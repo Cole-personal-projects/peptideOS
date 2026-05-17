@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import { CalendarDays, List, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import Link from 'next/link';
+import { CalendarDays, List, ChevronLeft, ChevronRight, Filter, Map } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -109,16 +110,24 @@ export default function LogPage() {
       <PageHeader 
         title="Dose Log" 
         rightElement={
-          <Tabs value={view} onValueChange={(v) => setView(v as 'calendar' | 'list')}>
-            <TabsList className="h-8">
-              <TabsTrigger value="calendar" className="h-6 px-2">
-                <CalendarDays className="w-4 h-4" />
-              </TabsTrigger>
-              <TabsTrigger value="list" className="h-6 px-2">
-                <List className="w-4 h-4" />
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" asChild className="h-8 w-8">
+              <Link href="/log/site-map">
+                <Map className="w-4 h-4" />
+                <span className="sr-only">Site map</span>
+              </Link>
+            </Button>
+            <Tabs value={view} onValueChange={(v) => setView(v as 'calendar' | 'list')}>
+              <TabsList className="h-8">
+                <TabsTrigger value="calendar" className="h-6 px-2">
+                  <CalendarDays className="w-4 h-4" />
+                </TabsTrigger>
+                <TabsTrigger value="list" className="h-6 px-2">
+                  <List className="w-4 h-4" />
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         }
       />
 

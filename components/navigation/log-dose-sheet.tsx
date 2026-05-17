@@ -7,27 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { BodyMannequin } from '@/components/site-picker/body-mannequin';
 import { useApp } from '@/lib/context';
 import { getAllowedDoseUnits, getDefaultDoseUnit, getDoseUnitLabel } from '@/lib/dose-helpers';
-import type { DoseUnit, Route } from '@/lib/types';
+import type { DoseUnit, Route, SiteCode } from '@/lib/types';
 
 interface LogDoseSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const sites = [
-  { value: 'abdomen-upper-left', label: 'Abdomen Upper Left' },
-  { value: 'abdomen-upper-right', label: 'Abdomen Upper Right' },
-  { value: 'abdomen-lower-left', label: 'Abdomen Lower Left' },
-  { value: 'abdomen-lower-right', label: 'Abdomen Lower Right' },
-  { value: 'thigh-left', label: 'Left Thigh' },
-  { value: 'thigh-right', label: 'Right Thigh' },
-  { value: 'deltoid-left', label: 'Left Deltoid' },
-  { value: 'deltoid-right', label: 'Right Deltoid' },
-  { value: 'glute-left', label: 'Left Glute' },
-  { value: 'glute-right', label: 'Right Glute' },
-];
 
 const routes: { value: Route; label: string }[] = [
   { value: 'subq', label: 'Subcutaneous' },
@@ -37,6 +25,8 @@ const routes: { value: Route; label: string }[] = [
   { value: 'topical', label: 'Topical' },
 ];
 
+const injectableRoutes: Route[] = ['subq', 'im'];
+
 export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
   const { data, addDose, getPeptide } = useApp();
   const [peptideId, setPeptideId] = useState('');
@@ -44,13 +34,14 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
   const [doseValue, setDoseValue] = useState('');
   const [doseUnit, setDoseUnit] = useState<DoseUnit>('mcg');
   const [route, setRoute] = useState<Route>('subq');
-  const [site, setSite] = useState('');
+  const [site, setSite] = useState<SiteCode | ''>('');
   const [notes, setNotes] = useState('');
 
   const activeVials = data.vials.filter(v => v.status === 'active');
   const selectedPeptide = getPeptide(peptideId);
   const filteredVials = activeVials.filter(v => v.peptideId === peptideId);
   const allowedDoseUnits: DoseUnit[] = peptideId ? getAllowedDoseUnits(peptideId) : ['mcg', 'mg'];
+  const requiresSite = injectableRoutes.includes(route);
 
   const handlePeptideChange = (value: string) => {
     const peptide = getPeptide(value);
@@ -58,11 +49,18 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
     setVialId('');
     setDoseUnit(getDefaultDoseUnit(value));
     setRoute(peptide?.defaultRoute || 'subq');
+    setSite('');
+  };
+
+  const handleRouteChange = (value: Route) => {
+    setRoute(value);
+    setSite('');
   };
 
   const handleSubmit = () => {
     const parsedDoseValue = parseFloat(doseValue);
     if (!peptideId || !vialId || Number.isNaN(parsedDoseValue) || parsedDoseValue <= 0) return;
+    if (requiresSite && !site) return;
     
     addDose({
       peptideId,
@@ -163,7 +161,7 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
 
           <div className="space-y-2">
             <Label>Route</Label>
-            <Select value={route} onValueChange={(v) => setRoute(v as Route)}>
+            <Select value={route} onValueChange={(v) => handleRouteChange(v as Route)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -175,19 +173,32 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label>Injection Site</Label>
-            <Select value={site} onValueChange={setSite}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select site" />
-              </SelectTrigger>
-              <SelectContent>
-                {sites.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {requiresSite ? (
+            <div className="space-y-2">
+              <Label>Injection Site</Label>
+              <BodyMannequin
+                compact
+                doses={data.doses}
+                route={route}
+                selectedSite={site}
+                onSiteChange={setSite}
+                onRouteChange={handleRouteChange}
+                getPeptide={getPeptide}
+              />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>Site</Label>
+              <Select value={site} onValueChange={(value) => setSite(value as SiteCode)} disabled>
+                <SelectTrigger>
+                  <SelectValue placeholder="No injection site for this route" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none" disabled>No injection site for this route</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Notes (optional)</Label>
@@ -202,7 +213,7 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
             className="w-full mt-6" 
             size="lg"
             onClick={handleSubmit}
-            disabled={!peptideId || !vialId || !doseValue}
+            disabled={!peptideId || !vialId || !doseValue || (requiresSite && !site)}
           >
             Log Dose
           </Button>

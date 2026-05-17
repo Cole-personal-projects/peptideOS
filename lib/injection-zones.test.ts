@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   calculateRotationScore,
+  getCompatibleInjectionZones,
   getHeatmapColor,
+  getInjectionZoneById,
   getMostUsedZone,
   getRecencyBgClass,
   getRecencyColor,
@@ -9,7 +11,9 @@ import {
   getUnderusedZones,
   getZoneDoseHistory,
   getZoneStats,
+  INJECTION_ZONES,
 } from './injection-zones';
+import { mockDoses } from './mock-data';
 import type { Dose } from './types';
 
 const now = new Date('2026-05-17T12:00:00Z');
@@ -140,5 +144,27 @@ describe('injection zone rotation behavior', () => {
     ];
 
     expect(calculateRotationScore(rotated)).toBeGreaterThan(calculateRotationScore(repeated));
+  });
+
+  it('keeps seeded dose history on canonical injection zone ids', () => {
+    const zoneIds = new Set(INJECTION_ZONES.map((zone) => zone.id));
+
+    expect(mockDoses.map((entry) => entry.site).filter((site) => site && !zoneIds.has(site))).toEqual([]);
+  });
+
+  it('exposes route-compatible canonical injection site options', () => {
+    expect(getInjectionZoneById('thigh-front-upper-left')).toMatchObject({
+      label: 'Upper Left Thigh',
+      routes: expect.arrayContaining(['subq', 'im']),
+    });
+    expect(getInjectionZoneById('thigh-left')).toBeUndefined();
+
+    const subqZoneIds = getCompatibleInjectionZones('subq').map((zone) => zone.id);
+    expect(subqZoneIds).toContain('abdomen-upper-left');
+    expect(subqZoneIds).toContain('thigh-front-upper-left');
+
+    const imZoneIds = getCompatibleInjectionZones('im').map((zone) => zone.id);
+    expect(imZoneIds).toContain('glute-upper-outer-left');
+    expect(imZoneIds).not.toContain('abdomen-upper-left');
   });
 });

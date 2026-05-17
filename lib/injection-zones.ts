@@ -1,9 +1,9 @@
 // Injection Zone Data and Algorithms
 
-import type { Route, Dose } from './types';
+import type { Route, Dose, SiteCode } from './types';
 
 export interface InjectionZone {
-  id: string;
+  id: SiteCode;
   label: string;
   view: 'front' | 'back';
   routes: Route[];
@@ -46,17 +46,31 @@ export const INJECTION_ZONES: InjectionZone[] = [
   { id: 'lower-back-right', label: 'Right Lower Back', view: 'back', routes: ['subq'], bodyPart: 'back' },
 ];
 
+const ZONE_BY_ID = new Map<string, InjectionZone>(INJECTION_ZONES.map((zone) => [zone.id, zone]));
+
+export function getInjectionZoneById(zoneId: string): InjectionZone | undefined {
+  return ZONE_BY_ID.get(zoneId);
+}
+
+export function isInjectionZoneId(zoneId: string): zoneId is SiteCode {
+  return ZONE_BY_ID.has(zoneId);
+}
+
+export function getCompatibleInjectionZones(route: Route): InjectionZone[] {
+  return INJECTION_ZONES.filter((zone) => zone.routes.includes(route));
+}
+
 export type RecencyLevel = 'fresh' | 'moderate' | 'recent' | 'avoid' | 'incompatible';
 
 export interface ZoneStats {
-  zoneId: string;
+  zoneId: SiteCode;
   lastUsed: Date | null;
   daysSinceUse: number | null;
   dosesLast30Days: number;
   recencyLevel: RecencyLevel;
 }
 
-export function getZoneStats(doses: Dose[], zoneId: string): ZoneStats {
+export function getZoneStats(doses: Dose[], zoneId: SiteCode): ZoneStats {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   
@@ -128,9 +142,9 @@ export function getHeatmapColor(dosesLast30Days: number): string {
 export function getSuggestedZone(
   doses: Dose[],
   route: Route | null
-): string | null {
+): SiteCode | null {
   const compatibleZones = route 
-    ? INJECTION_ZONES.filter(z => z.routes.includes(route))
+    ? getCompatibleInjectionZones(route)
     : INJECTION_ZONES.filter(z => z.routes.includes('subq') || z.routes.includes('im'));
   
   if (compatibleZones.length === 0) return null;
@@ -164,7 +178,7 @@ export function calculateRotationScore(doses: Dose[]): number {
   const recentDoses = doses.filter(d => 
     d.completed && 
     new Date(d.dateTime) >= thirtyDaysAgo &&
-    (d.site.length > 0)
+    isInjectionZoneId(d.site)
   );
   
   if (recentDoses.length === 0) return 100;
