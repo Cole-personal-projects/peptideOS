@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, Flame, List, RotateCcw, VenusAndMars } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -49,6 +49,11 @@ export function BodyMannequin({
   const [listOpen, setListOpen] = useState(false);
   const [historySite, setHistorySite] = useState<SiteCode | ''>('');
   const [siteNotes, setSiteNotes] = useState('');
+  const rootRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    rootRef.current?.setAttribute('data-body-map-ready', 'true');
+  }, []);
 
   const zones = useMemo(
     () => getSitePickerZones({ doses, route, selectedSite, view, mode }),
@@ -59,7 +64,7 @@ export function BodyMannequin({
   const compatibleSites = useMemo(() => getCompatibleInjectionZones(route), [route]);
 
   return (
-    <section className={cn('space-y-4', className)}>
+    <section ref={rootRef} className={cn('space-y-4', className)} data-body-map-ready="false">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Tabs value={route} onValueChange={(value) => onRouteChange?.(value as Route)}>
           <TabsList className="h-8">
@@ -127,7 +132,11 @@ export function BodyMannequin({
       />
 
       {selectedSummary && (
-        <div className="rounded-md border border-cyan-400/30 bg-cyan-400/10 p-3">
+        <div
+          role="status"
+          aria-label="Selected site summary"
+          className="rounded-md border border-cyan-400/30 bg-cyan-400/10 p-3"
+        >
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-medium">{selectedSummary.label}</p>
