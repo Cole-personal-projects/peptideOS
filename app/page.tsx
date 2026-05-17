@@ -1,16 +1,43 @@
-export default function Home() {
+import { AppShell } from '@/components/app-shell';
+import { TodayCard } from '@/components/dashboard/today-card';
+import { ActiveStacksCarousel } from '@/components/dashboard/active-stacks-carousel';
+import { InventoryStatusCard } from '@/components/dashboard/inventory-status-card';
+import { StreakCard } from '@/components/dashboard/streak-card';
+import { RecentActivityCard } from '@/components/dashboard/recent-activity-card';
+
+function DashboardHeader() {
+  const now = new Date();
+  const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening';
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
   return (
-    <div className="flex min-h-screen items-center justify-center font-sans">
-      <main className="flex w-full max-w-3xl flex-col items-center gap-8 px-6 py-16 text-center sm:items-start sm:text-left">
-        <div className="flex flex-col gap-4">
-          <h1 className="text-4xl font-bold tracking-tight">
-            PeptideOS
-          </h1>
-          <p className="max-w-md text-lg text-muted-foreground">
-            To get started, send a prompt or modify this page directly.
-          </p>
+    <header className="px-4 pt-6 pb-4">
+      <p className="text-muted-foreground text-sm">{dateStr}</p>
+      <h1 className="text-2xl font-bold mt-1">{greeting}</h1>
+    </header>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <AppShell>
+      <DashboardHeader />
+      
+      <div className="space-y-4">
+        <div className="px-4">
+          <TodayCard />
         </div>
-      </main>
-    </div>
+
+        <ActiveStacksCarousel />
+
+        <div className="px-4 space-y-4">
+          <StreakCard />
+          
+          <InventoryStatusCard />
+          
+          <RecentActivityCard />
+        </div>
+      </div>
+    </AppShell>
   );
 }
