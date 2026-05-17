@@ -26,3 +26,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# planning -- spec docs, architecture docs, etc
+**/Docs_dont_track/
+
+# playwright
+/test-results/
+/playwright-report/
