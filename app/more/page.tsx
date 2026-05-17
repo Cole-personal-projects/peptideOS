@@ -18,8 +18,22 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import type { LucideIcon } from 'lucide-react';
 
-const menuSections = [
+type MenuItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  description: string;
+  badge?: string;
+};
+
+type MenuSection = {
+  title: string;
+  items: MenuItem[];
+};
+
+const menuSections: MenuSection[] = [
   {
     title: 'Management',
     items: [

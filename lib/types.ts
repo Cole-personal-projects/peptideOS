@@ -1,7 +1,8 @@
 // PeptideOS Data Models
 
 export type PeptideCategory = 'healing' | 'growth' | 'cognitive' | 'metabolic' | 'longevity' | 'aesthetic';
-export type Route = 'subq' | 'im' | 'intranasal' | 'oral';
+export type Route = 'subq' | 'im' | 'intranasal' | 'oral' | 'topical';
+export type DoseUnit = 'mcg' | 'mg' | 'iu';
 export type VialStatus = 'sealed' | 'active' | 'finished' | 'expired';
 export type StackStatus = 'planned' | 'active' | 'completed' | 'paused';
 
@@ -45,7 +46,8 @@ export interface Dose {
   peptideId: string;
   vialId: string;
   dateTime: string;
-  doseMcg: number;
+  doseValue: number;
+  doseUnit: DoseUnit;
   route: Route;
   site: string;
   notes: string;
@@ -54,7 +56,8 @@ export interface Dose {
 
 export interface StackPeptide {
   peptideId: string;
-  doseMcg: number;
+  doseValue: number;
+  doseUnit: DoseUnit;
   frequency: string;
   route: Route;
   timing: string;
@@ -82,7 +85,8 @@ export interface PlannedDose {
   id: string;
   peptideId: string;
   stackId: string;
-  doseMcg: number;
+  doseValue: number;
+  doseUnit: DoseUnit;
   route: Route;
   timing: string;
   completed: boolean;

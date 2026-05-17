@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ChevronRight, Syringe } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApp } from '@/lib/context';
+import { formatDose } from '@/lib/dose-helpers';
 
 export function RecentActivityCard() {
   const { getRecentDoses, getPeptide } = useApp();
@@ -50,7 +51,7 @@ export function RecentActivityCard() {
                     <p className="text-xs text-muted-foreground">{formatDateTime(dose.dateTime)}</p>
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    {dose.doseMcg}mcg
+                    {formatDose(dose.doseValue, dose.doseUnit)}
                   </span>
                 </div>
               );

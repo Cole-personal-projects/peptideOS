@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/lib/context';
+import { formatDose } from '@/lib/dose-helpers';
 import { cn } from '@/lib/utils';
 
 export default function LogPage() {
@@ -229,7 +230,7 @@ export default function LogPage() {
                               {formatTime(dose.dateTime)} · {dose.route.toUpperCase()} · {dose.site.replace(/-/g, ' ')}
                             </p>
                           </div>
-                          <Badge variant="secondary">{dose.doseMcg}mcg</Badge>
+                          <Badge variant="secondary">{formatDose(dose.doseValue, dose.doseUnit)}</Badge>
                         </CardContent>
                       </Card>
                     );
@@ -265,7 +266,7 @@ export default function LogPage() {
                                 {formatTime(dose.dateTime)} · {dose.route.toUpperCase()}
                               </p>
                             </div>
-                            <Badge variant="secondary">{dose.doseMcg}mcg</Badge>
+                            <Badge variant="secondary">{formatDose(dose.doseValue, dose.doseUnit)}</Badge>
                           </CardContent>
                         </Card>
                       );

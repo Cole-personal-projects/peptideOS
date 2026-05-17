@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useApp } from '@/lib/context';
+import { getDefaultDoseUnit } from '@/lib/dose-helpers';
 
 interface NewStackSheetProps {
   open: boolean;
@@ -39,7 +40,8 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
         const peptide = data.peptides.find(p => p.id === peptideId);
         return {
           peptideId,
-          doseMcg: 250,
+          doseValue: getDefaultDoseUnit(peptideId) === 'mg' ? 1 : 250,
+          doseUnit: getDefaultDoseUnit(peptideId),
           frequency: 'daily',
           route: peptide?.defaultRoute || 'subq',
           timing: 'Morning'

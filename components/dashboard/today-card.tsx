@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import { cn } from '@/lib/utils';
+import { formatDose } from '@/lib/dose-helpers';
 
 export function TodayCard() {
   const { getTodaysDoses, getPeptide, updateDose } = useApp();
@@ -80,7 +81,7 @@ export function TodayCard() {
               )}
               <div className="flex-1 text-left">
                 <p className={cn("font-medium text-sm", dose.completed && "line-through")}>
-                  {peptide?.name} - {dose.doseMcg}mcg
+                  {peptide?.name} - {formatDose(dose.doseValue, dose.doseUnit)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {formatTime(dose.dateTime)} · {dose.route.toUpperCase()}
