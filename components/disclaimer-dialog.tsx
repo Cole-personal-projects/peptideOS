@@ -39,15 +39,17 @@ export function DisclaimerDialog() {
             </div>
           </div>
           <AlertDialogTitle className="text-center">Research Purposes Only</AlertDialogTitle>
-          <AlertDialogDescription className="text-center space-y-3">
-            <p>
-              PeptideOS is designed exclusively for tracking research compounds. 
-              This application does not provide medical advice, diagnosis, or treatment recommendations.
-            </p>
-            <p className="font-medium text-foreground">
-              All peptides tracked in this app are for legitimate research purposes only. 
-              Consult qualified professionals for any health-related decisions.
-            </p>
+          <AlertDialogDescription asChild>
+            <div className="text-center space-y-3 text-sm text-muted-foreground">
+              <p>
+                PeptideOS is designed exclusively for tracking research compounds. 
+                This application does not provide medical advice, diagnosis, or treatment recommendations.
+              </p>
+              <p className="font-medium text-foreground">
+                All peptides tracked in this app are for legitimate research purposes only. 
+                Consult qualified professionals for any health-related decisions.
+              </p>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="sm:justify-center">
