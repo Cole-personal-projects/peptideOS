@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/lib/context';
-import type { Route } from '@/lib/types';
+import { getAllowedDoseUnits, getDefaultDoseUnit, getDoseUnitLabel } from '@/lib/dose-helpers';
+import type { DoseUnit, Route } from '@/lib/types';
 
 interface LogDoseSheetProps {
   open: boolean;
@@ -33,13 +34,15 @@ const routes: { value: Route; label: string }[] = [
   { value: 'im', label: 'Intramuscular' },
   { value: 'intranasal', label: 'Intranasal' },
   { value: 'oral', label: 'Oral' },
+  { value: 'topical', label: 'Topical' },
 ];
 
 export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
   const { data, addDose, getPeptide } = useApp();
   const [peptideId, setPeptideId] = useState('');
   const [vialId, setVialId] = useState('');
-  const [doseMcg, setDoseMcg] = useState('');
+  const [doseValue, setDoseValue] = useState('');
+  const [doseUnit, setDoseUnit] = useState<DoseUnit>('mcg');
   const [route, setRoute] = useState<Route>('subq');
   const [site, setSite] = useState('');
   const [notes, setNotes] = useState('');
@@ -47,15 +50,26 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
   const activeVials = data.vials.filter(v => v.status === 'active');
   const selectedPeptide = getPeptide(peptideId);
   const filteredVials = activeVials.filter(v => v.peptideId === peptideId);
+  const allowedDoseUnits: DoseUnit[] = peptideId ? getAllowedDoseUnits(peptideId) : ['mcg', 'mg'];
+
+  const handlePeptideChange = (value: string) => {
+    const peptide = getPeptide(value);
+    setPeptideId(value);
+    setVialId('');
+    setDoseUnit(getDefaultDoseUnit(value));
+    setRoute(peptide?.defaultRoute || 'subq');
+  };
 
   const handleSubmit = () => {
-    if (!peptideId || !vialId || !doseMcg) return;
+    const parsedDoseValue = parseFloat(doseValue);
+    if (!peptideId || !vialId || Number.isNaN(parsedDoseValue) || parsedDoseValue <= 0) return;
     
     addDose({
       peptideId,
       vialId,
       dateTime: new Date().toISOString(),
-      doseMcg: parseInt(doseMcg),
+      doseValue: parsedDoseValue,
+      doseUnit,
       route,
       site,
       notes,
@@ -65,7 +79,8 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
     // Reset form
     setPeptideId('');
     setVialId('');
-    setDoseMcg('');
+    setDoseValue('');
+    setDoseUnit('mcg');
     setRoute('subq');
     setSite('');
     setNotes('');
@@ -82,7 +97,7 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
         <div className="space-y-4 pb-8">
           <div className="space-y-2">
             <Label>Peptide</Label>
-            <Select value={peptideId} onValueChange={(v) => { setPeptideId(v); setVialId(''); }}>
+            <Select value={peptideId} onValueChange={handlePeptideChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Select peptide" />
               </SelectTrigger>
@@ -117,13 +132,28 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
           )}
 
           <div className="space-y-2">
-            <Label>Dose (mcg)</Label>
-            <Input
-              type="number"
-              placeholder="e.g., 250"
-              value={doseMcg}
-              onChange={(e) => setDoseMcg(e.target.value)}
-            />
+            <Label>Dose</Label>
+            <div className="grid grid-cols-[1fr_104px] gap-2">
+              <Input
+                type="number"
+                step="any"
+                placeholder="e.g., 250"
+                value={doseValue}
+                onChange={(e) => setDoseValue(e.target.value)}
+              />
+              <Select value={doseUnit} onValueChange={(v) => setDoseUnit(v as DoseUnit)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {allowedDoseUnits.map((unit) => (
+                    <SelectItem key={unit} value={unit}>
+                      {getDoseUnitLabel(unit)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {selectedPeptide && (
               <p className="text-xs text-muted-foreground">
                 Typical: {selectedPeptide.protocols[0]}
@@ -172,7 +202,7 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
             className="w-full mt-6" 
             size="lg"
             onClick={handleSubmit}
-            disabled={!peptideId || !vialId || !doseMcg}
+            disabled={!peptideId || !vialId || !doseValue}
           >
             Log Dose
           </Button>

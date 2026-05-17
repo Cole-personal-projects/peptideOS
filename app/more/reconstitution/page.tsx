@@ -20,6 +20,7 @@ import { Separator } from '@/components/ui/separator';
 import { Save, Share2, Beaker, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { formatDose } from '@/lib/dose-helpers';
 
 import {
   peptideConversions,
@@ -154,7 +155,7 @@ export default function ReconstitutionPage() {
         doseDisplay = `${doseNum} IU (${doseMcg.toFixed(0)} mcg)`;
       } else {
         const doseIu = doseMg * compound.iuPerMg;
-        doseDisplay = `${doseNum} ${doseUnit} (${doseIu.toFixed(1)} IU)`;
+        doseDisplay = `${formatDose(doseNum, doseUnit)} (${doseIu.toFixed(1)} IU)`;
       }
       
       if (vialUnit === 'iu') {
@@ -364,7 +365,7 @@ export default function ReconstitutionPage() {
 
   // Handle use for logging
   const handleUseForLogging = useCallback((calc: SavedCalculation) => {
-    toast.info('Opening dose logger...', { description: `Pre-filled with ${calc.doseValue} ${calc.doseUnit} of ${calc.compoundName}` });
+    toast.info('Opening dose logger...', { description: `Pre-filled with ${formatDose(calc.doseValue, calc.doseUnit)} of ${calc.compoundName}` });
     // In a real app, this would navigate to the dose logger with pre-filled data
   }, []);
 
@@ -378,7 +379,7 @@ export default function ReconstitutionPage() {
   const doseLabel = useMemo(() => {
     if (!calculations) return '';
     const doseNum = parseFloat(doseValue) || 0;
-    return `${doseNum} ${doseUnit}`;
+    return formatDose(doseNum, doseUnit);
   }, [calculations, doseValue, doseUnit]);
 
   return (

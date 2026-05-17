@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/lib/context';
+import { formatDose } from '@/lib/dose-helpers';
 import { cn } from '@/lib/utils';
 import type { StackStatus } from '@/lib/types';
 
@@ -138,7 +139,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                     <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                       <div>
                         <p className="text-muted-foreground text-xs">Dose</p>
-                        <p className="font-medium">{sp.doseMcg} mcg</p>
+                        <p className="font-medium">{formatDose(sp.doseValue, sp.doseUnit)}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground text-xs">Frequency</p>

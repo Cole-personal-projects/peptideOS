@@ -57,7 +57,6 @@ export function SyringeVisualization({
             height="30" 
             rx="3" 
             fill="currentColor" 
-            className="text-muted/20"
             stroke="currentColor"
             strokeWidth="1.5"
             className="text-border"

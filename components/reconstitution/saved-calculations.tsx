@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp, Copy, Syringe, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { formatDose, getDoseUnitLabel } from '@/lib/dose-helpers';
 
 export interface SavedCalculation {
   id: string;
@@ -88,11 +89,11 @@ export function SavedCalculations({
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="text-muted-foreground">Vial:</div>
                 <div className="font-mono">
-                  {calc.vialSize} {calc.vialUnit} + {calc.bacWaterMl}mL BAC
+                  {calc.vialSize} {getDoseUnitLabel(calc.vialUnit)} + {calc.bacWaterMl}mL BAC
                 </div>
                 <div className="text-muted-foreground">Dose:</div>
                 <div className="font-mono">
-                  {calc.doseValue} {calc.doseUnit}
+                  {formatDose(calc.doseValue, calc.doseUnit)}
                 </div>
                 <div className="text-muted-foreground">Draw:</div>
                 <div className="font-mono font-medium text-primary">
@@ -133,9 +134,9 @@ export function SavedCalculations({
 export function generateShareText(calc: SavedCalculation): string {
   const lines = [
     `${calc.compoundName} Reconstitution`,
-    `Vial: ${calc.vialSize} ${calc.vialUnit} + ${calc.bacWaterMl} mL BAC water`,
+    `Vial: ${calc.vialSize} ${getDoseUnitLabel(calc.vialUnit)} + ${calc.bacWaterMl} mL BAC water`,
     `Concentration: ${calc.concentration}`,
-    `Dose: ${calc.doseValue} ${calc.doseUnit} = ${calc.drawUnits.toFixed(1)} units on U-100 syringe = ${calc.drawMl.toFixed(3)} mL`,
+    `Dose: ${formatDose(calc.doseValue, calc.doseUnit)} = ${calc.drawUnits.toFixed(1)} units on U-100 syringe = ${calc.drawMl.toFixed(3)} mL`,
     `Doses per vial: ${calc.dosesPerVial.toFixed(0)}`,
   ];
   return lines.join('\n');
