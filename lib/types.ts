@@ -5,6 +5,31 @@ export type Route = 'subq' | 'im' | 'intranasal' | 'oral' | 'topical';
 export type DoseUnit = 'mcg' | 'mg' | 'iu';
 export type VialStatus = 'sealed' | 'active' | 'finished' | 'expired';
 export type StackStatus = 'planned' | 'active' | 'completed' | 'paused';
+export type SiteCode =
+  | 'abdomen-upper-left'
+  | 'abdomen-upper-right'
+  | 'abdomen-mid-left'
+  | 'abdomen-mid-right'
+  | 'abdomen-lower-left'
+  | 'abdomen-lower-right'
+  | 'flank-left'
+  | 'flank-right'
+  | 'thigh-front-upper-left'
+  | 'thigh-front-upper-right'
+  | 'thigh-front-mid-left'
+  | 'thigh-front-mid-right'
+  | 'thigh-outer-left'
+  | 'thigh-outer-right'
+  | 'delt-anterior-left'
+  | 'delt-anterior-right'
+  | 'delt-lateral-left'
+  | 'delt-lateral-right'
+  | 'delt-posterior-left'
+  | 'delt-posterior-right'
+  | 'glute-upper-outer-left'
+  | 'glute-upper-outer-right'
+  | 'lower-back-left'
+  | 'lower-back-right';
 
 export interface Citation {
   id: string;
@@ -49,7 +74,7 @@ export interface Dose {
   doseValue: number;
   doseUnit: DoseUnit;
   route: Route;
-  site: string;
+  site: SiteCode | '';
   notes: string;
   completed: boolean;
 }

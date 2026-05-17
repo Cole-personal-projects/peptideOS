@@ -281,7 +281,14 @@ export const mockVials: Vial[] = [
 // Generate 30 days of dose history
 const generateDoseHistory = (): Dose[] => {
   const doses: Dose[] = [];
-  const sites = ['abdomen-upper-left', 'abdomen-upper-right', 'abdomen-lower-left', 'abdomen-lower-right', 'thigh-left', 'thigh-right'];
+  const sites = [
+    'abdomen-upper-left',
+    'abdomen-upper-right',
+    'abdomen-lower-left',
+    'abdomen-lower-right',
+    'thigh-front-upper-left',
+    'thigh-front-upper-right',
+  ] as const;
   
   for (let i = 0; i < 30; i++) {
     const date = new Date();
