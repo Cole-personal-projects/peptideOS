@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,13 +16,7 @@ import { useApp } from '@/lib/context';
 
 export function DisclaimerDialog() {
   const { data, setHasSeenDisclaimer } = useApp();
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!data.hasSeenDisclaimer) {
-      setOpen(true);
-    }
-  }, [data.hasSeenDisclaimer]);
+  const [open, setOpen] = useState(() => !data.hasSeenDisclaimer);
 
   const handleAccept = () => {
     setHasSeenDisclaimer(true);
