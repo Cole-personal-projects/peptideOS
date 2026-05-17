@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,6 +21,7 @@ import { Save, Share2, Beaker, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { formatDose } from '@/lib/dose-helpers';
+import type { DoseUnit } from '@/lib/types';
 
 import {
   peptideConversions,
@@ -28,15 +29,15 @@ import {
   quickPresets,
   educationalContent,
   getConversionById,
-  canUseIU,
-  convertMgToIU,
-  convertIUToMg,
-  convertMcgToMg,
-  convertMgToMcg,
   type PeptideConversion,
   type SyringeType,
   type QuickPreset,
 } from '@/lib/peptide-conversions';
+import {
+  calculateReconstitution,
+  getReconstitutionWarnings,
+  type VialUnit,
+} from '@/lib/reconstitution-calculations';
 
 import { SyringeVisualization } from '@/components/reconstitution/syringe-visualization';
 import { InfoPopover } from '@/components/reconstitution/info-popover';
@@ -47,9 +48,6 @@ import {
   generateShareText, 
   type SavedCalculation 
 } from '@/components/reconstitution/saved-calculations';
-
-type VialUnit = 'mg' | 'iu';
-type DoseUnit = 'mcg' | 'mg' | 'iu';
 
 export default function ReconstitutionPage() {
   // State
@@ -75,228 +73,64 @@ export default function ReconstitutionPage() {
   const isIUCompound = compound?.dosingMode === 'iu-primary';
   const isMcgOnlyCompound = compound?.dosingMode === 'mcg-only';
 
-  // Reset units when compound changes
-  useEffect(() => {
-    if (compound) {
-      if (compound.dosingMode === 'iu-primary') {
-        setVialUnit('iu');
-        setDoseUnit('iu');
-        // Set default vial size for IU compounds
-        const defaultVial = compound.typicalVialSizes[0];
-        if (defaultVial) {
-          setVialSize(defaultVial.value.toString());
-        }
-        // Set default dose
-        setDoseValue(compound.typicalDoseRange.min.toString());
-      } else if (compound.dosingMode === 'mcg-only') {
-        setVialUnit('mg');
-        setDoseUnit('mcg');
-        const defaultVial = compound.typicalVialSizes[0];
-        if (defaultVial) {
-          setVialSize(defaultVial.value.toString());
-        }
-        setDoseValue(compound.typicalDoseRange.min.toString());
-      } else {
-        setVialUnit('mg');
-        setDoseUnit(compound.defaultUnit === 'mg' ? 'mg' : 'mcg');
-        const defaultVial = compound.typicalVialSizes[0];
-        if (defaultVial) {
-          setVialSize(defaultVial.value.toString());
-        }
-        setDoseValue(compound.typicalDoseRange.min.toString());
-      }
+  const applyCompoundDefaults = useCallback((compoundId: string) => {
+    const nextCompound = getConversionById(compoundId);
+    if (!nextCompound) return;
+
+    setSelectedCompoundId(compoundId);
+    setVialUnit(nextCompound.dosingMode === 'iu-primary' ? 'iu' : 'mg');
+    setDoseUnit(nextCompound.dosingMode === 'iu-primary' ? 'iu' : nextCompound.defaultUnit === 'mg' ? 'mg' : 'mcg');
+
+    const defaultVial = nextCompound.typicalVialSizes[0];
+    if (defaultVial) {
+      setVialSize(defaultVial.value.toString());
     }
-  }, [selectedCompoundId]);
+    setDoseValue(nextCompound.typicalDoseRange.min.toString());
+  }, []);
 
   // Calculations
   const calculations = useMemo(() => {
     const vialNum = parseFloat(vialSize) || 0;
     const doseNum = parseFloat(doseValue) || 0;
-    const bacMl = bacWaterMl || 0;
-    
-    if (vialNum === 0 || doseNum === 0 || bacMl === 0 || !compound) {
-      return null;
-    }
-    
-    // Convert everything to mg for internal calculation
-    let vialMg: number;
-    if (vialUnit === 'iu' && compound.iuPerMg) {
-      vialMg = vialNum / compound.iuPerMg;
-    } else {
-      vialMg = vialNum;
-    }
-    
-    let doseMg: number;
-    if (doseUnit === 'iu' && compound.iuPerMg) {
-      doseMg = doseNum / compound.iuPerMg;
-    } else if (doseUnit === 'mcg') {
-      doseMg = doseNum / 1000;
-    } else {
-      doseMg = doseNum;
-    }
-    
-    // Core calculations
-    const concentrationMgPerMl = vialMg / bacMl;
-    const volumeToDrawMl = doseMg / concentrationMgPerMl;
-    const syringeUnits = volumeToDrawMl * syringe.unitsPerMl;
-    const totalDoses = vialMg / doseMg;
-    
-    // Dual unit displays
-    let concentrationDisplay: string;
-    let doseDisplay: string;
-    let vialDisplay: string;
-    
-    if (isIUCompound && compound.iuPerMg) {
-      const concentrationIuPerMl = concentrationMgPerMl * compound.iuPerMg;
-      concentrationDisplay = `${concentrationIuPerMl.toFixed(1)} IU/mL (${concentrationMgPerMl.toFixed(2)} mg/mL)`;
-      
-      if (doseUnit === 'iu') {
-        const doseMcg = doseMg * 1000;
-        doseDisplay = `${doseNum} IU (${doseMcg.toFixed(0)} mcg)`;
-      } else {
-        const doseIu = doseMg * compound.iuPerMg;
-        doseDisplay = `${formatDose(doseNum, doseUnit)} (${doseIu.toFixed(1)} IU)`;
-      }
-      
-      if (vialUnit === 'iu') {
-        vialDisplay = `${vialNum} IU (${vialMg.toFixed(2)} mg)`;
-      } else {
-        const vialIu = vialMg * compound.iuPerMg;
-        vialDisplay = `${vialNum} mg (${vialIu.toFixed(0)} IU)`;
-      }
-    } else {
-      const concentrationMcgPerMl = concentrationMgPerMl * 1000;
-      concentrationDisplay = `${concentrationMgPerMl.toFixed(2)} mg/mL (${concentrationMcgPerMl.toFixed(0)} mcg/mL)`;
-      
-      if (doseUnit === 'mcg') {
-        doseDisplay = `${doseNum} mcg (${doseMg.toFixed(3)} mg)`;
-      } else {
-        const doseMcg = doseMg * 1000;
-        doseDisplay = `${doseNum} mg (${doseMcg.toFixed(0)} mcg)`;
-      }
-      
-      vialDisplay = `${vialMg} mg (${vialMg * 1000} mcg)`;
-    }
-    
-    // Cost calculations
-    let costPerDose: number | null = null;
-    let costPerCycle: number | null = null;
     const cost = parseFloat(vialCost);
     const days = parseInt(cycleDays);
-    
-    if (cost > 0) {
-      costPerDose = cost / totalDoses;
-      if (days > 0) {
-        // Assuming one dose per day for simplicity
-        costPerCycle = costPerDose * days;
-      }
-    }
-    
-    return {
-      volumeToDrawMl,
-      syringeUnits,
-      concentrationMgPerMl,
-      concentrationDisplay,
-      doseDisplay,
-      vialDisplay,
-      totalDoses,
-      costPerDose,
-      costPerCycle,
-      vialMg,
-      doseMg,
-    };
-  }, [vialSize, vialUnit, bacWaterMl, doseValue, doseUnit, syringe, compound, vialCost, cycleDays, isIUCompound]);
+
+    if (!compound) return null;
+
+    return calculateReconstitution({
+      compound,
+      syringe,
+      vialSize: vialNum,
+      vialUnit,
+      bacWaterMl,
+      doseValue: doseNum,
+      doseUnit,
+      vialCost: Number.isNaN(cost) ? null : cost,
+      cycleDays: Number.isNaN(days) ? null : days,
+    });
+  }, [vialSize, vialUnit, bacWaterMl, doseValue, doseUnit, syringe, compound, vialCost, cycleDays]);
 
   // Generate warnings
   const warnings = useMemo<Warning[]>(() => {
-    const result: Warning[] = [];
-    if (!calculations || !compound) return result;
-    
-    const { syringeUnits, volumeToDrawMl, doseMg } = calculations;
-    
-    // Exceeds syringe capacity
-    if (syringeUnits > syringe.totalUnits) {
-      result.push({
-        id: 'exceeds-capacity',
-        type: 'error',
-        message: 'Dose exceeds syringe capacity',
-        suggestion: `The draw volume (${syringeUnits.toFixed(1)} units) exceeds your ${syringe.totalUnits}-unit syringe. Use a larger syringe or increase BAC water to dilute.`,
-      });
-    }
-    
-    // Too dilute
-    if (volumeToDrawMl > 0.5 && syringeUnits <= syringe.totalUnits) {
-      result.push({
-        id: 'too-dilute',
-        type: 'warning',
-        message: 'Concentration may be too dilute',
-        suggestion: `Drawing ${volumeToDrawMl.toFixed(2)}mL per dose. Consider using less BAC water for more concentrated solution.`,
-      });
-    }
-    
-    // Too concentrated
-    if (volumeToDrawMl < 0.05 && volumeToDrawMl > 0) {
-      result.push({
-        id: 'too-concentrated',
-        type: 'warning',
-        message: 'Concentration may be too concentrated',
-        suggestion: `Drawing only ${(volumeToDrawMl * 1000).toFixed(1)}µL. Consider adding more BAC water for accurate dosing.`,
-      });
-    }
-    
-    // Check typical dose range
     const doseNum = parseFloat(doseValue) || 0;
-    const { min, max, unit } = compound.typicalDoseRange;
-    
-    let doseInRangeUnit: number;
-    if (unit === 'iu' && compound.iuPerMg) {
-      doseInRangeUnit = doseUnit === 'iu' ? doseNum : (doseUnit === 'mg' ? doseNum * compound.iuPerMg : (doseNum / 1000) * compound.iuPerMg);
-    } else if (unit === 'mg') {
-      doseInRangeUnit = doseUnit === 'mg' ? doseNum : (doseUnit === 'mcg' ? doseNum / 1000 : doseNum / (compound.iuPerMg || 1));
-    } else {
-      doseInRangeUnit = doseUnit === 'mcg' ? doseNum : (doseUnit === 'mg' ? doseNum * 1000 : (doseNum / (compound.iuPerMg || 1)) * 1000);
-    }
-    
-    if (doseInRangeUnit < min * 0.5 || doseInRangeUnit > max * 2) {
-      result.push({
-        id: 'unusual-dose',
-        type: 'warning',
-        message: `Unusual dose for ${compound.name}`,
-        suggestion: `Typical research range: ${min}-${max} ${unit}. Verify your intended dose.`,
-      });
-    }
-    
-    // Verify vial label prompt for IU compounds
-    if (isIUCompound && compound.typicalVialSizes.length > 0) {
-      const sizes = compound.typicalVialSizes.map(s => `${s.value} ${s.unit}`).join(', ');
-      result.push({
-        id: 'verify-vial',
-        type: 'info',
-        message: 'Verify your vial label',
-        suggestion: `Common vial sizes for ${compound.name}: ${sizes}`,
-      });
-    }
-    
-    return result;
+    return getReconstitutionWarnings({
+      calculations,
+      compound,
+      syringe,
+      doseValue: doseNum,
+      doseUnit,
+      isIUCompound,
+    });
   }, [calculations, compound, syringe, doseValue, doseUnit, isIUCompound]);
 
   // Handle preset selection
   const handlePresetSelect = useCallback((preset: QuickPreset) => {
-    setSelectedCompoundId(preset.compoundId);
+    applyCompoundDefaults(preset.compoundId);
     setDoseValue(preset.doseValue.toString());
     setDoseUnit(preset.doseUnit);
     setSelectedPresetId(preset.id);
-    
-    // Get compound for defaults
-    const presetCompound = getConversionById(preset.compoundId);
-    if (presetCompound) {
-      if (preset.doseUnit === 'iu') {
-        setVialUnit('iu');
-      } else {
-        setVialUnit('mg');
-      }
-    }
-  }, []);
+    setVialUnit(preset.doseUnit === 'iu' ? 'iu' : 'mg');
+  }, [applyCompoundDefaults]);
 
   // Save calculation
   const handleSave = useCallback(() => {
@@ -396,7 +230,7 @@ export default function ReconstitutionPage() {
                 Compound
               </Label>
               <Select value={selectedCompoundId} onValueChange={(v) => {
-                setSelectedCompoundId(v);
+                applyCompoundDefaults(v);
                 setSelectedPresetId(undefined);
               }}>
                 <SelectTrigger>
