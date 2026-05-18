@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/lib/context';
 import { formatDose } from '@/lib/dose-helpers';
+import { buildDoseTimelineGroups } from '@/lib/dose-timeline';
 import { cn } from '@/lib/utils';
 
 export default function LogPage() {
@@ -88,22 +89,10 @@ export default function LogPage() {
     return date.toDateString() === selectedDate.toDateString();
   };
 
-  // List view - get all doses grouped by date
-  const groupedDoses = useMemo(() => {
-    let doses = [...data.doses].filter(d => d.completed);
-    if (filterPeptide !== 'all') {
-      doses = doses.filter(d => d.peptideId === filterPeptide);
-    }
-    doses.sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime());
-
-    const groups: Record<string, typeof doses> = {};
-    doses.forEach(dose => {
-      const dateKey = new Date(dose.dateTime).toDateString();
-      if (!groups[dateKey]) groups[dateKey] = [];
-      groups[dateKey].push(dose);
-    });
-    return groups;
-  }, [data.doses, filterPeptide]);
+  const timelineGroups = useMemo(
+    () => buildDoseTimelineGroups(data.doses, filterPeptide),
+    [data.doses, filterPeptide],
+  );
 
   return (
     <AppShell>
@@ -119,10 +108,10 @@ export default function LogPage() {
             </Button>
             <Tabs value={view} onValueChange={(v) => setView(v as 'calendar' | 'list')}>
               <TabsList className="h-8">
-                <TabsTrigger value="calendar" className="h-6 px-2">
+                <TabsTrigger value="calendar" className="h-6 px-2" aria-label="Calendar view">
                   <CalendarDays className="w-4 h-4" />
                 </TabsTrigger>
-                <TabsTrigger value="list" className="h-6 px-2">
+                <TabsTrigger value="list" className="h-6 px-2" aria-label="List view">
                   <List className="w-4 h-4" />
                 </TabsTrigger>
               </TabsList>
@@ -238,6 +227,9 @@ export default function LogPage() {
                             <p className="text-xs text-muted-foreground">
                               {formatTime(dose.dateTime)} · {dose.route.toUpperCase()} · {dose.site.replace(/-/g, ' ')}
                             </p>
+                            <Badge variant={dose.completed ? 'secondary' : 'outline'} className="mt-1">
+                              {dose.completed ? 'Completed' : 'Planned'}
+                            </Badge>
                           </div>
                           <Badge variant="secondary">{formatDose(dose.doseValue, dose.doseUnit)}</Badge>
                         </CardContent>
@@ -251,20 +243,20 @@ export default function LogPage() {
         ) : (
           /* List view */
           <div className="space-y-4">
-            {Object.keys(groupedDoses).length === 0 ? (
+            {timelineGroups.length === 0 ? (
               <Card className="bg-secondary/50">
                 <CardContent className="py-12 text-center">
                   <p className="text-muted-foreground">No doses logged yet</p>
                 </CardContent>
               </Card>
             ) : (
-              Object.entries(groupedDoses).slice(0, 30).map(([dateKey, doses]) => (
-                <div key={dateKey}>
+              timelineGroups.slice(0, 30).map((group) => (
+                <div key={group.dateKey}>
                   <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                    {new Date(dateKey).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    {group.dateLabel}
                   </h3>
                   <div className="space-y-2">
-                    {doses.map((dose) => {
+                    {group.doses.map((dose) => {
                       const peptide = getPeptide(dose.peptideId);
                       return (
                         <Card key={dose.id}>
@@ -272,10 +264,13 @@ export default function LogPage() {
                             <div>
                               <p className="font-medium text-sm">{peptide?.name}</p>
                               <p className="text-xs text-muted-foreground">
-                                {formatTime(dose.dateTime)} · {dose.route.toUpperCase()}
+                                {dose.timeLabel} · {dose.route.toUpperCase()} · {dose.siteLabel}
                               </p>
+                              <Badge variant={dose.completed ? 'secondary' : 'outline'} className="mt-1">
+                                {dose.statusLabel}
+                              </Badge>
                             </div>
-                            <Badge variant="secondary">{formatDose(dose.doseValue, dose.doseUnit)}</Badge>
+                            <Badge variant="secondary">{dose.doseLabel}</Badge>
                           </CardContent>
                         </Card>
                       );
