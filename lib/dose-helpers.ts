@@ -1,4 +1,4 @@
-import { getConversionById, canUseIU, convertIUToMg, convertMgToIU } from './peptide-conversions';
+import { getConversionById, canUseIU, convertIUToMg, convertMgToIU, quickPresets } from './peptide-conversions';
 import type { DoseUnit } from './types';
 
 export function getDoseUnitLabel(unit: DoseUnit): string {
@@ -32,4 +32,22 @@ export function convertDoseToUnit(peptideId: string, value: number, fromUnit: Do
   if (toUnit === 'mg') return mg;
   if (toUnit === 'mcg') return mg * 1000;
   return convertMgToIU(peptideId, mg);
+}
+
+export interface DosePreset {
+  id: string;
+  label: string;
+  doseValue: number;
+  doseUnit: DoseUnit;
+}
+
+export function getDosePresetsForPeptide(peptideId: string): DosePreset[] {
+  return quickPresets
+    .filter((preset) => preset.compoundId === peptideId)
+    .map(({ id, label, doseValue, doseUnit }) => ({
+      id,
+      label,
+      doseValue,
+      doseUnit,
+    }));
 }

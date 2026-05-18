@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { BodyMannequin } from '@/components/site-picker/body-mannequin';
 import { useApp } from '@/lib/context';
-import { getAllowedDoseUnits, getDefaultDoseUnit, getDoseUnitLabel } from '@/lib/dose-helpers';
+import { getAllowedDoseUnits, getDefaultDoseUnit, getDosePresetsForPeptide, getDoseUnitLabel } from '@/lib/dose-helpers';
 import type { DoseUnit, Route, SiteCode } from '@/lib/types';
 
 interface LogDoseSheetProps {
@@ -41,12 +41,14 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
   const selectedPeptide = getPeptide(peptideId);
   const filteredVials = activeVials.filter(v => v.peptideId === peptideId);
   const allowedDoseUnits: DoseUnit[] = peptideId ? getAllowedDoseUnits(peptideId) : ['mcg', 'mg'];
+  const dosePresets = peptideId ? getDosePresetsForPeptide(peptideId) : [];
   const requiresSite = injectableRoutes.includes(route);
 
   const handlePeptideChange = (value: string) => {
     const peptide = getPeptide(value);
     setPeptideId(value);
     setVialId('');
+    setDoseValue('');
     setDoseUnit(getDefaultDoseUnit(value));
     setRoute(peptide?.defaultRoute || 'subq');
     setSite('');
@@ -152,6 +154,24 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
                 </SelectContent>
               </Select>
             </div>
+            {dosePresets.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {dosePresets.map((preset) => (
+                  <Button
+                    key={preset.id}
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setDoseValue(preset.doseValue.toString());
+                      setDoseUnit(preset.doseUnit);
+                    }}
+                  >
+                    {preset.label}
+                  </Button>
+                ))}
+              </div>
+            )}
             {selectedPeptide && (
               <p className="text-xs text-muted-foreground">
                 Typical: {selectedPeptide.protocols[0]}
