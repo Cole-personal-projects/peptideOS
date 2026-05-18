@@ -34,4 +34,26 @@ test.describe('log dose sheet body picker', () => {
     await expect(page.getByPlaceholder('e.g., 250')).toHaveValue('2');
     await expect(page.getByRole('combobox').filter({ hasText: 'mg' })).toBeVisible();
   });
+
+  test('logs IU-primary doses and renders the saved dose in IU', async ({ page }) => {
+    await page.goto('/stacks');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('button', { name: 'Quick actions' }).click();
+    await page.getByRole('button', { name: 'Log Dose' }).click();
+
+    await page.getByRole('combobox').filter({ hasText: 'Select peptide' }).click();
+    await page.getByRole('option', { name: 'hGH (Somatropin)' }).click();
+    await page.getByRole('combobox').filter({ hasText: 'Select vial' }).click();
+    await page.getByRole('option', { name: /HGH-2024-010/ }).click();
+
+    await page.getByRole('button', { name: 'hGH 2 IU (beginner)' }).click();
+    await page.getByRole('button', { name: 'Upper Left Abdomen' }).click();
+    await page.getByRole('button', { name: 'Log Dose' }).click();
+
+    await page.getByRole('link', { name: 'Log' }).click();
+    await expect(page.getByRole('heading', { name: 'Dose Log' })).toBeVisible();
+    await expect(page.getByText('hGH (Somatropin)').first()).toBeVisible();
+    await expect(page.getByText('2 IU').first()).toBeVisible();
+  });
 });

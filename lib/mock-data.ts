@@ -206,6 +206,22 @@ export const mockPeptides: Peptide[] = [
     citations: [
       { id: 'c13', title: 'Tirzepatide versus Semaglutide for weight loss', url: '#', source: 'NEJM', year: 2022 }
     ]
+  },
+  {
+    id: 'hgh',
+    name: 'hGH (Somatropin)',
+    category: 'growth',
+    defaultRoute: 'subq',
+    halfLifeHours: 3,
+    beginnerSummary: 'A recombinant human growth hormone preparation typically dosed by biological activity in IU.',
+    researcherDetails: 'Somatropin is recombinant human growth hormone with compound-specific IU-to-mass conversion metadata. PeptideOS preserves IU as the selected logging unit.',
+    mechanism: 'Binds growth hormone receptors and stimulates downstream IGF-1 signaling and anabolic metabolic pathways.',
+    protocols: ['Beginner: 1-2 IU daily', 'Intermediate: 3-4 IU daily', 'Advanced protocols require careful monitoring'],
+    safety: 'Monitor glucose, edema, joint discomfort, and other GH-related adverse effects. Use medical supervision.',
+    storage: 'Refrigerate according to preparation instructions. Reconstituted stability depends on product labeling.',
+    citations: [
+      { id: 'c14', title: 'Somatropin prescribing information', url: '#', source: 'FDA Label', year: 2024 }
+    ]
   }
 ];
 
@@ -275,6 +291,17 @@ export const mockVials: Vial[] = [
     reconstitutedDate: null,
     expirationDate: daysFromNow(365),
     status: 'sealed'
+  },
+  {
+    id: 'vial-7',
+    peptideId: 'hgh',
+    source: 'Pharmacy',
+    lotNumber: 'HGH-2024-010',
+    mg: 3.33,
+    bacWaterMl: 1,
+    reconstitutedDate: daysAgo(2),
+    expirationDate: daysFromNow(26),
+    status: 'active'
   }
 ];
 
