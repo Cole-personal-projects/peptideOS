@@ -57,7 +57,7 @@ export interface Peptide {
 export interface Vial {
   id: string;
   peptideId: string;
-  vendor: string;
+  source: string;
   lotNumber: string;
   mg: number;
   bacWaterMl: number;
@@ -99,13 +99,6 @@ export interface Stack {
   notes: string;
 }
 
-export interface Vendor {
-  id: string;
-  name: string;
-  privateNotes: string;
-  peptidesPurchased: string[];
-}
-
 export interface PlannedDose {
   id: string;
   peptideId: string;
@@ -122,7 +115,6 @@ export interface AppData {
   vials: Vial[];
   doses: Dose[];
   stacks: Stack[];
-  vendors: Vendor[];
   hasSeenDisclaimer: boolean;
   biometricLock: boolean;
   darkMode: boolean;

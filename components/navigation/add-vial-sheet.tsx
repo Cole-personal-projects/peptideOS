@@ -17,7 +17,7 @@ interface AddVialSheetProps {
 export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
   const { data, addVial } = useApp();
   const [peptideId, setPeptideId] = useState('');
-  const [vendor, setVendor] = useState('');
+  const [source, setSource] = useState('');
   const [lotNumber, setLotNumber] = useState('');
   const [mg, setMg] = useState('');
   const [status, setStatus] = useState<VialStatus>('sealed');
@@ -30,7 +30,7 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
     
     addVial({
       peptideId,
-      vendor,
+      source,
       lotNumber,
       mg: parseFloat(mg),
       bacWaterMl: 0,
@@ -41,7 +41,7 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
 
     // Reset form
     setPeptideId('');
-    setVendor('');
+    setSource('');
     setLotNumber('');
     setMg('');
     setStatus('sealed');
@@ -71,17 +71,12 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Vendor</Label>
-            <Select value={vendor} onValueChange={setVendor}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select vendor" />
-              </SelectTrigger>
-              <SelectContent>
-                {data.vendors.map((v) => (
-                  <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Source</Label>
+            <Input
+              placeholder="Optional vial source"
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">

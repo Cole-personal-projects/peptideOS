@@ -2,7 +2,7 @@
 
 import { use } from 'react';
 import { notFound } from 'next/navigation';
-import { Calendar, Building2, Hash, Droplet, AlertCircle } from 'lucide-react';
+import { Calendar, Hash, Droplet, AlertCircle, PackageSearch } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 
 export default function VialDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { getVial, getPeptide, getVendor, updateVial } = useApp();
+  const { getVial, getPeptide, updateVial } = useApp();
   const vial = getVial(id);
 
   if (!vial) {
@@ -22,7 +22,6 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   const peptide = getPeptide(vial.peptideId);
-  const vendor = getVendor(vial.vendor);
 
   const getDaysUntilExpiration = () => {
     const exp = new Date(vial.expirationDate);
@@ -159,11 +158,11 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
 
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-secondary">
-                <Building2 className="w-4 h-4 text-muted-foreground" />
+                <PackageSearch className="w-4 h-4 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Vendor</p>
-                <p className="font-medium">{vendor?.name || 'Unknown'}</p>
+                <p className="text-xs text-muted-foreground">Source</p>
+                <p className="font-medium">{vial.source || 'Unknown'}</p>
               </div>
             </div>
 
