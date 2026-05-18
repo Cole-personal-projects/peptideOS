@@ -5,6 +5,7 @@ import {
   formatDose,
   getAllowedDoseUnits,
   getDefaultDoseUnit,
+  getDosePresetsForPeptide,
 } from './dose-helpers';
 
 describe('dose helpers', () => {
@@ -38,5 +39,16 @@ describe('dose helpers', () => {
     expect(convertDoseToUnit('tb-500', 2.5, 'mg', 'mcg')).toBe(2500);
     expect(convertDoseToUnit('tb-500', 2500, 'mcg', 'mg')).toBe(2.5);
     expect(convertDoseToUnit('tb-500', 2.5, 'mg', 'iu')).toBeNull();
+  });
+
+  it('returns compound-aware dose presets without changing the native unit', () => {
+    expect(getDosePresetsForPeptide('tb-500')).toEqual([
+      expect.objectContaining({ label: 'TB-500 2mg', doseValue: 2, doseUnit: 'mg' }),
+    ]);
+    expect(getDosePresetsForPeptide('hgh')).toEqual([
+      expect.objectContaining({ label: 'hGH 2 IU (beginner)', doseValue: 2, doseUnit: 'iu' }),
+      expect.objectContaining({ label: 'hGH 4 IU (intermediate)', doseValue: 4, doseUnit: 'iu' }),
+    ]);
+    expect(getDosePresetsForPeptide('unknown-compound')).toEqual([]);
   });
 });
