@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { 
   FlaskConical, 
-  Building2, 
   Calculator, 
   TestTube, 
   Heart, 
@@ -38,7 +37,6 @@ const menuSections: MenuSection[] = [
     title: 'Management',
     items: [
       { href: '/more/inventory', label: 'Inventory', icon: FlaskConical, description: 'Manage your vials' },
-      { href: '/more/vendors', label: 'Vendors', icon: Building2, description: 'Supplier information' },
       { href: '/more/reconstitution', label: 'Reconstitution Calculator', icon: Calculator, description: 'Calculate dosing' },
     ]
   },

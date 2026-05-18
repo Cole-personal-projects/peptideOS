@@ -1,4 +1,4 @@
-import type { Peptide, Vial, Dose, Stack, Vendor } from './types';
+import type { Peptide, Vial, Dose, Stack } from './types';
 
 // Helper to generate dates
 const daysAgo = (days: number) => {
@@ -213,7 +213,7 @@ export const mockVials: Vial[] = [
   {
     id: 'vial-1',
     peptideId: 'bpc-157',
-    vendor: 'vendor-1',
+    source: 'PeptideSciences',
     lotNumber: 'BPC-2024-001',
     mg: 5,
     bacWaterMl: 2,
@@ -224,7 +224,7 @@ export const mockVials: Vial[] = [
   {
     id: 'vial-2',
     peptideId: 'tb-500',
-    vendor: 'vendor-1',
+    source: 'PeptideSciences',
     lotNumber: 'TB5-2024-042',
     mg: 5,
     bacWaterMl: 2,
@@ -235,7 +235,7 @@ export const mockVials: Vial[] = [
   {
     id: 'vial-3',
     peptideId: 'ipamorelin',
-    vendor: 'vendor-2',
+    source: 'CanLab',
     lotNumber: 'IPA-2024-103',
     mg: 5,
     bacWaterMl: 2.5,
@@ -246,7 +246,7 @@ export const mockVials: Vial[] = [
   {
     id: 'vial-4',
     peptideId: 'cjc-1295',
-    vendor: 'vendor-2',
+    source: 'CanLab',
     lotNumber: 'CJC-2024-088',
     mg: 2,
     bacWaterMl: 2,
@@ -257,7 +257,7 @@ export const mockVials: Vial[] = [
   {
     id: 'vial-5',
     peptideId: 'ghk-cu',
-    vendor: 'vendor-3',
+    source: 'PureRawz',
     lotNumber: 'GHK-2024-015',
     mg: 10,
     bacWaterMl: 0,
@@ -268,7 +268,7 @@ export const mockVials: Vial[] = [
   {
     id: 'vial-6',
     peptideId: 'epitalon',
-    vendor: 'vendor-3',
+    source: 'PureRawz',
     lotNumber: 'EPI-2024-007',
     mg: 50,
     bacWaterMl: 0,
@@ -458,33 +458,11 @@ export const mockStacks: Stack[] = [
   }
 ];
 
-export const mockVendors: Vendor[] = [
-  {
-    id: 'vendor-1',
-    name: 'PeptideSciences',
-    privateNotes: 'US-based, fast shipping 2-3 days. Good COAs. Slightly premium pricing.',
-    peptidesPurchased: ['bpc-157', 'tb-500', 'ghk-cu']
-  },
-  {
-    id: 'vendor-2',
-    name: 'CanLab',
-    privateNotes: 'Canadian vendor. 5-7 day shipping. Competitive pricing. Bulk discounts available.',
-    peptidesPurchased: ['ipamorelin', 'cjc-1295', 'tesamorelin']
-  },
-  {
-    id: 'vendor-3',
-    name: 'PureRawz',
-    privateNotes: 'Wide selection. Variable quality - always verify COA. Good for harder to find peptides.',
-    peptidesPurchased: ['epitalon', 'selank', 'mots-c', 'ghk-cu']
-  }
-];
-
 export const initialAppData = {
   peptides: mockPeptides,
   vials: mockVials,
   doses: mockDoses,
   stacks: mockStacks,
-  vendors: mockVendors,
   hasSeenDisclaimer: false,
   biometricLock: false,
   darkMode: true

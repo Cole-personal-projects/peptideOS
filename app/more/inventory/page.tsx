@@ -13,7 +13,7 @@ import { useApp } from '@/lib/context';
 import { cn } from '@/lib/utils';
 
 export default function InventoryPage() {
-  const { data, getPeptide, getVendor } = useApp();
+  const { data, getPeptide } = useApp();
 
   const getDaysUntilExpiration = (expirationDate: string) => {
     const exp = new Date(expirationDate);
@@ -37,7 +37,6 @@ export default function InventoryPage() {
 
   const renderVialCard = (vial: typeof data.vials[0]) => {
     const peptide = getPeptide(vial.peptideId);
-    const vendor = getVendor(vial.vendor);
     const daysLeft = getDaysUntilExpiration(vial.expirationDate);
     const progress = getExpirationProgress(vial.reconstitutedDate, vial.expirationDate);
     const isExpiringSoon = daysLeft <= 7 && daysLeft > 0;
@@ -71,8 +70,8 @@ export default function InventoryPage() {
                 <p className="font-medium">{vial.mg}mg</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Vendor</p>
-                <p className="font-medium">{vendor?.name || 'Unknown'}</p>
+                <p className="text-xs text-muted-foreground">Source</p>
+                <p className="font-medium">{vial.source || 'Unknown'}</p>
               </div>
             </div>
 

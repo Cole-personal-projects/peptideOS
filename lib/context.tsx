@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import type { AppData, Peptide, Vial, Dose, Stack, Vendor } from './types';
+import type { AppData, Peptide, Vial, Dose, Stack } from './types';
 import { initialAppData } from './mock-data';
 
 interface AppContextType {
@@ -25,9 +25,6 @@ interface AppContextType {
   addStack: (stack: Omit<Stack, 'id'>) => void;
   updateStack: (id: string, updates: Partial<Stack>) => void;
   getActiveStacks: () => Stack[];
-  // Vendors
-  getVendor: (id: string) => Vendor | undefined;
-  addVendor: (vendor: Omit<Vendor, 'id'>) => void;
   // Settings
   setHasSeenDisclaimer: (seen: boolean) => void;
   toggleDarkMode: () => void;
@@ -165,16 +162,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return data.stacks.filter(s => s.status === 'active');
   }, [data.stacks]);
 
-  // Vendors
-  const getVendor = useCallback((id: string) => {
-    return data.vendors.find(v => v.id === id);
-  }, [data.vendors]);
-
-  const addVendor = useCallback((vendor: Omit<Vendor, 'id'>) => {
-    const newVendor: Vendor = { ...vendor, id: `vendor-${Date.now()}` };
-    setData(prev => ({ ...prev, vendors: [...prev.vendors, newVendor] }));
-  }, []);
-
   // Settings
   const setHasSeenDisclaimer = useCallback((seen: boolean) => {
     setData(prev => ({ ...prev, hasSeenDisclaimer: seen }));
@@ -206,8 +193,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addStack,
       updateStack,
       getActiveStacks,
-      getVendor,
-      addVendor,
       setHasSeenDisclaimer,
       toggleDarkMode,
       toggleBiometricLock

@@ -5,6 +5,9 @@ const config = [
   {
     ignores: [
       'coverage/**',
+      'playwright-report/**',
+      'test-results/**',
+      '.next/**',
       'app/Docs_dont_track/**',
       'components/ui/**',
     ],
