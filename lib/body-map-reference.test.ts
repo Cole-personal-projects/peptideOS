@@ -4,6 +4,7 @@ import {
   BODY_SITES,
   BODY_TEMPLATES,
   BODY_ZONES,
+  type BodyTemplateId,
   getBodyTemplate,
   getBodyZones,
   SITE_ROUTE_COMPAT,
@@ -65,11 +66,58 @@ describe('body map reference data', () => {
     expect(getBodyZones('female-back').map((zone) => zone.siteCode)).toContain('glute-upper-outer-left');
   });
 
-  it('keeps male back overlay zones within anatomical envelopes', () => {
-    expectZoneBounds('male-back', 'glute-upper-outer-left', { minX: 1000, maxX: 1085, minY: 675, maxY: 805 });
-    expectZoneBounds('male-back', 'glute-upper-outer-right', { minX: 1085, maxX: 1165, minY: 675, maxY: 805 });
-    expectZoneBounds('male-back', 'lower-back-left', { minX: 1000, maxX: 1085, minY: 440, maxY: 590 });
-    expectZoneBounds('male-back', 'lower-back-right', { minX: 1085, maxX: 1155, minY: 440, maxY: 590 });
+  it('keeps rear glute and lower-back overlays within anatomical envelopes', () => {
+    expectTemplateZoneBounds('male-back', {
+      'glute-upper-outer-left': { minX: 1000, maxX: 1085, minY: 675, maxY: 805 },
+      'glute-upper-outer-right': { minX: 1085, maxX: 1165, minY: 675, maxY: 805 },
+      'lower-back-left': { minX: 1000, maxX: 1085, minY: 440, maxY: 590 },
+      'lower-back-right': { minX: 1085, maxX: 1155, minY: 440, maxY: 590 },
+    });
+    expectTemplateZoneBounds('female-back', {
+      'glute-upper-outer-left': { minX: 1010, maxX: 1140, minY: 590, maxY: 785 },
+      'glute-upper-outer-right': { minX: 1145, maxX: 1275, minY: 590, maxY: 785 },
+      'lower-back-left': { minX: 1055, maxX: 1140, minY: 500, maxY: 625 },
+      'lower-back-right': { minX: 1145, maxX: 1230, minY: 500, maxY: 625 },
+    });
+  });
+
+  it('keeps front abdomen, thigh, and deltoid overlays within anatomical envelopes', () => {
+    expectTemplateZoneBounds('male-front', {
+      'abdomen-upper-left': { minX: 300, maxX: 425, minY: 410, maxY: 650 },
+      'abdomen-upper-right': { minX: 300, maxX: 425, minY: 410, maxY: 650 },
+      'abdomen-mid-left': { minX: 300, maxX: 425, minY: 410, maxY: 650 },
+      'abdomen-mid-right': { minX: 300, maxX: 425, minY: 410, maxY: 650 },
+      'abdomen-lower-left': { minX: 300, maxX: 425, minY: 410, maxY: 650 },
+      'abdomen-lower-right': { minX: 300, maxX: 425, minY: 410, maxY: 650 },
+      'thigh-front-upper-left': { minX: 220, maxX: 505, minY: 640, maxY: 950 },
+      'thigh-front-upper-right': { minX: 220, maxX: 505, minY: 640, maxY: 950 },
+      'thigh-front-mid-left': { minX: 220, maxX: 505, minY: 640, maxY: 950 },
+      'thigh-front-mid-right': { minX: 220, maxX: 505, minY: 640, maxY: 950 },
+      'thigh-outer-left': { minX: 220, maxX: 505, minY: 640, maxY: 950 },
+      'thigh-outer-right': { minX: 220, maxX: 505, minY: 640, maxY: 950 },
+      'delt-anterior-left': { minX: 170, maxX: 555, minY: 290, maxY: 505 },
+      'delt-anterior-right': { minX: 170, maxX: 555, minY: 290, maxY: 505 },
+      'delt-lateral-left': { minX: 170, maxX: 555, minY: 290, maxY: 505 },
+      'delt-lateral-right': { minX: 170, maxX: 555, minY: 290, maxY: 505 },
+    });
+    expectTemplateZoneBounds('female-front', {
+      'abdomen-upper-left': { minX: 250, maxX: 390, minY: 430, maxY: 690 },
+      'abdomen-upper-right': { minX: 250, maxX: 390, minY: 430, maxY: 690 },
+      'abdomen-mid-left': { minX: 250, maxX: 390, minY: 430, maxY: 690 },
+      'abdomen-mid-right': { minX: 250, maxX: 390, minY: 430, maxY: 690 },
+      'abdomen-lower-left': { minX: 250, maxX: 390, minY: 430, maxY: 690 },
+      'abdomen-lower-right': { minX: 250, maxX: 390, minY: 430, maxY: 690 },
+      'thigh-front-upper-left': { minX: 190, maxX: 450, minY: 615, maxY: 970 },
+      'thigh-front-upper-right': { minX: 190, maxX: 450, minY: 615, maxY: 970 },
+      'thigh-front-mid-left': { minX: 190, maxX: 450, minY: 615, maxY: 970 },
+      'thigh-front-mid-right': { minX: 190, maxX: 450, minY: 615, maxY: 970 },
+      'thigh-outer-left': { minX: 190, maxX: 450, minY: 615, maxY: 970 },
+      'thigh-outer-right': { minX: 190, maxX: 450, minY: 615, maxY: 970 },
+      'delt-anterior-left': { minX: 155, maxX: 485, minY: 280, maxY: 385 },
+      'delt-anterior-right': { minX: 155, maxX: 485, minY: 280, maxY: 385 },
+      'delt-lateral-left': { minX: 155, maxX: 485, minY: 280, maxY: 385 },
+      'delt-lateral-right': { minX: 155, maxX: 485, minY: 280, maxY: 385 },
+    });
   });
 });
 
@@ -80,7 +128,13 @@ interface Bounds {
   maxY: number;
 }
 
-function expectZoneBounds(templateId: 'male-back', siteCode: SiteCode, bounds: Bounds) {
+function expectTemplateZoneBounds(templateId: BodyTemplateId, expectations: Partial<Record<SiteCode, Bounds>>) {
+  for (const [siteCode, bounds] of Object.entries(expectations) as [SiteCode, Bounds][]) {
+    expectZoneBounds(templateId, siteCode, bounds);
+  }
+}
+
+function expectZoneBounds(templateId: BodyTemplateId, siteCode: SiteCode, bounds: Bounds) {
   const zone = getBodyZones(templateId).find((candidate) => candidate.siteCode === siteCode);
   expect(zone).toBeDefined();
 
