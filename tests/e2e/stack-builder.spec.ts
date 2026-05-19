@@ -1,6 +1,33 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('stack builder', () => {
+  test('applies a stack template and still allows editing before save', async ({ page }) => {
+    await page.goto('/stacks');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('button', { name: 'New stack' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Templates' })).toBeVisible();
+    await page.getByRole('button', { name: /Use Healing Recovery Demo/ }).click();
+
+    await expect(page.getByLabel('Stack Name')).toHaveValue('Healing Recovery Demo');
+    await expect(page.getByLabel('Duration (days)')).toHaveValue('42');
+    await page.getByLabel('Stack Name').fill('Edited Template Stack');
+    await page.getByRole('button', { name: 'Next' }).click();
+
+    await expect(page.getByRole('checkbox', { name: 'BPC-157' })).toBeChecked();
+    await expect(page.getByRole('checkbox', { name: 'TB-500' })).toBeChecked();
+    await page.getByRole('button', { name: 'Next' }).click();
+
+    await expect(page.getByText('250 mcg').first()).toBeVisible();
+    await expect(page.getByText('2.5 mg').first()).toBeVisible();
+    await page.getByRole('button', { name: 'Next' }).click();
+
+    await expect(page.getByText('Edited Template Stack')).toBeVisible();
+    await page.getByRole('button', { name: 'Create Stack' }).click();
+    await expect(page.getByText('Edited Template Stack')).toBeVisible();
+  });
+
   test('creates a stack through the multi-step builder while preserving draft state', async ({ page }) => {
     await page.goto('/stacks');
 
