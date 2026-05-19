@@ -1,14 +1,17 @@
 "use client";
 
 import { use } from 'react';
+import { useState } from 'react';
 import { notFound } from 'next/navigation';
-import { Clock, Syringe, AlertTriangle, BookOpen, Beaker, Shield, Thermometer, ExternalLink } from 'lucide-react';
+import { Clock, Syringe, AlertTriangle, BookOpen, Beaker, Shield, Thermometer, ExternalLink, User, FlaskConical, Scale } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useApp } from '@/lib/context';
 import { cn } from '@/lib/utils';
 import type { PeptideCategory } from '@/lib/types';
@@ -25,6 +28,7 @@ const categoryColors: Record<PeptideCategory, string> = {
 export default function PeptideDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { getPeptide } = useApp();
+  const [researcherMode, setResearcherMode] = useState(false);
   const peptide = getPeptide(id);
 
   if (!peptide) {
@@ -33,7 +37,26 @@ export default function PeptideDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <AppShell>
-      <PageHeader title={peptide.name} backHref="/library" />
+      <PageHeader
+        title={peptide.name}
+        backHref="/library"
+        rightElement={
+          <div className="flex items-center gap-2" aria-label="Detail mode">
+            <User className={cn("w-4 h-4", !researcherMode && "text-primary")} />
+            <Label htmlFor="library-detail-mode" className="sr-only">
+              Researcher mode
+            </Label>
+            <Switch
+              id="library-detail-mode"
+              aria-label="Researcher mode"
+              checked={researcherMode}
+              onCheckedChange={setResearcherMode}
+              className="scale-75"
+            />
+            <FlaskConical className={cn("w-4 h-4", researcherMode && "text-primary")} />
+          </div>
+        }
+      />
 
       <div className="p-4 space-y-4">
         {/* Research disclaimer */}
@@ -60,10 +83,12 @@ export default function PeptideDetailPage({ params }: { params: Promise<{ id: st
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="w-full grid grid-cols-3">
+          <TabsList className="w-full grid grid-cols-5 overflow-x-auto">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="protocols">Protocols</TabsTrigger>
-            <TabsTrigger value="research">Research</TabsTrigger>
+            <TabsTrigger value="safety">Safety</TabsTrigger>
+            <TabsTrigger value="citations">Citations</TabsTrigger>
+            <TabsTrigger value="legal">Legal</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-4 space-y-4">
@@ -75,21 +100,25 @@ export default function PeptideDetailPage({ params }: { params: Promise<{ id: st
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm">{peptide.beginnerSummary}</p>
+                <p className="text-sm">
+                  {researcherMode ? peptide.researcherDetails : peptide.beginnerSummary}
+                </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Beaker className="w-4 h-4" />
-                  Mechanism
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{peptide.mechanism}</p>
-              </CardContent>
-            </Card>
+            {researcherMode ? (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Beaker className="w-4 h-4" />
+                    Mechanism
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{peptide.mechanism}</p>
+                </CardContent>
+              </Card>
+            ) : null}
 
             <Card>
               <CardHeader className="pb-2">
@@ -120,12 +149,14 @@ export default function PeptideDetailPage({ params }: { params: Promise<{ id: st
                 ))}
               </CardContent>
             </Card>
+          </TabsContent>
 
+          <TabsContent value="safety" className="mt-4 space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Shield className="w-4 h-4" />
-                  Safety Information
+                  Safety
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -134,19 +165,13 @@ export default function PeptideDetailPage({ params }: { params: Promise<{ id: st
             </Card>
           </TabsContent>
 
-          <TabsContent value="research" className="mt-4 space-y-4">
+          <TabsContent value="citations" className="mt-4 space-y-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Researcher Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{peptide.researcherDetails}</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Citations</CardTitle>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  Citations
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {peptide.citations.map((citation) => (
@@ -160,6 +185,21 @@ export default function PeptideDetailPage({ params }: { params: Promise<{ id: st
                     </div>
                   </div>
                 ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="legal" className="mt-4 space-y-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Scale className="w-4 h-4" />
+                  Legal
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <p>Research purposes only. PeptideOS does not provide medical advice, diagnosis, or treatment.</p>
+                <p>Protocol examples are research references and should not be treated as dosing instructions.</p>
               </CardContent>
             </Card>
           </TabsContent>
