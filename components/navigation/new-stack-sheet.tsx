@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useApp } from '@/lib/context';
 import { formatDose, getDefaultDoseUnit } from '@/lib/dose-helpers';
+import { getStackConflictWarnings } from '@/lib/stack-conflicts';
 import { stackTemplates, templateToStackDraft } from '@/lib/stack-templates';
 import { cn } from '@/lib/utils';
 import type { StackPeptide } from '@/lib/types';
@@ -107,6 +108,13 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
 
   const currentStepName: BuilderStep = steps[currentStep];
   const draftPeptides = getDraftPeptides();
+  const peptideNameById = Object.fromEntries(data.peptides.map((peptide) => [peptide.id, peptide.name]));
+  const conflictWarnings = getStackConflictWarnings({
+    draftPeptides,
+    existingStacks: data.stacks,
+    recentDoses: data.doses,
+    peptideNameById,
+  });
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -264,6 +272,25 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
           {currentStepName === 'Review' && (
             <section className="space-y-4">
               <h2 className="text-lg font-semibold">Review</h2>
+
+              {conflictWarnings.length > 0 && (
+                <div className="rounded-lg border border-chart-4/50 bg-chart-4/10 p-4 space-y-3">
+                  <h3 className="text-sm font-semibold">Review warnings</h3>
+                  <div className="space-y-2">
+                    {conflictWarnings.map((warning) => (
+                      <div key={warning.id} className="rounded-md bg-background/70 p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium">{warning.title}</p>
+                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                            {warning.severity}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">{warning.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="rounded-lg border border-border p-4 space-y-3">
                 <div>
