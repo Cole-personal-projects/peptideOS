@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Plus, Play, Pause, Clock, CheckCircle2 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { NewStackSheet } from '@/components/navigation/new-stack-sheet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,7 @@ const statusConfig = {
 
 export default function StacksPage() {
   const { data, getPeptide } = useApp();
+  const [newStackOpen, setNewStackOpen] = useState(false);
   const stacks = data.stacks;
 
   const getProgressPercentage = (startDate: string, durationDays: number, status: string) => {
@@ -35,7 +38,13 @@ export default function StacksPage() {
       <PageHeader 
         title="Stacks" 
         rightElement={
-          <Button size="sm" variant="ghost" className="text-primary">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-primary"
+            onClick={() => setNewStackOpen(true)}
+            aria-label="New stack"
+          >
             <Plus className="w-4 h-4 mr-1" /> New
           </Button>
         }
@@ -104,6 +113,7 @@ export default function StacksPage() {
           })
         )}
       </div>
+      <NewStackSheet open={newStackOpen} onOpenChange={setNewStackOpen} />
     </AppShell>
   );
 }
