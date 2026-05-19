@@ -28,6 +28,26 @@ test.describe('stack builder', () => {
     await expect(page.getByText('Edited Template Stack')).toBeVisible();
   });
 
+  test('shows non-blocking conflict warnings before saving a stack', async ({ page }) => {
+    await page.goto('/stacks');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('button', { name: 'New stack' }).click();
+
+    await page.getByLabel('Stack Name').fill('Overlap Review Stack');
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('checkbox', { name: 'BPC-157' }).check();
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('button', { name: 'Next' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Review warnings' })).toBeVisible();
+    await expect(page.getByText('Review active stack overlap')).toBeVisible();
+    await expect(page.getByText(/BPC-157 is already present in active stack/)).toBeVisible();
+
+    await page.getByRole('button', { name: 'Create Stack' }).click();
+    await expect(page.getByText('Overlap Review Stack')).toBeVisible();
+  });
+
   test('creates a stack through the multi-step builder while preserving draft state', async ({ page }) => {
     await page.goto('/stacks');
 
@@ -56,7 +76,7 @@ test.describe('stack builder', () => {
     await page.getByRole('button', { name: 'Next' }).click();
 
     await expect(page.getByText('Step 4 of 4')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Review' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Review', exact: true })).toBeVisible();
     await expect(page.getByText('Cut Recovery Stack')).toBeVisible();
     await expect(page.getByText('42 days', { exact: true })).toBeVisible();
     await expect(page.getByText('BPC-157').last()).toBeVisible();
