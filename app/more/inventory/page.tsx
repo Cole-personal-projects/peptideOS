@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/lib/context';
+import { getVialInventoryMetrics } from '@/lib/inventory-metrics';
 import { cn } from '@/lib/utils';
 
 export default function InventoryPage() {
@@ -39,6 +40,7 @@ export default function InventoryPage() {
     const peptide = getPeptide(vial.peptideId);
     const daysLeft = getDaysUntilExpiration(vial.expirationDate);
     const progress = getExpirationProgress(vial.reconstitutedDate, vial.expirationDate);
+    const metrics = getVialInventoryMetrics(vial, data.doses);
     const isExpiringSoon = daysLeft <= 7 && daysLeft > 0;
     const isExpired = daysLeft <= 0;
 
@@ -64,10 +66,14 @@ export default function InventoryPage() {
               </Badge>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+            <div className="grid grid-cols-3 gap-2 text-sm mb-3">
               <div>
                 <p className="text-xs text-muted-foreground">Amount</p>
-                <p className="font-medium">{vial.mg}mg</p>
+                <p className="font-medium">{metrics.originalLabel}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Remaining</p>
+                <p className="font-medium">{metrics.remainingLabel}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Source</p>
