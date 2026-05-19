@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useApp } from '@/lib/context';
 import { formatDose, getDefaultDoseUnit } from '@/lib/dose-helpers';
+import { stackTemplates, templateToStackDraft } from '@/lib/stack-templates';
 import { cn } from '@/lib/utils';
 import type { StackPeptide } from '@/lib/types';
 
@@ -27,6 +28,7 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedPeptides, setSelectedPeptides] = useState<string[]>([]);
+  const [templatePeptides, setTemplatePeptides] = useState<StackPeptide[] | null>(null);
   const [durationDays, setDurationDays] = useState('28');
 
   const resetForm = () => {
@@ -34,11 +36,15 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
     setName('');
     setDescription('');
     setSelectedPeptides([]);
+    setTemplatePeptides(null);
     setDurationDays('28');
   };
 
   const getDraftPeptides = (): StackPeptide[] => {
     return selectedPeptides.map(peptideId => {
+      const templatePeptide = templatePeptides?.find((item) => item.peptideId === peptideId);
+      if (templatePeptide) return { ...templatePeptide };
+
       const peptide = data.peptides.find(p => p.id === peptideId);
       const doseUnit = getDefaultDoseUnit(peptideId);
       return {
@@ -58,6 +64,17 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
         ? prev.filter(id => id !== peptideId)
         : [...prev, peptideId]
     );
+  };
+
+  const handleTemplateSelect = (templateId: string) => {
+    const draft = templateToStackDraft(templateId);
+    if (!draft) return;
+
+    setName(draft.name);
+    setDescription(draft.description);
+    setDurationDays(draft.durationDays.toString());
+    setSelectedPeptides(draft.peptides.map((peptide) => peptide.peptideId));
+    setTemplatePeptides(draft.peptides);
   };
 
   const canGoNext = () => {
@@ -126,6 +143,33 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
           {currentStepName === 'Basics' && (
             <section className="space-y-4">
               <h2 className="text-lg font-semibold">Basics</h2>
+
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold">Templates</h3>
+                <div className="grid gap-2">
+                  {stackTemplates.map((template) => (
+                    <div key={template.id} className="rounded-lg border border-border p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm">{template.name}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{template.description}</p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {template.durationDays} days · {template.peptides.length} peptides
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleTemplateSelect(template.id)}
+                        >
+                          Use {template.name}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="stack-name">Stack Name</Label>
