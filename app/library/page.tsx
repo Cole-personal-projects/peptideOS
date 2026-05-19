@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { Search, ChevronRight, User, FlaskConical } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/lib/context';
+import { filterPeptides } from '@/lib/library-filters';
 import { cn } from '@/lib/utils';
 import type { PeptideCategory } from '@/lib/types';
 
@@ -25,20 +27,20 @@ const categoryColors: Record<PeptideCategory, string> = {
 
 const categories: PeptideCategory[] = ['healing', 'growth', 'cognitive', 'metabolic', 'longevity', 'aesthetic'];
 
+function formatCategory(category: PeptideCategory): string {
+  return category.charAt(0).toUpperCase() + category.slice(1);
+}
+
 export default function LibraryPage() {
   const { data } = useApp();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<PeptideCategory | 'all'>('all');
   const [researcherMode, setResearcherMode] = useState(false);
 
-  const filteredPeptides = useMemo(() => {
-    return data.peptides.filter((p) => {
-      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.beginnerSummary.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [data.peptides, search, selectedCategory]);
+  const filteredPeptides = useMemo(
+    () => filterPeptides(data.peptides, { search, category: selectedCategory }),
+    [data.peptides, search, selectedCategory]
+  );
 
   return (
     <AppShell>
@@ -59,9 +61,15 @@ export default function LibraryPage() {
 
       <div className="p-4 space-y-4">
         {/* Search */}
-        <div className="relative">
+        <div role="search" className="relative">
+          <Label htmlFor="library-search" className="sr-only">
+            Search peptides
+          </Label>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
+            id="library-search"
+            type="search"
+            aria-label="Search peptides"
             placeholder="Search peptides..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -70,26 +78,32 @@ export default function LibraryPage() {
         </div>
 
         {/* Category filters */}
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-          <Badge
+        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar" aria-label="Filter by category">
+          <Button
+            type="button"
             variant={selectedCategory === 'all' ? 'default' : 'outline'}
-            className="cursor-pointer whitespace-nowrap"
+            size="sm"
+            className="h-6 whitespace-nowrap rounded-full px-2.5 text-xs"
+            aria-pressed={selectedCategory === 'all'}
             onClick={() => setSelectedCategory('all')}
           >
             All
-          </Badge>
+          </Button>
           {categories.map((cat) => (
-            <Badge
+            <Button
               key={cat}
               variant="outline"
+              size="sm"
+              type="button"
+              aria-pressed={selectedCategory === cat}
               className={cn(
-                "cursor-pointer whitespace-nowrap capitalize",
+                "h-6 whitespace-nowrap rounded-full px-2.5 text-xs",
                 selectedCategory === cat && categoryColors[cat]
               )}
               onClick={() => setSelectedCategory(cat)}
             >
-              {cat}
-            </Badge>
+              {formatCategory(cat)}
+            </Button>
           ))}
         </div>
 
