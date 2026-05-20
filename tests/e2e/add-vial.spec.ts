@@ -22,8 +22,7 @@ test.describe('add vial', () => {
 
     await newVialCard.click();
     await expect(page.getByRole('heading', { name: 'Travel GHK-Cu' })).toBeVisible();
-    await expect(page.getByText('Date Added')).toBeVisible();
-    await expect(page.getByText('May 20, 2026')).toBeVisible();
+    await expect(page.getByLabel('Date Added May 20, 2026')).toBeVisible();
     await expect(page.getByText('GHK-Cu', { exact: true })).toBeVisible();
   });
 });

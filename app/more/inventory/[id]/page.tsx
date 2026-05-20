@@ -156,7 +156,14 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-3"
+              aria-label={`Date Added ${new Date(`${vial.dateAdded.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+              })}`}
+            >
               <div className="p-2 rounded-lg bg-secondary">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
               </div>

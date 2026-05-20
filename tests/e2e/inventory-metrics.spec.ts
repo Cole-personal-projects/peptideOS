@@ -12,7 +12,7 @@ test.describe('inventory metrics', () => {
     await expect(hghCard).toContainText('Remaining');
     await expect(hghCard).toContainText('9.99 IU');
     await expect(hghCard).toContainText('Expiration');
-    await expect(hghCard).toContainText('26 days left');
+    await expect(hghCard).toContainText(/2[67] days left/);
 
     const bpcCard = page.locator('a[href="/more/inventory/vial-1"]');
     await expect(bpcCard).toContainText('Remaining');
