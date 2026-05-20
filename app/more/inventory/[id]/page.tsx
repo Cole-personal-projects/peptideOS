@@ -70,7 +70,7 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
 
   return (
     <AppShell>
-      <PageHeader title={peptide?.name || 'Vial'} backHref="/more/inventory" />
+      <PageHeader title={vial.name} backHref="/more/inventory" />
 
       <div className="p-4 space-y-4">
         {/* Status */}
@@ -141,8 +141,44 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
                 <Hash className="w-4 h-4 text-muted-foreground" />
               </div>
               <div>
+                <p className="text-xs text-muted-foreground">Name</p>
+                <p className="font-medium">{vial.name}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-secondary">
+                <PackageSearch className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Peptide</p>
+                <p className="font-medium">{peptide?.name ?? 'Unknown peptide'}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-secondary">
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Date Added</p>
+                <p className="font-medium">
+                  {new Date(`${vial.dateAdded.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-secondary">
+                <Hash className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div>
                 <p className="text-xs text-muted-foreground">Lot Number</p>
-                <p className="font-medium">{vial.lotNumber}</p>
+                <p className="font-medium">{vial.lotNumber || 'Not recorded'}</p>
               </div>
             </div>
 

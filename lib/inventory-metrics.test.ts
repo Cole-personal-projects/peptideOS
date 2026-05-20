@@ -4,7 +4,9 @@ import type { Dose, Vial } from './types';
 
 const baseVial: Vial = {
   id: 'vial-1',
+  name: 'BPC-157 active vial',
   peptideId: 'bpc-157',
+  dateAdded: '2026-05-20',
   source: 'Source',
   lotNumber: 'LOT-1',
   mg: 5,
