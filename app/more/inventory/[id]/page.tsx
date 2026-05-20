@@ -1,6 +1,7 @@
 "use client";
 
 import { use } from 'react';
+import { useMemo, useState } from 'react';
 import { notFound } from 'next/navigation';
 import { Calendar, Hash, Droplet, AlertCircle, PackageSearch } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
@@ -9,12 +10,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useApp } from '@/lib/context';
+import { buildReconstitutedVialUpdate, getReconstitutionPreview } from '@/lib/reconstitute-vial';
 import { cn } from '@/lib/utils';
 
 export default function VialDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { getVial, getPeptide, updateVial } = useApp();
+  const [isReconstituteOpen, setIsReconstituteOpen] = useState(false);
+  const [bacWaterInput, setBacWaterInput] = useState('2');
   const vial = getVial(id);
 
   if (!vial) {
@@ -43,17 +50,22 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
   const progress = getExpirationProgress();
   const isExpiringSoon = daysLeft <= 7 && daysLeft > 0;
   const isExpired = daysLeft <= 0;
+  const bacWaterMl = Number(bacWaterInput);
+  const reconstitutionPreview = useMemo(
+    () => getReconstitutionPreview({ vial, bacWaterMl }),
+    [vial, bacWaterMl]
+  );
 
   const handleMarkFinished = () => {
     updateVial(vial.id, { status: 'finished' });
   };
 
   const handleReconstitute = () => {
-    updateVial(vial.id, { 
-      status: 'active',
-      reconstitutedDate: new Date().toISOString(),
-      expirationDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString()
-    });
+    const update = buildReconstitutedVialUpdate({ vial, bacWaterMl });
+    if (!update) return;
+
+    updateVial(vial.id, update);
+    setIsReconstituteOpen(false);
   };
 
   return (
@@ -80,7 +92,7 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
                 </Button>
               )}
               {vial.status === 'sealed' && (
-                <Button size="sm" onClick={handleReconstitute}>
+                <Button size="sm" onClick={() => setIsReconstituteOpen(true)}>
                   Reconstitute
                 </Button>
               )}
@@ -211,14 +223,65 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
             <CardContent>
               <div className="text-center py-4">
                 <p className="text-3xl font-bold text-primary">
-                  {((vial.mg * 1000) / vial.bacWaterMl).toFixed(0)}
+                  {(vial.mg / vial.bacWaterMl).toFixed(2)}
                 </p>
-                <p className="text-sm text-muted-foreground">mcg per mL</p>
+                <p className="text-sm text-muted-foreground">mg per mL</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {((vial.mg * 1000) / vial.bacWaterMl).toFixed(0)} mcg per mL
+                </p>
               </div>
             </CardContent>
           </Card>
         )}
       </div>
+
+      <Dialog open={isReconstituteOpen} onOpenChange={setIsReconstituteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reconstitute vial</DialogTitle>
+            <DialogDescription>
+              Enter BAC water volume to activate this vial and calculate inventory concentration.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="bac-water-volume">BAC water volume</Label>
+              <Input
+                id="bac-water-volume"
+                type="number"
+                min="0.1"
+                step="0.1"
+                inputMode="decimal"
+                value={bacWaterInput}
+                onChange={(event) => setBacWaterInput(event.target.value)}
+                aria-label="BAC water volume"
+              />
+            </div>
+
+            <Card className="bg-secondary/40">
+              <CardContent className="p-4 space-y-1">
+                <p className="text-xs text-muted-foreground">Concentration preview</p>
+                <p className="font-medium">
+                  {reconstitutionPreview?.concentrationLabel ?? 'Enter a BAC water volume'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Expiration defaults to 28 days after reconstitution.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReconstituteOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleReconstitute} disabled={!reconstitutionPreview}>
+              Activate vial
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
