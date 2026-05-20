@@ -29,7 +29,9 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
     expirationDate.setMonth(expirationDate.getMonth() + 12);
     
     addVial({
+      name: `${data.peptides.find((peptide) => peptide.id === peptideId)?.name ?? 'Vial'} vial`,
       peptideId,
+      dateAdded: new Date().toISOString(),
       source,
       lotNumber,
       mg: parseFloat(mg),

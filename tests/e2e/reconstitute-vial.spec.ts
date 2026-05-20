@@ -5,8 +5,8 @@ test.describe('reconstitute vial flow', () => {
     await page.goto('/more/inventory/vial-5');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await expect(page.getByRole('heading', { name: 'GHK-Cu' })).toBeVisible();
-    await expect(page.getByText('sealed')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'GHK-Cu sealed vial' })).toBeVisible();
+    await expect(page.getByText('sealed', { exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: 'Reconstitute' }).click();
     await expect(page.getByRole('dialog', { name: 'Reconstitute vial' })).toBeVisible();

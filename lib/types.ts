@@ -56,7 +56,9 @@ export interface Peptide {
 
 export interface Vial {
   id: string;
+  name: string;
   peptideId: string;
+  dateAdded: string;
   source: string;
   lotNumber: string;
   mg: number;

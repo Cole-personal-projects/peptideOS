@@ -228,7 +228,9 @@ export const mockPeptides: Peptide[] = [
 export const mockVials: Vial[] = [
   {
     id: 'vial-1',
+    name: 'BPC-157 active vial',
     peptideId: 'bpc-157',
+    dateAdded: daysAgo(28),
     source: 'PeptideSciences',
     lotNumber: 'BPC-2024-001',
     mg: 5,
@@ -239,7 +241,9 @@ export const mockVials: Vial[] = [
   },
   {
     id: 'vial-2',
+    name: 'TB-500 loading vial',
     peptideId: 'tb-500',
+    dateAdded: daysAgo(21),
     source: 'PeptideSciences',
     lotNumber: 'TB5-2024-042',
     mg: 5,
@@ -250,7 +254,9 @@ export const mockVials: Vial[] = [
   },
   {
     id: 'vial-3',
+    name: 'Ipamorelin bedtime vial',
     peptideId: 'ipamorelin',
+    dateAdded: daysAgo(14),
     source: 'CanLab',
     lotNumber: 'IPA-2024-103',
     mg: 5,
@@ -261,7 +267,9 @@ export const mockVials: Vial[] = [
   },
   {
     id: 'vial-4',
+    name: 'CJC-1295 stack vial',
     peptideId: 'cjc-1295',
+    dateAdded: daysAgo(14),
     source: 'CanLab',
     lotNumber: 'CJC-2024-088',
     mg: 2,
@@ -272,7 +280,9 @@ export const mockVials: Vial[] = [
   },
   {
     id: 'vial-5',
+    name: 'GHK-Cu sealed vial',
     peptideId: 'ghk-cu',
+    dateAdded: daysAgo(10),
     source: 'PureRawz',
     lotNumber: 'GHK-2024-015',
     mg: 10,
@@ -283,7 +293,9 @@ export const mockVials: Vial[] = [
   },
   {
     id: 'vial-6',
+    name: 'Epitalon sealed vial',
     peptideId: 'epitalon',
+    dateAdded: daysAgo(10),
     source: 'PureRawz',
     lotNumber: 'EPI-2024-007',
     mg: 50,
@@ -294,7 +306,9 @@ export const mockVials: Vial[] = [
   },
   {
     id: 'vial-7',
+    name: 'hGH active vial',
     peptideId: 'hgh',
+    dateAdded: daysAgo(2),
     source: 'Pharmacy',
     lotNumber: 'HGH-2024-010',
     mg: 3.33,

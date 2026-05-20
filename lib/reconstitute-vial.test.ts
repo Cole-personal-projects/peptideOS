@@ -4,7 +4,9 @@ import type { Vial } from './types';
 
 const sealedVial: Vial = {
   id: 'vial-5',
+  name: 'GHK-Cu sealed vial',
   peptideId: 'ghk-cu',
+  dateAdded: '2026-05-20',
   source: 'Source',
   lotNumber: 'GHK-001',
   mg: 10,
