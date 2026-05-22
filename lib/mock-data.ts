@@ -1,4 +1,4 @@
-import type { Peptide, Vial, Dose, Stack } from './types';
+import type { AppData, Peptide, Vial, Dose, Stack } from './types';
 
 // Helper to generate dates
 const daysAgo = (days: number) => {
@@ -499,12 +499,14 @@ export const mockStacks: Stack[] = [
   }
 ];
 
-export const initialAppData = {
+export const initialAppData: AppData = {
   peptides: mockPeptides,
   vials: mockVials,
   doses: mockDoses,
   stacks: mockStacks,
   hasSeenDisclaimer: false,
+  hasCompletedOnboarding: false,
+  userMode: 'beginner',
   biometricLock: false,
   darkMode: true
 };

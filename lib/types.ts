@@ -5,6 +5,7 @@ export type Route = 'subq' | 'im' | 'intranasal' | 'oral' | 'topical';
 export type DoseUnit = 'mcg' | 'mg' | 'iu';
 export type VialStatus = 'sealed' | 'active' | 'finished' | 'expired';
 export type StackStatus = 'planned' | 'active' | 'completed' | 'paused';
+export type UserMode = 'beginner' | 'researcher';
 export type SiteCode =
   | 'abdomen-upper-left'
   | 'abdomen-upper-right'
@@ -118,6 +119,8 @@ export interface AppData {
   doses: Dose[];
   stacks: Stack[];
   hasSeenDisclaimer: boolean;
+  hasCompletedOnboarding: boolean;
+  userMode: UserMode;
   biometricLock: boolean;
   darkMode: boolean;
 }

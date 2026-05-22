@@ -35,7 +35,7 @@ export default function LibraryPage() {
   const { data } = useApp();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<PeptideCategory | 'all'>('all');
-  const [researcherMode, setResearcherMode] = useState(false);
+  const [researcherMode, setResearcherMode] = useState(data.userMode === 'researcher');
 
   const filteredPeptides = useMemo(
     () => filterPeptides(data.peptides, { search, category: selectedCategory }),

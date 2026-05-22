@@ -1,8 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import type { AppData, Peptide, Vial, Dose, Stack } from './types';
+import type { AppData, Peptide, Vial, Dose, Stack, UserMode } from './types';
 import { initialAppData } from './mock-data';
+import { completeOnboarding as completeOnboardingState } from './onboarding';
 
 interface AppContextType {
   data: AppData;
@@ -27,6 +28,7 @@ interface AppContextType {
   getActiveStacks: () => Stack[];
   // Settings
   setHasSeenDisclaimer: (seen: boolean) => void;
+  completeOnboarding: (userMode?: UserMode) => void;
   toggleDarkMode: () => void;
   toggleBiometricLock: () => void;
 }
@@ -167,6 +169,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setData(prev => ({ ...prev, hasSeenDisclaimer: seen }));
   }, []);
 
+  const completeOnboarding = useCallback((userMode?: UserMode) => {
+    setData(prev => completeOnboardingState(prev, userMode));
+  }, []);
+
   const toggleDarkMode = useCallback(() => {
     setData(prev => ({ ...prev, darkMode: !prev.darkMode }));
   }, []);
@@ -194,6 +200,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateStack,
       getActiveStacks,
       setHasSeenDisclaimer,
+      completeOnboarding,
       toggleDarkMode,
       toggleBiometricLock
     }}>
