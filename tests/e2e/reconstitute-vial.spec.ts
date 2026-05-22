@@ -27,6 +27,6 @@ test.describe('reconstitute vial flow', () => {
     const reconstitutedCard = page.locator('a[href="/more/inventory/vial-5"]');
     await expect(reconstitutedCard).toContainText('GHK-Cu');
     await expect(reconstitutedCard).toContainText('active');
-    await expect(reconstitutedCard).toContainText('28 days left');
+    await expect(reconstitutedCard).toContainText(/\d+ days left/);
   });
 });

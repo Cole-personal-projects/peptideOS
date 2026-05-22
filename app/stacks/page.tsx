@@ -9,7 +9,9 @@ import { NewStackSheet } from '@/components/navigation/new-stack-sheet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { useApp } from '@/lib/context';
+import { getEmptyStateContent } from '@/lib/empty-states';
 import { cn } from '@/lib/utils';
 
 const statusConfig = {
@@ -23,6 +25,7 @@ export default function StacksPage() {
   const { data, getPeptide } = useApp();
   const [newStackOpen, setNewStackOpen] = useState(false);
   const stacks = data.stacks;
+  const emptyState = getEmptyStateContent('stacks-empty');
 
   const getProgressPercentage = (startDate: string, durationDays: number, status: string) => {
     if (status === 'planned') return 0;
@@ -52,14 +55,20 @@ export default function StacksPage() {
 
       <div className="p-4 space-y-3">
         {stacks.length === 0 ? (
-          <Card className="bg-secondary/50 border-dashed">
-            <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground mb-2">No stacks created yet</p>
-              <Button variant="outline" size="sm">
-                <Plus className="w-4 h-4 mr-1" /> Create Stack
+          <Empty className="bg-secondary/40">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Plus className="w-5 h-5" />
+              </EmptyMedia>
+              <EmptyTitle>{emptyState.title}</EmptyTitle>
+              <EmptyDescription>{emptyState.description}</EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button variant="outline" size="sm" onClick={() => setNewStackOpen(true)}>
+                <Plus className="w-4 h-4 mr-1" /> {emptyState.actionLabel}
               </Button>
-            </CardContent>
-          </Card>
+            </EmptyContent>
+          </Empty>
         ) : (
           stacks.map((stack) => {
             const config = statusConfig[stack.status];

@@ -9,11 +9,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/lib/context';
+import { getEmptyStateContent, type EmptyStateKey } from '@/lib/empty-states';
 import { getVialInventoryMetrics } from '@/lib/inventory-metrics';
 import { buildNewVial } from '@/lib/vial-create';
 import { cn } from '@/lib/utils';
@@ -141,6 +143,29 @@ export default function InventoryPage() {
     );
   };
 
+  const renderInventoryEmpty = (key: EmptyStateKey) => {
+    const emptyState = getEmptyStateContent(key);
+
+    return (
+      <Empty className="bg-secondary/40">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Plus className="w-5 h-5" />
+          </EmptyMedia>
+          <EmptyTitle>{emptyState.title}</EmptyTitle>
+          <EmptyDescription>{emptyState.description}</EmptyDescription>
+        </EmptyHeader>
+        {emptyState.actionLabel ? (
+          <EmptyContent>
+            <Button variant="outline" size="sm" onClick={() => setIsAddOpen(true)}>
+              <Plus className="w-4 h-4 mr-1" /> {emptyState.actionLabel}
+            </Button>
+          </EmptyContent>
+        ) : null}
+      </Empty>
+    );
+  };
+
   return (
     <AppShell>
       <PageHeader 
@@ -169,11 +194,7 @@ export default function InventoryPage() {
 
           <TabsContent value="active" className="mt-4 space-y-3">
             {activeVials.length === 0 ? (
-              <Card className="bg-secondary/50 border-dashed">
-                <CardContent className="py-8 text-center">
-                  <p className="text-muted-foreground text-sm">No active vials</p>
-                </CardContent>
-              </Card>
+              renderInventoryEmpty('inventory-active-empty')
             ) : (
               activeVials.map(renderVialCard)
             )}
@@ -181,11 +202,7 @@ export default function InventoryPage() {
 
           <TabsContent value="sealed" className="mt-4 space-y-3">
             {sealedVials.length === 0 ? (
-              <Card className="bg-secondary/50 border-dashed">
-                <CardContent className="py-8 text-center">
-                  <p className="text-muted-foreground text-sm">No sealed vials in stock</p>
-                </CardContent>
-              </Card>
+              renderInventoryEmpty('inventory-sealed-empty')
             ) : (
               sealedVials.map(renderVialCard)
             )}
@@ -193,11 +210,7 @@ export default function InventoryPage() {
 
           <TabsContent value="history" className="mt-4 space-y-3">
             {finishedVials.length === 0 ? (
-              <Card className="bg-secondary/50 border-dashed">
-                <CardContent className="py-8 text-center">
-                  <p className="text-muted-foreground text-sm">No vial history</p>
-                </CardContent>
-              </Card>
+              renderInventoryEmpty('inventory-history-empty')
             ) : (
               finishedVials.map(renderVialCard)
             )}

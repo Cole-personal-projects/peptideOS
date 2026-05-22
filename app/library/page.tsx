@@ -7,11 +7,13 @@ import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/lib/context';
+import { getEmptyStateContent } from '@/lib/empty-states';
 import { filterPeptides } from '@/lib/library-filters';
 import { cn } from '@/lib/utils';
 import type { PeptideCategory } from '@/lib/types';
@@ -36,6 +38,7 @@ export default function LibraryPage() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<PeptideCategory | 'all'>('all');
   const [researcherMode, setResearcherMode] = useState(data.userMode === 'researcher');
+  const emptyState = getEmptyStateContent('library-no-results');
 
   const filteredPeptides = useMemo(
     () => filterPeptides(data.peptides, { search, category: selectedCategory }),
@@ -114,11 +117,28 @@ export default function LibraryPage() {
         {/* Peptide list */}
         <div className="space-y-2">
           {filteredPeptides.length === 0 ? (
-            <Card className="bg-secondary/50">
-              <CardContent className="py-8 text-center">
-                <p className="text-muted-foreground text-sm">No peptides found</p>
-              </CardContent>
-            </Card>
+            <Empty className="bg-secondary/40">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Search className="w-5 h-5" />
+                </EmptyMedia>
+                <EmptyTitle>{emptyState.title}</EmptyTitle>
+                <EmptyDescription>{emptyState.description}</EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearch('');
+                    setSelectedCategory('all');
+                  }}
+                >
+                  {emptyState.actionLabel}
+                </Button>
+              </EmptyContent>
+            </Empty>
           ) : (
             filteredPeptides.map((peptide) => (
               <Link key={peptide.id} href={`/library/${peptide.id}`}>
