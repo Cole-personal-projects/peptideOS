@@ -8,11 +8,13 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/lib/context';
 import { formatDose } from '@/lib/dose-helpers';
 import { buildDoseTimelineGroups } from '@/lib/dose-timeline';
+import { getEmptyStateContent } from '@/lib/empty-states';
 import { cn } from '@/lib/utils';
 
 export default function LogPage() {
@@ -93,6 +95,8 @@ export default function LogPage() {
     () => buildDoseTimelineGroups(data.doses, filterPeptide),
     [data.doses, filterPeptide],
   );
+  const dayEmptyState = getEmptyStateContent('log-day-empty');
+  const timelineEmptyState = getEmptyStateContent('log-timeline-empty');
 
   return (
     <AppShell>
@@ -210,11 +214,15 @@ export default function LogPage() {
                 {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </h3>
               {selectedDoses.length === 0 ? (
-                <Card className="bg-secondary/50">
-                  <CardContent className="py-8 text-center">
-                    <p className="text-muted-foreground text-sm">No doses logged this day</p>
-                  </CardContent>
-                </Card>
+                <Empty className="bg-secondary/40 py-8">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <CalendarDays className="w-5 h-5" />
+                    </EmptyMedia>
+                    <EmptyTitle>{dayEmptyState.title}</EmptyTitle>
+                    <EmptyDescription>{dayEmptyState.description}</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               ) : (
                 <div className="space-y-2">
                   {selectedDoses.map((dose) => {
@@ -244,11 +252,15 @@ export default function LogPage() {
           /* List view */
           <div className="space-y-4">
             {timelineGroups.length === 0 ? (
-              <Card className="bg-secondary/50">
-                <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">No doses logged yet</p>
-                </CardContent>
-              </Card>
+              <Empty className="bg-secondary/40">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <List className="w-5 h-5" />
+                  </EmptyMedia>
+                  <EmptyTitle>{timelineEmptyState.title}</EmptyTitle>
+                  <EmptyDescription>{timelineEmptyState.description}</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               timelineGroups.slice(0, 30).map((group) => (
                 <div key={group.dateKey}>
