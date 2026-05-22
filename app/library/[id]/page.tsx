@@ -27,8 +27,8 @@ const categoryColors: Record<PeptideCategory, string> = {
 
 export default function PeptideDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { getPeptide } = useApp();
-  const [researcherMode, setResearcherMode] = useState(false);
+  const { data, getPeptide } = useApp();
+  const [researcherMode, setResearcherMode] = useState(data.userMode === 'researcher');
   const peptide = getPeptide(id);
 
   if (!peptide) {
