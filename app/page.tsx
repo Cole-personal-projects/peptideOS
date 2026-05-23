@@ -4,6 +4,8 @@ import { ActiveStacksCarousel } from '@/components/dashboard/active-stacks-carou
 import { InventoryStatusCard } from '@/components/dashboard/inventory-status-card';
 import { StreakCard } from '@/components/dashboard/streak-card';
 import { RecentActivityCard } from '@/components/dashboard/recent-activity-card';
+import { BriefingCard } from '@/components/dashboard/briefing-card';
+import { AdherenceCard } from '@/components/dashboard/adherence-card';
 
 function DashboardHeader() {
   const now = new Date();
@@ -25,6 +27,10 @@ export default function DashboardPage() {
       
       <div className="space-y-4">
         <div className="px-4">
+          <BriefingCard />
+        </div>
+
+        <div className="px-4">
           <TodayCard />
         </div>
 
@@ -32,6 +38,8 @@ export default function DashboardPage() {
 
         <div className="px-4 space-y-4">
           <StreakCard />
+
+          <AdherenceCard />
           
           <InventoryStatusCard />
           
