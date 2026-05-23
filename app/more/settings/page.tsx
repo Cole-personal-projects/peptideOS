@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 
 export default function SettingsPage() {
-  const { data, toggleDarkMode, toggleBiometricLock } = useApp();
+  const { data, toggleDarkMode, toggleBiometricLock, exportAllData, clearAllData } = useApp();
 
   return (
     <AppShell>
@@ -64,11 +64,11 @@ export default function SettingsPage() {
             <CardTitle className="text-base">Data</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start">
+            <Button variant="outline" className="w-full justify-start" onClick={() => void exportAllData()}>
               <Download className="w-4 h-4 mr-3" />
               Export All Data
             </Button>
-            <Button variant="outline" className="w-full justify-start text-destructive hover:text-destructive">
+            <Button variant="outline" className="w-full justify-start text-destructive hover:text-destructive" onClick={() => void clearAllData()}>
               <Trash2 className="w-4 h-4 mr-3" />
               Clear All Data
             </Button>

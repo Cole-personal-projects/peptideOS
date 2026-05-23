@@ -18,13 +18,18 @@ import type { UserMode } from '@/lib/types';
 
 export function DisclaimerDialog() {
   const { data, completeOnboarding } = useApp();
-  const [open, setOpen] = useState(() => !data.hasCompletedOnboarding);
   const [step, setStep] = useState(1);
   const [selectedMode, setSelectedMode] = useState<UserMode>(data.userMode);
+  const [saving, setSaving] = useState(false);
+  const open = !data.hasCompletedOnboarding || saving;
 
-  const handleAccept = (mode: UserMode = 'beginner') => {
-    completeOnboarding(mode);
-    setOpen(false);
+  const handleAccept = async (mode: UserMode = 'beginner') => {
+    setSaving(true);
+    try {
+      await completeOnboarding(mode);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const progressLabel = step === 1 ? 'Step 1 of 4' : `Step ${step} of 4`;
@@ -80,10 +85,10 @@ export function DisclaimerDialog() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="sm:justify-center">
-              <Button type="button" variant="outline" onClick={() => setStep(2)} className="w-full sm:w-auto">
+              <Button type="button" variant="outline" onClick={() => setStep(2)} className="w-full sm:w-auto" disabled={saving}>
                 Set up profile
               </Button>
-              <Button type="button" onClick={() => handleAccept()} className="w-full sm:w-auto">
+              <Button type="button" onClick={() => void handleAccept()} className="w-full sm:w-auto" disabled={saving}>
                 I Understand
               </Button>
             </AlertDialogFooter>
@@ -196,7 +201,7 @@ export function DisclaimerDialog() {
               <Button type="button" variant="outline" onClick={() => setStep(3)}>
                 Back
               </Button>
-              <Button type="button" onClick={() => handleAccept(selectedMode)}>
+              <Button type="button" onClick={() => void handleAccept(selectedMode)} disabled={saving}>
                 Enter PeptideOS
               </Button>
             </AlertDialogFooter>
