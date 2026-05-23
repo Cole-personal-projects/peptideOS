@@ -124,3 +124,11 @@ export interface AppData {
   biometricLock: boolean;
   darkMode: boolean;
 }
+
+export interface AppSettings {
+  hasSeenDisclaimer: boolean;
+  hasCompletedOnboarding: boolean;
+  userMode: UserMode;
+  biometricLock: boolean;
+  darkMode: boolean;
+}

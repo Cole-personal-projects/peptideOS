@@ -1,9 +1,16 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import type { AppData, Peptide, Vial, Dose, Stack, UserMode } from './types';
 import { initialAppData } from './mock-data';
 import { completeOnboarding as completeOnboardingState } from './onboarding';
+import {
+  downloadUserData,
+  exportUserData,
+  loadPersistedAppData,
+  resetPersistedAppData,
+  savePersistedAppData,
+} from './persistence';
 
 interface AppContextType {
   data: AppData;
@@ -28,15 +35,64 @@ interface AppContextType {
   getActiveStacks: () => Stack[];
   // Settings
   setHasSeenDisclaimer: (seen: boolean) => void;
-  completeOnboarding: (userMode?: UserMode) => void;
+  completeOnboarding: (userMode?: UserMode) => Promise<void>;
   toggleDarkMode: () => void;
   toggleBiometricLock: () => void;
+  exportAllData: () => Promise<void>;
+  clearAllData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData>(initialAppData);
+  const [hydrated, setHydrated] = useState(false);
+  const saveSequence = useRef(0);
+  const persistenceQueue = useRef(Promise.resolve());
+  const dataRef = useRef(data);
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
+  useEffect(() => {
+    let active = true;
+
+    loadPersistedAppData(undefined, initialAppData)
+      .then((persistedData) => {
+        if (!active) return;
+        setData(persistedData);
+      })
+      .finally(() => {
+        if (!active) return;
+        setHydrated(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const enqueuePersistenceOperation = useCallback(<T,>(operation: () => Promise<T>) => {
+    const queuedOperation = persistenceQueue.current.then(operation, operation);
+    persistenceQueue.current = queuedOperation.then(() => undefined, () => undefined);
+    return queuedOperation;
+  }, []);
+
+  const setAndPersistData = useCallback(async (updater: (previousData: AppData) => AppData) => {
+    const nextData = updater(dataRef.current);
+    dataRef.current = nextData;
+    setData(nextData);
+
+    if (hydrated) {
+      const sequence = ++saveSequence.current;
+      await enqueuePersistenceOperation(() => savePersistedAppData(undefined, nextData)).catch((error) => {
+        if (sequence === saveSequence.current) {
+          console.error('Failed to persist PeptideOS data', error);
+        }
+      });
+    }
+  }, [enqueuePersistenceOperation, hydrated]);
 
   // Peptides
   const getPeptide = useCallback((id: string) => {
@@ -50,15 +106,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addVial = useCallback((vial: Omit<Vial, 'id'>) => {
     const newVial: Vial = { ...vial, id: `vial-${Date.now()}` };
-    setData(prev => ({ ...prev, vials: [...prev.vials, newVial] }));
-  }, []);
+    void setAndPersistData(prev => ({ ...prev, vials: [...prev.vials, newVial] }));
+  }, [setAndPersistData]);
 
   const updateVial = useCallback((id: string, updates: Partial<Vial>) => {
-    setData(prev => ({
+    void setAndPersistData(prev => ({
       ...prev,
       vials: prev.vials.map(v => v.id === id ? { ...v, ...updates } : v)
     }));
-  }, []);
+  }, [setAndPersistData]);
 
   // Doses
   const getDose = useCallback((id: string) => {
@@ -67,15 +123,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addDose = useCallback((dose: Omit<Dose, 'id'>) => {
     const newDose: Dose = { ...dose, id: `dose-${Date.now()}` };
-    setData(prev => ({ ...prev, doses: [...prev.doses, newDose] }));
-  }, []);
+    void setAndPersistData(prev => ({ ...prev, doses: [...prev.doses, newDose] }));
+  }, [setAndPersistData]);
 
   const updateDose = useCallback((id: string, updates: Partial<Dose>) => {
-    setData(prev => ({
+    void setAndPersistData(prev => ({
       ...prev,
       doses: prev.doses.map(d => d.id === id ? { ...d, ...updates } : d)
     }));
-  }, []);
+  }, [setAndPersistData]);
 
   const getTodaysDoses = useCallback(() => {
     const today = new Date();
@@ -150,15 +206,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addStack = useCallback((stack: Omit<Stack, 'id'>) => {
     const newStack: Stack = { ...stack, id: `stack-${Date.now()}` };
-    setData(prev => ({ ...prev, stacks: [...prev.stacks, newStack] }));
-  }, []);
+    void setAndPersistData(prev => ({ ...prev, stacks: [...prev.stacks, newStack] }));
+  }, [setAndPersistData]);
 
   const updateStack = useCallback((id: string, updates: Partial<Stack>) => {
-    setData(prev => ({
+    void setAndPersistData(prev => ({
       ...prev,
       stacks: prev.stacks.map(s => s.id === id ? { ...s, ...updates } : s)
     }));
-  }, []);
+  }, [setAndPersistData]);
 
   const getActiveStacks = useCallback(() => {
     return data.stacks.filter(s => s.status === 'active');
@@ -166,20 +222,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Settings
   const setHasSeenDisclaimer = useCallback((seen: boolean) => {
-    setData(prev => ({ ...prev, hasSeenDisclaimer: seen }));
-  }, []);
+    void setAndPersistData(prev => ({ ...prev, hasSeenDisclaimer: seen }));
+  }, [setAndPersistData]);
 
   const completeOnboarding = useCallback((userMode?: UserMode) => {
-    setData(prev => completeOnboardingState(prev, userMode));
-  }, []);
+    return setAndPersistData(prev => completeOnboardingState(prev, userMode));
+  }, [setAndPersistData]);
 
   const toggleDarkMode = useCallback(() => {
-    setData(prev => ({ ...prev, darkMode: !prev.darkMode }));
-  }, []);
+    void setAndPersistData(prev => ({ ...prev, darkMode: !prev.darkMode }));
+  }, [setAndPersistData]);
 
   const toggleBiometricLock = useCallback(() => {
-    setData(prev => ({ ...prev, biometricLock: !prev.biometricLock }));
+    void setAndPersistData(prev => ({ ...prev, biometricLock: !prev.biometricLock }));
+  }, [setAndPersistData]);
+
+  const exportAllData = useCallback(async () => {
+    await persistenceQueue.current;
+    const exported = await exportUserData();
+    downloadUserData(exported);
   }, []);
+
+  const clearAllData = useCallback(async () => {
+    saveSequence.current++;
+    const resetData = await enqueuePersistenceOperation(() => resetPersistedAppData(undefined, initialAppData));
+    setData(resetData);
+  }, [enqueuePersistenceOperation]);
+
+  if (!hydrated) {
+    return null;
+  }
 
   return (
     <AppContext.Provider value={{
@@ -202,7 +274,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setHasSeenDisclaimer,
       completeOnboarding,
       toggleDarkMode,
-      toggleBiometricLock
+      toggleBiometricLock,
+      exportAllData,
+      clearAllData
     }}>
       {children}
     </AppContext.Provider>
