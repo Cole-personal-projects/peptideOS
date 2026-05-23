@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { AlertTriangle, BookOpen, Layers, ShieldCheck } from 'lucide-react';
+import { BookOpen, FlaskConical, Layers, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialogContent,
@@ -35,9 +35,31 @@ export function DisclaimerDialog() {
         {step === 1 ? (
           <>
             <AlertDialogHeader>
-              <div className="flex justify-center mb-4">
-                <div className="p-3 rounded-full bg-destructive/10">
-                  <AlertTriangle className="w-8 h-8 text-destructive" />
+              <div className="relative overflow-hidden rounded-lg border bg-secondary/30 p-5 text-left">
+                <div className="absolute right-4 top-4 rounded-full border border-primary/30 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-primary">
+                  Research
+                </div>
+                <div className="mb-5 flex size-12 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                  <FlaskConical className="w-6 h-6" />
+                </div>
+                <p className="text-sm text-muted-foreground">Welcome to</p>
+                <h2 className="mt-1 text-3xl font-bold tracking-tight">PeptideOS</h2>
+                <p className="mt-3 max-w-sm text-sm text-muted-foreground">
+                  A private operating surface for peptide research logs, stack planning, site rotation, and vial records.
+                </p>
+                <div className="mt-5 grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="rounded-md border bg-background/60 p-2">
+                    <p className="font-semibold">Dose</p>
+                    <p className="text-muted-foreground">Native units</p>
+                  </div>
+                  <div className="rounded-md border bg-background/60 p-2">
+                    <p className="font-semibold">Sites</p>
+                    <p className="text-muted-foreground">Rotation</p>
+                  </div>
+                  <div className="rounded-md border bg-background/60 p-2">
+                    <p className="font-semibold">Vials</p>
+                    <p className="text-muted-foreground">Inventory</p>
+                  </div>
                 </div>
               </div>
               <p className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
