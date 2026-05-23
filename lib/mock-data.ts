@@ -1,3 +1,4 @@
+import { normalizeStacks } from './schedules';
 import type { AppData, Peptide, Vial, Dose, Stack } from './types';
 
 // Helper to generate dates
@@ -503,7 +504,9 @@ export const initialAppData: AppData = {
   peptides: mockPeptides,
   vials: mockVials,
   doses: mockDoses,
-  stacks: mockStacks,
+  stacks: normalizeStacks(mockStacks),
+  schedules: [],
+  scheduleLogs: [],
   hasSeenDisclaimer: false,
   hasCompletedOnboarding: false,
   userMode: 'beginner',

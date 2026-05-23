@@ -46,6 +46,8 @@ describe('Dexie persistence', () => {
       ],
       doses: [],
       stacks: [],
+      schedules: [],
+      scheduleLogs: [],
       hasSeenDisclaimer: true,
       hasCompletedOnboarding: true,
       userMode: 'researcher',
@@ -59,6 +61,52 @@ describe('Dexie persistence', () => {
     expect(loaded.vials[0]?.name).toBe('Persisted vial');
     expect(loaded.hasCompletedOnboarding).toBe(true);
     expect(loaded.userMode).toBe('researcher');
+    expect(loaded.stacks).toEqual([]);
+  });
+
+  test('saves and reloads schedules and schedule logs', async () => {
+    await savePersistedAppData(db, {
+      ...clone(initialAppData),
+      stacks: [],
+      schedules: [
+        {
+          id: 'schedule-persisted',
+          stackId: 'stack-1',
+          stackPeptideId: 'stack-1-item-bpc-157-0',
+          peptideId: 'bpc-157',
+          doseValue: 250,
+          doseUnit: 'mcg',
+          route: 'subq',
+          recurrence: { frequency: 'daily', timesOfDay: ['08:00'] },
+          startDate: '2026-05-23T00:00:00.000Z',
+          endDate: '2026-06-01T00:00:00.000Z',
+          status: 'active',
+        },
+      ],
+      scheduleLogs: [
+        {
+          id: 'schedule-log-persisted',
+          scheduleId: 'schedule-persisted',
+          stackId: 'stack-1',
+          stackPeptideId: 'stack-1-item-bpc-157-0',
+          peptideId: 'bpc-157',
+          dueAt: '2026-05-23T08:00:00.000Z',
+          status: 'pending',
+        },
+      ],
+    });
+
+    const loaded = await loadPersistedAppData(db, initialAppData);
+
+    expect(loaded.schedules).toHaveLength(1);
+    expect(loaded.schedules[0]?.recurrence).toEqual({ frequency: 'daily', timesOfDay: ['08:00'] });
+    expect(loaded.scheduleLogs).toEqual([
+      expect.objectContaining({
+        id: 'schedule-log-persisted',
+        scheduleId: 'schedule-persisted',
+        status: 'pending',
+      }),
+    ]);
   });
 
   test('reset clears local user data and restores defaults', async () => {
@@ -86,11 +134,13 @@ describe('Dexie persistence', () => {
 
     const exported = await exportUserData(db, new Date('2026-05-23T00:00:00.000Z'));
 
-    expect(exported.schemaVersion).toBe(1);
+    expect(exported.schemaVersion).toBe(2);
     expect(exported.exportedAt).toBe('2026-05-23T00:00:00.000Z');
     expect(exported.data.vials).toHaveLength(1);
     expect(exported.data.vials[0]?.name).toBe('Exported vial');
     expect(exported.data.settings.hasCompletedOnboarding).toBe(true);
+    expect(exported.data.schedules).toEqual([]);
+    expect(exported.data.scheduleLogs).toEqual([]);
     expect(exported.data).not.toHaveProperty('peptides');
   });
 
@@ -104,6 +154,60 @@ describe('Dexie persistence', () => {
       biometricLock: false,
       darkMode: true,
     });
+  });
+
+  test('exports active schedules and omits deleted schedule rows', async () => {
+    await savePersistedAppData(db, {
+      ...clone(initialAppData),
+      schedules: [
+        {
+          id: 'schedule-export-active',
+          stackId: 'stack-1',
+          stackPeptideId: 'stack-1-item-bpc-157-0',
+          peptideId: 'bpc-157',
+          doseValue: 250,
+          doseUnit: 'mcg',
+          route: 'subq',
+          recurrence: { frequency: 'daily', timesOfDay: ['08:00'] },
+          startDate: '2026-05-23T00:00:00.000Z',
+          endDate: '2026-05-24T23:59:59.999Z',
+          status: 'active',
+        },
+      ],
+      scheduleLogs: [
+        {
+          id: 'schedule-log-export-active',
+          scheduleId: 'schedule-export-active',
+          stackId: 'stack-1',
+          stackPeptideId: 'stack-1-item-bpc-157-0',
+          peptideId: 'bpc-157',
+          dueAt: '2026-05-23T08:00:00.000Z',
+          status: 'pending',
+        },
+      ],
+    });
+    await db.schedules.put({
+      id: 'schedule-export-deleted',
+      stackId: 'stack-1',
+      stackPeptideId: 'deleted-item',
+      peptideId: 'bpc-157',
+      doseValue: 250,
+      doseUnit: 'mcg',
+      route: 'subq',
+      recurrence: { frequency: 'daily', timesOfDay: ['08:00'] },
+      startDate: '2026-05-23T00:00:00.000Z',
+      endDate: '2026-05-24T23:59:59.999Z',
+      status: 'active',
+      createdAt: '2026-05-23T00:00:00.000Z',
+      updatedAt: '2026-05-23T00:00:00.000Z',
+      deletedAt: '2026-05-23T01:00:00.000Z',
+      syncState: 'dirty',
+    });
+
+    const exported = await exportUserData(db, new Date('2026-05-23T00:00:00.000Z'));
+
+    expect(exported.data.schedules.map((schedule) => schedule.id)).toEqual(['schedule-export-active']);
+    expect(exported.data.scheduleLogs.map((log) => log.id)).toEqual(['schedule-log-export-active']);
   });
 
   test('download creates a dated JSON file and revokes the object URL', () => {
@@ -133,6 +237,8 @@ describe('Dexie persistence', () => {
         vials: [],
         doses: [],
         stacks: [],
+        schedules: [],
+        scheduleLogs: [],
         settings: {
           hasSeenDisclaimer: false,
           hasCompletedOnboarding: false,

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
-import type { AppData, Peptide, Vial, Dose, Stack, UserMode } from './types';
+import type { AppData, Peptide, Vial, Dose, ScheduleLog, SiteCode, Stack, UserMode } from './types';
 import { initialAppData } from './mock-data';
 import { completeOnboarding as completeOnboardingState } from './onboarding';
+import { activateStackSchedules, normalizeStack } from './schedules';
 import {
   downloadUserData,
   exportUserData,
@@ -25,6 +26,7 @@ interface AppContextType {
   addDose: (dose: Omit<Dose, 'id'>) => void;
   updateDose: (id: string, updates: Partial<Dose>) => void;
   getTodaysDoses: () => Dose[];
+  getTodaysScheduleLogs: () => ScheduleLog[];
   getRecentDoses: (limit: number) => Dose[];
   getDosesByDate: (date: Date) => Dose[];
   getStreak: () => number;
@@ -32,6 +34,10 @@ interface AppContextType {
   getStack: (id: string) => Stack | undefined;
   addStack: (stack: Omit<Stack, 'id'>) => void;
   updateStack: (id: string, updates: Partial<Stack>) => void;
+  activateStack: (id: string) => void;
+  getScheduleLogsForStack: (stackId: string) => ScheduleLog[];
+  completeScheduleLog: (logId: string, completion: { vialId: string; site: SiteCode | ''; notes: string }) => Promise<void>;
+  skipScheduleLog: (logId: string) => Promise<void>;
   getActiveStacks: () => Stack[];
   // Settings
   setHasSeenDisclaimer: (seen: boolean) => void;
@@ -82,7 +88,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setAndPersistData = useCallback(async (updater: (previousData: AppData) => AppData) => {
     const nextData = updater(dataRef.current);
     dataRef.current = nextData;
-    setData(nextData);
 
     if (hydrated) {
       const sequence = ++saveSequence.current;
@@ -92,6 +97,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       });
     }
+
+    setData(nextData);
   }, [enqueuePersistenceOperation, hydrated]);
 
   // Peptides
@@ -144,6 +151,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return doseDate >= today && doseDate < tomorrow;
     }).sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
   }, [data.doses]);
+
+  const getTodaysScheduleLogs = useCallback(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    return data.scheduleLogs.filter((log) => {
+      const dueDate = new Date(log.dueAt);
+      return dueDate >= today && dueDate < tomorrow;
+    }).sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
+  }, [data.scheduleLogs]);
 
   const getRecentDoses = useCallback((limit: number) => {
     return [...data.doses]
@@ -205,7 +224,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [data.stacks]);
 
   const addStack = useCallback((stack: Omit<Stack, 'id'>) => {
-    const newStack: Stack = { ...stack, id: `stack-${Date.now()}` };
+    const id = `stack-${Date.now()}`;
+    const newStack: Stack = normalizeStack({ ...stack, id });
     void setAndPersistData(prev => ({ ...prev, stacks: [...prev.stacks, newStack] }));
   }, [setAndPersistData]);
 
@@ -213,6 +233,72 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void setAndPersistData(prev => ({
       ...prev,
       stacks: prev.stacks.map(s => s.id === id ? { ...s, ...updates } : s)
+    }));
+  }, [setAndPersistData]);
+
+  const activateStack = useCallback((id: string) => {
+    void setAndPersistData(prev => {
+      const stack = prev.stacks.find((candidate) => candidate.id === id);
+      if (!stack) return prev;
+
+      const activated = activateStackSchedules({
+        stack,
+        existingSchedules: prev.schedules,
+        existingScheduleLogs: prev.scheduleLogs,
+      });
+
+      return {
+        ...prev,
+        stacks: prev.stacks.map((candidate) => candidate.id === id ? activated.stack : candidate),
+        schedules: activated.schedules,
+        scheduleLogs: activated.scheduleLogs,
+      };
+    });
+  }, [setAndPersistData]);
+
+  const getScheduleLogsForStack = useCallback((stackId: string) => {
+    return data.scheduleLogs
+      .filter((log) => log.stackId === stackId)
+      .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
+  }, [data.scheduleLogs]);
+
+  const completeScheduleLog = useCallback((logId: string, completion: { vialId: string; site: SiteCode | ''; notes: string }) => {
+    return setAndPersistData(prev => {
+      const log = prev.scheduleLogs.find((candidate) => candidate.id === logId);
+      const schedule = log ? prev.schedules.find((candidate) => candidate.id === log.scheduleId) : undefined;
+      if (!log || !schedule || log.status !== 'pending') return prev;
+
+      const completedAt = new Date().toISOString();
+      const newDose: Dose = {
+        id: `dose-${Date.now()}`,
+        scheduleLogId: log.id,
+        peptideId: schedule.peptideId,
+        vialId: completion.vialId,
+        dateTime: completedAt,
+        doseValue: schedule.doseValue,
+        doseUnit: schedule.doseUnit,
+        route: schedule.route,
+        site: completion.site,
+        notes: completion.notes,
+        completed: true,
+      };
+
+      return {
+        ...prev,
+        doses: [...prev.doses, newDose],
+        scheduleLogs: prev.scheduleLogs.map((candidate) => candidate.id === logId
+          ? { ...candidate, status: 'taken', doseId: newDose.id, takenAt: completedAt }
+          : candidate),
+      };
+    });
+  }, [setAndPersistData]);
+
+  const skipScheduleLog = useCallback((logId: string) => {
+    return setAndPersistData(prev => ({
+      ...prev,
+      scheduleLogs: prev.scheduleLogs.map((log) => log.id === logId && log.status === 'pending'
+        ? { ...log, status: 'skipped', skippedAt: new Date().toISOString() }
+        : log),
     }));
   }, [setAndPersistData]);
 
@@ -264,12 +350,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addDose,
       updateDose,
       getTodaysDoses,
+      getTodaysScheduleLogs,
       getRecentDoses,
       getDosesByDate,
       getStreak,
       getStack,
       addStack,
       updateStack,
+      activateStack,
+      getScheduleLogsForStack,
+      completeScheduleLog,
+      skipScheduleLog,
       getActiveStacks,
       setHasSeenDisclaimer,
       completeOnboarding,
