@@ -5,6 +5,9 @@ export type Route = 'subq' | 'im' | 'intranasal' | 'oral' | 'topical';
 export type DoseUnit = 'mcg' | 'mg' | 'iu';
 export type VialStatus = 'sealed' | 'active' | 'finished' | 'expired';
 export type StackStatus = 'planned' | 'active' | 'completed' | 'paused';
+export type ScheduleStatus = 'active' | 'paused' | 'completed';
+export type ScheduleLogStatus = 'pending' | 'taken' | 'skipped' | 'missed';
+export type ScheduleFrequency = 'daily' | 'weekly';
 export type UserMode = 'beginner' | 'researcher';
 export type SiteCode =
   | 'abdomen-upper-left'
@@ -73,6 +76,7 @@ export interface Dose {
   id: string;
   peptideId: string;
   vialId: string;
+  scheduleLogId?: string;
   dateTime: string;
   doseValue: number;
   doseUnit: DoseUnit;
@@ -83,12 +87,14 @@ export interface Dose {
 }
 
 export interface StackPeptide {
+  id?: string;
   peptideId: string;
   doseValue: number;
   doseUnit: DoseUnit;
   frequency: string;
   route: Route;
   timing: string;
+  schedule?: ScheduleRecurrence;
 }
 
 export interface Stack {
@@ -113,11 +119,46 @@ export interface PlannedDose {
   completed: boolean;
 }
 
+export interface ScheduleRecurrence {
+  frequency: ScheduleFrequency;
+  timesOfDay: string[];
+  weekdays?: number[];
+}
+
+export interface Schedule {
+  id: string;
+  stackId: string;
+  stackPeptideId: string;
+  peptideId: string;
+  doseValue: number;
+  doseUnit: DoseUnit;
+  route: Route;
+  recurrence: ScheduleRecurrence;
+  startDate: string;
+  endDate: string;
+  status: ScheduleStatus;
+}
+
+export interface ScheduleLog {
+  id: string;
+  scheduleId: string;
+  stackId: string;
+  stackPeptideId: string;
+  peptideId: string;
+  dueAt: string;
+  status: ScheduleLogStatus;
+  doseId?: string;
+  takenAt?: string;
+  skippedAt?: string;
+}
+
 export interface AppData {
   peptides: Peptide[];
   vials: Vial[];
   doses: Dose[];
   stacks: Stack[];
+  schedules: Schedule[];
+  scheduleLogs: ScheduleLog[];
   hasSeenDisclaimer: boolean;
   hasCompletedOnboarding: boolean;
   userMode: UserMode;

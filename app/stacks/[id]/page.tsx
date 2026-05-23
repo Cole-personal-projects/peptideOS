@@ -23,7 +23,7 @@ const statusConfig = {
 
 export default function StackDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { getStack, getPeptide, updateStack } = useApp();
+  const { getStack, getPeptide, updateStack, activateStack, getScheduleLogsForStack } = useApp();
   const stack = getStack(id);
 
   if (!stack) {
@@ -48,13 +48,20 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
   const progress = getProgressPercentage();
 
   const handleStatusChange = (newStatus: StackStatus) => {
+    if (newStatus === 'active') {
+      activateStack(stack.id);
+      return;
+    }
+
     updateStack(stack.id, { status: newStatus });
   };
 
-  // Mock conflict warnings
-  const conflicts = [
-    { type: 'timing', message: 'CJC-1295 and Ipamorelin should be taken together for synergy' },
-  ];
+  const scheduleLogs = getScheduleLogsForStack(stack.id);
+  const scheduleLogsByDate = scheduleLogs.reduce<Record<string, typeof scheduleLogs>>((groups, log) => {
+    const key = log.dueAt.slice(0, 10);
+    groups[key] = [...(groups[key] ?? []), log];
+    return groups;
+  }, {});
 
   return (
     <AppShell>
@@ -177,21 +184,37 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                     const dayNum = i - startDate.getDay() + 1;
                     const isInRange = dayNum > 0 && dayNum <= stack.durationDays;
                     const isToday = dayNum === Math.floor((new Date().getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                    const dayDate = new Date(startDate);
+                    dayDate.setDate(startDate.getDate() + Math.max(dayNum - 1, 0));
+                    const logsForDay = isInRange ? scheduleLogsByDate[dayDate.toISOString().slice(0, 10)] ?? [] : [];
+                    const hasTaken = logsForDay.some((log) => log.status === 'taken');
+                    const hasSkipped = logsForDay.some((log) => log.status === 'skipped');
+                    const hasPending = logsForDay.some((log) => log.status === 'pending');
                     return (
                       <div 
                         key={i} 
+                        aria-label={isInRange && logsForDay.length > 0 ? `Day ${dayNum}: ${logsForDay.length} scheduled, ${logsForDay.map((log) => log.status).join(', ')}` : undefined}
                         className={cn(
-                          "aspect-square flex items-center justify-center rounded-md text-xs",
+                          "aspect-square flex flex-col items-center justify-center rounded-md text-xs",
                           isInRange && "bg-secondary",
                           isToday && "bg-primary text-primary-foreground font-bold",
+                          hasPending && "ring-1 ring-chart-4",
+                          hasTaken && "bg-chart-3/20 text-chart-3",
+                          hasSkipped && "bg-muted text-muted-foreground line-through",
                           !isInRange && "text-muted-foreground/30"
                         )}
                       >
-                        {isInRange ? dayNum : ''}
+                        <span>{isInRange ? dayNum : ''}</span>
+                        {logsForDay.length > 0 && <span className="text-[9px]">{logsForDay.length}</span>}
                       </div>
                     );
                   })}
                 </div>
+                {scheduleLogs.length === 0 && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Start this stack to generate scheduled due doses.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -209,21 +232,18 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
           </TabsContent>
         </Tabs>
 
-        {/* Conflict Warnings */}
-        {conflicts.length > 0 && (
+        {scheduleLogs.length > 0 && (
           <Card className="border-chart-4/50 bg-chart-4/5">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2 text-chart-4">
                 <AlertTriangle className="w-4 h-4" />
-                Protocol Notes
+                Schedule State
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              {conflicts.map((conflict, i) => (
-                <p key={i} className="text-sm text-muted-foreground">
-                  {conflict.message}
-                </p>
-              ))}
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                {scheduleLogs.filter((log) => log.status === 'pending').length} pending · {scheduleLogs.filter((log) => log.status === 'taken').length} taken · {scheduleLogs.filter((log) => log.status === 'skipped').length} skipped
+              </p>
             </CardContent>
           </Card>
         )}

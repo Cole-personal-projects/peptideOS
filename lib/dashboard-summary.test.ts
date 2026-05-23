@@ -9,6 +9,8 @@ const baseData: AppData = {
   vials: [],
   doses: [],
   stacks: [],
+  schedules: [],
+  scheduleLogs: [],
   hasSeenDisclaimer: true,
   hasCompletedOnboarding: true,
   userMode: 'beginner',
