@@ -27,9 +27,9 @@ test.describe('first-launch onboarding', () => {
 
     await page.getByRole('link', { name: 'Library' }).click();
     await expect(page.getByText('Researcher Mode: Showing detailed information')).toBeVisible();
-    await expect(page.getByText('Body Protection Compound-157 is a pentadecapeptide')).toBeVisible();
+    await expect(page.getByText('BPC-157 is described in preclinical literature')).toBeVisible();
 
     await page.getByRole('link', { name: /BPC-157/ }).click();
-    await expect(page.getByText('Body Protection Compound-157 is a pentadecapeptide')).toBeVisible();
+    await expect(page.getByText('BPC-157 is described in preclinical literature')).toBeVisible();
   });
 });
