@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { CheckCircle2, Circle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import { BodyMannequin } from '@/components/site-picker/body-mannequin';
 import { useApp } from '@/lib/context';
 import { cn } from '@/lib/utils';
 import { formatDose } from '@/lib/dose-helpers';
+import { getVialInventoryMetrics } from '@/lib/inventory-metrics';
 import type { ScheduleLog, SiteCode } from '@/lib/types';
 
 const injectableRoutes = new Set(['subq', 'im']);
@@ -35,6 +37,7 @@ export function TodayCard() {
     ? data.vials.filter((vial) => vial.status === 'active' && vial.peptideId === activeSchedule.peptideId)
     : [];
   const requiresSite = activeSchedule ? injectableRoutes.has(activeSchedule.route) : false;
+  const canCompleteActiveLog = Boolean(vialId && (!requiresSite || site));
 
   const formatTime = (dateTime: string) => {
     return new Date(dateTime).toLocaleTimeString('en-US', {
@@ -191,31 +194,55 @@ export function TodayCard() {
       </Card>
 
       <Dialog open={Boolean(activeLog)} onOpenChange={(open) => !open && closeCompletion()}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Complete scheduled dose</DialogTitle>
             <DialogDescription>
-              Select the vial used for this scheduled dose.
+              Select the vial and confirm the details used for this scheduled dose.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
+            {activeSchedule && (
+              <div className="rounded-md bg-secondary p-3 text-sm">
+                <p className="font-medium">
+                  {getPeptide(activeSchedule.peptideId)?.name} · {formatDose(activeSchedule.doseValue, activeSchedule.doseUnit)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {activeSchedule.route.toUpperCase()} route
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Vial</Label>
-              <Select value={vialId} onValueChange={setVialId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select active vial" />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeVials.length > 0 ? activeVials.map((vial) => (
-                    <SelectItem key={vial.id} value={vial.id}>
-                      {vial.name} ({vial.lotNumber || 'no lot'})
-                    </SelectItem>
-                  )) : (
-                    <SelectItem value="none" disabled>No active vial</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+              {activeVials.length > 0 ? (
+                <Select value={vialId} onValueChange={setVialId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select active vial" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeVials.map((vial) => {
+                      const metrics = getVialInventoryMetrics(vial, data.doses);
+                      return (
+                        <SelectItem key={vial.id} value={vial.id}>
+                          {vial.name} · {vial.lotNumber || 'no lot'} · {metrics.remainingLabel} left
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="rounded-md border border-chart-4/40 bg-chart-4/10 p-3 text-sm">
+                  <p className="font-medium text-chart-4">No active vial available</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Activate or add a vial in Inventory before completing this scheduled dose.
+                  </p>
+                  <Button asChild size="sm" variant="outline" className="mt-3">
+                    <Link href="/more/inventory">Open Inventory</Link>
+                  </Button>
+                </div>
+              )}
             </div>
 
             {activeSchedule && requiresSite && (
@@ -241,7 +268,7 @@ export function TodayCard() {
 
           <DialogFooter>
             <Button variant="outline" onClick={closeCompletion}>Cancel</Button>
-            <Button onClick={() => void handleCompleteScheduleLog()} disabled={!vialId || (requiresSite && !site) || savingLogId === activeLog?.id}>
+            <Button onClick={() => void handleCompleteScheduleLog()} disabled={!canCompleteActiveLog || savingLogId === activeLog?.id}>
               Complete dose
             </Button>
           </DialogFooter>

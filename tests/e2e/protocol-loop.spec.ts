@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('protocol loop', () => {
   test('starts a stack, completes a scheduled dose, and persists schedule state', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-05-23T12:00:00-07:00'));
     await page.goto('/stacks');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
@@ -25,6 +26,7 @@ test.describe('protocol loop', () => {
     await page.getByRole('button', { name: 'Complete' }).first().click();
     await expect(page.getByRole('dialog', { name: 'Complete scheduled dose' })).toBeVisible();
     await page.getByRole('combobox').filter({ hasText: 'Select active vial' }).click();
+    await expect(page.getByRole('option', { name: /left/ }).first()).toBeVisible();
     await page.getByRole('option', { name: /BPC-157 active vial/ }).click();
     await page.getByRole('button', { name: 'Upper Left Abdomen' }).click();
     await page.getByRole('button', { name: 'Complete dose' }).click();
@@ -53,8 +55,18 @@ test.describe('protocol loop', () => {
 
     await page.goto('/stacks');
     await page.getByRole('link', { name: /Protocol Loop Test Stack/ }).click();
+    await page.getByRole('tab', { name: 'Protocol' }).click();
+    await page.getByLabel('BPC-157 schedule').click();
+    await page.getByRole('option', { name: /Weekly/ }).click();
+    await expect(page.getByText('Weekly · Monday · 8:00 AM')).toBeVisible();
+    await page.reload();
+    await expect(page.getByText('Weekly · Monday · 8:00 AM')).toBeVisible();
+
     await page.getByRole('tab', { name: 'Calendar' }).click();
-    await expect(page.getByText(/taken/)).toBeVisible();
-    await expect(page.getByText(/skipped/)).toBeVisible();
+    await expect(page.getByLabel('Calendar legend')).toContainText('Pending');
+    await page.getByRole('button', { name: 'taken' }).click();
+    await expect(page.getByText(/0 pending · 1 taken/)).toBeVisible();
+    await page.getByRole('button', { name: 'skipped' }).click();
+    await expect(page.getByText(/1 skipped/)).toBeVisible();
   });
 });
