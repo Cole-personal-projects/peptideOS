@@ -25,4 +25,30 @@ test.describe('add vial', () => {
     await expect(page.getByLabel('Date Added May 20, 2026')).toBeVisible();
     await expect(page.getByText('GHK-Cu', { exact: true })).toBeVisible();
   });
+
+  test('creates a concentration-based testosterone multi-dose vial from quick actions', async ({ page }) => {
+    await page.goto('/more/inventory');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('button', { name: 'Quick actions' }).click();
+    await page.getByRole('button', { name: 'Add Vial' }).click();
+
+    await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
+    await page.getByRole('option', { name: 'Testosterone Cypionate' }).click();
+    await expect(page.getByRole('combobox').filter({ hasText: 'Multi-dose vial' })).toBeVisible();
+
+    await page.getByPlaceholder('Optional vial source').fill('Pharmacy');
+    await page.getByPlaceholder('e.g., BPC-2024-001').fill('TEST-CYP-001');
+    await page.getByPlaceholder('e.g., 200').fill('200');
+    await page.getByPlaceholder('e.g., 10').fill('10');
+    await page.getByRole('combobox').filter({ hasText: 'Sealed' }).click();
+    await page.getByRole('option', { name: 'Active (Reconstituted)' }).click();
+    await page.getByRole('button', { name: 'Add Vial' }).click();
+
+    await expect(page.getByRole('link', { name: /Testosterone Cypionate container/ })).toContainText('200 mg/mL · 10 mL');
+    await page.getByRole('link', { name: /Testosterone Cypionate container/ }).click();
+    await expect(page.getByRole('heading', { name: 'Testosterone Cypionate container' })).toBeVisible();
+    await expect(page.getByText('multi dose vial')).toBeVisible();
+    await expect(page.getByText('200 mg/mL · 10 mL')).toBeVisible();
+  });
 });
