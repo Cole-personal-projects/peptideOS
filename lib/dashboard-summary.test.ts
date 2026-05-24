@@ -6,6 +6,7 @@ const now = new Date('2026-05-22T12:00:00.000Z');
 
 const baseData: AppData = {
   peptides: [],
+  compounds: [],
   vials: [],
   doses: [],
   stacks: [],

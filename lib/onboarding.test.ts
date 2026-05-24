@@ -4,6 +4,7 @@ import type { AppData } from './types';
 
 const baseData: AppData = {
   peptides: [],
+  compounds: [],
   vials: [],
   doses: [],
   stacks: [],
