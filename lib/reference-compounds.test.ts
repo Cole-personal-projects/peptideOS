@@ -2,6 +2,16 @@ import { describe, expect, test } from 'vitest';
 import { referenceCompounds, validateReferenceCompound } from './reference-compounds';
 
 describe('reference compounds', () => {
+  const coreReferenceIds = [
+    'hgh-somatropin',
+    'testosterone-cypionate',
+    'testosterone-enanthate',
+    'testosterone-propionate',
+    'bpc-157',
+    'tb-500',
+    'ghk-cu',
+  ];
+
   test('ships only reviewed reference compounds with valid schema fields', () => {
     expect(referenceCompounds.length).toBeGreaterThanOrEqual(2);
 
@@ -30,6 +40,11 @@ describe('reference compounds', () => {
     expect(new Set(aliases).size).toBe(aliases.length);
   });
 
+  test('seeds the first reviewed core reference library', () => {
+    expect(referenceCompounds.map((compound) => compound.id)).toEqual(expect.arrayContaining(coreReferenceIds));
+    expect(referenceCompounds.length).toBeGreaterThanOrEqual(coreReferenceIds.length);
+  });
+
   test('blocks medical recommendation language and fields from bundled entries', () => {
     const bannedCopy = /\b(recommended dose|should take|safe dose|dose recommendation)\b/i;
 
@@ -45,7 +60,7 @@ describe('reference compounds', () => {
 
   test('supports hormones and concentration-mode compounds without modeling them as peptides', () => {
     const somatropin = referenceCompounds.find((compound) => compound.id === 'hgh-somatropin');
-    const testosteroneCypionate = referenceCompounds.find((compound) => compound.id === 'testosterone-cypionate');
+    const testosteroneCompounds = referenceCompounds.filter((compound) => compound.id.startsWith('testosterone-'));
 
     expect(somatropin).toEqual(expect.objectContaining({
       compoundType: 'hormone',
@@ -53,13 +68,30 @@ describe('reference compounds', () => {
       defaultDoseUnit: 'iu',
       concentrationMode: 'prefilled',
     }));
-    expect(testosteroneCypionate).toEqual(expect.objectContaining({
-      compoundType: 'hormone',
-      category: 'hormone-endocrine',
-      defaultDoseUnit: 'mg',
-      concentrationMode: 'concentration',
-    }));
-    expect(testosteroneCypionate?.vialPresets.some((preset) => preset.concentration?.unit === 'mg/ml')).toBe(true);
+    testosteroneCompounds.forEach((compound) => {
+      expect(compound).toEqual(expect.objectContaining({
+        compoundType: 'hormone',
+        category: 'hormone-endocrine',
+        defaultDoseUnit: 'mg',
+        concentrationMode: 'concentration',
+      }));
+      expect(compound.vialPresets.some((preset) => preset.concentration?.unit === 'mg/ml')).toBe(true);
+    });
+  });
+
+  test('models lyophilized peptide-style entries as reconstituted tracking records', () => {
+    const peptideIds = ['bpc-157', 'tb-500', 'ghk-cu'];
+
+    peptideIds.forEach((id) => {
+      const compound = referenceCompounds.find((entry) => entry.id === id);
+
+      expect(compound).toEqual(expect.objectContaining({
+        compoundType: 'peptide',
+        concentrationMode: 'reconstituted',
+      }));
+      expect(compound?.reconstitutionDefaults?.typicalVialAmounts.length).toBeGreaterThan(0);
+      expect(compound?.reconstitutionDefaults?.typicalBacWaterMl.length).toBeGreaterThan(0);
+    });
   });
 
   test('reports actionable issues for malformed reference entries', () => {
