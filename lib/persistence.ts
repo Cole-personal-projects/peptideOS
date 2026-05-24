@@ -17,6 +17,13 @@ export interface UserDataExport {
   data: PersistedUserData;
 }
 
+export class UserDataImportError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'UserDataImportError';
+  }
+}
+
 function getDefaultSettings(defaults: AppData): AppSettings {
   return {
     hasSeenDisclaimer: defaults.hasSeenDisclaimer,
@@ -190,6 +197,72 @@ export async function exportUserData(database: PeptideOSDatabase = defaultDb, ex
       settings: settings ? stripPersistenceMetadata(settings) as AppSettings : fallbackSettings,
     },
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function assertArray(value: unknown, label: string): asserts value is unknown[] {
+  if (!Array.isArray(value)) {
+    throw new UserDataImportError(`Import is missing ${label}.`);
+  }
+}
+
+function parseUserDataExport(input: string): UserDataExport {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(input) as unknown;
+  } catch {
+    throw new UserDataImportError('Select a valid PeptideOS export JSON file.');
+  }
+
+  if (!isRecord(parsed) || !isRecord(parsed.data)) {
+    throw new UserDataImportError('Select a valid PeptideOS export JSON file.');
+  }
+
+  if (typeof parsed.schemaVersion !== 'number' || parsed.schemaVersion < 1 || parsed.schemaVersion > PERSISTENCE_SCHEMA_VERSION) {
+    throw new UserDataImportError('This PeptideOS export uses an unsupported schema version.');
+  }
+
+  const data = parsed.data;
+  assertArray(data.vials, 'vials');
+  assertArray(data.doses, 'doses');
+  assertArray(data.stacks, 'stacks');
+  assertArray(data.schedules, 'schedules');
+  assertArray(data.scheduleLogs, 'scheduleLogs');
+
+  if (!isRecord(data.settings)) {
+    throw new UserDataImportError('Import is missing settings.');
+  }
+
+  return {
+    schemaVersion: parsed.schemaVersion,
+    exportedAt: typeof parsed.exportedAt === 'string' ? parsed.exportedAt : new Date().toISOString(),
+    data: {
+      vials: data.vials as Vial[],
+      doses: data.doses as Dose[],
+      stacks: data.stacks as Stack[],
+      schedules: data.schedules as Schedule[],
+      scheduleLogs: data.scheduleLogs as ScheduleLog[],
+      settings: data.settings as unknown as AppSettings,
+    },
+  };
+}
+
+export async function importUserData(
+  database: PeptideOSDatabase = defaultDb,
+  defaults: AppData,
+  input: string,
+  importedAt = new Date(),
+): Promise<AppData> {
+  const imported = parseUserDataExport(input);
+  const nextData = applyUserData(defaults, imported.data);
+
+  await savePersistedAppData(database, nextData, importedAt);
+
+  return nextData;
 }
 
 export function downloadUserData(exported: UserDataExport) {

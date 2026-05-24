@@ -9,6 +9,7 @@ import type { SchedulePreset } from './schedules';
 import {
   downloadUserData,
   exportUserData,
+  importUserData,
   loadPersistedAppData,
   resetPersistedAppData,
   savePersistedAppData,
@@ -47,6 +48,7 @@ interface AppContextType {
   toggleDarkMode: () => void;
   toggleBiometricLock: () => void;
   exportAllData: () => Promise<void>;
+  importAllData: (file: File) => Promise<void>;
   clearAllData: () => Promise<void>;
 }
 
@@ -353,6 +355,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     downloadUserData(exported);
   }, []);
 
+  const importAllData = useCallback(async (file: File) => {
+    const contents = await file.text();
+    saveSequence.current++;
+    const importedData = await enqueuePersistenceOperation(() => importUserData(undefined, initialAppData, contents));
+    dataRef.current = importedData;
+    setData(importedData);
+  }, [enqueuePersistenceOperation]);
+
   const clearAllData = useCallback(async () => {
     saveSequence.current++;
     const resetData = await enqueuePersistenceOperation(() => resetPersistedAppData(undefined, initialAppData));
@@ -392,6 +402,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleDarkMode,
       toggleBiometricLock,
       exportAllData,
+      importAllData,
       clearAllData
     }}>
       {children}

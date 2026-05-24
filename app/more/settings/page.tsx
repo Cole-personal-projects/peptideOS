@@ -1,15 +1,38 @@
 "use client";
 
-import { Moon, Sun, Fingerprint, Download, Shield, Trash2 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Moon, Sun, Fingerprint, Download, Shield, Trash2, Upload } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useApp } from '@/lib/context';
 
 export default function SettingsPage() {
-  const { data, toggleDarkMode, toggleBiometricLock, exportAllData, clearAllData } = useApp();
+  const { data, toggleDarkMode, toggleBiometricLock, exportAllData, importAllData, clearAllData } = useApp();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [importStatus, setImportStatus] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+
+  const handleImportFile = async (file: File | undefined) => {
+    if (!file) return;
+    setIsImporting(true);
+    setImportStatus('');
+
+    try {
+      await importAllData(file);
+      setImportStatus('Data restored from backup.');
+    } catch (error) {
+      setImportStatus(error instanceof Error ? error.message : 'Could not restore this backup.');
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   return (
     <AppShell>
@@ -68,6 +91,28 @@ export default function SettingsPage() {
               <Download className="w-4 h-4 mr-3" />
               Export All Data
             </Button>
+            <Input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="sr-only"
+              aria-label="Import Data File"
+              onChange={(event) => void handleImportFile(event.target.files?.[0])}
+            />
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              disabled={isImporting}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="w-4 h-4 mr-3" />
+              {isImporting ? 'Importing Data...' : 'Import Data'}
+            </Button>
+            {importStatus && (
+              <p className="rounded-md bg-secondary p-3 text-sm text-muted-foreground" role="status">
+                {importStatus}
+              </p>
+            )}
             <Button variant="outline" className="w-full justify-start text-destructive hover:text-destructive" onClick={() => void clearAllData()}>
               <Trash2 className="w-4 h-4 mr-3" />
               Clear All Data

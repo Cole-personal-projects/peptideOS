@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { writeFile } from 'node:fs/promises';
 
 test.describe('local persistence', () => {
   test('persists onboarding completion across reloads', async ({ page }) => {
@@ -56,5 +57,52 @@ test.describe('local persistence', () => {
     await page.getByRole('tab', { name: /Sealed/ }).click();
 
     await expect(page.getByRole('link', { name: /Clear Data GHK-Cu/ })).toHaveCount(0);
+  });
+
+  test('restores local data from a PeptideOS export JSON file', async ({ page }, testInfo) => {
+    const exportPath = testInfo.outputPath('peptideos-import.json');
+    await writeFile(exportPath, JSON.stringify({
+      schemaVersion: 2,
+      exportedAt: '2026-05-23T00:00:00.000Z',
+      data: {
+        vials: [
+          {
+            id: 'vial-import-e2e',
+            name: 'Imported Backup GHK-Cu',
+            peptideId: 'ghk-cu',
+            dateAdded: '2026-05-22',
+            source: 'Backup',
+            lotNumber: 'IMPORT-001',
+            mg: 50,
+            bacWaterMl: 0,
+            reconstitutedDate: null,
+            expirationDate: '2026-12-31',
+            status: 'sealed',
+          },
+        ],
+        doses: [],
+        stacks: [],
+        schedules: [],
+        scheduleLogs: [],
+        settings: {
+          hasSeenDisclaimer: true,
+          hasCompletedOnboarding: true,
+          userMode: 'researcher',
+          biometricLock: false,
+          darkMode: true,
+        },
+      },
+    }));
+
+    await page.goto('/more/settings');
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByLabel('Import Data File').setInputFiles(exportPath);
+    await expect(page.getByRole('status')).toContainText('Data restored from backup.');
+
+    await page.reload();
+    await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
+    await page.goto('/more/inventory');
+    await page.getByRole('tab', { name: /Sealed/ }).click();
+    await expect(page.getByRole('link', { name: /Imported Backup GHK-Cu/ })).toBeVisible();
   });
 });
