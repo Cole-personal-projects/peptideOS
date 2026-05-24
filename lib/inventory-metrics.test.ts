@@ -63,4 +63,53 @@ describe('inventory metrics', () => {
     expect(metrics.remainingMg).toBe(0);
     expect(metrics.remainingLabel).toBe('0 mg');
   });
+
+  it('derives inventory from concentration and volume for multi-dose vials', () => {
+    const testosteroneVial: Vial = {
+      ...baseVial,
+      id: 'test-cyp-vial',
+      peptideId: 'testosterone-cypionate',
+      containerType: 'multi-dose-vial',
+      mg: 0,
+      concentration: { value: 200, unit: 'mg/ml' },
+      volumeMl: 10,
+    };
+
+    const metrics = getVialInventoryMetrics(testosteroneVial, [
+      dose({
+        id: 'test-dose',
+        peptideId: 'testosterone-cypionate',
+        vialId: 'test-cyp-vial',
+        doseValue: 100,
+        doseUnit: 'mg',
+        route: 'im',
+      }),
+    ]);
+
+    expect(metrics.originalMg).toBe(2000);
+    expect(metrics.remainingMg).toBe(1900);
+    expect(metrics.originalLabel).toBe('200 mg/mL · 10 mL');
+    expect(metrics.remainingLabel).toBe('1900 mg');
+  });
+
+  it('formats IU concentration containers in IU when conversion metadata exists', () => {
+    const hghPen: Vial = {
+      ...baseVial,
+      id: 'hgh-pen',
+      peptideId: 'hgh',
+      containerType: 'prefilled-pen',
+      mg: 0,
+      concentration: { value: 10, unit: 'iu/ml' },
+      volumeMl: 1.5,
+    };
+
+    const metrics = getVialInventoryMetrics(hghPen, [
+      dose({ id: 'hgh-pen-dose', peptideId: 'hgh', vialId: 'hgh-pen', doseValue: 2, doseUnit: 'iu' }),
+    ]);
+
+    expect(metrics.originalMg).toBe(5);
+    expect(metrics.remainingMg).toBeCloseTo(4.333, 3);
+    expect(metrics.originalLabel).toBe('10 IU/mL · 1.5 mL');
+    expect(metrics.remainingLabel).toBe('13 IU');
+  });
 });

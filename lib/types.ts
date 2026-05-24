@@ -20,6 +20,7 @@ export type CompoundSource = 'bundled' | 'user';
 export type CurationStatus = 'candidate' | 'draft' | 'reviewed';
 export type ConcentrationMode = 'reconstituted' | 'concentration' | 'prefilled' | 'none';
 export type ConcentrationUnit = 'mg/ml' | 'iu/ml';
+export type InventoryContainerType = 'lyophilized-vial' | 'multi-dose-vial' | 'prefilled-pen' | 'capsule-bottle' | 'other';
 export type DosePresetIntent = 'loggingPreset' | 'labelUnit' | 'commonResearchRange' | 'recommendation';
 export type VialStatus = 'sealed' | 'active' | 'finished' | 'expired';
 export type StackStatus = 'planned' | 'active' | 'completed' | 'paused';
@@ -144,10 +145,20 @@ export interface Vial {
   id: string;
   name: string;
   peptideId: string;
+  containerType?: InventoryContainerType;
   dateAdded: string;
   source: string;
   lotNumber: string;
   mg: number;
+  totalAmount?: {
+    value: number;
+    unit: DoseUnit;
+  };
+  concentration?: {
+    value: number;
+    unit: ConcentrationUnit;
+  };
+  volumeMl?: number;
   bacWaterMl: number;
   reconstitutedDate: string | null;
   expirationDate: string;

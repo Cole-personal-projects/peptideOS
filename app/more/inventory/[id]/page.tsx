@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/lib/context';
 import { getTrackableCompounds, isReconstitutableCompound } from '@/lib/compound-workflows';
+import { getVialInventoryMetrics } from '@/lib/inventory-metrics';
 import { buildReconstitutedVialUpdate, getReconstitutionPreview } from '@/lib/reconstitute-vial';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +32,7 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
 
   const compound = getTrackableCompounds(data).find((candidate) => candidate.id === vial.peptideId);
   const canReconstitute = isReconstitutableCompound(compound);
+  const inventoryMetrics = getVialInventoryMetrics(vial, data.doses);
 
   const getDaysUntilExpiration = () => {
     const exp = new Date(vial.expirationDate);
@@ -197,7 +199,17 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Amount</p>
-                <p className="font-medium">{vial.mg}mg</p>
+                <p className="font-medium">{inventoryMetrics.originalLabel}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-secondary">
+                <PackageSearch className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Container Type</p>
+                <p className="font-medium capitalize">{(vial.containerType ?? 'lyophilized-vial').replaceAll('-', ' ')}</p>
               </div>
             </div>
 
