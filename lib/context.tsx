@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
-import type { AppData, Peptide, Vial, Dose, ScheduleLog, SiteCode, Stack, UserMode } from './types';
+import type { AppData, Compound, Peptide, Vial, Dose, ScheduleLog, SiteCode, Stack, UserMode } from './types';
 import { initialAppData } from './mock-data';
 import { completeOnboarding as completeOnboardingState } from './onboarding';
 import { activateStackSchedules, normalizeStack, updateStackPeptideSchedule } from './schedules';
@@ -14,11 +14,17 @@ import {
   resetPersistedAppData,
   savePersistedAppData,
 } from './persistence';
+import { createUserCompound, softDeleteUserCompound, updateUserCompound, type UserCompoundDraft } from './user-compounds';
 
 interface AppContextType {
   data: AppData;
   // Peptides
   getPeptide: (id: string) => Peptide | undefined;
+  // Compounds
+  getCompound: (id: string) => Compound | undefined;
+  addUserCompound: (compound: UserCompoundDraft) => void;
+  updateUserCompound: (id: string, updates: Partial<UserCompoundDraft>) => void;
+  deleteUserCompound: (id: string) => void;
   // Vials
   getVial: (id: string) => Vial | undefined;
   addVial: (vial: Omit<Vial, 'id'>) => void;
@@ -109,6 +115,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getPeptide = useCallback((id: string) => {
     return data.peptides.find(p => p.id === id);
   }, [data.peptides]);
+
+  const getCompound = useCallback((id: string) => {
+    return data.compounds.find(compound => compound.id === id);
+  }, [data.compounds]);
+
+  const addUserCompound = useCallback((compound: UserCompoundDraft) => {
+    void setAndPersistData(prev => ({
+      ...prev,
+      compounds: [...prev.compounds, createUserCompound(compound)],
+    }));
+  }, [setAndPersistData]);
+
+  const updateCustomCompound = useCallback((id: string, updates: Partial<UserCompoundDraft>) => {
+    void setAndPersistData(prev => ({
+      ...prev,
+      compounds: prev.compounds.map(compound => compound.id === id ? updateUserCompound(compound, updates) : compound),
+    }));
+  }, [setAndPersistData]);
+
+  const deleteUserCompound = useCallback((id: string) => {
+    void setAndPersistData(prev => ({
+      ...prev,
+      compounds: prev.compounds.map(compound => compound.id === id ? softDeleteUserCompound(compound) : compound),
+    }));
+  }, [setAndPersistData]);
 
   // Vials
   const getVial = useCallback((id: string) => {
@@ -377,6 +408,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider value={{
       data,
       getPeptide,
+      getCompound,
+      addUserCompound,
+      updateUserCompound: updateCustomCompound,
+      deleteUserCompound,
       getVial,
       addVial,
       updateVial,

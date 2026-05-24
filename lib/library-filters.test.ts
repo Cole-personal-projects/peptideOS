@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { filterPeptides } from './library-filters';
-import type { Peptide } from './types';
+import { filterCompounds, filterPeptides } from './library-filters';
+import type { Compound, Peptide } from './types';
 
 const peptides: Peptide[] = [
   {
@@ -47,6 +47,70 @@ const peptides: Peptide[] = [
   },
 ];
 
+const compounds: Compound[] = [
+  {
+    id: 'bpc-157',
+    name: 'BPC-157',
+    aliases: ['Body Protection Compound 157'],
+    compoundType: 'peptide',
+    category: 'healing',
+    defaultRoute: 'subq',
+    supportedRoutes: ['subq'],
+    defaultDoseUnit: 'mcg',
+    concentrationMode: 'reconstituted',
+    dosePresets: [],
+    vialPresets: [],
+    beginnerSummary: 'Research compound for tissue repair.',
+    researcherDetails: 'Angiogenesis and nitric oxide pathway details.',
+    safety: 'Research use only.',
+    storage: 'Refrigerate.',
+    citations: [],
+    source: 'bundled',
+    curationStatus: 'reviewed',
+  },
+  {
+    id: 'testosterone-cypionate',
+    name: 'Testosterone Cypionate',
+    aliases: ['Depo-Testosterone'],
+    compoundType: 'hormone',
+    category: 'hormone-endocrine',
+    defaultRoute: 'im',
+    supportedRoutes: ['im'],
+    defaultDoseUnit: 'mg',
+    concentrationMode: 'concentration',
+    dosePresets: [],
+    vialPresets: [],
+    beginnerSummary: 'Hormone/endocrine tracking entry.',
+    researcherDetails: 'Androgen receptor activity.',
+    mechanism: 'Androgen receptor ligand.',
+    safety: 'Tracking only.',
+    storage: 'Follow label.',
+    citations: [],
+    source: 'bundled',
+    curationStatus: 'reviewed',
+  },
+  {
+    id: 'custom-cognitive',
+    name: 'Custom Cognitive Compound',
+    aliases: ['CCC'],
+    compoundType: 'small-molecule',
+    category: 'cognitive',
+    defaultRoute: 'oral',
+    supportedRoutes: ['oral'],
+    defaultDoseUnit: 'mg',
+    concentrationMode: 'none',
+    dosePresets: [],
+    vialPresets: [],
+    beginnerSummary: 'User-created nootropic tracker.',
+    researcherDetails: 'User notes mention focus and recall.',
+    safety: 'User safety notes.',
+    storage: 'Room temperature.',
+    citations: [],
+    source: 'user',
+    curationStatus: 'draft',
+  },
+];
+
 describe('library filters', () => {
   it('filters peptides by name and searchable research text', () => {
     expect(filterPeptides(peptides, { search: 'sema', category: 'all' }).map((peptide) => peptide.id)).toEqual([
@@ -71,5 +135,41 @@ describe('library filters', () => {
       'semaglutide',
     ]);
     expect(filterPeptides(peptides, { search: 'glp', category: 'healing' })).toEqual([]);
+  });
+});
+
+describe('compound library filters', () => {
+  it('filters compounds by name, aliases, and research text', () => {
+    expect(filterCompounds(compounds, { search: 'depo', category: 'all', compoundType: 'all' }).map((compound) => compound.id)).toEqual([
+      'testosterone-cypionate',
+    ]);
+    expect(filterCompounds(compounds, { search: 'nitric oxide', category: 'all', compoundType: 'all' }).map((compound) => compound.id)).toEqual([
+      'bpc-157',
+    ]);
+  });
+
+  it('filters compounds by category and compound type without changing order', () => {
+    expect(filterCompounds(compounds, { search: '', category: 'healing', compoundType: 'all' }).map((compound) => compound.id)).toEqual([
+      'bpc-157',
+    ]);
+    expect(filterCompounds(compounds, { search: '', category: 'all', compoundType: 'hormone' }).map((compound) => compound.id)).toEqual([
+      'testosterone-cypionate',
+    ]);
+  });
+
+  it('combines compound search, category, and type filters', () => {
+    expect(filterCompounds(compounds, { search: 'focus', category: 'cognitive', compoundType: 'small-molecule' }).map((compound) => compound.id)).toEqual([
+      'custom-cognitive',
+    ]);
+    expect(filterCompounds(compounds, { search: 'focus', category: 'cognitive', compoundType: 'peptide' })).toEqual([]);
+  });
+
+  it('omits soft-deleted custom compounds', () => {
+    expect(filterCompounds([
+      ...compounds,
+      { ...compounds[2], id: 'deleted-custom', deletedAt: '2026-05-24T00:00:00.000Z' },
+    ], { search: 'focus', category: 'all', compoundType: 'all' }).map((compound) => compound.id)).toEqual([
+      'custom-cognitive',
+    ]);
   });
 });

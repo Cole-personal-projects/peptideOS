@@ -1,8 +1,14 @@
-import type { Peptide, PeptideCategory } from './types';
+import type { Compound, CompoundCategory, CompoundType, Peptide, PeptideCategory } from './types';
 
 export interface LibraryFilterOptions {
   search: string;
   category: PeptideCategory | 'all';
+}
+
+export interface CompoundLibraryFilterOptions {
+  search: string;
+  category: CompoundCategory | 'all';
+  compoundType: CompoundType | 'all';
 }
 
 function searchableText(peptide: Peptide): string {
@@ -26,5 +32,36 @@ export function filterPeptides(peptides: Peptide[], options: LibraryFilterOption
     const matchesSearch = search.length === 0 || searchableText(peptide).includes(search);
     const matchesCategory = options.category === 'all' || peptide.category === options.category;
     return matchesSearch && matchesCategory;
+  });
+}
+
+function searchableCompoundText(compound: Compound): string {
+  return [
+    compound.name,
+    compound.aliases.join(' '),
+    compound.compoundType,
+    compound.category,
+    compound.defaultRoute,
+    compound.supportedRoutes.join(' '),
+    compound.defaultDoseUnit,
+    compound.concentrationMode,
+    compound.beginnerSummary,
+    compound.researcherDetails,
+    compound.mechanism ?? '',
+    compound.safety,
+    compound.storage,
+    compound.source,
+  ].join(' ').toLowerCase();
+}
+
+export function filterCompounds(compounds: Compound[], options: CompoundLibraryFilterOptions): Compound[] {
+  const search = options.search.trim().toLowerCase();
+
+  return compounds.filter((compound) => {
+    if (compound.deletedAt) return false;
+    const matchesSearch = search.length === 0 || searchableCompoundText(compound).includes(search);
+    const matchesCategory = options.category === 'all' || compound.category === options.category;
+    const matchesType = options.compoundType === 'all' || compound.compoundType === options.compoundType;
+    return matchesSearch && matchesCategory && matchesType;
   });
 }
