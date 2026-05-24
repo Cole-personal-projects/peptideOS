@@ -1,0 +1,18 @@
+id: example-compound
+name: Example Compound
+status: candidate
+compoundTypeGuess: peptide
+categoryGuess: healing
+knownAliases:
+  - Example Alias
+sourceHints:
+  pubchem: Example Compound
+  dailymed: Example Compound injection
+desiredDefaults:
+  defaultRoute: subq
+  supportedRoutes:
+    - subq
+  defaultDoseUnit: mg
+  concentrationMode: reconstituted
+notes:
+  - Mark uncertainty here. Do not write final app copy in candidate files.

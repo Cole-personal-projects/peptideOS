@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "compound:validate": "vitest run lib/reference-compounds.test.ts",
     "test:e2e": "pnpm build && playwright test",
     "test:e2e:ci": "playwright test"
   },

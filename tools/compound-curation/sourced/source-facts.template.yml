@@ -1,0 +1,19 @@
+compoundId: example-compound
+status: sourced-facts
+sources:
+  - id: source-id
+    title: Source title
+    url: https://example.com/source
+    source: Source name
+    year: 2026
+    facts:
+      identity:
+        - Fact with source-backed wording.
+      routes:
+        - subq
+      units:
+        - mg
+      storage:
+        - Storage fact if present.
+unresolved:
+  - Fields or claims that need human review.
