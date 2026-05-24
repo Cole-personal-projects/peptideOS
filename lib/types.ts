@@ -1,8 +1,26 @@
 // PeptideOS Data Models
 
 export type PeptideCategory = 'healing' | 'growth' | 'cognitive' | 'metabolic' | 'longevity' | 'aesthetic';
+export type CompoundType = 'peptide' | 'hormone' | 'glp-1' | 'small-molecule' | 'biologic' | 'supplement' | 'other';
+export type CompoundCategory =
+  | 'healing'
+  | 'growth-hormone'
+  | 'metabolic'
+  | 'longevity'
+  | 'cognitive'
+  | 'skin-hair'
+  | 'immune'
+  | 'sleep'
+  | 'sexual-reproductive'
+  | 'hormone-endocrine'
+  | 'custom';
 export type Route = 'subq' | 'im' | 'intranasal' | 'oral' | 'topical';
 export type DoseUnit = 'mcg' | 'mg' | 'iu';
+export type CompoundSource = 'bundled' | 'user';
+export type CurationStatus = 'candidate' | 'draft' | 'reviewed';
+export type ConcentrationMode = 'reconstituted' | 'concentration' | 'prefilled' | 'none';
+export type ConcentrationUnit = 'mg/ml' | 'iu/ml';
+export type DosePresetIntent = 'loggingPreset' | 'labelUnit' | 'commonResearchRange' | 'recommendation';
 export type VialStatus = 'sealed' | 'active' | 'finished' | 'expired';
 export type StackStatus = 'planned' | 'active' | 'completed' | 'paused';
 export type ScheduleStatus = 'active' | 'paused' | 'completed';
@@ -56,6 +74,70 @@ export interface Peptide {
   safety: string;
   storage: string;
   citations: Citation[];
+}
+
+export interface CompoundDosePreset {
+  label: string;
+  value: number;
+  unit: DoseUnit;
+  intent: DosePresetIntent;
+  sourceNote: string;
+  citationIds: string[];
+}
+
+export interface CompoundVialPreset {
+  label: string;
+  totalAmount?: {
+    value: number;
+    unit: DoseUnit;
+  };
+  concentration?: {
+    value: number;
+    unit: ConcentrationUnit;
+  };
+  volumeMl?: number;
+  sourceNote: string;
+  citationIds: string[];
+}
+
+export interface CompoundReconstitutionDefaults {
+  typicalVialAmounts: Array<{ value: number; unit: DoseUnit }>;
+  typicalBacWaterMl: number[];
+}
+
+export interface CompoundConversion {
+  iuPerMg?: number;
+  mgPerIU?: number;
+  conversionUnavailableReason?: string;
+  notes?: string;
+}
+
+export interface Compound {
+  id: string;
+  name: string;
+  aliases: string[];
+  compoundType: CompoundType;
+  category: CompoundCategory;
+  defaultRoute: Route;
+  supportedRoutes: Route[];
+  defaultDoseUnit: DoseUnit;
+  concentrationMode: ConcentrationMode;
+  dosePresets: CompoundDosePreset[];
+  vialPresets: CompoundVialPreset[];
+  reconstitutionDefaults?: CompoundReconstitutionDefaults;
+  conversion?: CompoundConversion;
+  beginnerSummary: string;
+  researcherDetails: string;
+  mechanism?: string;
+  safety: string;
+  storage: string;
+  citations: Citation[];
+  source: CompoundSource;
+  curationStatus: CurationStatus;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+  syncState?: 'local' | 'synced' | 'dirty';
 }
 
 export interface Vial {
