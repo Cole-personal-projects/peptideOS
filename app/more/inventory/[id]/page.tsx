@@ -14,12 +14,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/lib/context';
+import { getTrackableCompounds, isReconstitutableCompound } from '@/lib/compound-workflows';
 import { buildReconstitutedVialUpdate, getReconstitutionPreview } from '@/lib/reconstitute-vial';
 import { cn } from '@/lib/utils';
 
 export default function VialDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { getVial, getPeptide, updateVial } = useApp();
+  const { data, getVial, updateVial } = useApp();
   const [isReconstituteOpen, setIsReconstituteOpen] = useState(false);
   const [bacWaterInput, setBacWaterInput] = useState('2');
   const vial = getVial(id);
@@ -28,7 +29,8 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
     notFound();
   }
 
-  const peptide = getPeptide(vial.peptideId);
+  const compound = getTrackableCompounds(data).find((candidate) => candidate.id === vial.peptideId);
+  const canReconstitute = isReconstitutableCompound(compound);
 
   const getDaysUntilExpiration = () => {
     const exp = new Date(vial.expirationDate);
@@ -91,7 +93,7 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
                   Mark Finished
                 </Button>
               )}
-              {vial.status === 'sealed' && (
+              {vial.status === 'sealed' && canReconstitute && (
                 <Button size="sm" onClick={() => setIsReconstituteOpen(true)}>
                   Reconstitute
                 </Button>
@@ -151,8 +153,8 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
                 <PackageSearch className="w-4 h-4 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Peptide</p>
-                <p className="font-medium">{peptide?.name ?? 'Unknown peptide'}</p>
+                <p className="text-xs text-muted-foreground">Compound</p>
+                <p className="font-medium">{compound?.name ?? 'Unknown compound'}</p>
               </div>
             </div>
 

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { useApp } from '@/lib/context';
+import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { getEmptyStateContent } from '@/lib/empty-states';
 import { cn } from '@/lib/utils';
 
@@ -22,10 +23,11 @@ const statusConfig = {
 };
 
 export default function StacksPage() {
-  const { data, getPeptide } = useApp();
+  const { data } = useApp();
   const [newStackOpen, setNewStackOpen] = useState(false);
   const stacks = data.stacks;
   const emptyState = getEmptyStateContent('stacks-empty');
+  const trackableCompounds = getTrackableCompounds(data);
 
   const getProgressPercentage = (startDate: string, durationDays: number, status: string) => {
     if (status === 'planned') return 0;
@@ -94,10 +96,10 @@ export default function StacksPage() {
 
                     <div className="flex flex-wrap gap-1.5 my-3">
                       {stack.peptides.map((sp) => {
-                        const peptide = getPeptide(sp.peptideId);
+                        const compound = trackableCompounds.find((candidate) => candidate.id === sp.peptideId);
                         return (
                           <Badge key={sp.peptideId} variant="outline" className="text-xs">
-                            {peptide?.name}
+                            {compound?.name ?? sp.peptideId}
                           </Badge>
                         );
                       })}

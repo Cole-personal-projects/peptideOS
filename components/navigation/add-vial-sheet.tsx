@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useApp } from '@/lib/context';
+import { getTrackableCompounds } from '@/lib/compound-workflows';
 import type { VialStatus } from '@/lib/types';
 
 interface AddVialSheetProps {
@@ -21,6 +22,7 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
   const [lotNumber, setLotNumber] = useState('');
   const [mg, setMg] = useState('');
   const [status, setStatus] = useState<VialStatus>('sealed');
+  const trackableCompounds = getTrackableCompounds(data);
 
   const handleSubmit = () => {
     if (!peptideId || !mg || !lotNumber) return;
@@ -29,7 +31,7 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
     expirationDate.setMonth(expirationDate.getMonth() + 12);
     
     addVial({
-      name: `${data.peptides.find((peptide) => peptide.id === peptideId)?.name ?? 'Vial'} vial`,
+      name: `${trackableCompounds.find((compound) => compound.id === peptideId)?.name ?? 'Compound'} vial`,
       peptideId,
       dateAdded: new Date().toISOString(),
       source,
@@ -59,14 +61,14 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
         
         <div className="space-y-4 pb-8">
           <div className="space-y-2">
-            <Label>Peptide</Label>
+            <Label>Compound</Label>
             <Select value={peptideId} onValueChange={setPeptideId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select peptide" />
+                <SelectValue placeholder="Select compound" />
               </SelectTrigger>
               <SelectContent>
-                {data.peptides.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                {trackableCompounds.map((compound) => (
+                  <SelectItem key={compound.id} value={compound.id}>{compound.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

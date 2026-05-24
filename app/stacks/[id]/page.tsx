@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useApp } from '@/lib/context';
+import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose } from '@/lib/dose-helpers';
 import { getSchedulePreset, getScheduleSummary } from '@/lib/schedules';
 import { cn } from '@/lib/utils';
@@ -37,7 +38,7 @@ const scheduleStatusConfig: Record<ScheduleLogStatus, { label: string; className
 
 export default function StackDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { getStack, getPeptide, updateStack, activateStack, updateStackItemSchedule, getScheduleLogsForStack } = useApp();
+  const { data, getStack, updateStack, activateStack, updateStackItemSchedule, getScheduleLogsForStack } = useApp();
   const [calendarFilter, setCalendarFilter] = useState<CalendarFilter>('all');
   const stack = getStack(id);
 
@@ -81,6 +82,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
     groups[key] = [...(groups[key] ?? []), log];
     return groups;
   }, {});
+  const trackableCompounds = getTrackableCompounds(data);
   const hasSchedulableItems = stack.peptides.length > 0;
   const scheduleCounts = scheduleLogs.reduce<Record<ScheduleLogStatus, number>>((counts, log) => {
     counts[log.status] += 1;
@@ -159,15 +161,15 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
 
           <TabsContent value="protocol" className="mt-4 space-y-3">
             {stack.peptides.map((sp) => {
-              const peptide = getPeptide(sp.peptideId);
+              const compound = trackableCompounds.find((candidate) => candidate.id === sp.peptideId);
               return (
                 <Card key={sp.id ?? sp.peptideId}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="font-semibold">{peptide?.name}</h4>
+                        <h4 className="font-semibold">{compound?.name ?? sp.peptideId}</h4>
                         <Badge variant="outline" className="text-xs mt-1">
-                          {peptide?.category}
+                          {compound?.source === 'user' ? 'custom' : compound?.source ?? 'reference'}
                         </Badge>
                       </div>
                       <Syringe className="w-4 h-4 text-muted-foreground" />
@@ -196,7 +198,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                         value={getSchedulePreset(sp)}
                         onValueChange={(value) => sp.id && updateStackItemSchedule(stack.id, sp.id, value as SchedulePreset)}
                       >
-                        <SelectTrigger id={`schedule-${sp.id ?? sp.peptideId}`} aria-label={`${peptide?.name ?? sp.peptideId} schedule`}>
+                        <SelectTrigger id={`schedule-${sp.id ?? sp.peptideId}`} aria-label={`${compound?.name ?? sp.peptideId} schedule`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

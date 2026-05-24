@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useApp } from '@/lib/context';
+import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose, getDefaultDoseUnit } from '@/lib/dose-helpers';
 import { applySchedulePreset, getSchedulePreset } from '@/lib/schedules';
 import { getStackConflictWarnings } from '@/lib/stack-conflicts';
@@ -23,7 +24,7 @@ interface NewStackSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const steps = ['Basics', 'Peptides', 'Schedule', 'Review'] as const;
+const steps = ['Basics', 'Compounds', 'Schedule', 'Review'] as const;
 type BuilderStep = typeof steps[number];
 
 export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
@@ -34,6 +35,7 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
   const [selectedPeptides, setSelectedPeptides] = useState<string[]>([]);
   const [templatePeptides, setTemplatePeptides] = useState<StackPeptide[] | null>(null);
   const [durationDays, setDurationDays] = useState('28');
+  const trackableCompounds = getTrackableCompounds(data);
 
   const resetForm = () => {
     setCurrentStep(0);
@@ -49,14 +51,14 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
       const templatePeptide = templatePeptides?.find((item) => item.peptideId === peptideId);
       if (templatePeptide) return { ...templatePeptide };
 
-      const peptide = data.peptides.find(p => p.id === peptideId);
-      const doseUnit = getDefaultDoseUnit(peptideId);
+      const compound = trackableCompounds.find(p => p.id === peptideId);
+      const doseUnit = compound?.defaultDoseUnit ?? getDefaultDoseUnit(peptideId);
       return {
         peptideId,
         doseValue: doseUnit === 'mg' ? 1 : doseUnit === 'iu' ? 2 : 250,
         doseUnit,
         frequency: 'daily',
-        route: peptide?.defaultRoute || 'subq',
+        route: compound?.defaultRoute || 'subq',
         timing: 'Morning',
         schedule: { frequency: 'daily', timesOfDay: ['08:00'] },
       };
@@ -119,7 +121,7 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
 
   const currentStepName: BuilderStep = steps[currentStep];
   const draftPeptides = getDraftPeptides();
-  const peptideNameById = Object.fromEntries(data.peptides.map((peptide) => [peptide.id, peptide.name]));
+  const peptideNameById = Object.fromEntries(trackableCompounds.map((compound) => [compound.id, compound.name]));
   const conflictWarnings = getStackConflictWarnings({
     draftPeptides,
     existingStacks: data.stacks,
@@ -224,27 +226,27 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
             </section>
           )}
 
-          {currentStepName === 'Peptides' && (
+          {currentStepName === 'Compounds' && (
             <section className="space-y-4">
-              <h2 className="text-lg font-semibold">Peptides</h2>
+              <h2 className="text-lg font-semibold">Compounds</h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[42vh] overflow-y-auto p-1">
-                {data.peptides.map((peptide) => {
-                  const checkboxId = `stack-peptide-${peptide.id}`;
+                {trackableCompounds.map((compound) => {
+                  const checkboxId = `stack-peptide-${compound.id}`;
                   return (
                     <label
-                      key={peptide.id}
+                      key={compound.id}
                       htmlFor={checkboxId}
                       className="flex items-start gap-3 p-3 rounded-lg bg-secondary cursor-pointer hover:bg-secondary/80"
                     >
                       <Checkbox
                         id={checkboxId}
-                        checked={selectedPeptides.includes(peptide.id)}
-                        onCheckedChange={() => handlePeptideToggle(peptide.id)}
+                        checked={selectedPeptides.includes(compound.id)}
+                        onCheckedChange={() => handlePeptideToggle(compound.id)}
                       />
                       <span>
-                        <span className="block text-sm font-medium">{peptide.name}</span>
-                        <span className="block text-xs text-muted-foreground capitalize">{peptide.defaultRoute}</span>
+                        <span className="block text-sm font-medium">{compound.name}</span>
+                        <span className="block text-xs text-muted-foreground capitalize">{compound.defaultRoute}</span>
                       </span>
                     </label>
                   );
@@ -259,12 +261,12 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
 
               <div className="space-y-2">
                 {draftPeptides.map((stackPeptide) => {
-                  const peptide = data.peptides.find(p => p.id === stackPeptide.peptideId);
+                  const compound = trackableCompounds.find(p => p.id === stackPeptide.peptideId);
                   return (
                     <div key={stackPeptide.peptideId} className="rounded-lg border border-border p-3">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-medium text-sm">{peptide?.name}</p>
+                          <p className="font-medium text-sm">{compound?.name}</p>
                           <p className="text-xs text-muted-foreground">
                             {stackPeptide.frequency} · {stackPeptide.timing} · {stackPeptide.route.toUpperCase()}
                           </p>
@@ -331,12 +333,12 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
                   <p className="font-medium">{durationDays} days</p>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Peptides</p>
+                  <p className="text-xs text-muted-foreground">Compounds</p>
                   {draftPeptides.map((stackPeptide) => {
-                    const peptide = data.peptides.find(p => p.id === stackPeptide.peptideId);
+                    const compound = trackableCompounds.find(p => p.id === stackPeptide.peptideId);
                     return (
                       <div key={stackPeptide.peptideId} className="flex items-center justify-between gap-3 text-sm">
-                        <span className="font-medium">{peptide?.name}</span>
+                        <span className="font-medium">{compound?.name}</span>
                         <span>{formatDose(stackPeptide.doseValue, stackPeptide.doseUnit)}</span>
                       </div>
                     );
