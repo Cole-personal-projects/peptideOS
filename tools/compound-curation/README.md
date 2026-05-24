@@ -9,6 +9,7 @@ This workflow is for bundled stock-library data. User-created compounds belong i
 ## Rules
 
 - No generated facts ship without human review.
+- Source fetcher output is always `sourced-facts-unreviewed`.
 - Do not copy third-party database descriptions.
 - Do not add medical instructions, treatment guidance, or dose recommendations.
 - Do not promote a compound to `reviewed` unless citations/source notes are present.
@@ -24,7 +25,8 @@ This workflow is for bundled stock-library data. User-created compounds belong i
 ## Agent Checklist
 
 1. Create or update a candidate file.
-2. Collect source facts with citations and URLs.
+2. Collect source facts with citations and URLs. Optional helper:
+   `pnpm compound:fetch-sources -- --compound "Testosterone Cypionate" --id testosterone-cypionate`
 3. Normalize into a draft reference entry.
 4. Run a safety review for recommendation language.
 5. Run `pnpm compound:validate`.
@@ -37,3 +39,9 @@ This workflow is for bundled stock-library data. User-created compounds belong i
 - Presets are labeled for logging/reference only.
 - Citations use HTTPS URLs and identify the source.
 - Copy is original, concise, and research/tracking oriented.
+
+## Source Fetcher Limits
+
+The helper fetches PubChem identifiers/synonyms and DailyMed label candidates into `tools/compound-curation/sourced/*.source-facts.yml`.
+It does not create reviewed app entries, does not write final app copy, and does not decide route, dose, safety, or storage defaults.
+Every generated source-facts file must remain unreviewed until a human confirms identity, source relevance, and whether the facts are appropriate for PeptideOS.
