@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { BodyMannequin } from '@/components/site-picker/body-mannequin';
 import { useApp } from '@/lib/context';
-import { getAllowedDoseUnits, getDefaultDoseUnit, getDosePresetsForPeptide, getDoseUnitLabel } from '@/lib/dose-helpers';
+import { getAllowedWorkflowDoseUnits, getTrackableCompounds, getWorkflowDosePresets } from '@/lib/compound-workflows';
+import { getDoseUnitLabel } from '@/lib/dose-helpers';
 import type { DoseUnit, Route, SiteCode } from '@/lib/types';
 
 interface LogDoseSheetProps {
@@ -37,20 +38,21 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
   const [site, setSite] = useState<SiteCode | ''>('');
   const [notes, setNotes] = useState('');
 
+  const trackableCompounds = getTrackableCompounds(data);
   const activeVials = data.vials.filter(v => v.status === 'active');
-  const selectedPeptide = getPeptide(peptideId);
+  const selectedCompound = trackableCompounds.find((compound) => compound.id === peptideId);
   const filteredVials = activeVials.filter(v => v.peptideId === peptideId);
-  const allowedDoseUnits: DoseUnit[] = peptideId ? getAllowedDoseUnits(peptideId) : ['mcg', 'mg'];
-  const dosePresets = peptideId ? getDosePresetsForPeptide(peptideId) : [];
+  const allowedDoseUnits: DoseUnit[] = getAllowedWorkflowDoseUnits(selectedCompound);
+  const dosePresets = getWorkflowDosePresets(selectedCompound);
   const requiresSite = injectableRoutes.includes(route);
 
   const handlePeptideChange = (value: string) => {
-    const peptide = getPeptide(value);
+    const compound = trackableCompounds.find((candidate) => candidate.id === value);
     setPeptideId(value);
     setVialId('');
     setDoseValue('');
-    setDoseUnit(getDefaultDoseUnit(value));
-    setRoute(peptide?.defaultRoute || 'subq');
+    setDoseUnit(compound?.defaultDoseUnit ?? 'mcg');
+    setRoute(compound?.defaultRoute || 'subq');
     setSite('');
   };
 
@@ -96,14 +98,14 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
         
         <div className="space-y-4 pb-8">
           <div className="space-y-2">
-            <Label>Peptide</Label>
+            <Label>Compound</Label>
             <Select value={peptideId} onValueChange={handlePeptideChange}>
               <SelectTrigger>
-                <SelectValue placeholder="Select peptide" />
+                <SelectValue placeholder="Select compound" />
               </SelectTrigger>
               <SelectContent>
-                {data.peptides.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                {trackableCompounds.map((compound) => (
+                  <SelectItem key={compound.id} value={compound.id}>{compound.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -172,9 +174,9 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
                 ))}
               </div>
             )}
-            {selectedPeptide && (
+            {selectedCompound && (
               <p className="text-xs text-muted-foreground">
-                Typical: {selectedPeptide.protocols[0]}
+                Default: {selectedCompound.defaultRoute.toUpperCase()} · {selectedCompound.defaultDoseUnit.toUpperCase()}
               </p>
             )}
           </div>

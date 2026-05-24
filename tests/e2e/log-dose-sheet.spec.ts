@@ -27,7 +27,7 @@ test.describe('log dose sheet body picker', () => {
     await page.getByRole('button', { name: 'Quick actions' }).click();
     await page.getByRole('button', { name: 'Log Dose' }).click();
 
-    await page.getByRole('combobox').filter({ hasText: 'Select peptide' }).click();
+    await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
     await page.getByRole('option', { name: 'TB-500' }).click();
 
     await page.getByRole('button', { name: 'TB-500 2mg' }).click();
@@ -42,7 +42,7 @@ test.describe('log dose sheet body picker', () => {
     await page.getByRole('button', { name: 'Quick actions' }).click();
     await page.getByRole('button', { name: 'Log Dose' }).click();
 
-    await page.getByRole('combobox').filter({ hasText: 'Select peptide' }).click();
+    await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
     await page.getByRole('option', { name: 'hGH (Somatropin)' }).click();
     await page.getByRole('combobox').filter({ hasText: 'Select vial' }).click();
     await page.getByRole('option', { name: /HGH-2024-010/ }).click();

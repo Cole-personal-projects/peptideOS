@@ -12,13 +12,14 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/lib/context';
+import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose } from '@/lib/dose-helpers';
 import { buildDoseTimelineGroups } from '@/lib/dose-timeline';
 import { getEmptyStateContent } from '@/lib/empty-states';
 import { cn } from '@/lib/utils';
 
 export default function LogPage() {
-  const { data, getDosesByDate, getPeptide } = useApp();
+  const { data, getDosesByDate } = useApp();
   const [view, setView] = useState<'calendar' | 'list'>('calendar');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [filterPeptide, setFilterPeptide] = useState<string>('all');
@@ -97,6 +98,7 @@ export default function LogPage() {
   );
   const dayEmptyState = getEmptyStateContent('log-day-empty');
   const timelineEmptyState = getEmptyStateContent('log-timeline-empty');
+  const trackableCompounds = getTrackableCompounds(data);
 
   return (
     <AppShell>
@@ -130,12 +132,12 @@ export default function LogPage() {
           <Filter className="w-4 h-4 text-muted-foreground" />
           <Select value={filterPeptide} onValueChange={setFilterPeptide}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="All peptides" />
+              <SelectValue placeholder="All compounds" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All peptides</SelectItem>
-              {data.peptides.map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              <SelectItem value="all">All compounds</SelectItem>
+              {trackableCompounds.map((compound) => (
+                <SelectItem key={compound.id} value={compound.id}>{compound.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -226,12 +228,12 @@ export default function LogPage() {
               ) : (
                 <div className="space-y-2">
                   {selectedDoses.map((dose) => {
-                    const peptide = getPeptide(dose.peptideId);
+                    const compound = trackableCompounds.find((candidate) => candidate.id === dose.peptideId);
                     return (
                       <Card key={dose.id}>
                         <CardContent className="p-3 flex items-center justify-between">
                           <div>
-                            <p className="font-medium text-sm">{peptide?.name}</p>
+                            <p className="font-medium text-sm">{compound?.name ?? dose.peptideId}</p>
                             <p className="text-xs text-muted-foreground">
                               {formatTime(dose.dateTime)} · {dose.route.toUpperCase()} · {dose.site.replace(/-/g, ' ')}
                             </p>
@@ -269,12 +271,12 @@ export default function LogPage() {
                   </h3>
                   <div className="space-y-2">
                     {group.doses.map((dose) => {
-                      const peptide = getPeptide(dose.peptideId);
+                      const compound = trackableCompounds.find((candidate) => candidate.id === dose.peptideId);
                       return (
                         <Card key={dose.id}>
                           <CardContent className="p-3 flex items-center justify-between">
                             <div>
-                              <p className="font-medium text-sm">{peptide?.name}</p>
+                              <p className="font-medium text-sm">{compound?.name ?? dose.peptideId}</p>
                               <p className="text-xs text-muted-foreground">
                                 {dose.timeLabel} · {dose.route.toUpperCase()} · {dose.siteLabel}
                               </p>

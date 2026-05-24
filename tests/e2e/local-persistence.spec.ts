@@ -20,7 +20,7 @@ test.describe('local persistence', () => {
     await page.getByRole('button', { name: 'I Understand' }).click();
     await page.getByRole('button', { name: 'Add' }).click();
     await page.getByRole('textbox', { name: 'Vial name' }).fill('Reload Persisted GHK-Cu');
-    await page.getByLabel('Peptide').selectOption('ghk-cu');
+    await page.getByLabel('Compound').selectOption('ghk-cu');
     await page.getByLabel('Date added').fill('2026-05-21');
     await page.getByRole('button', { name: 'Create vial' }).click();
 
@@ -39,7 +39,7 @@ test.describe('local persistence', () => {
     await page.getByRole('button', { name: 'I Understand' }).click();
     await page.getByRole('button', { name: 'Add' }).click();
     await page.getByRole('textbox', { name: 'Vial name' }).fill('Clear Data GHK-Cu');
-    await page.getByLabel('Peptide').selectOption('ghk-cu');
+    await page.getByLabel('Compound').selectOption('ghk-cu');
     await page.getByLabel('Date added').fill('2026-05-21');
     await page.getByRole('button', { name: 'Create vial' }).click();
     await page.getByRole('tab', { name: /Sealed/ }).click();

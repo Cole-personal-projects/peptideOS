@@ -11,7 +11,7 @@ test.describe('add vial', () => {
     await expect(page.getByRole('dialog', { name: 'Add vial' })).toBeVisible();
 
     await page.getByRole('textbox', { name: 'Vial name' }).fill('Travel GHK-Cu');
-    await page.getByLabel('Peptide').selectOption('ghk-cu');
+    await page.getByLabel('Compound').selectOption('ghk-cu');
     await page.getByLabel('Date added').fill('2026-05-20');
     await page.getByRole('button', { name: 'Create vial' }).click();
 

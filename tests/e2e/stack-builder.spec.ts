@@ -64,7 +64,7 @@ test.describe('stack builder', () => {
     await page.getByRole('button', { name: 'Next' }).click();
 
     await expect(page.getByText('Step 2 of 4')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Peptides' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Compounds' })).toBeVisible();
     await page.getByRole('checkbox', { name: 'BPC-157' }).check();
     await page.getByRole('checkbox', { name: 'TB-500' }).check();
     await page.getByRole('button', { name: 'Next' }).click();

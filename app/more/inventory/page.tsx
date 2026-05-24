@@ -15,17 +15,19 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/lib/context';
+import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { getEmptyStateContent, type EmptyStateKey } from '@/lib/empty-states';
 import { getVialInventoryMetrics } from '@/lib/inventory-metrics';
 import { buildNewVial } from '@/lib/vial-create';
 import { cn } from '@/lib/utils';
 
 export default function InventoryPage() {
-  const { data, getPeptide, addVial } = useApp();
+  const { data, addVial } = useApp();
   const [activeTab, setActiveTab] = useState('active');
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const trackableCompounds = getTrackableCompounds(data);
   const [newVialName, setNewVialName] = useState('');
-  const [newVialPeptideId, setNewVialPeptideId] = useState(data.peptides[0]?.id ?? '');
+  const [newVialPeptideId, setNewVialPeptideId] = useState(trackableCompounds[0]?.id ?? '');
   const [newVialDateAdded, setNewVialDateAdded] = useState(() => new Date().toISOString().slice(0, 10));
 
   const getDaysUntilExpiration = (expirationDate: string) => {
@@ -64,14 +66,14 @@ export default function InventoryPage() {
 
     addVial(newVialPayload);
     setNewVialName('');
-    setNewVialPeptideId(data.peptides[0]?.id ?? '');
+    setNewVialPeptideId(trackableCompounds[0]?.id ?? '');
     setNewVialDateAdded(new Date().toISOString().slice(0, 10));
     setActiveTab('sealed');
     setIsAddOpen(false);
   };
 
   const renderVialCard = (vial: typeof data.vials[0]) => {
-    const peptide = getPeptide(vial.peptideId);
+    const compound = trackableCompounds.find((candidate) => candidate.id === vial.peptideId);
     const daysLeft = getDaysUntilExpiration(vial.expirationDate);
     const progress = getExpirationProgress(vial.reconstitutedDate, vial.expirationDate);
     const metrics = getVialInventoryMetrics(vial, data.doses);
@@ -94,7 +96,7 @@ export default function InventoryPage() {
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {peptide?.name ?? 'Unknown peptide'} · Added {formatDate(vial.dateAdded)}
+                  {compound?.name ?? 'Unknown compound'} · Added {formatDate(vial.dateAdded)}
                 </p>
               </div>
               <Badge variant={vial.status === 'active' ? 'default' : 'secondary'} className="capitalize">
@@ -240,17 +242,17 @@ export default function InventoryPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="vial-peptide">Peptide</Label>
+              <Label htmlFor="vial-peptide">Compound</Label>
               <select
                 id="vial-peptide"
-                aria-label="Peptide"
+                aria-label="Compound"
                 value={newVialPeptideId}
                 onChange={(event) => setNewVialPeptideId(event.target.value)}
                 className="border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
               >
-                {data.peptides.map((peptide) => (
-                  <option key={peptide.id} value={peptide.id}>
-                    {peptide.name}
+                {trackableCompounds.map((compound) => (
+                  <option key={compound.id} value={compound.id}>
+                    {compound.name}
                   </option>
                 ))}
               </select>
