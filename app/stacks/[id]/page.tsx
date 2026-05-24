@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import { notFound } from 'next/navigation';
 import { Calendar, AlertTriangle, Clock, Play, Pause, CheckCircle2, Syringe } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
@@ -9,10 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useApp } from '@/lib/context';
 import { formatDose } from '@/lib/dose-helpers';
+import { getSchedulePreset, getScheduleSummary } from '@/lib/schedules';
 import { cn } from '@/lib/utils';
-import type { StackStatus } from '@/lib/types';
+import type { ScheduleLogStatus, StackStatus } from '@/lib/types';
+import type { SchedulePreset } from '@/lib/schedules';
 
 const statusConfig = {
   active: { icon: Play, label: 'Active', className: 'bg-primary/20 text-primary' },
@@ -21,9 +25,20 @@ const statusConfig = {
   paused: { icon: Pause, label: 'Paused', className: 'bg-muted text-muted-foreground' },
 };
 
+const calendarFilters = ['all', 'pending', 'taken', 'skipped', 'missed'] as const;
+type CalendarFilter = typeof calendarFilters[number];
+
+const scheduleStatusConfig: Record<ScheduleLogStatus, { label: string; className: string }> = {
+  pending: { label: 'Pending', className: 'bg-chart-4' },
+  taken: { label: 'Taken', className: 'bg-chart-3' },
+  skipped: { label: 'Skipped', className: 'bg-muted-foreground' },
+  missed: { label: 'Missed', className: 'bg-destructive' },
+};
+
 export default function StackDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { getStack, getPeptide, updateStack, activateStack, getScheduleLogsForStack } = useApp();
+  const { getStack, getPeptide, updateStack, activateStack, updateStackItemSchedule, getScheduleLogsForStack } = useApp();
+  const [calendarFilter, setCalendarFilter] = useState<CalendarFilter>('all');
   const stack = getStack(id);
 
   if (!stack) {
@@ -49,6 +64,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
 
   const handleStatusChange = (newStatus: StackStatus) => {
     if (newStatus === 'active') {
+      if (stack.peptides.length === 0) return;
       activateStack(stack.id);
       return;
     }
@@ -57,11 +73,19 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
   };
 
   const scheduleLogs = getScheduleLogsForStack(stack.id);
-  const scheduleLogsByDate = scheduleLogs.reduce<Record<string, typeof scheduleLogs>>((groups, log) => {
+  const filteredScheduleLogs = calendarFilter === 'all'
+    ? scheduleLogs
+    : scheduleLogs.filter((log) => log.status === calendarFilter);
+  const scheduleLogsByDate = filteredScheduleLogs.reduce<Record<string, typeof scheduleLogs>>((groups, log) => {
     const key = log.dueAt.slice(0, 10);
     groups[key] = [...(groups[key] ?? []), log];
     return groups;
   }, {});
+  const hasSchedulableItems = stack.peptides.length > 0;
+  const scheduleCounts = scheduleLogs.reduce<Record<ScheduleLogStatus, number>>((counts, log) => {
+    counts[log.status] += 1;
+    return counts;
+  }, { pending: 0, taken: 0, skipped: 0, missed: 0 });
 
   return (
     <AppShell>
@@ -78,7 +102,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
               </Badge>
               <div className="flex gap-2">
                 {stack.status === 'planned' && (
-                  <Button size="sm" onClick={() => handleStatusChange('active')}>
+                  <Button size="sm" disabled={!hasSchedulableItems} onClick={() => handleStatusChange('active')}>
                     <Play className="w-3.5 h-3.5 mr-1" /> Start
                   </Button>
                 )}
@@ -101,6 +125,11 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             </div>
 
             <p className="text-sm text-muted-foreground mb-4">{stack.description}</p>
+            {!hasSchedulableItems && (
+              <p className="mb-4 rounded-md border border-chart-4/40 bg-chart-4/10 p-3 text-sm text-chart-4">
+                Add at least one peptide before starting this stack.
+              </p>
+            )}
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
@@ -132,7 +161,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             {stack.peptides.map((sp) => {
               const peptide = getPeptide(sp.peptideId);
               return (
-                <Card key={sp.peptideId}>
+                <Card key={sp.id ?? sp.peptideId}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div>
@@ -161,6 +190,26 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                         <p className="font-medium">{sp.timing}</p>
                       </div>
                     </div>
+                    <div className="mt-4 space-y-2">
+                      <Label htmlFor={`schedule-${sp.id ?? sp.peptideId}`}>Schedule</Label>
+                      <Select
+                        value={getSchedulePreset(sp)}
+                        onValueChange={(value) => sp.id && updateStackItemSchedule(stack.id, sp.id, value as SchedulePreset)}
+                      >
+                        <SelectTrigger id={`schedule-${sp.id ?? sp.peptideId}`} aria-label={`${peptide?.name ?? sp.peptideId} schedule`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="daily">Daily · 8:00 AM</SelectItem>
+                          <SelectItem value="twice-daily">2x daily · 8:00 AM, 8:00 PM</SelectItem>
+                          <SelectItem value="weekly">Weekly · Monday</SelectItem>
+                          <SelectItem value="twice-weekly">2x weekly · Monday, Thursday</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        {getScheduleSummary(sp.schedule ?? { frequency: 'daily', timesOfDay: ['08:00'] })}
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               );
@@ -176,6 +225,20 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                <div className="mb-3 flex flex-wrap gap-2" aria-label="Calendar status filters">
+                  {calendarFilters.map((filter) => (
+                    <Button
+                      key={filter}
+                      type="button"
+                      size="sm"
+                      variant={calendarFilter === filter ? 'default' : 'outline'}
+                      className="h-8 capitalize"
+                      onClick={() => setCalendarFilter(filter)}
+                    >
+                      {filter}
+                    </Button>
+                  ))}
+                </div>
                 <div className="grid grid-cols-7 gap-1 text-center text-xs">
                   {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
                     <div key={i} className="text-muted-foreground py-1">{day}</div>
@@ -189,6 +252,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                     const logsForDay = isInRange ? scheduleLogsByDate[dayDate.toISOString().slice(0, 10)] ?? [] : [];
                     const hasTaken = logsForDay.some((log) => log.status === 'taken');
                     const hasSkipped = logsForDay.some((log) => log.status === 'skipped');
+                    const hasMissed = logsForDay.some((log) => log.status === 'missed');
                     const hasPending = logsForDay.some((log) => log.status === 'pending');
                     return (
                       <div 
@@ -201,6 +265,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                           hasPending && "ring-1 ring-chart-4",
                           hasTaken && "bg-chart-3/20 text-chart-3",
                           hasSkipped && "bg-muted text-muted-foreground line-through",
+                          hasMissed && "bg-destructive/15 text-destructive",
                           !isInRange && "text-muted-foreground/30"
                         )}
                       >
@@ -209,6 +274,14 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                       </div>
                     );
                   })}
+                </div>
+                <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground" aria-label="Calendar legend">
+                  {(Object.keys(scheduleStatusConfig) as ScheduleLogStatus[]).map((status) => (
+                    <span key={status} className="inline-flex items-center gap-1.5">
+                      <span className={cn('h-2 w-2 rounded-full', scheduleStatusConfig[status].className)} />
+                      {scheduleStatusConfig[status].label}
+                    </span>
+                  ))}
                 </div>
                 {scheduleLogs.length === 0 && (
                   <p className="mt-3 text-xs text-muted-foreground">
@@ -242,7 +315,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                {scheduleLogs.filter((log) => log.status === 'pending').length} pending · {scheduleLogs.filter((log) => log.status === 'taken').length} taken · {scheduleLogs.filter((log) => log.status === 'skipped').length} skipped
+                {scheduleCounts.pending} pending · {scheduleCounts.taken} taken · {scheduleCounts.skipped} skipped · {scheduleCounts.missed} missed
               </p>
             </CardContent>
           </Card>

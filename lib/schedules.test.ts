@@ -1,6 +1,15 @@
 import { describe, expect, test } from 'vitest';
-import { activateStackSchedules, generateScheduleLogs, normalizeStack, normalizeStacks } from './schedules';
-import type { Schedule, Stack } from './types';
+import {
+  activateStackSchedules,
+  applySchedulePreset,
+  generateScheduleLogs,
+  getSchedulePreset,
+  getScheduleSummary,
+  normalizeStack,
+  normalizeStacks,
+  updateStackPeptideSchedule,
+} from './schedules';
+import type { Schedule, ScheduleLog, Stack } from './types';
 
 const legacyStack = {
   id: 'stack-legacy',
@@ -158,5 +167,77 @@ describe('schedule generation', () => {
     expect(first.scheduleLogs.length).toBeGreaterThan(0);
     expect(second.schedules).toHaveLength(first.schedules.length);
     expect(second.scheduleLogs).toHaveLength(first.scheduleLogs.length);
+  });
+});
+
+describe('schedule presets', () => {
+  test('maps schedule presets into recurrence metadata and display copy', () => {
+    const daily = applySchedulePreset(legacyStack.peptides[0], 'daily');
+    const twiceDaily = applySchedulePreset(legacyStack.peptides[0], 'twice-daily');
+    const weekly = applySchedulePreset(legacyStack.peptides[0], 'weekly');
+    const twiceWeekly = applySchedulePreset(legacyStack.peptides[0], 'twice-weekly');
+
+    expect(getSchedulePreset(daily)).toBe('daily');
+    expect(getSchedulePreset(twiceDaily)).toBe('twice-daily');
+    expect(getSchedulePreset(weekly)).toBe('weekly');
+    expect(getSchedulePreset(twiceWeekly)).toBe('twice-weekly');
+    expect(getScheduleSummary(twiceWeekly.schedule!)).toBe('2x weekly · Monday, Thursday · 8:00 AM');
+  });
+
+  test('falls back to daily morning when persisted recurrence has no time slots', () => {
+    const updated = applySchedulePreset({
+      ...legacyStack.peptides[0],
+      schedule: { frequency: 'daily', timesOfDay: [] },
+    }, 'daily');
+
+    expect(updated.schedule).toEqual({ frequency: 'daily', timesOfDay: ['08:00'] });
+  });
+});
+
+describe('schedule editing', () => {
+  test('updates an active stack item schedule and preserves completed logs', () => {
+    const stack = normalizeStack({
+      ...legacyStack,
+      startDate: '2026-05-23T00:00:00.000Z',
+      durationDays: 14,
+      peptides: [legacyStack.peptides[0]],
+      status: 'active',
+    });
+    const activated = activateStackSchedules({ stack, existingSchedules: [], existingScheduleLogs: [] });
+    const firstLog = activated.scheduleLogs[0];
+    const preservedTakenLog: ScheduleLog = {
+      ...firstLog,
+      status: 'taken',
+      doseId: 'dose-1',
+      takenAt: '2026-05-23T08:10:00.000Z',
+    };
+    const skippedLog: ScheduleLog = {
+      ...activated.scheduleLogs[1],
+      status: 'skipped',
+      skippedAt: '2026-05-23T20:30:00.000Z',
+    };
+
+    const result = updateStackPeptideSchedule({
+      stack: activated.stack,
+      stackPeptideId: activated.stack.peptides[0].id!,
+      preset: 'weekly',
+      existingSchedules: activated.schedules,
+      existingScheduleLogs: [preservedTakenLog, skippedLog, ...activated.scheduleLogs.slice(2)],
+    });
+
+    expect(result.stack.peptides[0]).toEqual(expect.objectContaining({
+      frequency: 'weekly',
+      timing: 'Monday morning',
+      schedule: { frequency: 'weekly', timesOfDay: ['08:00'], weekdays: [1] },
+    }));
+    expect(result.schedules[0]).toEqual(expect.objectContaining({
+      recurrence: { frequency: 'weekly', timesOfDay: ['08:00'], weekdays: [1] },
+    }));
+    expect(result.scheduleLogs).toContainEqual(preservedTakenLog);
+    expect(result.scheduleLogs).toContainEqual(skippedLog);
+    expect(result.scheduleLogs.filter((log) => log.status === 'pending').map((log) => log.dueAt)).toEqual([
+      '2026-05-25T08:00:00.000Z',
+      '2026-06-01T08:00:00.000Z',
+    ]);
   });
 });

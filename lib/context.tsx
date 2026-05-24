@@ -4,7 +4,8 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import type { AppData, Peptide, Vial, Dose, ScheduleLog, SiteCode, Stack, UserMode } from './types';
 import { initialAppData } from './mock-data';
 import { completeOnboarding as completeOnboardingState } from './onboarding';
-import { activateStackSchedules, normalizeStack } from './schedules';
+import { activateStackSchedules, normalizeStack, updateStackPeptideSchedule } from './schedules';
+import type { SchedulePreset } from './schedules';
 import {
   downloadUserData,
   exportUserData,
@@ -35,6 +36,7 @@ interface AppContextType {
   addStack: (stack: Omit<Stack, 'id'>) => void;
   updateStack: (id: string, updates: Partial<Stack>) => void;
   activateStack: (id: string) => void;
+  updateStackItemSchedule: (stackId: string, stackPeptideId: string, preset: SchedulePreset) => void;
   getScheduleLogsForStack: (stackId: string) => ScheduleLog[];
   completeScheduleLog: (logId: string, completion: { vialId: string; site: SiteCode | ''; notes: string }) => Promise<void>;
   skipScheduleLog: (logId: string) => Promise<void>;
@@ -239,7 +241,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const activateStack = useCallback((id: string) => {
     void setAndPersistData(prev => {
       const stack = prev.stacks.find((candidate) => candidate.id === id);
-      if (!stack) return prev;
+      if (!stack || stack.peptides.length === 0) return prev;
 
       const activated = activateStackSchedules({
         stack,
@@ -252,6 +254,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
         stacks: prev.stacks.map((candidate) => candidate.id === id ? activated.stack : candidate),
         schedules: activated.schedules,
         scheduleLogs: activated.scheduleLogs,
+      };
+    });
+  }, [setAndPersistData]);
+
+  const updateStackItemSchedule = useCallback((stackId: string, stackPeptideId: string, preset: SchedulePreset) => {
+    void setAndPersistData(prev => {
+      const stack = prev.stacks.find((candidate) => candidate.id === stackId);
+      if (!stack) return prev;
+
+      const updated = updateStackPeptideSchedule({
+        stack,
+        stackPeptideId,
+        preset,
+        existingSchedules: prev.schedules,
+        existingScheduleLogs: prev.scheduleLogs,
+      });
+
+      return {
+        ...prev,
+        stacks: prev.stacks.map((candidate) => candidate.id === stackId ? updated.stack : candidate),
+        schedules: updated.schedules,
+        scheduleLogs: updated.scheduleLogs,
       };
     });
   }, [setAndPersistData]);
@@ -358,6 +382,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addStack,
       updateStack,
       activateStack,
+      updateStackItemSchedule,
       getScheduleLogsForStack,
       completeScheduleLog,
       skipScheduleLog,

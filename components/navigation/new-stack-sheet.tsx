@@ -11,11 +11,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useApp } from '@/lib/context';
 import { formatDose, getDefaultDoseUnit } from '@/lib/dose-helpers';
-import { getDefaultScheduleRecurrence } from '@/lib/schedules';
+import { applySchedulePreset, getSchedulePreset } from '@/lib/schedules';
 import { getStackConflictWarnings } from '@/lib/stack-conflicts';
 import { stackTemplates, templateToStackDraft } from '@/lib/stack-templates';
 import { cn } from '@/lib/utils';
 import type { StackPeptide } from '@/lib/types';
+import type { SchedulePreset } from '@/lib/schedules';
 
 interface NewStackSheetProps {
   open: boolean;
@@ -24,52 +25,6 @@ interface NewStackSheetProps {
 
 const steps = ['Basics', 'Peptides', 'Schedule', 'Review'] as const;
 type BuilderStep = typeof steps[number];
-type SchedulePreset = 'daily' | 'twice-daily' | 'weekly' | 'twice-weekly';
-
-function getSchedulePresetLabel(stackPeptide: StackPeptide): SchedulePreset {
-  const recurrence = stackPeptide.schedule ?? getDefaultScheduleRecurrence(stackPeptide);
-  if (recurrence.frequency === 'weekly') {
-    return (recurrence.weekdays?.length ?? 0) > 1 ? 'twice-weekly' : 'weekly';
-  }
-
-  return recurrence.timesOfDay.length > 1 ? 'twice-daily' : 'daily';
-}
-
-function applySchedulePreset(stackPeptide: StackPeptide, preset: SchedulePreset): StackPeptide {
-  if (preset === 'twice-daily') {
-    return {
-      ...stackPeptide,
-      frequency: '2x daily',
-      timing: 'Morning and evening',
-      schedule: { frequency: 'daily', timesOfDay: ['08:00', '20:00'] },
-    };
-  }
-
-  if (preset === 'weekly') {
-    return {
-      ...stackPeptide,
-      frequency: 'weekly',
-      timing: 'Monday morning',
-      schedule: { frequency: 'weekly', timesOfDay: ['08:00'], weekdays: [1] },
-    };
-  }
-
-  if (preset === 'twice-weekly') {
-    return {
-      ...stackPeptide,
-      frequency: '2x weekly',
-      timing: 'Monday and Thursday',
-      schedule: { frequency: 'weekly', timesOfDay: ['08:00'], weekdays: [1, 4] },
-    };
-  }
-
-  return {
-    ...stackPeptide,
-    frequency: 'daily',
-    timing: 'Morning',
-    schedule: { frequency: 'daily', timesOfDay: ['08:00'] },
-  };
-}
 
 export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
   const { data, addStack } = useApp();
@@ -321,7 +276,7 @@ export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
                       <div className="mt-3 space-y-2">
                         <Label htmlFor={`schedule-${stackPeptide.peptideId}`}>Schedule</Label>
                         <Select
-                          value={getSchedulePresetLabel(stackPeptide)}
+                          value={getSchedulePreset(stackPeptide)}
                           onValueChange={(value) => updateDraftPeptideSchedule(stackPeptide.peptideId, value as SchedulePreset)}
                         >
                           <SelectTrigger id={`schedule-${stackPeptide.peptideId}`}>
