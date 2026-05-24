@@ -1,5 +1,7 @@
 compoundId: example-compound
-status: sourced-facts
+query: "Example Compound"
+status: sourced-facts-unreviewed
+reviewGate: human-review-required
 sources:
   - id: source-id
     title: Source title
@@ -17,3 +19,4 @@ sources:
         - Storage fact if present.
 unresolved:
   - Fields or claims that need human review.
+  - Do not promote this file directly to a reviewed reference compound.

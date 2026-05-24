@@ -12,6 +12,7 @@ describe('compound curation workflow scaffold', () => {
 
     expect(readme).toContain('candidate -> sourced facts -> normalized draft -> safety review -> validation -> human approval -> reviewed entry');
     expect(readme).toContain('No generated facts ship without human review');
+    expect(readme).toContain('Source fetcher output is always `sourced-facts-unreviewed`');
     expect(readme).toContain('Do not copy third-party database descriptions');
   });
 
@@ -24,5 +25,6 @@ describe('compound curation workflow scaffold', () => {
 
   test('exposes a focused validation command for reference compounds', () => {
     expect(packageJson.scripts['compound:validate']).toBe('vitest run lib/reference-compounds.test.ts');
+    expect(packageJson.scripts['compound:fetch-sources']).toBe('node tools/compound-curation/source-fetcher.mjs');
   });
 });
