@@ -1,7 +1,7 @@
 import Dexie, { type Table } from 'dexie';
-import type { AppSettings, Dose, Schedule, ScheduleLog, Stack, Vial } from './types';
+import type { AppSettings, Compound, Dose, Schedule, ScheduleLog, Stack, Vial } from './types';
 
-export const PERSISTENCE_SCHEMA_VERSION = 2;
+export const PERSISTENCE_SCHEMA_VERSION = 3;
 export const DEFAULT_DATABASE_NAME = 'PeptideOS';
 
 export type SyncState = 'local' | 'synced' | 'dirty';
@@ -54,12 +54,21 @@ export type PersistedScheduleLog = ScheduleLog & {
   syncState: SyncState;
 };
 
+export type PersistedUserCompound = Compound & {
+  source: 'user';
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  syncState: SyncState;
+};
+
 export class PeptideOSDatabase extends Dexie {
   vials!: Table<PersistedVial, string>;
   doses!: Table<PersistedDose, string>;
   stacks!: Table<PersistedStack, string>;
   schedules!: Table<PersistedSchedule, string>;
   scheduleLogs!: Table<PersistedScheduleLog, string>;
+  userCompounds!: Table<PersistedUserCompound, string>;
   settings!: Table<PersistedAppSettings, string>;
   metadata!: Table<PersistedMetadata, string>;
 
@@ -74,12 +83,23 @@ export class PeptideOSDatabase extends Dexie {
       metadata: 'key',
     });
 
+    this.version(2).stores({
+      vials: 'id, peptideId, status, updatedAt, syncState, deletedAt',
+      doses: 'id, peptideId, vialId, scheduleLogId, dateTime, completed, updatedAt, syncState, deletedAt',
+      stacks: 'id, status, updatedAt, syncState, deletedAt',
+      schedules: 'id, stackId, stackPeptideId, peptideId, status, updatedAt, syncState, deletedAt',
+      scheduleLogs: 'id, scheduleId, stackId, stackPeptideId, peptideId, dueAt, status, doseId, updatedAt, syncState, deletedAt',
+      settings: 'id, updatedAt, syncState',
+      metadata: 'key',
+    });
+
     this.version(PERSISTENCE_SCHEMA_VERSION).stores({
       vials: 'id, peptideId, status, updatedAt, syncState, deletedAt',
       doses: 'id, peptideId, vialId, scheduleLogId, dateTime, completed, updatedAt, syncState, deletedAt',
       stacks: 'id, status, updatedAt, syncState, deletedAt',
       schedules: 'id, stackId, stackPeptideId, peptideId, status, updatedAt, syncState, deletedAt',
       scheduleLogs: 'id, scheduleId, stackId, stackPeptideId, peptideId, dueAt, status, doseId, updatedAt, syncState, deletedAt',
+      userCompounds: 'id, compoundType, category, updatedAt, syncState, deletedAt',
       settings: 'id, updatedAt, syncState',
       metadata: 'key',
     });

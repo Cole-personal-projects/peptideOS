@@ -10,11 +10,41 @@ import {
   savePersistedAppData,
 } from './persistence';
 import { initialAppData } from './mock-data';
-import type { AppData } from './types';
+import { referenceCompounds } from './reference-compounds';
+import type { AppData, Compound } from './types';
 
 let db: PeptideOSDatabase;
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+
+const customCompound: Compound = {
+  id: 'custom-compound',
+  name: 'Custom Compound',
+  aliases: ['Custom alias'],
+  compoundType: 'peptide',
+  category: 'custom',
+  defaultRoute: 'subq',
+  supportedRoutes: ['subq'],
+  defaultDoseUnit: 'mg',
+  concentrationMode: 'reconstituted',
+  dosePresets: [],
+  vialPresets: [],
+  reconstitutionDefaults: {
+    typicalVialAmounts: [{ value: 10, unit: 'mg' }],
+    typicalBacWaterMl: [2],
+  },
+  beginnerSummary: 'User-entered compound.',
+  researcherDetails: 'User-entered compound details.',
+  safety: 'User-entered safety notes.',
+  storage: 'User-entered storage notes.',
+  citations: [],
+  source: 'user',
+  curationStatus: 'draft',
+  createdAt: '2026-05-23T00:00:00.000Z',
+  updatedAt: '2026-05-23T00:00:00.000Z',
+  deletedAt: null,
+  syncState: 'dirty',
+};
 
 beforeEach(() => {
   db = createPeptideOSDatabase(`PeptideOSTest-${crypto.randomUUID()}`);
@@ -31,6 +61,7 @@ describe('Dexie persistence', () => {
 
     expect(loaded.vials).toHaveLength(initialAppData.vials.length);
     expect(loaded.peptides).toHaveLength(initialAppData.peptides.length);
+    expect(loaded.compounds).toHaveLength(referenceCompounds.length);
     expect(loaded.hasCompletedOnboarding).toBe(false);
   });
 
@@ -38,6 +69,7 @@ describe('Dexie persistence', () => {
     const saved: AppData = {
       ...clone(initialAppData),
       peptides: [],
+      compounds: [],
       vials: [
         {
           ...initialAppData.vials[0],
@@ -58,11 +90,32 @@ describe('Dexie persistence', () => {
     const loaded = await loadPersistedAppData(db, initialAppData);
 
     expect(loaded.peptides).toHaveLength(initialAppData.peptides.length);
+    expect(loaded.compounds).toHaveLength(referenceCompounds.length);
     expect(loaded.vials).toHaveLength(1);
     expect(loaded.vials[0]?.name).toBe('Persisted vial');
     expect(loaded.hasCompletedOnboarding).toBe(true);
     expect(loaded.userMode).toBe('researcher');
     expect(loaded.stacks).toEqual([]);
+  });
+
+  test('saves and reloads user compounds merged with bundled reference compounds', async () => {
+    await savePersistedAppData(db, {
+      ...clone(initialAppData),
+      compounds: [...referenceCompounds, customCompound],
+    });
+
+    const loaded = await loadPersistedAppData(db, initialAppData);
+
+    expect(loaded.compounds.map((compound) => compound.id)).toEqual(expect.arrayContaining([
+      'hgh-somatropin',
+      'testosterone-cypionate',
+      'custom-compound',
+    ]));
+    expect(loaded.compounds.find((compound) => compound.id === 'hgh-somatropin')?.source).toBe('bundled');
+    expect(loaded.compounds.find((compound) => compound.id === 'custom-compound')).toEqual(expect.objectContaining({
+      source: 'user',
+      syncState: 'dirty',
+    }));
   });
 
   test('saves and reloads schedules and schedule logs', async () => {
@@ -135,14 +188,31 @@ describe('Dexie persistence', () => {
 
     const exported = await exportUserData(db, new Date('2026-05-23T00:00:00.000Z'));
 
-    expect(exported.schemaVersion).toBe(2);
+    expect(exported.schemaVersion).toBe(3);
     expect(exported.exportedAt).toBe('2026-05-23T00:00:00.000Z');
     expect(exported.data.vials).toHaveLength(1);
     expect(exported.data.vials[0]?.name).toBe('Exported vial');
     expect(exported.data.settings.hasCompletedOnboarding).toBe(true);
     expect(exported.data.schedules).toEqual([]);
     expect(exported.data.scheduleLogs).toEqual([]);
+    expect(exported.data.userCompounds).toEqual([]);
     expect(exported.data).not.toHaveProperty('peptides');
+    expect(exported.data).not.toHaveProperty('compounds');
+  });
+
+  test('exports user compounds without bundled reference compounds', async () => {
+    await savePersistedAppData(db, {
+      ...clone(initialAppData),
+      compounds: [...referenceCompounds, customCompound],
+    });
+
+    const exported = await exportUserData(db, new Date('2026-05-23T00:00:00.000Z'));
+
+    expect(exported.data.userCompounds).toEqual([expect.objectContaining({
+      id: 'custom-compound',
+      source: 'user',
+    })]);
+    expect(exported.data.userCompounds.some((compound) => compound.source === 'bundled')).toBe(false);
   });
 
   test('export falls back to default settings when settings have not been saved', async () => {
@@ -228,6 +298,7 @@ describe('Dexie persistence', () => {
         ],
         schedules: [],
         scheduleLogs: [],
+        userCompounds: [customCompound],
         settings: {
           hasSeenDisclaimer: true,
           hasCompletedOnboarding: true,
@@ -243,6 +314,10 @@ describe('Dexie persistence', () => {
 
     expect(imported.vials).toEqual([expect.objectContaining({ id: 'vial-imported', name: 'Imported vial' })]);
     expect(loaded.peptides).toHaveLength(initialAppData.peptides.length);
+    expect(loaded.compounds).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'hgh-somatropin', source: 'bundled' }),
+      expect.objectContaining({ id: 'custom-compound', source: 'user' }),
+    ]));
     expect(loaded.vials).toEqual([expect.objectContaining({ id: 'vial-imported', name: 'Imported vial' })]);
     expect(loaded.stacks[0]).toEqual(expect.objectContaining({
       id: 'stack-imported',
@@ -283,6 +358,7 @@ describe('Dexie persistence', () => {
         stacks: [],
         schedules: [],
         scheduleLogs: [],
+        userCompounds: [],
         settings: {
           hasSeenDisclaimer: false,
           hasCompletedOnboarding: false,
@@ -326,6 +402,7 @@ describe('Dexie persistence', () => {
         stacks: [],
         schedules: [],
         scheduleLogs: [],
+        userCompounds: [],
         settings: {
           hasSeenDisclaimer: false,
           hasCompletedOnboarding: false,
@@ -361,5 +438,29 @@ describe('Dexie persistence', () => {
 
     expect(loaded.vials).toHaveLength(initialAppData.vials.length);
     expect(loaded.vials.some((vial) => vial.id === 'vial-bad-metadata')).toBe(false);
+  });
+
+  test('imports older v2 exports with no user compounds', async () => {
+    const imported = await importUserData(db, initialAppData, JSON.stringify({
+      schemaVersion: 2,
+      exportedAt: '2026-05-23T00:00:00.000Z',
+      data: {
+        vials: [],
+        doses: [],
+        stacks: [],
+        schedules: [],
+        scheduleLogs: [],
+        settings: {
+          hasSeenDisclaimer: true,
+          hasCompletedOnboarding: true,
+          userMode: 'beginner',
+          biometricLock: false,
+          darkMode: true,
+        },
+      },
+    }));
+
+    expect(imported.compounds).toEqual(referenceCompounds);
+    expect(imported.hasCompletedOnboarding).toBe(true);
   });
 });

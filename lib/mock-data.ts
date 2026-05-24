@@ -1,4 +1,5 @@
 import { normalizeStacks } from './schedules';
+import { referenceCompounds } from './reference-compounds';
 import type { AppData, Peptide, Vial, Dose, Stack } from './types';
 
 // Helper to generate dates
@@ -502,6 +503,7 @@ export const mockStacks: Stack[] = [
 
 export const initialAppData: AppData = {
   peptides: mockPeptides,
+  compounds: [...referenceCompounds],
   vials: mockVials,
   doses: mockDoses,
   stacks: normalizeStacks(mockStacks),

@@ -1,6 +1,7 @@
-import { db as defaultDb, PERSISTENCE_SCHEMA_VERSION, type PeptideOSDatabase, type PersistedDose, type PersistedSchedule, type PersistedScheduleLog, type PersistedStack, type PersistedVial } from './db';
+import { db as defaultDb, PERSISTENCE_SCHEMA_VERSION, type PeptideOSDatabase, type PersistedDose, type PersistedSchedule, type PersistedScheduleLog, type PersistedStack, type PersistedUserCompound, type PersistedVial, type SyncState } from './db';
 import { normalizeStacks } from './schedules';
-import type { AppData, AppSettings, Dose, Schedule, ScheduleLog, Stack, Vial } from './types';
+import { getPersistableUserCompounds, mergeCompoundLibrary } from './user-compounds';
+import type { AppData, AppSettings, Compound, Dose, Schedule, ScheduleLog, Stack, Vial } from './types';
 
 export interface PersistedUserData {
   vials: Vial[];
@@ -8,6 +9,7 @@ export interface PersistedUserData {
   stacks: Stack[];
   schedules: Schedule[];
   scheduleLogs: ScheduleLog[];
+  userCompounds: Compound[];
   settings: AppSettings;
 }
 
@@ -42,6 +44,7 @@ function applyUserData(defaults: AppData, persisted: PersistedUserData): AppData
     stacks: normalizeStacks(persisted.stacks),
     schedules: persisted.schedules,
     scheduleLogs: persisted.scheduleLogs,
+    compounds: mergeCompoundLibrary(persisted.userCompounds),
     ...persisted.settings,
   };
 }
@@ -53,13 +56,20 @@ function stripPersistenceMetadata<T extends { createdAt?: string; updatedAt?: st
   return rest;
 }
 
+function isSyncState(value: unknown): value is SyncState {
+  return value === 'local' || value === 'synced' || value === 'dirty';
+}
+
 function withPersistenceMetadata<T extends { id: string }>(value: T, now: string) {
+  const persistedValue = value as T & { createdAt?: string; deletedAt?: string | null; syncState?: string };
+  const syncState: SyncState = isSyncState(persistedValue.syncState) ? persistedValue.syncState : 'dirty';
+
   return {
     ...value,
-    createdAt: now,
+    createdAt: persistedValue.createdAt ?? now,
     updatedAt: now,
-    deletedAt: null,
-    syncState: 'dirty' as const,
+    deletedAt: persistedValue.deletedAt ?? null,
+    syncState,
   };
 }
 
@@ -98,12 +108,13 @@ export async function loadPersistedAppData(database: PeptideOSDatabase = default
     return defaults;
   }
 
-  const [vials, doses, stacks, schedules, scheduleLogs, settings] = await Promise.all([
+  const [vials, doses, stacks, schedules, scheduleLogs, userCompounds, settings] = await Promise.all([
     database.vials.toArray(),
     database.doses.toArray(),
     database.stacks.toArray(),
     database.schedules.toArray(),
     database.scheduleLogs.toArray(),
+    database.userCompounds.toArray(),
     database.settings.get('app-settings'),
   ]);
 
@@ -117,6 +128,7 @@ export async function loadPersistedAppData(database: PeptideOSDatabase = default
     stacks: stacks.filter((stack) => !stack.deletedAt).map((stack) => stripPersistenceMetadata(stack) as Stack),
     schedules: schedules.filter((schedule) => !schedule.deletedAt).map((schedule) => stripPersistenceMetadata(schedule) as Schedule),
     scheduleLogs: scheduleLogs.filter((log) => !log.deletedAt).map((log) => stripPersistenceMetadata(log) as ScheduleLog),
+    userCompounds: userCompounds as Compound[],
     settings: stripPersistenceMetadata(settings) as AppSettings,
   });
 }
@@ -129,14 +141,19 @@ export async function savePersistedAppData(database: PeptideOSDatabase = default
   const stacks = normalizeStacks(data.stacks).map((stack) => withPersistenceMetadata(stack, now) as PersistedStack);
   const schedules = data.schedules.map((schedule) => withPersistenceMetadata(schedule, now) as PersistedSchedule);
   const scheduleLogs = data.scheduleLogs.map((log) => withPersistenceMetadata(log, now) as PersistedScheduleLog);
+  const userCompounds = getPersistableUserCompounds(data.compounds).map((compound) => withPersistenceMetadata({
+    ...compound,
+    source: 'user' as const,
+  }, now) as PersistedUserCompound);
 
-  await database.transaction('rw', [database.vials, database.doses, database.stacks, database.schedules, database.scheduleLogs, database.settings, database.metadata], async () => {
+  await database.transaction('rw', [database.vials, database.doses, database.stacks, database.schedules, database.scheduleLogs, database.userCompounds, database.settings, database.metadata], async () => {
     await Promise.all([
       database.vials.clear(),
       database.doses.clear(),
       database.stacks.clear(),
       database.schedules.clear(),
       database.scheduleLogs.clear(),
+      database.userCompounds.clear(),
       database.settings.clear(),
     ]);
 
@@ -146,6 +163,7 @@ export async function savePersistedAppData(database: PeptideOSDatabase = default
       database.stacks.bulkPut(stacks),
       database.schedules.bulkPut(schedules),
       database.scheduleLogs.bulkPut(scheduleLogs),
+      database.userCompounds.bulkPut(userCompounds),
       database.settings.put(settings),
       ensureMetadata(database, now),
     ]);
@@ -153,13 +171,14 @@ export async function savePersistedAppData(database: PeptideOSDatabase = default
 }
 
 export async function resetPersistedAppData(database: PeptideOSDatabase = defaultDb, defaults: AppData): Promise<AppData> {
-  await database.transaction('rw', [database.vials, database.doses, database.stacks, database.schedules, database.scheduleLogs, database.settings, database.metadata], async () => {
+  await database.transaction('rw', [database.vials, database.doses, database.stacks, database.schedules, database.scheduleLogs, database.userCompounds, database.settings, database.metadata], async () => {
     await Promise.all([
       database.vials.clear(),
       database.doses.clear(),
       database.stacks.clear(),
       database.schedules.clear(),
       database.scheduleLogs.clear(),
+      database.userCompounds.clear(),
       database.settings.clear(),
       database.metadata.clear(),
     ]);
@@ -176,12 +195,13 @@ export async function exportUserData(database: PeptideOSDatabase = defaultDb, ex
     biometricLock: false,
     darkMode: true,
   };
-  const [vials, doses, stacks, schedules, scheduleLogs, settings] = await Promise.all([
+  const [vials, doses, stacks, schedules, scheduleLogs, userCompounds, settings] = await Promise.all([
     database.vials.toArray(),
     database.doses.toArray(),
     database.stacks.toArray(),
     database.schedules.toArray(),
     database.scheduleLogs.toArray(),
+    database.userCompounds.toArray(),
     database.settings.get('app-settings'),
   ]);
 
@@ -194,6 +214,7 @@ export async function exportUserData(database: PeptideOSDatabase = defaultDb, ex
       stacks: stacks.filter((stack) => !stack.deletedAt).map((stack) => stripPersistenceMetadata(stack) as Stack),
       schedules: schedules.filter((schedule) => !schedule.deletedAt).map((schedule) => stripPersistenceMetadata(schedule) as Schedule),
       scheduleLogs: scheduleLogs.filter((log) => !log.deletedAt).map((log) => stripPersistenceMetadata(log) as ScheduleLog),
+      userCompounds: userCompounds.filter((compound) => !compound.deletedAt) as Compound[],
       settings: settings ? stripPersistenceMetadata(settings) as AppSettings : fallbackSettings,
     },
   };
@@ -232,6 +253,9 @@ function parseUserDataExport(input: string): UserDataExport {
   assertArray(data.stacks, 'stacks');
   assertArray(data.schedules, 'schedules');
   assertArray(data.scheduleLogs, 'scheduleLogs');
+  if ('userCompounds' in data && data.userCompounds !== undefined) {
+    assertArray(data.userCompounds, 'userCompounds');
+  }
 
   if (!isRecord(data.settings)) {
     throw new UserDataImportError('Import is missing settings.');
@@ -246,6 +270,9 @@ function parseUserDataExport(input: string): UserDataExport {
       stacks: data.stacks as Stack[],
       schedules: data.schedules as Schedule[],
       scheduleLogs: data.scheduleLogs as ScheduleLog[],
+      userCompounds: 'userCompounds' in data && Array.isArray(data.userCompounds)
+        ? data.userCompounds as Compound[]
+        : [],
       settings: data.settings as unknown as AppSettings,
     },
   };

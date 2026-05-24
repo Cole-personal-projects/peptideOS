@@ -236,6 +236,7 @@ export interface ScheduleLog {
 
 export interface AppData {
   peptides: Peptide[];
+  compounds: Compound[];
   vials: Vial[];
   doses: Dose[];
   stacks: Stack[];
