@@ -4,6 +4,7 @@ import { createPeptideOSDatabase, type PeptideOSDatabase } from './db';
 import {
   downloadUserData,
   exportUserData,
+  importUserData,
   loadPersistedAppData,
   resetPersistedAppData,
   savePersistedAppData,
@@ -208,6 +209,92 @@ describe('Dexie persistence', () => {
 
     expect(exported.data.schedules.map((schedule) => schedule.id)).toEqual(['schedule-export-active']);
     expect(exported.data.scheduleLogs.map((log) => log.id)).toEqual(['schedule-log-export-active']);
+  });
+
+  test('imports exported user data and reloads it with bundled reference peptides', async () => {
+    const exported = {
+      schemaVersion: 2,
+      exportedAt: '2026-05-23T00:00:00.000Z',
+      data: {
+        vials: [{ ...initialAppData.vials[0], id: 'vial-imported', name: 'Imported vial' }],
+        doses: [],
+        stacks: [
+          {
+            ...initialAppData.stacks[0],
+            id: 'stack-imported',
+            name: 'Imported stack',
+            peptides: initialAppData.stacks[0].peptides.map(({ id: _id, ...peptide }) => peptide),
+          },
+        ],
+        schedules: [],
+        scheduleLogs: [],
+        settings: {
+          hasSeenDisclaimer: true,
+          hasCompletedOnboarding: true,
+          userMode: 'researcher' as const,
+          biometricLock: false,
+          darkMode: false,
+        },
+      },
+    };
+
+    const imported = await importUserData(db, initialAppData, JSON.stringify(exported), new Date('2026-05-24T00:00:00.000Z'));
+    const loaded = await loadPersistedAppData(db, initialAppData);
+
+    expect(imported.vials).toEqual([expect.objectContaining({ id: 'vial-imported', name: 'Imported vial' })]);
+    expect(loaded.peptides).toHaveLength(initialAppData.peptides.length);
+    expect(loaded.vials).toEqual([expect.objectContaining({ id: 'vial-imported', name: 'Imported vial' })]);
+    expect(loaded.stacks[0]).toEqual(expect.objectContaining({
+      id: 'stack-imported',
+      name: 'Imported stack',
+    }));
+    expect(loaded.stacks[0]?.peptides[0]).toEqual(expect.objectContaining({ id: 'stack-imported-item-bpc-157-0' }));
+    expect(loaded.hasCompletedOnboarding).toBe(true);
+    expect(loaded.userMode).toBe('researcher');
+    expect(loaded.darkMode).toBe(false);
+  });
+
+  test('rejects invalid import JSON without overwriting current local data', async () => {
+    await savePersistedAppData(db, {
+      ...clone(initialAppData),
+      vials: [{ ...initialAppData.vials[0], id: 'vial-keep', name: 'Keep me' }],
+      hasCompletedOnboarding: true,
+    });
+
+    await expect(importUserData(db, initialAppData, '{not-json')).rejects.toThrow(/valid PeptideOS export/i);
+    const loaded = await loadPersistedAppData(db, initialAppData);
+
+    expect(loaded.vials).toEqual([expect.objectContaining({ id: 'vial-keep', name: 'Keep me' })]);
+    expect(loaded.hasCompletedOnboarding).toBe(true);
+  });
+
+  test('rejects unsupported import schema versions without overwriting current local data', async () => {
+    await savePersistedAppData(db, {
+      ...clone(initialAppData),
+      vials: [{ ...initialAppData.vials[0], id: 'vial-schema-keep', name: 'Schema keep' }],
+    });
+
+    await expect(importUserData(db, initialAppData, JSON.stringify({
+      schemaVersion: 999,
+      exportedAt: '2026-05-23T00:00:00.000Z',
+      data: {
+        vials: [],
+        doses: [],
+        stacks: [],
+        schedules: [],
+        scheduleLogs: [],
+        settings: {
+          hasSeenDisclaimer: false,
+          hasCompletedOnboarding: false,
+          userMode: 'beginner',
+          biometricLock: false,
+          darkMode: true,
+        },
+      },
+    }))).rejects.toThrow(/unsupported/i);
+    const loaded = await loadPersistedAppData(db, initialAppData);
+
+    expect(loaded.vials).toEqual([expect.objectContaining({ id: 'vial-schema-keep' })]);
   });
 
   test('download creates a dated JSON file and revokes the object URL', () => {
