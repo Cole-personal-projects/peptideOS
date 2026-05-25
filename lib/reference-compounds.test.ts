@@ -45,6 +45,29 @@ describe('reference compounds', () => {
     expect(referenceCompounds.length).toBeGreaterThanOrEqual(coreReferenceIds.length);
   });
 
+  test('includes reviewed batch one expansion entries across core categories', () => {
+    const batchOneIds = [
+      'cjc-1295',
+      'ipamorelin',
+      'tesamorelin',
+      'semaglutide',
+      'tirzepatide',
+      'ibutamoren',
+      'nad-plus',
+      'bremelanotide',
+    ];
+    const batchOne = referenceCompounds.filter((compound) => batchOneIds.includes(compound.id));
+
+    expect(referenceCompounds.map((compound) => compound.id)).toEqual(expect.arrayContaining(batchOneIds));
+    expect(batchOne).toHaveLength(batchOneIds.length);
+    expect(new Set(batchOne.map((compound) => compound.category))).toEqual(new Set([
+      'growth-hormone',
+      'metabolic',
+      'longevity',
+      'sexual-reproductive',
+    ]));
+  });
+
   test('blocks medical recommendation language and fields from bundled entries', () => {
     const bannedCopy = /\b(recommended dose|should take|safe dose|dose recommendation)\b/i;
 

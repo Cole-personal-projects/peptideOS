@@ -22,4 +22,18 @@ test.describe('library filters', () => {
     await page.getByRole('link', { name: /BPC-157/ }).click();
     await expect(page).toHaveURL(/\/library\/bpc-157$/);
   });
+
+  test('exposes reviewed batch one entries through search and category filters', async ({ page }) => {
+    await page.goto('/library');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('searchbox', { name: 'Search compounds' }).fill('tirzepatide');
+    await expect(page.getByRole('link', { name: /Tirzepatide/ })).toBeVisible();
+
+    await page.getByRole('searchbox', { name: 'Search compounds' }).fill('');
+    await page.getByRole('button', { name: 'Sexual Reproductive' }).click();
+    await expect(page.getByRole('link', { name: /PT-141 \/ Bremelanotide/ })).toBeVisible();
+    await page.getByRole('link', { name: /PT-141 \/ Bremelanotide/ }).click();
+    await expect(page).toHaveURL(/\/library\/bremelanotide$/);
+  });
 });
