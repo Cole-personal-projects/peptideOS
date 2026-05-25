@@ -64,4 +64,18 @@ test.describe('library filters', () => {
     await page.getByRole('link', { name: /AHK-Cu/ }).click();
     await expect(page).toHaveURL(/\/library\/ahk-cu$/);
   });
+
+  test('exposes reviewed batch four entries through search and sleep category filters', async ({ page }) => {
+    await page.goto('/library');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('searchbox', { name: 'Search compounds' }).fill('Elamipretide');
+    await expect(page.getByRole('link', { name: /Elamipretide/ })).toBeVisible();
+
+    await page.getByRole('searchbox', { name: 'Search compounds' }).fill('');
+    await page.getByRole('button', { name: 'Sleep' }).click();
+    await expect(page.getByRole('link', { name: /DSIP/ })).toBeVisible();
+    await page.getByRole('link', { name: /DSIP/ }).click();
+    await expect(page).toHaveURL(/\/library\/dsip$/);
+  });
 });

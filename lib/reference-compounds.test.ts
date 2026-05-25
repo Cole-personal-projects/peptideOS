@@ -115,6 +115,33 @@ describe('reference compounds', () => {
     ]));
   });
 
+  test('includes reviewed batch four expansion entries across core categories', () => {
+    const batchFourIds = [
+      'elamipretide',
+      'thymosin-alpha-1',
+      'kisspeptin-10',
+      'melanotan-ii',
+      'dsip',
+      'sirolimus',
+      'metformin',
+      'oxytocin',
+      'ptd-dbm',
+      'foxo4-dri',
+    ];
+    const batchFour = referenceCompounds.filter((compound) => batchFourIds.includes(compound.id));
+
+    expect(referenceCompounds.map((compound) => compound.id)).toEqual(expect.arrayContaining(batchFourIds));
+    expect(batchFour).toHaveLength(batchFourIds.length);
+    expect(new Set(batchFour.map((compound) => compound.category))).toEqual(new Set([
+      'longevity',
+      'immune',
+      'sexual-reproductive',
+      'skin-hair',
+      'sleep',
+      'metabolic',
+    ]));
+  });
+
   test('blocks medical recommendation language and fields from bundled entries', () => {
     const bannedCopy = /\b(recommended dose|should take|safe dose|dose recommendation)\b/i;
 
