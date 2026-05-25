@@ -92,6 +92,29 @@ describe('reference compounds', () => {
     ]));
   });
 
+  test('includes reviewed batch three expansion entries across core categories', () => {
+    const batchThreeIds = [
+      'retatrutide',
+      'sermorelin',
+      'gonadorelin',
+      'hcg',
+      'dihexa',
+      'pinealon',
+      'ahk-cu',
+    ];
+    const batchThree = referenceCompounds.filter((compound) => batchThreeIds.includes(compound.id));
+
+    expect(referenceCompounds.map((compound) => compound.id)).toEqual(expect.arrayContaining(batchThreeIds));
+    expect(batchThree).toHaveLength(batchThreeIds.length);
+    expect(new Set(batchThree.map((compound) => compound.category))).toEqual(new Set([
+      'metabolic',
+      'growth-hormone',
+      'sexual-reproductive',
+      'cognitive',
+      'skin-hair',
+    ]));
+  });
+
   test('blocks medical recommendation language and fields from bundled entries', () => {
     const bannedCopy = /\b(recommended dose|should take|safe dose|dose recommendation)\b/i;
 

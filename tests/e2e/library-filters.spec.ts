@@ -50,4 +50,18 @@ test.describe('library filters', () => {
     await page.getByRole('link', { name: /LL-37/ }).click();
     await expect(page).toHaveURL(/\/library\/ll-37$/);
   });
+
+  test('exposes reviewed batch three entries through search and category filters', async ({ page }) => {
+    await page.goto('/library');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('searchbox', { name: 'Search compounds' }).fill('Dihexa');
+    await expect(page.getByRole('link', { name: /Dihexa/ })).toBeVisible();
+
+    await page.getByRole('searchbox', { name: 'Search compounds' }).fill('');
+    await page.getByRole('button', { name: 'Skin Hair' }).click();
+    await expect(page.getByRole('link', { name: /AHK-Cu/ })).toBeVisible();
+    await page.getByRole('link', { name: /AHK-Cu/ }).click();
+    await expect(page).toHaveURL(/\/library\/ahk-cu$/);
+  });
 });
