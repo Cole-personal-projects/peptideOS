@@ -1,10 +1,14 @@
 import { aicar } from './entries/aicar';
+import { ahkCu } from './entries/ahk-cu';
 import { aod9604 } from './entries/aod-9604';
 import { bpc157 } from './entries/bpc-157';
 import { bremelanotide } from './entries/bremelanotide';
 import { cjc1295 } from './entries/cjc-1295';
+import { dihexa } from './entries/dihexa';
 import { epitalon } from './entries/epitalon';
 import { ghkCu } from './entries/ghk-cu';
+import { gonadorelin } from './entries/gonadorelin';
+import { hcg } from './entries/hcg';
 import { hghSomatropin } from './entries/hgh-somatropin';
 import { ibutamoren } from './entries/ibutamoren';
 import { ipamorelin } from './entries/ipamorelin';
@@ -12,9 +16,12 @@ import { kpv } from './entries/kpv';
 import { ll37 } from './entries/ll-37';
 import { motsC } from './entries/mots-c';
 import { nadPlus } from './entries/nad-plus';
+import { pinealon } from './entries/pinealon';
+import { retatrutide } from './entries/retatrutide';
 import { selank } from './entries/selank';
 import { semax } from './entries/semax';
 import { semaglutide } from './entries/semaglutide';
+import { sermorelin } from './entries/sermorelin';
 import { tesamorelin } from './entries/tesamorelin';
 import { testosteroneCypionate } from './entries/testosterone-cypionate';
 import { testosteroneEnanthate } from './entries/testosterone-enanthate';
@@ -48,6 +55,13 @@ const reviewedReferenceCompounds = [
   semax,
   selank,
   aod9604,
+  retatrutide,
+  sermorelin,
+  gonadorelin,
+  hcg,
+  dihexa,
+  pinealon,
+  ahkCu,
 ] as const;
 
 export const referenceCompounds = [...reviewedReferenceCompounds];
