@@ -68,6 +68,30 @@ describe('reference compounds', () => {
     ]));
   });
 
+  test('includes reviewed batch two expansion entries across core categories', () => {
+    const batchTwoIds = [
+      'kpv',
+      'll-37',
+      'mots-c',
+      'aicar',
+      'epitalon',
+      'semax',
+      'selank',
+      'aod-9604',
+    ];
+    const batchTwo = referenceCompounds.filter((compound) => batchTwoIds.includes(compound.id));
+
+    expect(referenceCompounds.map((compound) => compound.id)).toEqual(expect.arrayContaining(batchTwoIds));
+    expect(batchTwo).toHaveLength(batchTwoIds.length);
+    expect(new Set(batchTwo.map((compound) => compound.category))).toEqual(new Set([
+      'healing',
+      'immune',
+      'metabolic',
+      'longevity',
+      'cognitive',
+    ]));
+  });
+
   test('blocks medical recommendation language and fields from bundled entries', () => {
     const bannedCopy = /\b(recommended dose|should take|safe dose|dose recommendation)\b/i;
 
