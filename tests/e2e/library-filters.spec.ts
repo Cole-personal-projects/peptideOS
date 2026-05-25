@@ -36,4 +36,18 @@ test.describe('library filters', () => {
     await page.getByRole('link', { name: /PT-141 \/ Bremelanotide/ }).click();
     await expect(page).toHaveURL(/\/library\/bremelanotide$/);
   });
+
+  test('exposes reviewed batch two entries through search and immune category filters', async ({ page }) => {
+    await page.goto('/library');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('searchbox', { name: 'Search compounds' }).fill('MOTS-c');
+    await expect(page.getByRole('link', { name: /MOTS-c/ })).toBeVisible();
+
+    await page.getByRole('searchbox', { name: 'Search compounds' }).fill('');
+    await page.getByRole('button', { name: 'Immune' }).click();
+    await expect(page.getByRole('link', { name: /LL-37/ })).toBeVisible();
+    await page.getByRole('link', { name: /LL-37/ }).click();
+    await expect(page).toHaveURL(/\/library\/ll-37$/);
+  });
 });

@@ -28,11 +28,12 @@ const categoryColors: Partial<Record<CompoundCategory, string>> = {
   longevity: 'bg-chart-5/20 text-chart-5 border-chart-5/30',
   'skin-hair': 'bg-chart-2/20 text-chart-2 border-chart-2/30',
   'sexual-reproductive': 'bg-chart-5/20 text-chart-5 border-chart-5/30',
+  immune: 'bg-chart-3/20 text-chart-3 border-chart-3/30',
   'hormone-endocrine': 'bg-chart-1/20 text-chart-1 border-chart-1/30',
   custom: 'bg-secondary text-secondary-foreground border-border',
 };
 
-const categories: Array<CompoundCategory | 'all'> = ['all', 'healing', 'growth-hormone', 'metabolic', 'longevity', 'cognitive', 'skin-hair', 'sexual-reproductive', 'hormone-endocrine', 'custom'];
+const categories: Array<CompoundCategory | 'all'> = ['all', 'healing', 'growth-hormone', 'metabolic', 'longevity', 'cognitive', 'skin-hair', 'immune', 'sexual-reproductive', 'hormone-endocrine', 'custom'];
 const compoundTypes: Array<CompoundType | 'all'> = ['all', 'peptide', 'hormone', 'glp-1', 'small-molecule', 'biologic', 'supplement', 'other'];
 const routes: Route[] = ['subq', 'im', 'intranasal', 'oral', 'topical'];
 const doseUnits: DoseUnit[] = ['mcg', 'mg', 'iu'];
