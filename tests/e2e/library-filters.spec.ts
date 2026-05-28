@@ -1,6 +1,21 @@
 import { expect, test } from '@playwright/test';
+import { formatCompoundDisplayLabel } from '../../lib/compound-display';
+import { referenceCompounds } from '../../lib/reference-compounds';
 
 test.describe('library filters', () => {
+  test('renders every bundled reference category as a visible filter', async ({ page }) => {
+    const categories = [...new Set(referenceCompounds.map((compound) => compound.category))];
+
+    await page.goto('/library');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await expect(page.getByRole('heading', { name: 'Library' })).toBeVisible();
+
+    for (const category of categories) {
+      await expect(page.getByRole('button', { name: formatCompoundDisplayLabel(category) })).toBeVisible();
+    }
+  });
+
   test('filters library cards by search text and category without leaving the page', async ({ page }) => {
     await page.goto('/library');
 
