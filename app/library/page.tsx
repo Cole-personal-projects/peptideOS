@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/lib/context';
+import { formatCompoundDisplayLabel, libraryCategoryOptions, libraryCompoundTypeOptions } from '@/lib/compound-display';
 import { getEmptyStateContent } from '@/lib/empty-states';
 import { filterCompounds } from '@/lib/library-filters';
 import { cn } from '@/lib/utils';
@@ -34,13 +35,13 @@ const categoryColors: Partial<Record<CompoundCategory, string>> = {
   custom: 'bg-secondary text-secondary-foreground border-border',
 };
 
-const categories: Array<CompoundCategory | 'all'> = ['all', 'healing', 'growth-hormone', 'metabolic', 'longevity', 'cognitive', 'skin-hair', 'immune', 'sleep', 'sexual-reproductive', 'hormone-endocrine', 'custom'];
-const compoundTypes: Array<CompoundType | 'all'> = ['all', 'peptide', 'hormone', 'glp-1', 'small-molecule', 'biologic', 'supplement', 'other'];
+const categories = libraryCategoryOptions;
+const compoundTypes = libraryCompoundTypeOptions;
 const routes: Route[] = ['subq', 'im', 'intranasal', 'oral', 'topical'];
 const doseUnits: DoseUnit[] = ['mcg', 'mg', 'iu'];
 
 function formatLabel(value: string): string {
-  return value.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+  return formatCompoundDisplayLabel(value);
 }
 
 function slugify(value: string): string {
