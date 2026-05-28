@@ -16,6 +16,14 @@ This checkpoint validates that PeptideOS is ready for realistic local-first test
 - Unit and integration coverage: `pnpm test:coverage`
 - Browser coverage: `pnpm test:e2e`
 - Focused smoke: `pnpm build && pnpm playwright test tests/e2e/mvp-walkthrough.spec.ts`
+- PWA/offline check: `pnpm build && pnpm playwright test tests/e2e/pwa.spec.ts`
+
+## PWA Offline Scope
+
+- The app shell, manifest, and icons are precached by the service worker.
+- Visited navigation routes are cached and can be reloaded while offline.
+- Unvisited navigation routes show the branded offline fallback.
+- Local user data remains IndexedDB-backed; cloud sync, push reminders, and cross-device restore are outside this checkpoint.
 
 ## Deferred
 
