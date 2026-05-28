@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { CheckCircle2, Circle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -94,8 +95,16 @@ export function TodayCard() {
             Today
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground text-sm">No doses scheduled for today</p>
+        <CardContent className="space-y-3">
+          <div>
+            <p className="text-sm font-medium">No doses due today</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Start a stack to generate scheduled due doses on the dashboard.
+            </p>
+          </div>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/stacks">Build a stack</Link>
+          </Button>
         </CardContent>
       </Card>
     );
@@ -104,6 +113,7 @@ export function TodayCard() {
   const completedCount = todaysScheduleLogs.filter(log => log.status === 'taken').length + standaloneDoses.filter(d => d.completed).length;
   const totalCount = todaysScheduleLogs.length + standaloneDoses.length;
   const progress = Math.round((completedCount / totalCount) * 100);
+  const pendingCount = todaysScheduleLogs.filter((log) => log.status === 'pending').length + standaloneDoses.filter((dose) => !dose.completed).length;
 
   return (
     <>
@@ -114,9 +124,14 @@ export function TodayCard() {
               <Clock className="w-4 h-4 text-muted-foreground" />
               Today
             </CardTitle>
-            <span className="text-sm text-muted-foreground">
-              {completedCount}/{totalCount} completed
-            </span>
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-sm text-muted-foreground">
+                {completedCount}/{totalCount} completed
+              </span>
+              <span className="text-xs font-medium text-primary">
+                {pendingCount > 0 ? 'Due today' : 'Taken today'}
+              </span>
+            </div>
           </div>
           <div className="h-1.5 bg-secondary rounded-full overflow-hidden mt-2">
             <div 
@@ -126,11 +141,17 @@ export function TodayCard() {
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
+          {pendingCount === 0 && (
+            <p className="rounded-md bg-secondary px-3 py-2 text-xs text-muted-foreground">
+              All scheduled items are handled for today.
+            </p>
+          )}
           {todaysScheduleLogs.map((log) => {
             const schedule = data.schedules.find((candidate) => candidate.id === log.scheduleId);
             const peptide = getPeptide(log.peptideId);
             const isTaken = log.status === 'taken';
             const isSkipped = log.status === 'skipped';
+            const statusLabel = isTaken ? 'Taken today' : isSkipped ? 'Skipped today' : 'Pending action';
             return (
               <div key={log.id} className={cn("rounded-md border border-border p-3", (isTaken || isSkipped) && "opacity-60")}>
                 <div className="flex items-start gap-3">
@@ -140,11 +161,16 @@ export function TodayCard() {
                     <Circle className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className={cn("font-medium text-sm", (isTaken || isSkipped) && "line-through")}>
-                      {peptide?.name} - {schedule ? formatDose(schedule.doseValue, schedule.doseUnit) : 'Scheduled dose'}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className={cn("font-medium text-sm", isTaken && "line-through")}>
+                        {peptide?.name} - {schedule ? formatDose(schedule.doseValue, schedule.doseUnit) : 'Scheduled dose'}
+                      </p>
+                      <Badge variant={isTaken ? 'default' : isSkipped ? 'secondary' : 'outline'}>
+                        {statusLabel}
+                      </Badge>
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      {formatTime(log.dueAt)} · {schedule?.route.toUpperCase()} · {log.status}
+                      Due {formatTime(log.dueAt)} · {schedule?.route.toUpperCase()}
                     </p>
                   </div>
                 </div>
@@ -184,7 +210,7 @@ export function TodayCard() {
                     {peptide?.name} - {formatDose(dose.doseValue, dose.doseUnit)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {formatTime(dose.dateTime)} · {dose.route.toUpperCase()}
+                    {formatTime(dose.dateTime)} · {dose.route.toUpperCase()} · {dose.completed ? 'Taken today' : 'Pending action'}
                   </p>
                 </div>
               </Button>

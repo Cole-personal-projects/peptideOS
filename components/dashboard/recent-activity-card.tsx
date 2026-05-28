@@ -48,7 +48,9 @@ export function RecentActivityCard() {
                 <div key={dose.id} className="flex items-center justify-between py-1.5">
                   <div>
                     <p className="text-sm font-medium">{peptide?.name}</p>
-                    <p className="text-xs text-muted-foreground">{formatDateTime(dose.dateTime)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {dose.scheduleLogId ? 'Completed scheduled dose' : 'Logged dose'} · {formatDateTime(dose.dateTime)}
+                    </p>
                   </div>
                   <span className="text-sm text-muted-foreground">
                     {formatDose(dose.doseValue, dose.doseUnit)}

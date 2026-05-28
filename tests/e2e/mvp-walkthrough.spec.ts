@@ -44,7 +44,7 @@ test.describe('MVP tester walkthrough', () => {
     await page.getByRole('option', { name: /BPC-157 active vial/ }).click();
     await page.getByRole('button', { name: 'Upper Left Abdomen' }).click();
     await page.getByRole('button', { name: 'Complete dose' }).click();
-    await expect(page.getByText(/taken/).first()).toBeVisible();
+    await expect(page.getByText('Taken today', { exact: true }).first()).toBeVisible();
 
     await page.goto('/log');
     await expect(page.getByRole('heading', { name: 'Dose Log' })).toBeVisible();

@@ -32,9 +32,9 @@ test.describe('protocol loop', () => {
     await page.getByRole('button', { name: 'Complete dose' }).click();
 
     await expect(page.getByRole('dialog', { name: 'Complete scheduled dose' })).toHaveCount(0);
-    await expect(page.getByText(/taken/).first()).toBeVisible();
+    await expect(page.getByText('Taken today', { exact: true }).first()).toBeVisible();
     await page.reload();
-    await expect(page.getByText(/taken/).first()).toBeVisible();
+    await expect(page.getByText('Taken today', { exact: true }).first()).toBeVisible();
 
     await page.getByRole('link', { name: 'Log' }).click();
     await expect(page.getByRole('heading', { name: 'Dose Log' })).toBeVisible();
@@ -49,9 +49,9 @@ test.describe('protocol loop', () => {
 
     await page.goto('/');
     await page.getByRole('button', { name: 'Skip' }).first().click();
-    await expect(page.getByText(/skipped/).first()).toBeVisible();
+    await expect(page.getByText('Skipped today', { exact: true }).first()).toBeVisible();
     await page.reload();
-    await expect(page.getByText(/skipped/).first()).toBeVisible();
+    await expect(page.getByText('Skipped today', { exact: true }).first()).toBeVisible();
 
     await page.goto('/stacks');
     await page.getByRole('link', { name: /Protocol Loop Test Stack/ }).click();
