@@ -4,6 +4,16 @@ import { useRef, useState } from 'react';
 import { Moon, Sun, Fingerprint, Download, Shield, Trash2, Upload } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -15,6 +25,8 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [importStatus, setImportStatus] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   const handleImportFile = async (file: File | undefined) => {
     if (!file) return;
@@ -31,6 +43,17 @@ export default function SettingsPage() {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    }
+  };
+
+  const handleClearData = async () => {
+    setIsClearing(true);
+
+    try {
+      await clearAllData();
+      setClearDialogOpen(false);
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -87,10 +110,16 @@ export default function SettingsPage() {
             <CardTitle className="text-base">Data</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Exports include your saved vials, doses, stacks, schedules, custom compounds, and settings. Bundled reference compounds stay in the app and are not duplicated in backups.
+            </p>
             <Button variant="outline" className="w-full justify-start" onClick={() => void exportAllData()}>
               <Download className="w-4 h-4 mr-3" />
               Export All Data
             </Button>
+            <p className="text-xs text-muted-foreground">
+              Imports replace local user data from a PeptideOS JSON backup. Bundled reference compounds remain app-owned.
+            </p>
             <Input
               ref={fileInputRef}
               type="file"
@@ -109,14 +138,37 @@ export default function SettingsPage() {
               {isImporting ? 'Importing Data...' : 'Import Data'}
             </Button>
             {importStatus && (
-              <p className="rounded-md bg-secondary p-3 text-sm text-muted-foreground" role="status">
+              <p className="rounded-md bg-secondary p-3 text-sm text-muted-foreground" role="status" aria-live="polite">
                 {importStatus}
               </p>
             )}
-            <Button variant="outline" className="w-full justify-start text-destructive hover:text-destructive" onClick={() => void clearAllData()}>
-              <Trash2 className="w-4 h-4 mr-3" />
-              Clear All Data
-            </Button>
+            <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+              <Button variant="outline" className="w-full justify-start text-destructive hover:text-destructive" onClick={() => setClearDialogOpen(true)}>
+                <Trash2 className="w-4 h-4 mr-3" />
+                Clear All Data
+              </Button>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear all local data?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This removes your saved vials, doses, stacks, schedules, custom compounds, and settings from this device. Bundled reference compounds stay available after reset.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isClearing}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    disabled={isClearing}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      void handleClearData();
+                    }}
+                  >
+                    {isClearing ? 'Clearing...' : 'Clear local data'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
 
