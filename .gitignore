@@ -27,6 +27,7 @@ yarn-error.log*
 
 # cloudflare / opennext
 .open-next
+.wrangler
 cloudflare-env.d.ts
 
 # typescript
