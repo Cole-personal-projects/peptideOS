@@ -19,9 +19,15 @@ yarn-error.log*
 
 # env files
 .env*
+!.env.example
+.dev.vars
 
 # vercel
 .vercel
+
+# cloudflare / opennext
+.open-next
+cloudflare-env.d.ts
 
 # typescript
 *.tsbuildinfo
