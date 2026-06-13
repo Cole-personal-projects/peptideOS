@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Play, Pause, Clock, CheckCircle2 } from 'lucide-react';
+import { Plus, Play, Pause, Clock, CheckCircle2, Sparkles } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { NewStackSheet } from '@/components/navigation/new-stack-sheet';
+import { AiStackSheet } from '@/components/navigation/ai-stack-sheet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ const statusConfig = {
 export default function StacksPage() {
   const { data } = useApp();
   const [newStackOpen, setNewStackOpen] = useState(false);
+  const [aiStackOpen, setAiStackOpen] = useState(false);
   const stacks = data.stacks;
   const emptyState = getEmptyStateContent('stacks-empty');
   const trackableCompounds = getTrackableCompounds(data);
@@ -43,15 +45,26 @@ export default function StacksPage() {
       <PageHeader 
         title="Stacks" 
         rightElement={
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-primary"
-            onClick={() => setNewStackOpen(true)}
-            aria-label="New stack"
-          >
-            <Plus className="w-4 h-4 mr-1" /> New
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-primary"
+              onClick={() => setAiStackOpen(true)}
+              aria-label="AI protocol assistant"
+            >
+              <Sparkles className="w-4 h-4 mr-1" /> AI
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-primary"
+              onClick={() => setNewStackOpen(true)}
+              aria-label="New stack"
+            >
+              <Plus className="w-4 h-4 mr-1" /> New
+            </Button>
+          </div>
         }
       />
 
@@ -125,6 +138,7 @@ export default function StacksPage() {
         )}
       </div>
       <NewStackSheet open={newStackOpen} onOpenChange={setNewStackOpen} />
+      <AiStackSheet open={aiStackOpen} onOpenChange={setAiStackOpen} />
     </AppShell>
   );
 }

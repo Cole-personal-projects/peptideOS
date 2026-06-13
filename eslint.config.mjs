@@ -8,6 +8,8 @@ const config = [
       'playwright-report/**',
       'test-results/**',
       '.next/**',
+      '.open-next/**',
+      '.wrangler/**',
       'app/Docs_dont_track/**',
       'components/ui/**',
     ],
