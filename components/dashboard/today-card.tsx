@@ -15,7 +15,8 @@ import { useApp } from '@/lib/context';
 import { cn } from '@/lib/utils';
 import { formatDose } from '@/lib/dose-helpers';
 import { getVialInventoryMetrics } from '@/lib/inventory-metrics';
-import type { ScheduleLog, SiteCode } from '@/lib/types';
+import { buildDueDoseInbox, type DueDoseInboxItem, type DueDoseState } from '@/lib/due-doses';
+import type { Schedule, ScheduleLog, SiteCode } from '@/lib/types';
 
 const injectableRoutes = new Set(['subq', 'im']);
 
@@ -23,6 +24,21 @@ export function TodayCard() {
   const { data, getTodaysDoses, getTodaysScheduleLogs, getPeptide, updateDose, completeScheduleLog, skipScheduleLog } = useApp();
   const todaysDoses = getTodaysDoses();
   const todaysScheduleLogs = getTodaysScheduleLogs();
+  const dueDoseInbox = useMemo(() => buildDueDoseInbox(data), [data]);
+  const overdueLogIds = new Set(dueDoseInbox.filter((item) => item.state === 'overdue').map((item) => item.log.id));
+  const todayScheduleItems = todaysScheduleLogs
+    .filter((log) => !overdueLogIds.has(log.id))
+    .reduce<DueDoseInboxItem[]>((items, log) => {
+      const schedule = data.schedules.find((candidate) => candidate.id === log.scheduleId);
+      if (!schedule) return items;
+
+      const state: DueDoseState = log.status === 'pending' && new Date(log.dueAt) > new Date() ? 'upcoming' : 'due';
+      return [...items, { log, schedule, state }];
+    }, []);
+  const scheduleRows: DueDoseInboxItem[] = [
+    ...dueDoseInbox.filter((item) => item.state === 'overdue'),
+    ...todayScheduleItems,
+  ];
   const standaloneDoses = todaysDoses.filter((dose) => !dose.scheduleLogId);
   const [activeLog, setActiveLog] = useState<ScheduleLog | null>(null);
   const [vialId, setVialId] = useState('');
@@ -86,7 +102,7 @@ export function TodayCard() {
     }
   };
 
-  if (todaysScheduleLogs.length === 0 && standaloneDoses.length === 0) {
+  if (scheduleRows.length === 0 && standaloneDoses.length === 0) {
     return (
       <Card>
         <CardHeader className="pb-2">
@@ -110,10 +126,10 @@ export function TodayCard() {
     );
   }
 
-  const completedCount = todaysScheduleLogs.filter(log => log.status === 'taken').length + standaloneDoses.filter(d => d.completed).length;
-  const totalCount = todaysScheduleLogs.length + standaloneDoses.length;
+  const completedCount = scheduleRows.filter(({ log }) => log.status === 'taken' || log.status === 'skipped').length + standaloneDoses.filter(d => d.completed).length;
+  const totalCount = scheduleRows.length + standaloneDoses.length;
   const progress = Math.round((completedCount / totalCount) * 100);
-  const pendingCount = todaysScheduleLogs.filter((log) => log.status === 'pending').length + standaloneDoses.filter((dose) => !dose.completed).length;
+  const pendingCount = scheduleRows.filter(({ log }) => log.status === 'pending').length + standaloneDoses.filter((dose) => !dose.completed).length;
 
   return (
     <>
@@ -146,14 +162,13 @@ export function TodayCard() {
               All scheduled items are handled for today.
             </p>
           )}
-          {todaysScheduleLogs.map((log) => {
-            const schedule = data.schedules.find((candidate) => candidate.id === log.scheduleId);
+          {scheduleRows.map(({ log, schedule, state }) => {
             const peptide = getPeptide(log.peptideId);
             const isTaken = log.status === 'taken';
             const isSkipped = log.status === 'skipped';
-            const statusLabel = isTaken ? 'Taken today' : isSkipped ? 'Skipped today' : 'Pending action';
+            const statusLabel = isTaken ? 'Taken today' : isSkipped ? 'Skipped today' : state === 'overdue' ? 'Overdue' : 'Pending action';
             return (
-              <div key={log.id} className={cn("rounded-md border border-border p-3", (isTaken || isSkipped) && "opacity-60")}>
+              <div key={log.id} className={cn("rounded-md border border-border p-3", state === 'overdue' && "border-destructive/50 bg-destructive/5", (isTaken || isSkipped) && "opacity-60")}>
                 <div className="flex items-start gap-3">
                   {isTaken ? (
                     <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
@@ -163,9 +178,9 @@ export function TodayCard() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className={cn("font-medium text-sm", isTaken && "line-through")}>
-                        {peptide?.name} - {schedule ? formatDose(schedule.doseValue, schedule.doseUnit) : 'Scheduled dose'}
+                        {peptide?.name} - {formatDose(schedule.doseValue, schedule.doseUnit)}
                       </p>
-                      <Badge variant={isTaken ? 'default' : isSkipped ? 'secondary' : 'outline'}>
+                      <Badge variant={isTaken ? 'default' : isSkipped ? 'secondary' : state === 'overdue' ? 'destructive' : 'outline'}>
                         {statusLabel}
                       </Badge>
                     </div>

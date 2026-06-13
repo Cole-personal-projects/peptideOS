@@ -246,6 +246,7 @@ export interface ScheduleLog {
   doseId?: string;
   takenAt?: string;
   skippedAt?: string;
+  missedAt?: string;
 }
 
 export interface AppData {
