@@ -134,6 +134,56 @@ describe('parsedProtocolToStackDraft', () => {
     expect(peptide.timing).toBe('Monday and Thursday');
   });
 
+  it('builds interval schedules from model output', () => {
+    const parsed = makeParsed({
+      items: [{
+        compoundId: 'bpc-157',
+        compoundName: 'BPC-157',
+        doseValue: 250,
+        doseUnit: 'mcg',
+        route: 'subq',
+        frequency: 'interval',
+        timesOfDay: ['08:00'],
+        weekdays: null,
+        intervalDays: 2,
+        cycleOnDays: null,
+        cycleOffDays: null,
+        notes: null,
+      }],
+    });
+    const result = parsedProtocolToStackDraft(parsed, compounds);
+    const peptide = result.draft!.peptides[0];
+
+    expect(peptide.schedule).toEqual({ frequency: 'interval', timesOfDay: ['08:00'], intervalDays: 2 });
+    expect(peptide.frequency).toBe('every 2 days');
+    expect(peptide.timing).toBe('Morning');
+  });
+
+  it('builds cycle schedules from model output', () => {
+    const parsed = makeParsed({
+      items: [{
+        compoundId: 'hgh',
+        compoundName: 'HGH',
+        doseValue: 2,
+        doseUnit: 'iu',
+        route: 'subq',
+        frequency: 'cycle',
+        timesOfDay: ['20:00'],
+        weekdays: null,
+        intervalDays: null,
+        cycleOnDays: 5,
+        cycleOffDays: 2,
+        notes: null,
+      }],
+    });
+    const result = parsedProtocolToStackDraft(parsed, compounds);
+    const peptide = result.draft!.peptides[0];
+
+    expect(peptide.schedule).toEqual({ frequency: 'cycle', timesOfDay: ['20:00'], cycleOnDays: 5, cycleOffDays: 2 });
+    expect(peptide.frequency).toBe('5 days on / 2 days off');
+    expect(peptide.timing).toBe('Evening');
+  });
+
   it('falls back to the compound default route when unsupported', () => {
     const parsed = makeParsed({
       items: [{ ...makeParsed().items[0], compoundId: 'tb-500', compoundName: 'TB-500', route: 'oral' }],

@@ -26,7 +26,7 @@ export type VialStatus = 'sealed' | 'active' | 'finished' | 'expired';
 export type StackStatus = 'planned' | 'active' | 'completed' | 'paused';
 export type ScheduleStatus = 'active' | 'paused' | 'completed';
 export type ScheduleLogStatus = 'pending' | 'taken' | 'skipped' | 'missed';
-export type ScheduleFrequency = 'daily' | 'weekly';
+export type ScheduleFrequency = 'daily' | 'weekly' | 'interval' | 'cycle';
 export type UserMode = 'beginner' | 'researcher';
 export type SiteCode =
   | 'abdomen-upper-left'
@@ -216,6 +216,9 @@ export interface ScheduleRecurrence {
   frequency: ScheduleFrequency;
   timesOfDay: string[];
   weekdays?: number[];
+  intervalDays?: number;
+  cycleOnDays?: number;
+  cycleOffDays?: number;
 }
 
 export interface Schedule {

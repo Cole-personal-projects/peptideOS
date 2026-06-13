@@ -9,7 +9,7 @@ import {
   normalizeStacks,
   updateStackPeptideSchedule,
 } from './schedules';
-import type { Schedule, ScheduleLog, Stack } from './types';
+import type { Schedule, ScheduleLog, Stack, StackPeptide } from './types';
 
 const legacyStack = {
   id: 'stack-legacy',
@@ -148,6 +148,56 @@ describe('schedule generation', () => {
     ]);
   });
 
+  test('generates interval logs every N days from the schedule start', () => {
+    const schedule: Schedule = {
+      id: 'schedule-interval',
+      stackId: 'stack-legacy',
+      stackPeptideId: 'stack-legacy-item-bpc-157-0',
+      peptideId: 'bpc-157',
+      doseValue: 250,
+      doseUnit: 'mcg',
+      route: 'subq',
+      recurrence: { frequency: 'interval', timesOfDay: ['08:00'], intervalDays: 2 },
+      startDate: '2026-05-23T00:00:00.000Z',
+      endDate: '2026-05-29T23:59:59.999Z',
+      status: 'active',
+    };
+
+    expect(generateScheduleLogs(schedule).map((log) => log.dueAt)).toEqual([
+      '2026-05-23T08:00:00.000Z',
+      '2026-05-25T08:00:00.000Z',
+      '2026-05-27T08:00:00.000Z',
+      '2026-05-29T08:00:00.000Z',
+    ]);
+  });
+
+  test('generates cycle logs during on-days and skips off-days', () => {
+    const schedule: Schedule = {
+      id: 'schedule-cycle',
+      stackId: 'stack-legacy',
+      stackPeptideId: 'stack-legacy-item-ipamorelin-0',
+      peptideId: 'ipamorelin',
+      doseValue: 200,
+      doseUnit: 'mcg',
+      route: 'subq',
+      recurrence: { frequency: 'cycle', timesOfDay: ['20:00'], cycleOnDays: 5, cycleOffDays: 2 },
+      startDate: '2026-05-23T00:00:00.000Z',
+      endDate: '2026-06-01T23:59:59.999Z',
+      status: 'active',
+    };
+
+    expect(generateScheduleLogs(schedule).map((log) => log.dueAt)).toEqual([
+      '2026-05-23T20:00:00.000Z',
+      '2026-05-24T20:00:00.000Z',
+      '2026-05-25T20:00:00.000Z',
+      '2026-05-26T20:00:00.000Z',
+      '2026-05-27T20:00:00.000Z',
+      '2026-05-30T20:00:00.000Z',
+      '2026-05-31T20:00:00.000Z',
+      '2026-06-01T20:00:00.000Z',
+    ]);
+  });
+
   test('activates a stack idempotently without duplicating schedules or logs', () => {
     const stack = normalizeStack({
       ...legacyStack,
@@ -182,6 +232,37 @@ describe('schedule presets', () => {
     expect(getSchedulePreset(weekly)).toBe('weekly');
     expect(getSchedulePreset(twiceWeekly)).toBe('twice-weekly');
     expect(getScheduleSummary(twiceWeekly.schedule!)).toBe('2x weekly · Monday, Thursday · 8:00 AM');
+  });
+
+  test('maps richer schedule presets into recurrence metadata and display copy', () => {
+    const weekdays = applySchedulePreset(legacyStack.peptides[0], 'weekdays');
+    const everyOtherDay = applySchedulePreset(legacyStack.peptides[0], 'every-other-day');
+    const fiveOnTwoOff = applySchedulePreset(legacyStack.peptides[0], 'five-on-two-off');
+
+    expect(getSchedulePreset(weekdays)).toBe('weekdays');
+    expect(getScheduleSummary(weekdays.schedule!)).toBe('Weekdays · Monday, Tuesday, Wednesday, Thursday, Friday · 8:00 AM');
+    expect(getSchedulePreset(everyOtherDay)).toBe('every-other-day');
+    expect(getScheduleSummary(everyOtherDay.schedule!)).toBe('Every 2 days · 8:00 AM');
+    expect(getSchedulePreset(fiveOnTwoOff)).toBe('five-on-two-off');
+    expect(getScheduleSummary(fiveOnTwoOff.schedule!)).toBe('5 days on / 2 days off · 8:00 AM');
+  });
+
+  test('labels non-preset recurrence as custom', () => {
+    expect(getSchedulePreset({
+      ...legacyStack.peptides[0],
+      schedule: { frequency: 'interval', timesOfDay: ['08:00'], intervalDays: 3 },
+    })).toBe('custom');
+  });
+
+  test('does not rewrite custom recurrence through the preset helper', () => {
+    const customPeptide: StackPeptide = {
+      ...legacyStack.peptides[0],
+      frequency: 'every 3 days',
+      timing: 'Morning',
+      schedule: { frequency: 'interval', timesOfDay: ['08:00'], intervalDays: 3 },
+    };
+
+    expect(applySchedulePreset(customPeptide, 'custom')).toEqual(customPeptide);
   });
 
   test('falls back to daily morning when persisted recurrence has no time slots', () => {
