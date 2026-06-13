@@ -15,6 +15,7 @@ import {
   savePersistedAppData,
 } from './persistence';
 import { createUserCompound, softDeleteUserCompound, updateUserCompound, type UserCompoundDraft } from './user-compounds';
+import { completeDueDose, skipDueDose } from './due-doses';
 
 interface AppContextType {
   data: AppData;
@@ -320,43 +321,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [data.scheduleLogs]);
 
   const completeScheduleLog = useCallback((logId: string, completion: { vialId: string; site: SiteCode | ''; notes: string }) => {
-    return setAndPersistData(prev => {
-      const log = prev.scheduleLogs.find((candidate) => candidate.id === logId);
-      const schedule = log ? prev.schedules.find((candidate) => candidate.id === log.scheduleId) : undefined;
-      if (!log || !schedule || log.status !== 'pending') return prev;
-
-      const completedAt = new Date().toISOString();
-      const newDose: Dose = {
-        id: `dose-${Date.now()}`,
-        scheduleLogId: log.id,
-        peptideId: schedule.peptideId,
-        vialId: completion.vialId,
-        dateTime: completedAt,
-        doseValue: schedule.doseValue,
-        doseUnit: schedule.doseUnit,
-        route: schedule.route,
-        site: completion.site,
-        notes: completion.notes,
-        completed: true,
-      };
-
-      return {
-        ...prev,
-        doses: [...prev.doses, newDose],
-        scheduleLogs: prev.scheduleLogs.map((candidate) => candidate.id === logId
-          ? { ...candidate, status: 'taken', doseId: newDose.id, takenAt: completedAt }
-          : candidate),
-      };
-    });
+    return setAndPersistData(prev => completeDueDose(prev, logId, completion));
   }, [setAndPersistData]);
 
   const skipScheduleLog = useCallback((logId: string) => {
-    return setAndPersistData(prev => ({
-      ...prev,
-      scheduleLogs: prev.scheduleLogs.map((log) => log.id === logId && log.status === 'pending'
-        ? { ...log, status: 'skipped', skippedAt: new Date().toISOString() }
-        : log),
-    }));
+    return setAndPersistData(prev => skipDueDose(prev, logId));
   }, [setAndPersistData]);
 
   const getActiveStacks = useCallback(() => {

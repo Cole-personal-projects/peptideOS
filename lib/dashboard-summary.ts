@@ -39,12 +39,17 @@ function getAdherenceLevel(completedCount: number): AdherenceLevel {
 
 export function buildDashboardBriefing(data: AppData, now = new Date()): DashboardBriefing {
   const { start, end } = getDayBounds(now);
-  const todaysDoses = data.doses.filter((dose) => {
+  const standaloneDoses = data.doses.filter((dose) => !dose.scheduleLogId).filter((dose) => {
     const doseDate = new Date(dose.dateTime);
     return doseDate >= start && doseDate < end;
   });
-  const completedToday = todaysDoses.filter((dose) => dose.completed).length;
-  const scheduledToday = todaysDoses.length;
+  const todaysScheduleLogs = data.scheduleLogs.filter((log) => {
+    const dueDate = new Date(log.dueAt);
+    return dueDate >= start && dueDate < end;
+  });
+  const completedToday = todaysScheduleLogs.filter((log) => log.status === 'taken' || log.status === 'skipped').length
+    + standaloneDoses.filter((dose) => dose.completed).length;
+  const scheduledToday = todaysScheduleLogs.length + standaloneDoses.length;
 
   return {
     scheduledToday,

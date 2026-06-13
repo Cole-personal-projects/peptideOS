@@ -48,6 +48,25 @@ describe('dashboard summary', () => {
     });
   });
 
+  test('summarizes scheduled dose logs for today', () => {
+    const briefing = buildDashboardBriefing({
+      ...baseData,
+      scheduleLogs: [
+        { id: 'pending', scheduleId: 'schedule-1', stackId: 'stack-1', stackPeptideId: 'item-1', peptideId: 'bpc-157', dueAt: '2026-05-22T08:00:00.000Z', status: 'pending' },
+        { id: 'taken', scheduleId: 'schedule-1', stackId: 'stack-1', stackPeptideId: 'item-1', peptideId: 'bpc-157', dueAt: '2026-05-22T20:00:00.000Z', status: 'taken' },
+        { id: 'skipped', scheduleId: 'schedule-1', stackId: 'stack-1', stackPeptideId: 'item-1', peptideId: 'bpc-157', dueAt: '2026-05-22T21:00:00.000Z', status: 'skipped' },
+        { id: 'tomorrow', scheduleId: 'schedule-1', stackId: 'stack-1', stackPeptideId: 'item-1', peptideId: 'bpc-157', dueAt: '2026-05-23T08:00:00.000Z', status: 'pending' },
+      ],
+    }, now);
+
+    expect(briefing).toEqual(expect.objectContaining({
+      scheduledToday: 3,
+      completedToday: 2,
+      pendingToday: 1,
+      completionPercent: 67,
+    }));
+  });
+
   test('builds a recent adherence grid with completed dose counts', () => {
     const grid = buildAdherenceGrid([
       { id: 'today-1', peptideId: 'bpc-157', vialId: 'active', dateTime: '2026-05-22T08:00:00.000Z', doseValue: 250, doseUnit: 'mcg', route: 'subq', site: '', notes: '', completed: true },
