@@ -26,7 +26,7 @@ export const parsedProtocolItemSchema = z.object({
   route: z
     .enum(['subq', 'im', 'intranasal', 'oral', 'topical'])
     .describe('Administration route. Use the compound default route when the user did not specify one.'),
-  frequency: z.enum(['daily', 'weekly']).describe('daily = every day; weekly = only on specific weekdays.'),
+  frequency: z.enum(['daily', 'weekly', 'interval', 'cycle']).describe('daily = every day; weekly = only on specific weekdays; interval = every N days; cycle = N days on followed by N days off.'),
   timesOfDay: z
     .array(z.string())
     .describe('Times of administration in 24-hour HH:MM format, e.g. ["08:00", "20:00"]. Morning = 08:00, midday = 12:00, evening/before bed = 20:00.'),
@@ -34,6 +34,21 @@ export const parsedProtocolItemSchema = z.object({
     .array(z.number())
     .nullable()
     .describe('For weekly frequency only: weekdays as numbers, 0 = Sunday through 6 = Saturday. Null for daily frequency.'),
+  intervalDays: z
+    .number()
+    .nullable()
+    .optional()
+    .describe('For interval frequency only: dose every N days, e.g. every other day = 2. Null otherwise.'),
+  cycleOnDays: z
+    .number()
+    .nullable()
+    .optional()
+    .describe('For cycle frequency only: number of consecutive dosing days, e.g. 5 days on = 5. Null otherwise.'),
+  cycleOffDays: z
+    .number()
+    .nullable()
+    .optional()
+    .describe('For cycle frequency only: number of consecutive rest days, e.g. 2 days off = 2. Null otherwise.'),
   notes: z.string().nullable().describe('Anything the user said about this compound that does not fit the fields above, or null.'),
 });
 
@@ -73,7 +88,9 @@ export function buildProtocolSystemPrompt(compounds: ProtocolCompoundInput[]): s
     '- Times of day must be 24-hour HH:MM strings. If the user gave no timing, default to ["08:00"].',
     '- "Twice daily" or "morning and evening" means timesOfDay ["08:00", "20:00"] with frequency daily.',
     '- "Before bed", "at night", or "evening" means ["20:00"].',
-    '- Phrases like "5 days on 2 days off" or "weekdays only" mean frequency weekly with weekdays [1, 2, 3, 4, 5].',
+    '- "Weekdays only" means frequency weekly with weekdays [1, 2, 3, 4, 5].',
+    '- "Every other day" means frequency interval with intervalDays 2. "Every 3 days" means intervalDays 3.',
+    '- "5 days on 2 days off" means frequency cycle with cycleOnDays 5 and cycleOffDays 2.',
     '- Durations: convert weeks/months to days (1 week = 7, 1 month = 30). If no duration is stated, set durationDays to null.',
     '- warnings is for parsing ambiguities only — never advice.',
     '',
@@ -125,12 +142,36 @@ function toRecurrence(item: ParsedProtocolItem): ScheduleRecurrence {
     return normalizeScheduleRecurrence({ frequency: 'weekly', timesOfDay, weekdays });
   }
 
+  if (item.frequency === 'interval') {
+    return normalizeScheduleRecurrence({
+      frequency: 'interval',
+      timesOfDay,
+      intervalDays: item.intervalDays ?? undefined,
+    });
+  }
+
+  if (item.frequency === 'cycle') {
+    return normalizeScheduleRecurrence({
+      frequency: 'cycle',
+      timesOfDay,
+      cycleOnDays: item.cycleOnDays ?? undefined,
+      cycleOffDays: item.cycleOffDays ?? undefined,
+    });
+  }
+
   return normalizeScheduleRecurrence({ frequency: 'daily', timesOfDay });
 }
 
 const weekdayLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function describeFrequency(recurrence: ScheduleRecurrence): string {
+  if (recurrence.frequency === 'interval') {
+    const interval = recurrence.intervalDays ?? 2;
+    return interval === 1 ? 'daily' : `every ${interval} days`;
+  }
+  if (recurrence.frequency === 'cycle') {
+    return `${recurrence.cycleOnDays ?? 5} days on / ${recurrence.cycleOffDays ?? 2} days off`;
+  }
   if (recurrence.frequency === 'weekly') {
     const count = recurrence.weekdays?.length ?? 1;
     return count > 1 ? `${count}x weekly` : 'weekly';

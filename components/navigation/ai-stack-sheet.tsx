@@ -20,6 +20,8 @@ interface AiStackSheetProps {
 const examplePrompts = [
   'BPC-157 250mcg twice daily and TB-500 2.5mg twice weekly for 8 weeks',
   'Ipamorelin 300mcg before bed, weekdays only, for 12 weeks',
+  'HGH 2 IU at night, 5 days on 2 days off, for 16 weeks',
+  'BPC-157 250mcg every other day for 6 weeks',
   'Semaglutide 0.25mg once weekly on Sundays',
 ];
 

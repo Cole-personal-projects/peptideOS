@@ -204,8 +204,12 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                         <SelectContent>
                           <SelectItem value="daily">Daily · 8:00 AM</SelectItem>
                           <SelectItem value="twice-daily">2x daily · 8:00 AM, 8:00 PM</SelectItem>
+                          <SelectItem value="weekdays">Weekdays · 8:00 AM</SelectItem>
                           <SelectItem value="weekly">Weekly · Monday</SelectItem>
                           <SelectItem value="twice-weekly">2x weekly · Monday, Thursday</SelectItem>
+                          <SelectItem value="every-other-day">Every other day · 8:00 AM</SelectItem>
+                          <SelectItem value="five-on-two-off">5 days on / 2 days off · 8:00 AM</SelectItem>
+                          <SelectItem value="custom" disabled>Custom AI schedule</SelectItem>
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">

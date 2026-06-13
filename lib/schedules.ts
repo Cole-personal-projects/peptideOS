@@ -1,6 +1,6 @@
 import type { Schedule, ScheduleLog, ScheduleRecurrence, Stack, StackPeptide } from './types';
 
-export type SchedulePreset = 'daily' | 'twice-daily' | 'weekly' | 'twice-weekly';
+export type SchedulePreset = 'daily' | 'twice-daily' | 'weekly' | 'twice-weekly' | 'weekdays' | 'every-other-day' | 'five-on-two-off' | 'custom';
 
 const weekdayLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -67,6 +67,23 @@ export function normalizeScheduleRecurrence(recurrence: ScheduleRecurrence): Sch
     };
   }
 
+  if (recurrence.frequency === 'interval') {
+    return {
+      frequency: 'interval',
+      timesOfDay,
+      intervalDays: recurrence.intervalDays && recurrence.intervalDays > 0 ? Math.round(recurrence.intervalDays) : 2,
+    };
+  }
+
+  if (recurrence.frequency === 'cycle') {
+    return {
+      frequency: 'cycle',
+      timesOfDay,
+      cycleOnDays: recurrence.cycleOnDays && recurrence.cycleOnDays > 0 ? Math.round(recurrence.cycleOnDays) : 5,
+      cycleOffDays: recurrence.cycleOffDays && recurrence.cycleOffDays > 0 ? Math.round(recurrence.cycleOffDays) : 2,
+    };
+  }
+
   return {
     frequency: 'daily',
     timesOfDay,
@@ -75,7 +92,14 @@ export function normalizeScheduleRecurrence(recurrence: ScheduleRecurrence): Sch
 
 export function getSchedulePreset(stackPeptide: StackPeptide): SchedulePreset {
   const recurrence = normalizeScheduleRecurrence(stackPeptide.schedule ?? getDefaultScheduleRecurrence(stackPeptide));
+  if (recurrence.frequency === 'interval') {
+    return recurrence.intervalDays === 2 ? 'every-other-day' : 'custom';
+  }
+  if (recurrence.frequency === 'cycle') {
+    return recurrence.cycleOnDays === 5 && recurrence.cycleOffDays === 2 ? 'five-on-two-off' : 'custom';
+  }
   if (recurrence.frequency === 'weekly') {
+    if ((recurrence.weekdays ?? []).join(',') === '1,2,3,4,5') return 'weekdays';
     return (recurrence.weekdays?.length ?? 0) > 1 ? 'twice-weekly' : 'weekly';
   }
 
@@ -83,6 +107,10 @@ export function getSchedulePreset(stackPeptide: StackPeptide): SchedulePreset {
 }
 
 export function applySchedulePreset(stackPeptide: StackPeptide, preset: SchedulePreset): StackPeptide {
+  if (preset === 'custom') {
+    return stackPeptide;
+  }
+
   if (preset === 'twice-daily') {
     return {
       ...stackPeptide,
@@ -110,6 +138,33 @@ export function applySchedulePreset(stackPeptide: StackPeptide, preset: Schedule
     };
   }
 
+  if (preset === 'weekdays') {
+    return {
+      ...stackPeptide,
+      frequency: 'weekdays',
+      timing: 'Weekday morning',
+      schedule: { frequency: 'weekly', timesOfDay: ['08:00'], weekdays: [1, 2, 3, 4, 5] },
+    };
+  }
+
+  if (preset === 'every-other-day') {
+    return {
+      ...stackPeptide,
+      frequency: 'every 2 days',
+      timing: 'Morning',
+      schedule: { frequency: 'interval', timesOfDay: ['08:00'], intervalDays: 2 },
+    };
+  }
+
+  if (preset === 'five-on-two-off') {
+    return {
+      ...stackPeptide,
+      frequency: '5 days on / 2 days off',
+      timing: 'Morning',
+      schedule: { frequency: 'cycle', timesOfDay: ['08:00'], cycleOnDays: 5, cycleOffDays: 2 },
+    };
+  }
+
   return {
     ...stackPeptide,
     frequency: 'daily',
@@ -132,9 +187,22 @@ export function getScheduleSummary(recurrence: ScheduleRecurrence): string {
   const normalized = normalizeScheduleRecurrence(recurrence);
   const timeSummary = normalized.timesOfDay.map(formatTime).join(', ');
 
+  if (normalized.frequency === 'interval') {
+    const interval = normalized.intervalDays ?? 2;
+    const cadence = interval === 1 ? 'Daily' : `Every ${interval} days`;
+    return `${cadence} · ${timeSummary}`;
+  }
+
+  if (normalized.frequency === 'cycle') {
+    return `${normalized.cycleOnDays ?? 5} days on / ${normalized.cycleOffDays ?? 2} days off · ${timeSummary}`;
+  }
+
   if (normalized.frequency === 'weekly') {
     const days = (normalized.weekdays ?? [1]).map((weekday) => weekdayLabels[weekday] ?? 'Monday').join(', ');
-    const cadence = (normalized.weekdays?.length ?? 0) > 1 ? '2x weekly' : 'Weekly';
+    const weekdayCount = normalized.weekdays?.length ?? 0;
+    const cadence = weekdayCount === 5 && (normalized.weekdays ?? []).join(',') === '1,2,3,4,5'
+      ? 'Weekdays'
+      : weekdayCount > 1 ? `${weekdayCount}x weekly` : 'Weekly';
     return `${cadence} · ${days} · ${timeSummary}`;
   }
 
@@ -185,6 +253,12 @@ function addDays(date: Date, days: number): Date {
   return next;
 }
 
+function daysSince(start: Date, current: Date): number {
+  const startDay = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
+  const currentDay = Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate());
+  return Math.floor((currentDay - startDay) / 86_400_000);
+}
+
 function getStackEndDate(stack: Stack): string {
   const start = new Date(stack.startDate);
   const end = addDays(start, Math.max(stack.durationDays - 1, 0));
@@ -202,6 +276,16 @@ export function generateScheduleLogs(schedule: Schedule): ScheduleLog[] {
   for (let cursor = new Date(start); cursor <= end; cursor = addDays(cursor, 1)) {
     if (recurrence.frequency === 'weekly' && !weekdays.includes(cursor.getUTCDay())) {
       continue;
+    }
+    if (recurrence.frequency === 'interval') {
+      const interval = recurrence.intervalDays ?? 2;
+      if (daysSince(start, cursor) % interval !== 0) continue;
+    }
+    if (recurrence.frequency === 'cycle') {
+      const onDays = recurrence.cycleOnDays ?? 5;
+      const offDays = recurrence.cycleOffDays ?? 2;
+      const cycleLength = onDays + offDays;
+      if (cycleLength <= 0 || daysSince(start, cursor) % cycleLength >= onDays) continue;
     }
 
     recurrence.timesOfDay.forEach((timeOfDay) => {
