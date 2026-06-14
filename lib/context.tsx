@@ -29,6 +29,7 @@ interface AppContextType {
   // Vials
   getVial: (id: string) => Vial | undefined;
   addVial: (vial: Omit<Vial, 'id'>) => void;
+  addVials: (vials: Array<Omit<Vial, 'id'>>) => void;
   updateVial: (id: string, updates: Partial<Vial>) => void;
   // Doses
   getDose: (id: string) => Dose | undefined;
@@ -153,6 +154,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addVial = useCallback((vial: Omit<Vial, 'id'>) => {
     const newVial: Vial = { ...vial, id: `vial-${Date.now()}` };
     void setAndPersistData(prev => ({ ...prev, vials: [...prev.vials, newVial] }));
+  }, [setAndPersistData]);
+
+  const addVials = useCallback((vials: Array<Omit<Vial, 'id'>>) => {
+    const createdAt = Date.now();
+    const newVials: Vial[] = vials.map((vial, index) => ({
+      ...vial,
+      id: `vial-${createdAt}-${index}`,
+    }));
+    void setAndPersistData(prev => ({ ...prev, vials: [...prev.vials, ...newVials] }));
   }, [setAndPersistData]);
 
   const updateVial = useCallback((id: string, updates: Partial<Vial>) => {
@@ -400,6 +410,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       deleteUserCompound,
       getVial,
       addVial,
+      addVials,
       updateVial,
       getDose,
       addDose,

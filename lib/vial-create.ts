@@ -12,6 +12,8 @@ export interface NewVialInput {
   concentrationValue?: number;
   concentrationUnit?: ConcentrationUnit;
   volumeMl?: number;
+  packageUnit?: 'vial' | 'kit';
+  packageQuantity?: number;
 }
 
 function deriveTotalMg(input: NewVialInput): number {
@@ -82,4 +84,26 @@ export function buildNewVial(input: NewVialInput): Omit<Vial, 'id'> | null {
     expirationDate: new Date(`${dateAdded}T00:00:00.000Z`).toISOString(),
     status: 'sealed',
   };
+}
+
+export function getPhysicalVialCount(input: Pick<NewVialInput, 'packageUnit' | 'packageQuantity'>): number {
+  const quantity = input.packageQuantity ?? 1;
+  if (!Number.isFinite(quantity) || quantity < 1) return 0;
+
+  return Math.floor(quantity) * (input.packageUnit === 'kit' ? 10 : 1);
+}
+
+export function buildNewVialBatch(input: NewVialInput): Array<Omit<Vial, 'id'>> {
+  const count = getPhysicalVialCount(input);
+  if (count < 1) return [];
+
+  const baseVial = buildNewVial(input);
+  if (!baseVial) return [];
+
+  if (count === 1) return [baseVial];
+
+  return Array.from({ length: count }, (_, index) => ({
+    ...baseVial,
+    name: `${baseVial.name} vial ${index + 1} of ${count}`,
+  }));
 }

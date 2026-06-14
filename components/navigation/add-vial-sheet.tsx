@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useApp } from '@/lib/context';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
-import { buildNewVial } from '@/lib/vial-create';
+import { buildNewVialBatch } from '@/lib/vial-create';
 import type { ConcentrationUnit, DoseUnit, InventoryContainerType, VialStatus } from '@/lib/types';
 
 interface AddVialSheetProps {
@@ -17,13 +17,17 @@ interface AddVialSheetProps {
 }
 
 export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
-  const { data, addVial } = useApp();
+  const { data, addVials } = useApp();
+  const [name, setName] = useState('');
   const [peptideId, setPeptideId] = useState('');
+  const [dateAdded, setDateAdded] = useState(() => new Date().toISOString().slice(0, 10));
   const [containerType, setContainerType] = useState<InventoryContainerType>('lyophilized-vial');
   const [source, setSource] = useState('');
   const [lotNumber, setLotNumber] = useState('');
   const [amount, setAmount] = useState('');
   const [amountUnit, setAmountUnit] = useState<DoseUnit>('mg');
+  const [packageUnit, setPackageUnit] = useState<'vial' | 'kit'>('vial');
+  const [packageQuantity, setPackageQuantity] = useState('1');
   const [concentration, setConcentration] = useState('');
   const [concentrationUnit, setConcentrationUnit] = useState<ConcentrationUnit>('mg/ml');
   const [volumeMl, setVolumeMl] = useState('');
@@ -35,7 +39,7 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
   const handleCompoundChange = (value: string) => {
     const compound = trackableCompounds.find((candidate) => candidate.id === value);
     setPeptideId(value);
-    setAmountUnit(compound?.defaultDoseUnit ?? 'mg');
+    setAmountUnit(compound?.defaultDoseUnit === 'iu' ? 'iu' : 'mg');
     setConcentrationUnit(compound?.defaultDoseUnit === 'iu' ? 'iu/ml' : 'mg/ml');
 
     if (compound?.concentrationMode === 'concentration') {
@@ -50,15 +54,14 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
   };
 
   const handleSubmit = () => {
-    if (!peptideId || !lotNumber) return;
+    if (!peptideId) return;
     if (usesConcentration && (!concentration || !volumeMl)) return;
     if (!usesConcentration && !amount) return;
     
-    const dateAdded = new Date().toISOString().slice(0, 10);
     const expirationDate = new Date();
     expirationDate.setMonth(expirationDate.getMonth() + 12);
-    const vialPayload = buildNewVial({
-      name: `${selectedCompound?.name ?? 'Compound'} container`,
+    const vialPayloads = buildNewVialBatch({
+      name: name || `${selectedCompound?.name ?? 'Compound'} container`,
       peptideId,
       dateAdded,
       containerType,
@@ -67,25 +70,31 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
       concentrationValue: usesConcentration ? parseFloat(concentration) : undefined,
       concentrationUnit: usesConcentration ? concentrationUnit : undefined,
       volumeMl: usesConcentration ? parseFloat(volumeMl) : undefined,
+      packageUnit: usesConcentration ? 'vial' : packageUnit,
+      packageQuantity: usesConcentration ? 1 : parseFloat(packageQuantity),
     });
 
-    if (!vialPayload) return;
+    if (vialPayloads.length === 0) return;
     
-    addVial({
+    addVials(vialPayloads.map((vialPayload) => ({
       ...vialPayload,
       source,
       lotNumber,
       expirationDate: expirationDate.toISOString(),
       status
-    });
+    })));
 
     // Reset form
+    setName('');
     setPeptideId('');
+    setDateAdded(new Date().toISOString().slice(0, 10));
     setContainerType('lyophilized-vial');
     setSource('');
     setLotNumber('');
     setAmount('');
     setAmountUnit('mg');
+    setPackageUnit('vial');
+    setPackageQuantity('1');
     setConcentration('');
     setConcentrationUnit('mg/ml');
     setVolumeMl('');
@@ -102,6 +111,17 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
         
         <div className="space-y-4 pb-8">
           <div className="space-y-2">
+            <Label htmlFor="vial-name">Vial name</Label>
+            <Input
+              id="vial-name"
+              aria-label="Vial name"
+              placeholder="e.g., KPV kit"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label>Compound</Label>
             <Select value={peptideId} onValueChange={handleCompoundChange}>
               <SelectTrigger>
@@ -113,6 +133,17 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="vial-date-added">Date added</Label>
+            <Input
+              id="vial-date-added"
+              aria-label="Date added"
+              type="date"
+              value={dateAdded}
+              onChange={(e) => setDateAdded(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">
@@ -187,11 +218,13 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
           ) : (
             <div className="grid grid-cols-[1fr_104px] gap-2">
               <div className="space-y-2">
-                <Label>Total Amount</Label>
+                <Label htmlFor="vial-size">Vial size</Label>
                 <Input
+                  id="vial-size"
+                  aria-label="Vial size"
                   type="number"
                   step="any"
-                  placeholder="e.g., 5"
+                  placeholder="e.g., 10"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                 />
@@ -208,6 +241,32 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
                     <SelectItem value="iu">IU</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="inventory-unit">Inventory unit</Label>
+                <select
+                  id="inventory-unit"
+                  aria-label="Inventory unit"
+                  value={packageUnit}
+                  onChange={(e) => setPackageUnit(e.target.value as 'vial' | 'kit')}
+                  className="border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                >
+                  <option value="vial">Vials</option>
+                  <option value="kit">Kits (10 vials)</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="inventory-amount">Inventory amount</Label>
+                <Input
+                  id="inventory-amount"
+                  aria-label="Inventory amount"
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="e.g., 1"
+                  value={packageQuantity}
+                  onChange={(e) => setPackageQuantity(e.target.value)}
+                />
               </div>
             </div>
           )}
@@ -229,7 +288,7 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
             className="w-full mt-6" 
             size="lg"
             onClick={handleSubmit}
-            disabled={!peptideId || !lotNumber || (usesConcentration ? !concentration || !volumeMl : !amount)}
+            disabled={!peptideId || (usesConcentration ? !concentration || !volumeMl : !amount || !packageQuantity)}
           >
             Add Vial
           </Button>

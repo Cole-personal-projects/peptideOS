@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildNewVial } from './vial-create';
+import { buildNewVial, buildNewVialBatch } from './vial-create';
 
 describe('vial creation', () => {
   it('builds a sealed vial payload from name, peptide, and date added', () => {
@@ -69,5 +69,28 @@ describe('vial creation', () => {
       totalAmount: { value: 3000, unit: 'mg' },
       status: 'sealed',
     });
+  });
+
+  it('expands one kit into ten physical vial payloads using the per-vial size', () => {
+    const vials = buildNewVialBatch({
+      name: 'KPV kit',
+      peptideId: 'kpv',
+      dateAdded: '2026-05-20',
+      containerType: 'lyophilized-vial',
+      totalAmountValue: 10,
+      totalAmountUnit: 'mg',
+      packageUnit: 'kit',
+      packageQuantity: 1,
+    });
+
+    expect(vials).toHaveLength(10);
+    expect(vials[0]).toMatchObject({
+      name: 'KPV kit vial 1 of 10',
+      peptideId: 'kpv',
+      mg: 10,
+      totalAmount: { value: 10, unit: 'mg' },
+      status: 'sealed',
+    });
+    expect(vials[9]?.name).toBe('KPV kit vial 10 of 10');
   });
 });
