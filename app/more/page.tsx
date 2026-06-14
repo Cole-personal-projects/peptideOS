@@ -51,7 +51,7 @@ const menuSections: MenuSection[] = [
     title: 'Community',
     items: [
       { href: '/more/community', label: 'Community', icon: Users, description: 'Connect with researchers', badge: 'Soon' },
-      { href: '/more/ai-assistant', label: 'AI Assistant', icon: Bot, description: 'Research helper', badge: 'Soon' },
+      { href: '/more/ai-assistant', label: 'AI Assistant', icon: Bot, description: 'Research helper' },
     ]
   },
   {
