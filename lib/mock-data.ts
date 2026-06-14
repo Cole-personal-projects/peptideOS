@@ -504,9 +504,9 @@ export const mockStacks: Stack[] = [
 export const initialAppData: AppData = {
   peptides: mockPeptides,
   compounds: [...referenceCompounds],
-  vials: mockVials,
-  doses: mockDoses,
-  stacks: normalizeStacks(mockStacks),
+  vials: [],
+  doses: [],
+  stacks: [],
   schedules: [],
   scheduleLogs: [],
   reconstitutionCalculations: [],

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
+import { addTestVial } from './helpers/inventory';
 
 test.describe('dashboard polish', () => {
   test('shows briefing and adherence widgets after first-run accept', async ({ page }) => {
@@ -18,9 +19,14 @@ test.describe('dashboard polish', () => {
 
   test('labels scheduled dose states and recent scheduled completions clearly', async ({ page }) => {
     await page.clock.setFixedTime(new Date('2026-05-23T12:00:00-07:00'));
+    await addTestVial(page, {
+      name: 'BPC-157 active vial',
+      compound: 'BPC-157',
+      status: 'active',
+    });
+
     await page.goto('/stacks');
 
-    await page.getByRole('button', { name: 'I Understand' }).click();
     await page.getByRole('button', { name: 'New stack' }).click();
     await page.getByLabel('Stack Name').fill('Dashboard Actionability Stack');
     await page.getByLabel('Duration (days)').fill('2');

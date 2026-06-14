@@ -16,7 +16,7 @@ test.describe('compound workflows', () => {
     await expect(page.getByRole('link', { name: /Custom Recovery Blend/ })).toBeVisible();
 
     await page.goto('/more/inventory');
-    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
     await page.getByRole('textbox', { name: 'Vial name' }).fill('Custom Recovery Backup');
     await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
     await page.getByRole('option', { name: 'Custom Recovery Blend' }).click();

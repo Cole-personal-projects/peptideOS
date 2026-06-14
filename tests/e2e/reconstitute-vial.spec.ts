@@ -1,10 +1,17 @@
 import { expect, test } from '@playwright/test';
+import { addTestVial } from './helpers/inventory';
 
 test.describe('reconstitute vial flow', () => {
   test('activates a sealed vial with BAC water and concentration preview', async ({ page }) => {
-    await page.goto('/more/inventory/vial-5');
+    await addTestVial(page, {
+      name: 'GHK-Cu sealed vial',
+      compound: 'GHK-Cu',
+      size: '10',
+      status: 'sealed',
+    });
 
-    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('tab', { name: /Sealed/ }).click();
+    await page.getByRole('link', { name: /GHK-Cu sealed vial/ }).click();
     await expect(page.getByRole('heading', { name: 'GHK-Cu sealed vial' })).toBeVisible();
     await expect(page.getByText('sealed', { exact: true })).toBeVisible();
 
@@ -24,7 +31,7 @@ test.describe('reconstitute vial flow', () => {
 
     await page.getByRole('link', { name: 'Back' }).click();
     await page.getByRole('tab', { name: /Active/ }).click();
-    const reconstitutedCard = page.locator('a[href="/more/inventory/vial-5"]');
+    const reconstitutedCard = page.getByRole('link', { name: /GHK-Cu sealed vial/ });
     await expect(reconstitutedCard).toContainText('GHK-Cu');
     await expect(reconstitutedCard).toContainText('active');
     await expect(reconstitutedCard).toContainText(/\d+ days left/);

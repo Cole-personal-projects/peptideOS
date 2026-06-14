@@ -7,7 +7,7 @@ test.describe('add vial', () => {
     await page.getByRole('button', { name: 'I Understand' }).click();
     await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'Add Vial' })).toBeVisible();
 
     await page.getByRole('textbox', { name: 'Vial name' }).fill('Travel GHK-Cu');
@@ -32,7 +32,7 @@ test.describe('add vial', () => {
     await page.goto('/more/inventory');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
     await page.getByRole('textbox', { name: 'Vial name' }).fill('KPV kit test');
     await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
     await page.getByRole('option', { name: 'KPV' }).click();
@@ -53,7 +53,7 @@ test.describe('add vial', () => {
     await page.goto('/more/inventory');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
     await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
     await page.getByRole('option', { name: 'KPV' }).click();
 
@@ -68,7 +68,7 @@ test.describe('add vial', () => {
     await page.goto('/more/inventory');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
     await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
     await page.getByRole('option', { name: 'KPV' }).click();
 
@@ -104,7 +104,7 @@ test.describe('add vial', () => {
     await page.goto('/more/inventory');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
     await page.getByRole('textbox', { name: 'Vial name' }).fill('Editable KPV vial');
     await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
     await page.getByRole('option', { name: 'KPV' }).click();

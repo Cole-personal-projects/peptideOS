@@ -9,7 +9,7 @@ import {
   resetPersistedAppData,
   savePersistedAppData,
 } from './persistence';
-import { initialAppData } from './mock-data';
+import { initialAppData, mockStacks, mockVials } from './mock-data';
 import { referenceCompounds } from './reference-compounds';
 import type { AppData, Compound } from './types';
 
@@ -72,7 +72,7 @@ describe('Dexie persistence', () => {
       compounds: [],
       vials: [
         {
-          ...initialAppData.vials[0],
+          ...mockVials[0],
           id: 'vial-persisted',
           name: 'Persisted vial',
         },
@@ -199,7 +199,7 @@ describe('Dexie persistence', () => {
   test('reset clears local user data and restores defaults', async () => {
     await savePersistedAppData(db, {
       ...clone(initialAppData),
-      vials: [{ ...initialAppData.vials[0], id: 'vial-reset', name: 'Reset me' }],
+      vials: [{ ...mockVials[0], id: 'vial-reset', name: 'Reset me' }],
       hasCompletedOnboarding: true,
       hasSeenDisclaimer: true,
     });
@@ -215,7 +215,7 @@ describe('Dexie persistence', () => {
   test('exports user-owned data with schema metadata', async () => {
     await savePersistedAppData(db, {
       ...clone(initialAppData),
-      vials: [{ ...initialAppData.vials[0], id: 'vial-export', name: 'Exported vial' }],
+      vials: [{ ...mockVials[0], id: 'vial-export', name: 'Exported vial' }],
       reconstitutionCalculations: [
         {
           id: 'reconstitution-calc-export',
@@ -343,14 +343,14 @@ describe('Dexie persistence', () => {
       schemaVersion: 2,
       exportedAt: '2026-05-23T00:00:00.000Z',
       data: {
-        vials: [{ ...initialAppData.vials[0], id: 'vial-imported', name: 'Imported vial' }],
+        vials: [{ ...mockVials[0], id: 'vial-imported', name: 'Imported vial' }],
         doses: [],
         stacks: [
           {
-            ...initialAppData.stacks[0],
+            ...mockStacks[0],
             id: 'stack-imported',
             name: 'Imported stack',
-            peptides: initialAppData.stacks[0].peptides.map(({ id: _id, ...peptide }) => peptide),
+            peptides: mockStacks[0]!.peptides.map(({ id: _id, ...peptide }) => peptide),
           },
         ],
         schedules: [],
@@ -390,7 +390,7 @@ describe('Dexie persistence', () => {
   test('rejects invalid import JSON without overwriting current local data', async () => {
     await savePersistedAppData(db, {
       ...clone(initialAppData),
-      vials: [{ ...initialAppData.vials[0], id: 'vial-keep', name: 'Keep me' }],
+      vials: [{ ...mockVials[0], id: 'vial-keep', name: 'Keep me' }],
       hasCompletedOnboarding: true,
     });
 
@@ -404,7 +404,7 @@ describe('Dexie persistence', () => {
   test('rejects unsupported import schema versions without overwriting current local data', async () => {
     await savePersistedAppData(db, {
       ...clone(initialAppData),
-      vials: [{ ...initialAppData.vials[0], id: 'vial-schema-keep', name: 'Schema keep' }],
+      vials: [{ ...mockVials[0], id: 'vial-schema-keep', name: 'Schema keep' }],
     });
 
     await expect(importUserData(db, initialAppData, JSON.stringify({
@@ -485,7 +485,7 @@ describe('Dexie persistence', () => {
   test('bad metadata falls back to bundled defaults without crashing', async () => {
     await db.metadata.put({ key: 'schemaVersion', value: 'not-a-number' });
     await db.vials.put({
-      ...initialAppData.vials[0],
+      ...mockVials[0],
       id: 'vial-bad-metadata',
       name: 'Bad metadata vial',
       createdAt: '2026-05-23T00:00:00.000Z',

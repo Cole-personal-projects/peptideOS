@@ -13,14 +13,16 @@ test.describe('MVP tester walkthrough', () => {
     await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ })).toBeVisible();
 
     await page.goto('/more/inventory');
-    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
     await page.getByRole('textbox', { name: 'Vial name' }).fill('MVP Walkthrough BPC');
     await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
     await page.getByRole('option', { name: 'BPC-157' }).click();
     await page.getByLabel('Date added').fill('2026-05-26');
     await page.getByRole('spinbutton', { name: 'Vial size' }).fill('5');
+    await page.getByRole('combobox', { name: 'Status' }).click();
+    await page.getByRole('option', { name: 'Active (Reconstituted)' }).click();
     await page.getByRole('button', { name: 'Add Vial' }).click();
-    await page.getByRole('tab', { name: /Sealed/ }).click();
+    await page.getByRole('tab', { name: /Active/ }).click();
     await expect(page.getByRole('link', { name: /MVP Walkthrough BPC/ })).toContainText('Added May 26, 2026');
 
     await page.goto('/stacks');
@@ -43,7 +45,7 @@ test.describe('MVP tester walkthrough', () => {
     await expect(page.getByText(/BPC-157 - 250 mcg/).first()).toBeVisible();
     await page.getByRole('button', { name: 'Complete' }).first().click();
     await page.getByRole('combobox').filter({ hasText: 'Select active vial' }).click();
-    await page.getByRole('option', { name: /BPC-157 active vial/ }).click();
+    await page.getByRole('option', { name: /MVP Walkthrough BPC/ }).click();
     await page.getByRole('button', { name: 'Upper Left Abdomen' }).click();
     await page.getByRole('button', { name: 'Complete dose' }).click();
     await expect(page.getByText('Taken today', { exact: true }).first()).toBeVisible();
