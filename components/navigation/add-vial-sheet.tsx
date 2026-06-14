@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,6 +35,7 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
   const trackableCompounds = getTrackableCompounds(data);
   const selectedCompound = trackableCompounds.find((compound) => compound.id === peptideId);
   const usesConcentration = containerType === 'multi-dose-vial' || containerType === 'prefilled-pen';
+  const canSubmit = Boolean(peptideId) && (usesConcentration ? Boolean(concentration && volumeMl) : Boolean(amount && packageQuantity));
 
   const handleCompoundChange = (value: string) => {
     const compound = trackableCompounds.find((candidate) => candidate.id === value);
@@ -104,12 +105,16 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-3xl h-[75vh] overflow-y-auto">
-        <SheetHeader className="pb-4">
+      <SheetContent
+        side="bottom"
+        className="h-[min(92dvh,760px)] max-h-[calc(100dvh-env(safe-area-inset-top)-0.75rem)] gap-0 overflow-hidden rounded-t-3xl border-t p-0"
+      >
+        <SheetHeader className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
+          <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-muted-foreground/30" aria-hidden="true" />
           <SheetTitle>Add Vial</SheetTitle>
         </SheetHeader>
         
-        <div className="space-y-4 pb-8">
+        <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="vial-name">Vial name</Label>
             <Input
@@ -122,9 +127,9 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Compound</Label>
+            <Label htmlFor="vial-compound">Compound</Label>
             <Select value={peptideId} onValueChange={handleCompoundChange}>
-              <SelectTrigger>
+              <SelectTrigger id="vial-compound" aria-label="Compound">
                 <SelectValue placeholder="Select compound" />
               </SelectTrigger>
               <SelectContent>
@@ -147,9 +152,9 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Container Type</Label>
+            <Label htmlFor="vial-container-type">Container Type</Label>
             <Select value={containerType} onValueChange={(value) => setContainerType(value as InventoryContainerType)}>
-              <SelectTrigger>
+              <SelectTrigger id="vial-container-type" aria-label="Container Type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -163,8 +168,10 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Source</Label>
+            <Label htmlFor="vial-source">Source</Label>
             <Input
+              id="vial-source"
+              aria-label="Source"
               placeholder="Optional vial source"
               value={source}
               onChange={(e) => setSource(e.target.value)}
@@ -172,8 +179,10 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Lot Number</Label>
+            <Label htmlFor="vial-lot-number">Lot Number</Label>
             <Input
+              id="vial-lot-number"
+              aria-label="Lot Number"
               placeholder="e.g., BPC-2024-001"
               value={lotNumber}
               onChange={(e) => setLotNumber(e.target.value)}
@@ -181,10 +190,12 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
           </div>
 
           {usesConcentration ? (
-            <div className="grid grid-cols-[1fr_116px] gap-2">
+            <div className="grid grid-cols-[minmax(0,1fr)_7rem] items-end gap-3">
               <div className="space-y-2">
-                <Label>Concentration</Label>
+                <Label htmlFor="vial-concentration">Concentration</Label>
                 <Input
+                  id="vial-concentration"
+                  aria-label="Concentration"
                   type="number"
                   step="any"
                   placeholder="e.g., 200"
@@ -193,9 +204,9 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Unit</Label>
+                <Label htmlFor="vial-concentration-unit">Unit</Label>
                 <Select value={concentrationUnit} onValueChange={(value) => setConcentrationUnit(value as ConcentrationUnit)}>
-                  <SelectTrigger>
+                  <SelectTrigger id="vial-concentration-unit" aria-label="Concentration unit">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -205,8 +216,10 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
                 </Select>
               </div>
               <div className="space-y-2 col-span-2">
-                <Label>Volume (mL)</Label>
+                <Label htmlFor="vial-volume">Volume (mL)</Label>
                 <Input
+                  id="vial-volume"
+                  aria-label="Volume (mL)"
                   type="number"
                   step="any"
                   placeholder="e.g., 10"
@@ -216,7 +229,7 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-[1fr_104px] gap-2">
+            <div className="grid grid-cols-[minmax(0,1fr)_5.75rem] items-end gap-3">
               <div className="space-y-2">
                 <Label htmlFor="vial-size">Vial size</Label>
                 <Input
@@ -230,9 +243,9 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Unit</Label>
+                <Label htmlFor="vial-size-unit">Unit</Label>
                 <Select value={amountUnit} onValueChange={(value) => setAmountUnit(value as DoseUnit)}>
-                  <SelectTrigger>
+                  <SelectTrigger id="vial-size-unit" aria-label="Vial size unit">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -244,16 +257,15 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="inventory-unit">Inventory unit</Label>
-                <select
-                  id="inventory-unit"
-                  aria-label="Inventory unit"
-                  value={packageUnit}
-                  onChange={(e) => setPackageUnit(e.target.value as 'vial' | 'kit')}
-                  className="border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
-                >
-                  <option value="vial">Vials</option>
-                  <option value="kit">Kits (10 vials)</option>
-                </select>
+                <Select value={packageUnit} onValueChange={(value) => setPackageUnit(value as 'vial' | 'kit')}>
+                  <SelectTrigger id="inventory-unit" aria-label="Inventory unit">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="vial">Vials</SelectItem>
+                    <SelectItem value="kit">Kits (10 vials)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="inventory-amount">Inventory amount</Label>
@@ -272,9 +284,9 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
           )}
 
           <div className="space-y-2">
-            <Label>Status</Label>
+            <Label htmlFor="vial-status">Status</Label>
             <Select value={status} onValueChange={(v) => setStatus(v as VialStatus)}>
-              <SelectTrigger>
+              <SelectTrigger id="vial-status" aria-label="Status">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -283,16 +295,18 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
               </SelectContent>
             </Select>
           </div>
+        </div>
 
-          <Button 
-            className="w-full mt-6" 
+        <SheetFooter className="sticky bottom-0 border-t bg-background/95 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur">
+          <Button
+            className="w-full"
             size="lg"
             onClick={handleSubmit}
-            disabled={!peptideId || (usesConcentration ? !concentration || !volumeMl : !amount || !packageQuantity)}
+            disabled={!canSubmit}
           >
             Add Vial
           </Button>
-        </div>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
