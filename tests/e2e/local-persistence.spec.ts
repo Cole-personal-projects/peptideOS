@@ -33,6 +33,21 @@ test.describe('local persistence', () => {
     await expect(page.getByRole('link', { name: /Reload Persisted GHK-Cu/ })).toBeVisible();
   });
 
+  test('persists saved reconstitution calculations across reloads', async ({ page }) => {
+    await page.goto('/more/reconstitution');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByText('Saved Calculations (1)')).toBeVisible();
+
+    await page.reload();
+
+    const savedCalculations = page.getByLabel('Saved reconstitution calculations');
+    await expect(savedCalculations).toBeVisible();
+    await expect(savedCalculations).toContainText('BPC-157');
+    await expect(savedCalculations).toContainText('10.0 units');
+  });
+
   test('clears local data from Settings and returns to first-run state', async ({ page }) => {
     await page.goto('/more/inventory');
 
@@ -107,7 +122,7 @@ test.describe('local persistence', () => {
 
     await page.goto('/more/settings');
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await expect(page.getByText('Exports include your saved vials, doses, stacks, schedules, custom compounds, and settings. Bundled reference compounds stay in the app and are not duplicated in backups.')).toBeVisible();
+    await expect(page.getByText('Exports include your saved vials, doses, stacks, schedules, reconstitution calculations, custom compounds, and settings. Bundled reference compounds stay in the app and are not duplicated in backups.')).toBeVisible();
     await expect(page.getByText('Imports replace local user data from a PeptideOS JSON backup. Bundled reference compounds remain app-owned.')).toBeVisible();
     await page.getByLabel('Import Data File').setInputFiles(exportPath);
     await expect(page.getByRole('status')).toContainText('Data restored from backup.');

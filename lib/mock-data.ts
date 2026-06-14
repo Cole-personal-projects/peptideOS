@@ -509,6 +509,7 @@ export const initialAppData: AppData = {
   stacks: normalizeStacks(mockStacks),
   schedules: [],
   scheduleLogs: [],
+  reconstitutionCalculations: [],
   hasSeenDisclaimer: false,
   hasCompletedOnboarding: false,
   userMode: 'beginner',

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
-import type { AppData, Compound, Peptide, Vial, Dose, ScheduleLog, SiteCode, Stack, UserMode } from './types';
+import type { AppData, Compound, Peptide, Vial, Dose, ReconstitutionCalculation, ScheduleLog, SiteCode, Stack, UserMode } from './types';
 import { initialAppData } from './mock-data';
 import { completeOnboarding as completeOnboardingState } from './onboarding';
 import { activateStackSchedules, normalizeStack, updateStackPeptideSchedule } from './schedules';
@@ -39,6 +39,9 @@ interface AppContextType {
   getRecentDoses: (limit: number) => Dose[];
   getDosesByDate: (date: Date) => Dose[];
   getStreak: () => number;
+  // Reconstitution
+  addReconstitutionCalculation: (calculation: ReconstitutionCalculation) => void;
+  deleteReconstitutionCalculation: (id: string) => void;
   // Stacks
   getStack: (id: string) => Stack | undefined;
   addStack: (stack: Omit<Stack, 'id'>) => void;
@@ -254,6 +257,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return streak;
   }, [data.doses]);
 
+  const addReconstitutionCalculation = useCallback((calculation: ReconstitutionCalculation) => {
+    void setAndPersistData(prev => ({
+      ...prev,
+      reconstitutionCalculations: [calculation, ...prev.reconstitutionCalculations],
+    }));
+  }, [setAndPersistData]);
+
+  const deleteReconstitutionCalculation = useCallback((id: string) => {
+    void setAndPersistData(prev => ({
+      ...prev,
+      reconstitutionCalculations: prev.reconstitutionCalculations.filter((calculation) => calculation.id !== id),
+    }));
+  }, [setAndPersistData]);
+
   // Stacks
   const getStack = useCallback((id: string) => {
     return data.stacks.find(s => s.id === id);
@@ -392,6 +409,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       getRecentDoses,
       getDosesByDate,
       getStreak,
+      addReconstitutionCalculation,
+      deleteReconstitutionCalculation,
       getStack,
       addStack,
       updateStack,

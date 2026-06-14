@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { formatDose } from '@/lib/dose-helpers';
 import type { DoseUnit } from '@/lib/types';
+import { useApp } from '@/lib/context';
 
 import {
   peptideConversions,
@@ -50,6 +51,7 @@ import {
 } from '@/components/reconstitution/saved-calculations';
 
 export default function ReconstitutionPage() {
+  const { data, addReconstitutionCalculation, deleteReconstitutionCalculation } = useApp();
   // State
   const [selectedCompoundId, setSelectedCompoundId] = useState<string>('bpc-157');
   const [vialSize, setVialSize] = useState<string>('5');
@@ -60,7 +62,6 @@ export default function ReconstitutionPage() {
   const [syringeTypeId, setSyringeTypeId] = useState<string>('u100-1ml');
   const [vialCost, setVialCost] = useState<string>('');
   const [cycleDays, setCycleDays] = useState<string>('');
-  const [savedCalcs, setSavedCalcs] = useState<SavedCalculation[]>([]);
   const [selectedPresetId, setSelectedPresetId] = useState<string | undefined>();
 
   // Get current compound and syringe
@@ -152,9 +153,9 @@ export default function ReconstitutionPage() {
       savedAt: new Date().toISOString(),
     };
     
-    setSavedCalcs(prev => [newCalc, ...prev]);
+    addReconstitutionCalculation(newCalc);
     toast.success('Calculation saved');
-  }, [calculations, compound, vialSize, vialUnit, bacWaterMl, doseValue, doseUnit]);
+  }, [addReconstitutionCalculation, calculations, compound, vialSize, vialUnit, bacWaterMl, doseValue, doseUnit]);
 
   // Share calculation
   const handleShare = useCallback(async () => {
@@ -205,9 +206,9 @@ export default function ReconstitutionPage() {
 
   // Handle delete saved
   const handleDeleteSaved = useCallback((id: string) => {
-    setSavedCalcs(prev => prev.filter(c => c.id !== id));
+    deleteReconstitutionCalculation(id);
     toast.success('Calculation deleted');
-  }, []);
+  }, [deleteReconstitutionCalculation]);
 
   // Get dose label for syringe visualization
   const doseLabel = useMemo(() => {
@@ -564,7 +565,7 @@ export default function ReconstitutionPage() {
 
         {/* Saved Calculations */}
         <SavedCalculations
-          calculations={savedCalcs}
+          calculations={data.reconstitutionCalculations}
           onDelete={handleDeleteSaved}
           onUseForLogging={handleUseForLogging}
           onCopy={handleCopyFromSaved}

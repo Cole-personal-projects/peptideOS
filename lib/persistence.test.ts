@@ -163,6 +163,39 @@ describe('Dexie persistence', () => {
     ]);
   });
 
+  test('saves and reloads saved reconstitution calculations', async () => {
+    await savePersistedAppData(db, {
+      ...clone(initialAppData),
+      reconstitutionCalculations: [
+        {
+          id: 'reconstitution-calc-persisted',
+          compoundName: 'BPC-157',
+          compoundId: 'bpc-157',
+          vialSize: 5,
+          vialUnit: 'mg',
+          bacWaterMl: 2,
+          doseValue: 250,
+          doseUnit: 'mcg',
+          drawUnits: 10,
+          drawMl: 0.1,
+          concentration: '2.5 mg/mL',
+          dosesPerVial: 20,
+          savedAt: '2026-05-23T00:00:00.000Z',
+        },
+      ],
+    });
+
+    const loaded = await loadPersistedAppData(db, initialAppData);
+
+    expect(loaded.reconstitutionCalculations).toEqual([
+      expect.objectContaining({
+        id: 'reconstitution-calc-persisted',
+        compoundId: 'bpc-157',
+        drawUnits: 10,
+      }),
+    ]);
+  });
+
   test('reset clears local user data and restores defaults', async () => {
     await savePersistedAppData(db, {
       ...clone(initialAppData),
@@ -183,18 +216,42 @@ describe('Dexie persistence', () => {
     await savePersistedAppData(db, {
       ...clone(initialAppData),
       vials: [{ ...initialAppData.vials[0], id: 'vial-export', name: 'Exported vial' }],
+      reconstitutionCalculations: [
+        {
+          id: 'reconstitution-calc-export',
+          compoundName: 'BPC-157',
+          compoundId: 'bpc-157',
+          vialSize: 5,
+          vialUnit: 'mg',
+          bacWaterMl: 2,
+          doseValue: 250,
+          doseUnit: 'mcg',
+          drawUnits: 10,
+          drawMl: 0.1,
+          concentration: '2.5 mg/mL',
+          dosesPerVial: 20,
+          savedAt: '2026-05-23T00:00:00.000Z',
+        },
+      ],
       hasCompletedOnboarding: true,
     });
 
     const exported = await exportUserData(db, new Date('2026-05-23T00:00:00.000Z'));
 
-    expect(exported.schemaVersion).toBe(3);
+    expect(exported.schemaVersion).toBe(4);
     expect(exported.exportedAt).toBe('2026-05-23T00:00:00.000Z');
     expect(exported.data.vials).toHaveLength(1);
     expect(exported.data.vials[0]?.name).toBe('Exported vial');
     expect(exported.data.settings.hasCompletedOnboarding).toBe(true);
     expect(exported.data.schedules).toEqual([]);
     expect(exported.data.scheduleLogs).toEqual([]);
+    expect(exported.data.reconstitutionCalculations).toEqual([
+      expect.objectContaining({
+        id: 'reconstitution-calc-export',
+        compoundId: 'bpc-157',
+        drawUnits: 10,
+      }),
+    ]);
     expect(exported.data.userCompounds).toEqual([]);
     expect(exported.data).not.toHaveProperty('peptides');
     expect(exported.data).not.toHaveProperty('compounds');
@@ -319,6 +376,7 @@ describe('Dexie persistence', () => {
       expect.objectContaining({ id: 'custom-compound', source: 'user' }),
     ]));
     expect(loaded.vials).toEqual([expect.objectContaining({ id: 'vial-imported', name: 'Imported vial' })]);
+    expect(loaded.reconstitutionCalculations).toEqual([]);
     expect(loaded.stacks[0]).toEqual(expect.objectContaining({
       id: 'stack-imported',
       name: 'Imported stack',
@@ -358,6 +416,7 @@ describe('Dexie persistence', () => {
         stacks: [],
         schedules: [],
         scheduleLogs: [],
+        reconstitutionCalculations: [],
         userCompounds: [],
         settings: {
           hasSeenDisclaimer: false,
@@ -402,6 +461,7 @@ describe('Dexie persistence', () => {
         stacks: [],
         schedules: [],
         scheduleLogs: [],
+        reconstitutionCalculations: [],
         userCompounds: [],
         settings: {
           hasSeenDisclaimer: false,
@@ -461,6 +521,7 @@ describe('Dexie persistence', () => {
     }));
 
     expect(imported.compounds).toEqual(referenceCompounds);
+    expect(imported.reconstitutionCalculations).toEqual([]);
     expect(imported.hasCompletedOnboarding).toBe(true);
   });
 });
