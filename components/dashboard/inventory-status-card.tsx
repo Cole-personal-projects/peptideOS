@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useApp } from '@/lib/context';
 import { cn } from '@/lib/utils';
+import { getVialRunoutForecast } from '@/lib/inventory-metrics';
 
 export function InventoryStatusCard() {
   const { data, getPeptide } = useApp();
@@ -66,6 +67,12 @@ export function InventoryStatusCard() {
           const peptide = getPeptide(vial.peptideId);
           const daysLeft = getDaysUntilExpiration(vial.expirationDate);
           const progress = getExpirationProgress(vial.reconstitutedDate, vial.expirationDate);
+          const forecast = getVialRunoutForecast({
+            vial,
+            doses: data.doses,
+            schedules: data.schedules,
+            scheduleLogs: data.scheduleLogs,
+          });
           const isExpiringSoon = daysLeft <= 7;
           const isExpired = daysLeft <= 0;
 
@@ -75,15 +82,15 @@ export function InventoryStatusCard() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-sm truncate">{peptide?.name}</p>
-                    {(isExpiringSoon || isExpired) && (
+                    {(isExpiringSoon || isExpired || forecast.isLowStock) && (
                       <AlertCircle className={cn(
                         "w-3.5 h-3.5 flex-shrink-0",
-                        isExpired ? "text-destructive" : "text-chart-4"
+                        isExpired || forecast.status === 'runout' ? "text-destructive" : "text-chart-4"
                       )} />
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {vial.mg}mg · {vial.lotNumber}
+                    {forecast.status === 'unscheduled' ? `${vial.mg}mg · ${vial.lotNumber}` : forecast.label}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">

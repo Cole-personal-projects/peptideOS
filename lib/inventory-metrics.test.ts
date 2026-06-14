@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { getVialInventoryMetrics } from './inventory-metrics';
-import type { Dose, Vial } from './types';
+import { getVialInventoryMetrics, getVialRunoutForecast } from './inventory-metrics';
+import type { Dose, Schedule, ScheduleLog, Vial } from './types';
 
 const baseVial: Vial = {
   id: 'vial-1',
@@ -28,6 +28,33 @@ function dose(overrides: Partial<Dose>): Dose {
     site: 'abdomen-upper-left',
     notes: '',
     completed: true,
+    ...overrides,
+  };
+}
+
+const schedule: Schedule = {
+  id: 'schedule-bpc',
+  stackId: 'stack-1',
+  stackPeptideId: 'stack-1-item-bpc-157-0',
+  peptideId: 'bpc-157',
+  doseValue: 1,
+  doseUnit: 'mg',
+  route: 'subq',
+  recurrence: { frequency: 'daily', timesOfDay: ['08:00'] },
+  startDate: '2026-05-20T00:00:00.000Z',
+  endDate: '2026-06-30T23:59:59.999Z',
+  status: 'active',
+};
+
+function log(overrides: Partial<ScheduleLog>): ScheduleLog {
+  return {
+    id: overrides.id ?? 'log-1',
+    scheduleId: overrides.scheduleId ?? schedule.id,
+    stackId: 'stack-1',
+    stackPeptideId: 'stack-1-item-bpc-157-0',
+    peptideId: 'bpc-157',
+    dueAt: overrides.dueAt ?? '2026-05-23T08:00:00.000Z',
+    status: overrides.status ?? 'pending',
     ...overrides,
   };
 }
@@ -111,5 +138,70 @@ describe('inventory metrics', () => {
     expect(metrics.remainingMg).toBeCloseTo(4.333, 3);
     expect(metrics.originalLabel).toBe('10 IU/mL · 1.5 mL');
     expect(metrics.remainingLabel).toBe('13 IU');
+  });
+
+  it('forecasts runout from future pending schedule logs for the vial compound', () => {
+    const forecast = getVialRunoutForecast({
+      vial: { ...baseVial, mg: 2 },
+      doses: [],
+      schedules: [schedule],
+      scheduleLogs: [
+        log({ id: 'today', dueAt: '2026-05-22T08:00:00.000Z' }),
+        log({ id: 'runout', dueAt: '2026-05-23T08:00:00.000Z' }),
+        log({ id: 'after-runout', dueAt: '2026-05-24T08:00:00.000Z' }),
+      ],
+      now: new Date('2026-05-22T07:00:00.000Z'),
+    });
+
+    expect(forecast).toEqual(expect.objectContaining({
+      status: 'runout',
+      runoutAt: '2026-05-23T08:00:00.000Z',
+      dosesCovered: 2,
+      daysUntilRunout: 1,
+      isLowStock: true,
+      label: 'Runs out May 23',
+    }));
+  });
+
+  it('ignores completed logs, past logs, and schedules for other compounds', () => {
+    const otherSchedule: Schedule = { ...schedule, id: 'schedule-other', peptideId: 'tb-500', doseValue: 10 };
+    const forecast = getVialRunoutForecast({
+      vial: { ...baseVial, mg: 2 },
+      doses: [],
+      schedules: [schedule, otherSchedule],
+      scheduleLogs: [
+        log({ id: 'past', dueAt: '2026-05-21T08:00:00.000Z' }),
+        log({ id: 'taken', dueAt: '2026-05-22T08:00:00.000Z', status: 'taken' }),
+        log({ id: 'other', scheduleId: 'schedule-other', peptideId: 'tb-500', dueAt: '2026-05-22T08:00:00.000Z' }),
+        log({ id: 'future', dueAt: '2026-05-23T08:00:00.000Z' }),
+      ],
+      now: new Date('2026-05-22T12:00:00.000Z'),
+    });
+
+    expect(forecast).toEqual(expect.objectContaining({
+      status: 'covered',
+      runoutAt: null,
+      dosesCovered: 1,
+      isLowStock: false,
+      label: 'Covers scheduled doses',
+    }));
+  });
+
+  it('reports no schedule when there are no future pending logs for the compound', () => {
+    const forecast = getVialRunoutForecast({
+      vial: baseVial,
+      doses: [],
+      schedules: [schedule],
+      scheduleLogs: [],
+      now: new Date('2026-05-22T12:00:00.000Z'),
+    });
+
+    expect(forecast).toEqual(expect.objectContaining({
+      status: 'unscheduled',
+      runoutAt: null,
+      dosesCovered: 0,
+      isLowStock: false,
+      label: 'No scheduled usage',
+    }));
   });
 });
