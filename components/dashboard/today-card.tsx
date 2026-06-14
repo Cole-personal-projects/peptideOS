@@ -259,7 +259,7 @@ export function TodayCard() {
               <Label>Vial</Label>
               {activeVials.length > 0 ? (
                 <Select value={vialId} onValueChange={setVialId}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Vial">
                     <SelectValue placeholder="Select active vial" />
                   </SelectTrigger>
                   <SelectContent>

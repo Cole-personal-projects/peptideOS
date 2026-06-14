@@ -9,7 +9,7 @@ import {
   resetPersistedAppData,
   savePersistedAppData,
 } from './persistence';
-import { initialAppData, mockStacks, mockVials } from './mock-data';
+import { initialAppData, mockDoses, mockStacks, mockVials } from './mock-data';
 import { referenceCompounds } from './reference-compounds';
 import type { AppData, Compound } from './types';
 
@@ -96,6 +96,162 @@ describe('Dexie persistence', () => {
     expect(loaded.hasCompletedOnboarding).toBe(true);
     expect(loaded.userMode).toBe('researcher');
     expect(loaded.stacks).toEqual([]);
+  });
+
+  test('prunes historical bundled demo data from older persisted databases while keeping user records', async () => {
+    const now = '2026-06-14T00:00:00.000Z';
+    const userVial = {
+      ...mockVials[0],
+      id: 'vial-user-entered',
+      name: 'User entered KPV vial',
+      peptideId: 'kpv',
+      lotNumber: 'USER-KPV-001',
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+      syncState: 'dirty' as const,
+    };
+    const userDose = {
+      ...mockDoses[0]!,
+      id: 'dose-user-entered',
+      peptideId: 'kpv',
+      vialId: userVial.id,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+      syncState: 'dirty' as const,
+    };
+    const userStack = {
+      ...mockStacks[0]!,
+      id: 'stack-user-entered',
+      name: 'User entered stack',
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+      syncState: 'dirty' as const,
+    };
+
+    await db.vials.bulkPut([
+      ...mockVials.map((vial) => ({
+        ...vial,
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+        syncState: 'dirty' as const,
+      })),
+      userVial,
+    ]);
+    await db.doses.bulkPut([
+      ...mockDoses.map((dose) => ({
+        ...dose,
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+        syncState: 'dirty' as const,
+      })),
+      userDose,
+    ]);
+    await db.stacks.bulkPut([
+      ...mockStacks.map((stack) => ({
+        ...stack,
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+        syncState: 'dirty' as const,
+      })),
+      userStack,
+    ]);
+    await db.schedules.bulkPut([
+      {
+        id: 'schedule-demo',
+        stackId: 'stack-1',
+        stackPeptideId: 'stack-1-item-bpc-157-0',
+        peptideId: 'bpc-157',
+        doseValue: 250,
+        doseUnit: 'mcg',
+        route: 'subq',
+        recurrence: { frequency: 'daily', timesOfDay: ['08:00'] },
+        startDate: now,
+        endDate: '2026-06-21T00:00:00.000Z',
+        status: 'active',
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+        syncState: 'dirty',
+      },
+      {
+        id: 'schedule-user',
+        stackId: userStack.id,
+        stackPeptideId: 'stack-user-entered-item-kpv-0',
+        peptideId: 'kpv',
+        doseValue: 1,
+        doseUnit: 'mg',
+        route: 'subq',
+        recurrence: { frequency: 'daily', timesOfDay: ['09:00'] },
+        startDate: now,
+        endDate: '2026-06-21T00:00:00.000Z',
+        status: 'active',
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+        syncState: 'dirty',
+      },
+    ]);
+    await db.scheduleLogs.bulkPut([
+      {
+        id: 'schedule-log-demo',
+        scheduleId: 'schedule-demo',
+        stackId: 'stack-1',
+        stackPeptideId: 'stack-1-item-bpc-157-0',
+        peptideId: 'bpc-157',
+        dueAt: now,
+        status: 'pending',
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+        syncState: 'dirty',
+      },
+      {
+        id: 'schedule-log-user',
+        scheduleId: 'schedule-user',
+        stackId: userStack.id,
+        stackPeptideId: 'stack-user-entered-item-kpv-0',
+        peptideId: 'kpv',
+        dueAt: now,
+        status: 'pending',
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+        syncState: 'dirty',
+      },
+    ]);
+    await db.settings.put({
+      id: 'app-settings',
+      hasSeenDisclaimer: true,
+      hasCompletedOnboarding: true,
+      userMode: 'beginner',
+      biometricLock: false,
+      darkMode: true,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+      syncState: 'dirty',
+    });
+    await db.metadata.bulkPut([
+      { key: 'schemaVersion', value: 4 },
+      { key: 'persisted', value: true },
+    ]);
+
+    const loaded = await loadPersistedAppData(db, initialAppData);
+    const reloaded = await loadPersistedAppData(db, initialAppData);
+
+    expect(loaded.vials).toEqual([expect.objectContaining({ id: userVial.id })]);
+    expect(loaded.doses).toEqual([expect.objectContaining({ id: userDose.id })]);
+    expect(loaded.stacks).toEqual([expect.objectContaining({ id: userStack.id })]);
+    expect(loaded.schedules).toEqual([expect.objectContaining({ id: 'schedule-user' })]);
+    expect(loaded.scheduleLogs).toEqual([expect.objectContaining({ id: 'schedule-log-user' })]);
+    expect(loaded.hasCompletedOnboarding).toBe(true);
+    expect(reloaded.vials).toEqual([expect.objectContaining({ id: userVial.id })]);
   });
 
   test('saves and reloads user compounds merged with bundled reference compounds', async () => {

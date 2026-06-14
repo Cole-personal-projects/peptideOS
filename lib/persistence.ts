@@ -20,6 +20,29 @@ export interface UserDataExport {
   data: PersistedUserData;
 }
 
+const HISTORICAL_DEMO_VIALS = [
+  { id: 'vial-1', peptideId: 'bpc-157', lotNumber: 'BPC-2024-001' },
+  { id: 'vial-2', peptideId: 'tb-500', lotNumber: 'TB5-2024-042' },
+  { id: 'vial-3', peptideId: 'ipamorelin', lotNumber: 'IPA-2024-103' },
+  { id: 'vial-4', peptideId: 'cjc-1295', lotNumber: 'CJC-2024-088' },
+  { id: 'vial-5', peptideId: 'ghk-cu', lotNumber: 'GHK-2024-015' },
+  { id: 'vial-6', peptideId: 'epitalon', lotNumber: 'EPI-2024-007' },
+  { id: 'vial-7', peptideId: 'hgh', lotNumber: 'HGH-2024-010' },
+];
+
+const HISTORICAL_DEMO_STACK_NAMES = new Map([
+  ['stack-1', 'Healing Protocol'],
+  ['stack-2', 'Longevity + GH Protocol'],
+  ['stack-3', 'Metabolic Reset'],
+]);
+const HISTORICAL_DEMO_DOSE_ID_PATTERNS = [
+  /^dose-bpc-(?:am|pm)-\d+$/,
+  /^dose-tb500-\d+$/,
+  /^dose-ipa-\d+$/,
+  /^dose-cjc-\d+$/,
+  /^dose-today-(?:bpc-am|bpc-pm|ipa)$/,
+];
+
 export class UserDataImportError extends Error {
   constructor(message: string) {
     super(message);
@@ -48,6 +71,61 @@ function applyUserData(defaults: AppData, persisted: PersistedUserData): AppData
     reconstitutionCalculations: persisted.reconstitutionCalculations,
     compounds: mergeCompoundLibrary(persisted.userCompounds),
     ...persisted.settings,
+  };
+}
+
+function isHistoricalDemoVial(vial: Vial) {
+  return HISTORICAL_DEMO_VIALS.some((demoVial) => (
+    vial.id === demoVial.id
+    && vial.peptideId === demoVial.peptideId
+    && vial.lotNumber === demoVial.lotNumber
+  ));
+}
+
+function isHistoricalDemoDose(dose: Dose, demoVialIds: Set<string>) {
+  return demoVialIds.has(dose.vialId)
+    || HISTORICAL_DEMO_DOSE_ID_PATTERNS.some((pattern) => pattern.test(dose.id));
+}
+
+function isHistoricalDemoStack(stack: Stack) {
+  return HISTORICAL_DEMO_STACK_NAMES.get(stack.id) === stack.name;
+}
+
+function pruneHistoricalDemoUserData(persisted: PersistedUserData): { data: PersistedUserData; changed: boolean } {
+  const demoVialIds = new Set(persisted.vials.filter(isHistoricalDemoVial).map((vial) => vial.id));
+  const demoStackIds = new Set(persisted.stacks.filter(isHistoricalDemoStack).map((stack) => stack.id));
+  const vials = persisted.vials.filter((vial) => !demoVialIds.has(vial.id));
+  const doses = persisted.doses.filter((dose) => !isHistoricalDemoDose(dose, demoVialIds));
+  const stacks = persisted.stacks.filter((stack) => !demoStackIds.has(stack.id));
+  const removedScheduleIds = new Set(
+    persisted.schedules
+      .filter((schedule) => demoStackIds.has(schedule.stackId))
+      .map((schedule) => schedule.id),
+  );
+  const schedules = persisted.schedules.filter((schedule) => (
+    !demoStackIds.has(schedule.stackId)
+  ));
+  const scheduleLogs = persisted.scheduleLogs.filter((log) => (
+    !demoStackIds.has(log.stackId)
+    && !removedScheduleIds.has(log.scheduleId)
+  ));
+
+  const changed = vials.length !== persisted.vials.length
+    || doses.length !== persisted.doses.length
+    || stacks.length !== persisted.stacks.length
+    || schedules.length !== persisted.schedules.length
+    || scheduleLogs.length !== persisted.scheduleLogs.length;
+
+  return {
+    data: {
+      ...persisted,
+      vials,
+      doses,
+      stacks,
+      schedules,
+      scheduleLogs,
+    },
+    changed,
   };
 }
 
@@ -125,7 +203,7 @@ export async function loadPersistedAppData(database: PeptideOSDatabase = default
     return defaults;
   }
 
-  return applyUserData(defaults, {
+  const persistedUserData: PersistedUserData = {
     vials: vials.filter((vial) => !vial.deletedAt).map((vial) => stripPersistenceMetadata(vial) as Vial),
     doses: doses.filter((dose) => !dose.deletedAt).map((dose) => stripPersistenceMetadata(dose) as Dose),
     stacks: stacks.filter((stack) => !stack.deletedAt).map((stack) => stripPersistenceMetadata(stack) as Stack),
@@ -136,7 +214,16 @@ export async function loadPersistedAppData(database: PeptideOSDatabase = default
       .map((calculation) => stripPersistenceMetadata(calculation) as ReconstitutionCalculation),
     userCompounds: userCompounds as Compound[],
     settings: stripPersistenceMetadata(settings) as AppSettings,
-  });
+  };
+
+  const pruned = pruneHistoricalDemoUserData(persistedUserData);
+  const loaded = applyUserData(defaults, pruned.data);
+
+  if (pruned.changed) {
+    await savePersistedAppData(database, loaded);
+  }
+
+  return loaded;
 }
 
 export async function savePersistedAppData(database: PeptideOSDatabase = defaultDb, data: AppData, savedAt = new Date()) {

@@ -103,6 +103,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setAndPersistData = useCallback(async (updater: (previousData: AppData) => AppData) => {
     const nextData = updater(dataRef.current);
     dataRef.current = nextData;
+    setData(nextData);
 
     if (hydrated) {
       const sequence = ++saveSequence.current;
@@ -112,8 +113,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       });
     }
-
-    setData(nextData);
   }, [enqueuePersistenceOperation, hydrated]);
 
   // Peptides
