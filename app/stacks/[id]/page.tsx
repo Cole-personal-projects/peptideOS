@@ -2,15 +2,18 @@
 
 import { use, useState } from 'react';
 import { notFound } from 'next/navigation';
-import { Calendar, AlertTriangle, Clock, Play, Pause, CheckCircle2, Syringe } from 'lucide-react';
+import { Calendar, AlertTriangle, Clock, Play, Pause, CheckCircle2, Syringe, Edit3 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/lib/context';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose } from '@/lib/dose-helpers';
@@ -40,6 +43,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params);
   const { data, getStack, updateStack, activateStack, updateStackItemSchedule, getScheduleLogsForStack } = useApp();
   const [calendarFilter, setCalendarFilter] = useState<CalendarFilter>('all');
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const stack = getStack(id);
 
   if (!stack) {
@@ -48,6 +52,10 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
 
   const config = statusConfig[stack.status];
   const StatusIcon = config.icon;
+  const [editName, setEditName] = useState(stack.name);
+  const [editDescription, setEditDescription] = useState(stack.description);
+  const [editDurationDays, setEditDurationDays] = useState(stack.durationDays.toString());
+  const [editNotes, setEditNotes] = useState(stack.notes);
 
   const startDate = new Date(stack.startDate);
   const endDate = new Date(startDate);
@@ -73,6 +81,28 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
     updateStack(stack.id, { status: newStatus });
   };
 
+  const openEditDialog = () => {
+    setEditName(stack.name);
+    setEditDescription(stack.description);
+    setEditDurationDays(stack.durationDays.toString());
+    setEditNotes(stack.notes);
+    setIsEditOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    const trimmedName = editName.trim();
+    const durationDays = Number(editDurationDays);
+    if (!trimmedName || !Number.isFinite(durationDays) || durationDays < 1) return;
+
+    updateStack(stack.id, {
+      name: trimmedName,
+      description: editDescription,
+      durationDays: Math.floor(durationDays),
+      notes: editNotes,
+    });
+    setIsEditOpen(false);
+  };
+
   const scheduleLogs = getScheduleLogsForStack(stack.id);
   const filteredScheduleLogs = calendarFilter === 'all'
     ? scheduleLogs
@@ -91,7 +121,16 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
 
   return (
     <AppShell>
-      <PageHeader title={stack.name} backHref="/stacks" />
+      <PageHeader
+        title={stack.name}
+        backHref="/stacks"
+        rightElement={
+          <Button size="sm" variant="ghost" className="text-primary" onClick={openEditDialog}>
+            <Edit3 className="w-4 h-4 mr-1" /> Edit
+            <span className="sr-only"> protocol</span>
+          </Button>
+        }
+      />
 
       <div className="p-4 space-y-4">
         {/* Status and Progress */}
@@ -146,6 +185,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                <span>{stack.durationDays} days total</span>
                 <span>{endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
               </div>
             </div>
@@ -327,6 +367,66 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
           </Card>
         )}
       </div>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit protocol</DialogTitle>
+            <DialogDescription>
+              Update the saved protocol basics. Dose schedules remain editable from the Protocol tab.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-protocol-name">Protocol name</Label>
+              <Input
+                id="edit-protocol-name"
+                value={editName}
+                onChange={(event) => setEditName(event.target.value)}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="edit-protocol-description">Description</Label>
+              <Textarea
+                id="edit-protocol-description"
+                value={editDescription}
+                onChange={(event) => setEditDescription(event.target.value)}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="edit-protocol-duration">Duration (days)</Label>
+              <Input
+                id="edit-protocol-duration"
+                type="number"
+                min="1"
+                value={editDurationDays}
+                onChange={(event) => setEditDurationDays(event.target.value)}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="edit-protocol-notes">Notes</Label>
+              <Textarea
+                id="edit-protocol-notes"
+                value={editNotes}
+                onChange={(event) => setEditNotes(event.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={!editName.trim() || Number(editDurationDays) < 1}>
+              Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

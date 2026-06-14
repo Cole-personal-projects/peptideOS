@@ -18,9 +18,11 @@ test.describe('compound workflows', () => {
     await page.goto('/more/inventory');
     await page.getByRole('button', { name: 'Add' }).click();
     await page.getByRole('textbox', { name: 'Vial name' }).fill('Custom Recovery Backup');
-    await page.getByLabel('Compound').selectOption({ label: 'Custom Recovery Blend' });
+    await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
+    await page.getByRole('option', { name: 'Custom Recovery Blend' }).click();
     await page.getByLabel('Date added').fill('2026-05-24');
-    await page.getByRole('button', { name: 'Create vial' }).click();
+    await page.getByRole('spinbutton', { name: 'Vial size' }).fill('10');
+    await page.getByRole('button', { name: 'Add Vial' }).click();
     await page.getByRole('tab', { name: /Sealed/ }).click();
     await expect(page.getByRole('link', { name: /Custom Recovery Backup/ })).toContainText('Custom Recovery Blend');
 
@@ -30,7 +32,7 @@ test.describe('compound workflows', () => {
     await page.getByRole('option', { name: 'Custom Recovery Blend' }).click();
     await page.getByPlaceholder('Optional vial source').fill('Private');
     await page.getByPlaceholder('e.g., BPC-2024-001').fill('CUSTOM-001');
-    await page.getByPlaceholder('e.g., 5').fill('10');
+    await page.getByRole('spinbutton', { name: 'Vial size' }).fill('10');
     await page.getByRole('combobox').filter({ hasText: 'Sealed' }).click();
     await page.getByRole('option', { name: 'Active (Reconstituted)' }).click();
     await page.getByRole('button', { name: 'Add Vial' }).click();
