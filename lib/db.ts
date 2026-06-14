@@ -1,7 +1,7 @@
 import Dexie, { type Table } from 'dexie';
-import type { AppSettings, Compound, Dose, Schedule, ScheduleLog, Stack, Vial } from './types';
+import type { AppSettings, Compound, Dose, ReconstitutionCalculation, Schedule, ScheduleLog, Stack, Vial } from './types';
 
-export const PERSISTENCE_SCHEMA_VERSION = 3;
+export const PERSISTENCE_SCHEMA_VERSION = 4;
 export const DEFAULT_DATABASE_NAME = 'PeptideOS';
 
 export type SyncState = 'local' | 'synced' | 'dirty';
@@ -62,6 +62,13 @@ export type PersistedUserCompound = Compound & {
   syncState: SyncState;
 };
 
+export type PersistedReconstitutionCalculation = ReconstitutionCalculation & {
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  syncState: SyncState;
+};
+
 export class PeptideOSDatabase extends Dexie {
   vials!: Table<PersistedVial, string>;
   doses!: Table<PersistedDose, string>;
@@ -69,6 +76,7 @@ export class PeptideOSDatabase extends Dexie {
   schedules!: Table<PersistedSchedule, string>;
   scheduleLogs!: Table<PersistedScheduleLog, string>;
   userCompounds!: Table<PersistedUserCompound, string>;
+  reconstitutionCalculations!: Table<PersistedReconstitutionCalculation, string>;
   settings!: Table<PersistedAppSettings, string>;
   metadata!: Table<PersistedMetadata, string>;
 
@@ -100,6 +108,7 @@ export class PeptideOSDatabase extends Dexie {
       schedules: 'id, stackId, stackPeptideId, peptideId, status, updatedAt, syncState, deletedAt',
       scheduleLogs: 'id, scheduleId, stackId, stackPeptideId, peptideId, dueAt, status, doseId, updatedAt, syncState, deletedAt',
       userCompounds: 'id, compoundType, category, updatedAt, syncState, deletedAt',
+      reconstitutionCalculations: 'id, compoundId, savedAt, updatedAt, syncState, deletedAt',
       settings: 'id, updatedAt, syncState',
       metadata: 'key',
     });

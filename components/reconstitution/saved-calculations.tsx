@@ -3,24 +3,10 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Copy, Syringe, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { formatDose, getDoseUnitLabel } from '@/lib/dose-helpers';
+import type { ReconstitutionCalculation } from '@/lib/types';
 
-export interface SavedCalculation {
-  id: string;
-  compoundName: string;
-  compoundId: string;
-  vialSize: number;
-  vialUnit: 'mg' | 'iu';
-  bacWaterMl: number;
-  doseValue: number;
-  doseUnit: 'mcg' | 'mg' | 'iu';
-  drawUnits: number;
-  drawMl: number;
-  concentration: string;
-  dosesPerVial: number;
-  savedAt: string;
-}
+export type SavedCalculation = ReconstitutionCalculation;
 
 interface SavedCalculationsProps {
   calculations: SavedCalculation[];
@@ -50,7 +36,7 @@ export function SavedCalculations({
   };
   
   return (
-    <div className="border border-border rounded-lg overflow-hidden">
+    <div className="border border-border rounded-lg overflow-hidden" aria-label="Saved reconstitution calculations">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between p-4 bg-muted/30 hover:bg-muted/50 transition-colors"

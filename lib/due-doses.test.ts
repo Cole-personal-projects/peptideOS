@@ -43,6 +43,7 @@ function makeData(scheduleLogs: ScheduleLog[]): AppData {
     stacks: [],
     schedules: [schedule],
     scheduleLogs,
+    reconstitutionCalculations: [],
     hasSeenDisclaimer: true,
     hasCompletedOnboarding: true,
     userMode: 'researcher',

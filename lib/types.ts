@@ -249,6 +249,22 @@ export interface ScheduleLog {
   missedAt?: string;
 }
 
+export interface ReconstitutionCalculation {
+  id: string;
+  compoundName: string;
+  compoundId: string;
+  vialSize: number;
+  vialUnit: 'mg' | 'iu';
+  bacWaterMl: number;
+  doseValue: number;
+  doseUnit: DoseUnit;
+  drawUnits: number;
+  drawMl: number;
+  concentration: string;
+  dosesPerVial: number;
+  savedAt: string;
+}
+
 export interface AppData {
   peptides: Peptide[];
   compounds: Compound[];
@@ -257,6 +273,7 @@ export interface AppData {
   stacks: Stack[];
   schedules: Schedule[];
   scheduleLogs: ScheduleLog[];
+  reconstitutionCalculations: ReconstitutionCalculation[];
   hasSeenDisclaimer: boolean;
   hasCompletedOnboarding: boolean;
   userMode: UserMode;

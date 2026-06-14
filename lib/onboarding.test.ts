@@ -10,6 +10,7 @@ const baseData: AppData = {
   stacks: [],
   schedules: [],
   scheduleLogs: [],
+  reconstitutionCalculations: [],
   hasSeenDisclaimer: false,
   hasCompletedOnboarding: false,
   userMode: 'beginner',
