@@ -18,7 +18,7 @@ test.describe('local persistence', () => {
     await page.goto('/more/inventory');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
     await page.getByRole('textbox', { name: 'Vial name' }).fill('Reload Persisted GHK-Cu');
     await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
     await page.getByRole('option', { name: 'GHK-Cu' }).click();
@@ -54,7 +54,7 @@ test.describe('local persistence', () => {
     await page.goto('/more/inventory');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
     await page.getByRole('textbox', { name: 'Vial name' }).fill('Clear Data GHK-Cu');
     await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
     await page.getByRole('option', { name: 'GHK-Cu' }).click();

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { writeFile } from 'node:fs/promises';
 
 test.describe('stack builder', () => {
   test('applies a stack template and still allows editing before save', async ({ page }) => {
@@ -28,10 +29,54 @@ test.describe('stack builder', () => {
     await expect(page.getByText('Edited Template Stack')).toBeVisible();
   });
 
-  test('shows non-blocking conflict warnings before saving a stack', async ({ page }) => {
-    await page.goto('/stacks');
+  test('shows non-blocking conflict warnings before saving a stack', async ({ page }, testInfo) => {
+    const exportPath = testInfo.outputPath('active-stack-conflict-data.json');
+    await writeFile(exportPath, JSON.stringify({
+      schemaVersion: 4,
+      exportedAt: '2026-06-14T00:00:00.000Z',
+      data: {
+        vials: [],
+        doses: [],
+        stacks: [
+          {
+            id: 'existing-bpc-stack',
+            name: 'Existing BPC Stack',
+            description: '',
+            peptides: [
+              {
+                peptideId: 'bpc-157',
+                doseValue: 250,
+                doseUnit: 'mcg',
+                frequency: 'daily',
+                route: 'subq',
+                timing: 'Morning',
+              },
+            ],
+            startDate: '2026-06-14T00:00:00.000Z',
+            durationDays: 14,
+            status: 'active',
+            notes: '',
+          },
+        ],
+        schedules: [],
+        scheduleLogs: [],
+        reconstitutionCalculations: [],
+        userCompounds: [],
+        settings: {
+          hasSeenDisclaimer: true,
+          hasCompletedOnboarding: true,
+          userMode: 'beginner',
+          biometricLock: false,
+          darkMode: true,
+        },
+      },
+    }));
 
+    await page.goto('/more/settings');
     await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByLabel('Import Data File').setInputFiles(exportPath);
+    await expect(page.getByRole('status')).toContainText('Data restored from backup.');
+    await page.goto('/stacks');
     await page.getByRole('button', { name: 'New stack' }).click();
 
     await page.getByLabel('Stack Name').fill('Overlap Review Stack');

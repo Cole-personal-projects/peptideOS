@@ -1,10 +1,17 @@
 import { expect, test } from '@playwright/test';
+import { addTestVial } from './helpers/inventory';
 
 test.describe('retired vendors feature', () => {
   test('removes vendor navigation while preserving inventory source metadata', async ({ page }) => {
+    await addTestVial(page, {
+      name: 'Source metadata vial',
+      compound: 'BPC-157',
+      source: 'PeptideSciences',
+      status: 'active',
+    });
+
     await page.goto('/more');
 
-    await page.getByRole('button', { name: 'I Understand' }).click();
     await expect(page.getByRole('heading', { name: 'More' })).toBeVisible();
     await expect(page.getByRole('link', { name: /Vendors/ })).toHaveCount(0);
 
