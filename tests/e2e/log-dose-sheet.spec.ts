@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { addTestVial } from './helpers/inventory';
+import { writeFile } from 'node:fs/promises';
 
 test.describe('log dose sheet body picker', () => {
   test('supports compact body-map site selection and route filtering', async ({ page }) => {
@@ -36,15 +36,49 @@ test.describe('log dose sheet body picker', () => {
     await expect(page.getByRole('combobox').filter({ hasText: 'mg' })).toBeVisible();
   });
 
-  test('logs IU-primary doses and renders the saved dose in IU', async ({ page }) => {
-    await addTestVial(page, {
-      name: 'hGH active vial',
-      compound: 'hGH (Somatropin)',
-      size: '3.33',
-      status: 'active',
-      source: 'Pharmacy',
-      lotNumber: 'HGH-2024-010',
-    });
+  test('logs IU-primary doses and renders the saved dose in IU', async ({ page }, testInfo) => {
+    const exportPath = testInfo.outputPath('hgh-active-vial-data.json');
+    await writeFile(exportPath, JSON.stringify({
+      schemaVersion: 4,
+      exportedAt: '2026-06-14T00:00:00.000Z',
+      data: {
+        vials: [
+          {
+            id: 'hgh-active-vial',
+            name: 'hGH active vial',
+            peptideId: 'hgh',
+            containerType: 'lyophilized-vial',
+            dateAdded: '2026-06-14T00:00:00.000Z',
+            source: 'Pharmacy',
+            lotNumber: 'HGH-2024-010',
+            mg: 3.33,
+            totalAmount: { value: 9.99, unit: 'iu' },
+            bacWaterMl: 1,
+            reconstitutedDate: '2026-06-14T00:00:00.000Z',
+            expirationDate: '2026-07-12T00:00:00.000Z',
+            status: 'active',
+          },
+        ],
+        doses: [],
+        stacks: [],
+        schedules: [],
+        scheduleLogs: [],
+        reconstitutionCalculations: [],
+        userCompounds: [],
+        settings: {
+          hasSeenDisclaimer: true,
+          hasCompletedOnboarding: true,
+          userMode: 'beginner',
+          biometricLock: false,
+          darkMode: true,
+        },
+      },
+    }));
+
+    await page.goto('/more/settings');
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByLabel('Import Data File').setInputFiles(exportPath);
+    await expect(page.getByRole('status')).toContainText('Data restored from backup.');
 
     await page.goto('/stacks');
 
