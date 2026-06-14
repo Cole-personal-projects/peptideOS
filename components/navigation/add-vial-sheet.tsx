@@ -107,14 +107,17 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="h-[min(92dvh,760px)] max-h-[calc(100dvh-env(safe-area-inset-top)-0.75rem)] gap-0 overflow-hidden rounded-t-3xl border-t p-0"
+        className="h-[calc(100dvh-env(safe-area-inset-top)-0.5rem)] max-h-[760px] gap-0 overflow-hidden rounded-t-3xl border-t p-0"
       >
-        <SheetHeader className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
+        <SheetHeader className="shrink-0 border-b bg-background px-4 py-3">
           <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-muted-foreground/30" aria-hidden="true" />
           <SheetTitle>Add Vial</SheetTitle>
         </SheetHeader>
         
-        <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4">
+        <div
+          data-testid="add-vial-form-scroll"
+          className="min-h-0 flex-1 touch-pan-y space-y-4 overflow-y-auto overscroll-contain px-4 py-4 pb-6"
+        >
           <div className="space-y-2">
             <Label htmlFor="vial-name">Vial name</Label>
             <Input
@@ -297,7 +300,7 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
           </div>
         </div>
 
-        <SheetFooter className="sticky bottom-0 border-t bg-background/95 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur">
+        <SheetFooter className="shrink-0 border-t bg-background p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <Button
             className="w-full"
             size="lg"
