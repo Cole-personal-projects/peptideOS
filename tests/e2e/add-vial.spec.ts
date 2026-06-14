@@ -63,6 +63,43 @@ test.describe('add vial', () => {
     await expect(page.getByRole('button', { name: 'Add Vial' })).toBeInViewport();
   });
 
+  test('anchors the compact add vial sheet while only the form body scrolls', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 620 });
+    await page.goto('/more/inventory');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
+    await page.getByRole('option', { name: 'KPV' }).click();
+
+    const sheet = page.getByRole('dialog', { name: 'Add Vial' });
+    const formBody = page.getByTestId('add-vial-form-scroll');
+    const footerButton = page.getByRole('button', { name: 'Add Vial' });
+
+    const sheetTop = await sheet.evaluate((node) => node.getBoundingClientRect().top);
+    const footerBottom = await footerButton.evaluate((node) => node.getBoundingClientRect().bottom);
+    const pageScrollY = await page.evaluate(() => window.scrollY);
+
+    await page.getByRole('textbox', { name: 'Lot Number' }).focus();
+    await formBody.evaluate((node) => {
+      node.scrollTop = node.scrollHeight;
+    });
+
+    await expect(page.getByRole('combobox', { name: 'Inventory unit' })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Status' })).toBeVisible();
+    await expect(footerButton).toBeInViewport();
+
+    await expect
+      .poll(() => sheet.evaluate((node) => node.getBoundingClientRect().top))
+      .toBeCloseTo(sheetTop, 0);
+    await expect
+      .poll(() => footerButton.evaluate((node) => node.getBoundingClientRect().bottom))
+      .toBeCloseTo(footerBottom, 0);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBe(pageScrollY);
+  });
+
   test('edits vial details after creation', async ({ page }) => {
     await page.goto('/more/inventory');
 
