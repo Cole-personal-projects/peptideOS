@@ -38,13 +38,29 @@ test.describe('add vial', () => {
     await page.getByRole('option', { name: 'KPV' }).click();
     await page.getByLabel('Date added').fill('2026-06-14');
     await page.getByRole('spinbutton', { name: 'Vial size' }).fill('10');
-    await page.getByLabel('Inventory unit').selectOption('kit');
+    await page.getByRole('combobox', { name: 'Inventory unit' }).click();
+    await page.getByRole('option', { name: 'Kits (10 vials)' }).click();
     await page.getByRole('spinbutton', { name: 'Inventory amount' }).fill('1');
     await page.getByRole('button', { name: 'Add Vial' }).click();
 
     await page.getByRole('tab', { name: /Sealed/ }).click();
     await expect(page.getByRole('link', { name: /KPV kit test vial/ })).toHaveCount(10);
     await expect(page.getByRole('link', { name: /KPV kit test vial 1 of 10/ })).toContainText('10 mg');
+  });
+
+  test('keeps the shared add vial sheet usable in a compact viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 620 });
+    await page.goto('/more/inventory');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
+    await page.getByRole('option', { name: 'KPV' }).click();
+
+    await expect(page.getByRole('combobox', { name: 'Inventory unit' })).toBeVisible();
+    await expect(page.getByRole('spinbutton', { name: 'Inventory amount' })).toBeVisible();
+    await page.getByRole('textbox', { name: 'Lot Number' }).focus();
+    await expect(page.getByRole('button', { name: 'Add Vial' })).toBeInViewport();
   });
 
   test('edits vial details after creation', async ({ page }) => {
