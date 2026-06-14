@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/lib/context';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { getEmptyStateContent, type EmptyStateKey } from '@/lib/empty-states';
-import { getVialInventoryMetrics } from '@/lib/inventory-metrics';
+import { getVialInventoryMetrics, getVialRunoutForecast } from '@/lib/inventory-metrics';
 import { buildNewVial } from '@/lib/vial-create';
 import { cn } from '@/lib/utils';
 
@@ -77,6 +77,12 @@ export default function InventoryPage() {
     const daysLeft = getDaysUntilExpiration(vial.expirationDate);
     const progress = getExpirationProgress(vial.reconstitutedDate, vial.expirationDate);
     const metrics = getVialInventoryMetrics(vial, data.doses);
+    const forecast = getVialRunoutForecast({
+      vial,
+      doses: data.doses,
+      schedules: data.schedules,
+      scheduleLogs: data.scheduleLogs,
+    });
     const isExpiringSoon = daysLeft <= 7 && daysLeft > 0;
     const isExpired = daysLeft <= 0;
 
@@ -88,10 +94,10 @@ export default function InventoryPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold">{vial.name}</h3>
-                  {(isExpiringSoon || isExpired) && (
+                  {(isExpiringSoon || isExpired || forecast.isLowStock) && (
                     <AlertCircle className={cn(
                       "w-4 h-4",
-                      isExpired ? "text-destructive" : "text-chart-4"
+                      isExpired || forecast.status === 'runout' ? "text-destructive" : "text-chart-4"
                     )} />
                   )}
                 </div>
@@ -104,7 +110,7 @@ export default function InventoryPage() {
               </Badge>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 text-sm mb-3">
+            <div className="grid grid-cols-2 gap-2 text-sm mb-3 sm:grid-cols-4">
               <div>
                 <p className="text-xs text-muted-foreground">Amount</p>
                 <p className="font-medium">{metrics.originalLabel}</p>
@@ -116,6 +122,12 @@ export default function InventoryPage() {
               <div>
                 <p className="text-xs text-muted-foreground">Source</p>
                 <p className="font-medium">{vial.source || 'Unknown'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Forecast</p>
+                <p className={cn("font-medium", forecast.isLowStock && "text-destructive")}>
+                  {forecast.label}
+                </p>
               </div>
             </div>
 
