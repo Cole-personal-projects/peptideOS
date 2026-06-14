@@ -1,6 +1,8 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 interface TestVialOptions {
   name: string;
   compound: string;
@@ -36,4 +38,10 @@ export async function addTestVial(page: Page, options: TestVialOptions) {
   }
 
   await page.getByRole('button', { name: 'Add Vial' }).click();
+  if (options.status === 'active') {
+    await page.getByRole('tab', { name: /Active/ }).click();
+  } else {
+    await page.getByRole('tab', { name: /Sealed/ }).click();
+  }
+  await expect(page.getByRole('link', { name: new RegExp(escapeRegExp(options.name)) })).toBeVisible();
 }
