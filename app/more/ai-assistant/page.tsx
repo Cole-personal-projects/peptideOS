@@ -8,18 +8,61 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { AiStackSheet } from '@/components/navigation/ai-stack-sheet';
-import { proposeAssistantActionFromMessage, type AssistantAction } from '@/lib/assistant-actions';
+import {
+  isAssistantAction,
+  proposeAssistantActionFromMessage,
+  type AssistantAction,
+  type AssistantActionProposal,
+} from '@/lib/assistant-actions';
 import { useApp } from '@/lib/context';
+
+async function requestAssistantActionProposal(message: string): Promise<AssistantActionProposal | null> {
+  try {
+    const response = await fetch('/api/ai/propose-action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+
+    if (!response.ok) return null;
+
+    const payload = await response.json() as Partial<AssistantActionProposal>;
+    if (typeof payload.message !== 'string') return null;
+    if (payload.action !== null && !isAssistantAction(payload.action)) return null;
+
+    return {
+      message: payload.message,
+      action: payload.action ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
 
 export default function AIAssistantPage() {
   const { addSignalCheckIn } = useApp();
   const [aiStackOpen, setAiStackOpen] = useState(false);
   const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const [pendingAction, setPendingAction] = useState<AssistantAction | null>(null);
   const [assistantMessage, setAssistantMessage] = useState('Tell Haiku what you want to capture or change.');
 
-  const sendMessage = () => {
-    const nextAction = proposeAssistantActionFromMessage(message);
+  const sendMessage = async () => {
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage || isSending) return;
+
+    setIsSending(true);
+    const haikuProposal = await requestAssistantActionProposal(trimmedMessage);
+    setIsSending(false);
+
+    if (haikuProposal) {
+      setPendingAction(haikuProposal.action);
+      setAssistantMessage(haikuProposal.message);
+      setMessage('');
+      return;
+    }
+
+    const nextAction = proposeAssistantActionFromMessage(trimmedMessage);
 
     if (!nextAction) {
       setAssistantMessage('I can capture Signal check-ins right now. Include energy and/or sleep so I can draft one for approval.');
@@ -87,9 +130,9 @@ export default function AIAssistantPage() {
                 onChange={(event) => setMessage(event.target.value)}
                 placeholder="Energy was 7, slept 6 hours, shoulder calm today."
               />
-              <Button className="w-full" onClick={sendMessage} disabled={!message.trim()}>
+              <Button className="w-full" onClick={sendMessage} disabled={!message.trim() || isSending}>
                 <Send className="w-4 h-4" />
-                Send message
+                {isSending ? 'Sending...' : 'Send message'}
               </Button>
             </div>
           </CardContent>
