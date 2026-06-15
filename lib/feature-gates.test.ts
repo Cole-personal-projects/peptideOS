@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { getFeatureGate } from './feature-gates';
 
 describe('feature gates', () => {
-  test('gates AI assistant features behind the pro tier', () => {
+  test('gates Peppi features behind the pro tier', () => {
     expect(getFeatureGate('ai-assistant')).toEqual({
       feature: 'ai-assistant',
       tier: 'pro',

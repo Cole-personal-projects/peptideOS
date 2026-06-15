@@ -1,8 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
-import type { AppData, Compound, Peptide, Vial, Dose, ReconstitutionCalculation, ScheduleLog, SignalCheckIn, SiteCode, Stack, UserMode } from './types';
+import type { AppData, Compound, Peptide, Vial, Dose, InventoryBatch, ReconstitutionCalculation, ScheduleLog, SignalCheckIn, SiteCode, Stack, UserMode } from './types';
 import { initialAppData } from './mock-data';
+import { createInventoryBatchForVials } from './inventory-batches';
 import { completeOnboarding as completeOnboardingState } from './onboarding';
 import { activateStackSchedules, normalizeStack, updateStackPeptideSchedule } from './schedules';
 import type { SchedulePreset } from './schedules';
@@ -28,8 +29,8 @@ interface AppContextType {
   deleteUserCompound: (id: string) => void;
   // Vials
   getVial: (id: string) => Vial | undefined;
-  addVial: (vial: Omit<Vial, 'id'>) => void;
-  addVials: (vials: Array<Omit<Vial, 'id'>>) => void;
+  addVial: (vial: Omit<Vial, 'id'>, options?: AddInventoryBatchOptions) => void;
+  addVials: (vials: Array<Omit<Vial, 'id'>>, options?: AddInventoryBatchOptions) => void;
   updateVial: (id: string, updates: Partial<Vial>) => void;
   // Doses
   getDose: (id: string) => Dose | undefined;
@@ -66,6 +67,12 @@ interface AppContextType {
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+interface AddInventoryBatchOptions {
+  createdFrom?: InventoryBatch['createdFrom'];
+  packageUnit?: InventoryBatch['packageUnit'];
+  packageQuantity?: number;
+}
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData>(initialAppData);
@@ -152,18 +159,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return data.vials.find(v => v.id === id);
   }, [data.vials]);
 
-  const addVial = useCallback((vial: Omit<Vial, 'id'>) => {
-    const newVial: Vial = { ...vial, id: `vial-${Date.now()}` };
-    void setAndPersistData(prev => ({ ...prev, vials: [...prev.vials, newVial] }));
+  const addVial = useCallback((vial: Omit<Vial, 'id'>, options: AddInventoryBatchOptions = {}) => {
+    const createdAt = Date.now();
+    const batchId = `batch-${createdAt}`;
+    const newVial: Vial = { ...vial, id: `vial-${createdAt}`, inventoryBatchId: batchId };
+    const batch = createInventoryBatchForVials(batchId, [newVial], options.createdFrom ?? 'manual', {
+      packageUnit: options.packageUnit,
+      packageQuantity: options.packageQuantity,
+    });
+    void setAndPersistData(prev => ({
+      ...prev,
+      vials: [...prev.vials, newVial],
+      inventoryBatches: batch ? [...prev.inventoryBatches, batch] : prev.inventoryBatches,
+    }));
   }, [setAndPersistData]);
 
-  const addVials = useCallback((vials: Array<Omit<Vial, 'id'>>) => {
+  const addVials = useCallback((vials: Array<Omit<Vial, 'id'>>, options: AddInventoryBatchOptions = {}) => {
     const createdAt = Date.now();
+    const batchId = `batch-${createdAt}`;
     const newVials: Vial[] = vials.map((vial, index) => ({
       ...vial,
       id: `vial-${createdAt}-${index}`,
+      inventoryBatchId: batchId,
     }));
-    void setAndPersistData(prev => ({ ...prev, vials: [...prev.vials, ...newVials] }));
+    const batch = createInventoryBatchForVials(batchId, newVials, options.createdFrom ?? 'manual', {
+      packageUnit: options.packageUnit,
+      packageQuantity: options.packageQuantity,
+    });
+    void setAndPersistData(prev => ({
+      ...prev,
+      vials: [...prev.vials, ...newVials],
+      inventoryBatches: batch ? [...prev.inventoryBatches, batch] : prev.inventoryBatches,
+    }));
   }, [setAndPersistData]);
 
   const updateVial = useCallback((id: string, updates: Partial<Vial>) => {

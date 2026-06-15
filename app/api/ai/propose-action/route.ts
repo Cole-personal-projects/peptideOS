@@ -166,7 +166,7 @@ const SYSTEM_PROMPT = [
 export async function POST(request: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
-      { error: 'AI assistant is not configured. Set the ANTHROPIC_API_KEY environment variable on the server.' },
+      { error: 'Peppi is not configured. Set the ANTHROPIC_API_KEY environment variable on the server.' },
       { status: 503 },
     );
   }
@@ -206,12 +206,12 @@ export async function POST(request: Request) {
     return NextResponse.json(buildActionProposal(response.parsed_output, compounds));
   } catch (error) {
     if (error instanceof Anthropic.RateLimitError) {
-      return NextResponse.json({ error: 'AI assistant is busy. Try again in a moment.' }, { status: 429 });
+      return NextResponse.json({ error: 'Peppi is busy. Try again in a moment.' }, { status: 429 });
     }
     if (error instanceof Anthropic.AuthenticationError) {
-      return NextResponse.json({ error: 'AI assistant API key is invalid.' }, { status: 503 });
+      return NextResponse.json({ error: 'Peppi API key is invalid.' }, { status: 503 });
     }
     console.error('propose-action failed', error);
-    return NextResponse.json({ error: 'AI assistant request failed. Try again.' }, { status: 502 });
+    return NextResponse.json({ error: 'Peppi request failed. Try again.' }, { status: 502 });
   }
 }

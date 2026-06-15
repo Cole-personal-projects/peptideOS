@@ -28,7 +28,7 @@ test.describe('add vial', () => {
     await expect(page.getByText('GHK-Cu', { exact: true })).toBeVisible();
   });
 
-  test('creates ten physical vials when adding one kit from inventory', async ({ page }) => {
+  test('groups ten physical vials when adding one kit from inventory', async ({ page }) => {
     await page.goto('/more/inventory');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
@@ -44,8 +44,9 @@ test.describe('add vial', () => {
     await page.getByRole('button', { name: 'Add Vial' }).click();
 
     await page.getByRole('tab', { name: /Sealed/ }).click();
-    await expect(page.getByRole('link', { name: /KPV kit test vial/ })).toHaveCount(10);
-    await expect(page.getByRole('link', { name: /KPV kit test vial 1 of 10/ })).toContainText('10 mg');
+    await expect(page.getByRole('link', { name: /KPV kit test/ })).toHaveCount(1);
+    await expect(page.getByRole('link', { name: /KPV kit test/ })).toContainText('10 sealed vials');
+    await expect(page.getByRole('link', { name: /KPV kit test/ })).toContainText('10 mg each');
   });
 
   test('keeps the shared add vial sheet usable in a compact viewport', async ({ page }) => {

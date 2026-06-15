@@ -1,7 +1,7 @@
 import Dexie, { type Table } from 'dexie';
-import type { AppSettings, Compound, Dose, ReconstitutionCalculation, Schedule, ScheduleLog, SignalCheckIn, Stack, Vial } from './types';
+import type { AppSettings, Compound, Dose, InventoryBatch, ReconstitutionCalculation, Schedule, ScheduleLog, SignalCheckIn, Stack, Vial } from './types';
 
-export const PERSISTENCE_SCHEMA_VERSION = 5;
+export const PERSISTENCE_SCHEMA_VERSION = 6;
 export const DEFAULT_DATABASE_NAME = 'PeptideOS';
 
 export type SyncState = 'local' | 'synced' | 'dirty';
@@ -20,6 +20,13 @@ export interface PersistedAppSettings extends AppSettings {
 }
 
 export type PersistedVial = Vial & {
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  syncState: SyncState;
+};
+
+export type PersistedInventoryBatch = InventoryBatch & {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
@@ -78,6 +85,7 @@ export type PersistedSignalCheckIn = SignalCheckIn & {
 
 export class PeptideOSDatabase extends Dexie {
   vials!: Table<PersistedVial, string>;
+  inventoryBatches!: Table<PersistedInventoryBatch, string>;
   doses!: Table<PersistedDose, string>;
   stacks!: Table<PersistedStack, string>;
   schedules!: Table<PersistedSchedule, string>;
@@ -121,8 +129,22 @@ export class PeptideOSDatabase extends Dexie {
       metadata: 'key',
     });
 
-    this.version(PERSISTENCE_SCHEMA_VERSION).stores({
+    this.version(5).stores({
       vials: 'id, peptideId, status, updatedAt, syncState, deletedAt',
+      doses: 'id, peptideId, vialId, scheduleLogId, dateTime, completed, updatedAt, syncState, deletedAt',
+      stacks: 'id, status, updatedAt, syncState, deletedAt',
+      schedules: 'id, stackId, stackPeptideId, peptideId, status, updatedAt, syncState, deletedAt',
+      scheduleLogs: 'id, scheduleId, stackId, stackPeptideId, peptideId, dueAt, status, doseId, updatedAt, syncState, deletedAt',
+      userCompounds: 'id, compoundType, category, updatedAt, syncState, deletedAt',
+      reconstitutionCalculations: 'id, compoundId, savedAt, updatedAt, syncState, deletedAt',
+      signalCheckIns: 'id, checkedAt, updatedAt, syncState, deletedAt',
+      settings: 'id, updatedAt, syncState',
+      metadata: 'key',
+    });
+
+    this.version(PERSISTENCE_SCHEMA_VERSION).stores({
+      vials: 'id, inventoryBatchId, peptideId, status, updatedAt, syncState, deletedAt',
+      inventoryBatches: 'id, peptideId, dateAdded, lotNumber, updatedAt, syncState, deletedAt',
       doses: 'id, peptideId, vialId, scheduleLogId, dateTime, completed, updatedAt, syncState, deletedAt',
       stacks: 'id, status, updatedAt, syncState, deletedAt',
       schedules: 'id, stackId, stackPeptideId, peptideId, status, updatedAt, syncState, deletedAt',
