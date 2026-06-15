@@ -6,6 +6,7 @@ const baseData: AppData = {
   peptides: [],
   compounds: [],
   vials: [],
+  inventoryBatches: [],
   doses: [],
   stacks: [],
   schedules: [],
