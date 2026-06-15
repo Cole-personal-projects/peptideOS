@@ -1,4 +1,5 @@
-import type { DoseUnit, Route, ScheduleFrequency, ScheduleRecurrence, SignalCheckIn, Stack } from './types';
+import type { NewVialInput } from './vial-create';
+import type { DoseUnit, InventoryContainerType, Route, ScheduleFrequency, ScheduleRecurrence, SignalCheckIn, Stack } from './types';
 
 export type AssistantAction =
   | {
@@ -10,6 +11,11 @@ export type AssistantAction =
       id: string;
       type: 'create_stack_from_protocol';
       payload: Omit<Stack, 'id'>;
+    }
+  | {
+      id: string;
+      type: 'create_inventory_vials';
+      payload: NewVialInput;
     };
 
 export interface AssistantActionProposal {
@@ -30,6 +36,10 @@ export function isAssistantAction(value: unknown): value is AssistantAction {
     return isStackDraft(value.payload);
   }
 
+  if (value.type === 'create_inventory_vials') {
+    return isInventoryVialDraft(value.payload);
+  }
+
   if (value.type !== 'add_signal_check_in') {
     return false;
   }
@@ -45,6 +55,7 @@ export function isAssistantAction(value: unknown): value is AssistantAction {
 const doseUnits: DoseUnit[] = ['mcg', 'mg', 'iu'];
 const routes: Route[] = ['subq', 'im', 'intranasal', 'oral', 'topical'];
 const scheduleFrequencies: ScheduleFrequency[] = ['daily', 'weekly', 'interval', 'cycle'];
+const inventoryContainerTypes: InventoryContainerType[] = ['lyophilized-vial', 'multi-dose-vial', 'prefilled-pen', 'capsule-bottle', 'other'];
 
 function isScheduleRecurrence(value: unknown): value is ScheduleRecurrence {
   if (!isRecord(value) || !scheduleFrequencies.includes(value.frequency as ScheduleFrequency) || !Array.isArray(value.timesOfDay)) {
@@ -75,6 +86,25 @@ function isStackDraft(value: unknown): value is Omit<Stack, 'id'> {
       && typeof peptide.timing === 'string'
       && (peptide.schedule === undefined || isScheduleRecurrence(peptide.schedule))
     ));
+}
+
+function isPositiveOptionalNumber(value: unknown) {
+  return value === undefined || (typeof value === 'number' && Number.isFinite(value) && value > 0);
+}
+
+function isInventoryVialDraft(value: unknown): value is NewVialInput {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return typeof value.name === 'string'
+    && typeof value.peptideId === 'string'
+    && typeof value.dateAdded === 'string'
+    && (value.containerType === undefined || inventoryContainerTypes.includes(value.containerType as InventoryContainerType))
+    && isPositiveOptionalNumber(value.totalAmountValue)
+    && (value.totalAmountUnit === undefined || doseUnits.includes(value.totalAmountUnit as DoseUnit))
+    && (value.packageUnit === undefined || value.packageUnit === 'vial' || value.packageUnit === 'kit')
+    && isPositiveOptionalNumber(value.packageQuantity);
 }
 
 function clamp(value: number, min: number, max: number) {

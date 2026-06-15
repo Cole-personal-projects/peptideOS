@@ -110,4 +110,36 @@ describe('assistant action proposals', () => {
       },
     })).toBe(false);
   });
+
+  test('accepts inventory vial creation actions', () => {
+    expect(isAssistantAction({
+      id: 'haiku-inventory-action-1',
+      type: 'create_inventory_vials',
+      payload: {
+        name: 'AI KPV kit',
+        peptideId: 'kpv',
+        dateAdded: '2026-06-15',
+        containerType: 'lyophilized-vial',
+        totalAmountValue: 10,
+        totalAmountUnit: 'mg',
+        packageUnit: 'kit',
+        packageQuantity: 1,
+      },
+    })).toBe(true);
+
+    expect(isAssistantAction({
+      id: 'haiku-inventory-action-2',
+      type: 'create_inventory_vials',
+      payload: {
+        name: 'Bad inventory',
+        peptideId: 'kpv',
+        dateAdded: '2026-06-15',
+        containerType: 'unsupported',
+        totalAmountValue: 10,
+        totalAmountUnit: 'mg',
+        packageUnit: 'kit',
+        packageQuantity: 1,
+      },
+    })).toBe(false);
+  });
 });
