@@ -13,6 +13,7 @@ const baseData: AppData = {
   schedules: [],
   scheduleLogs: [],
   reconstitutionCalculations: [],
+  signalCheckIns: [],
   hasSeenDisclaimer: true,
   hasCompletedOnboarding: true,
   userMode: 'beginner',

@@ -510,6 +510,7 @@ export const initialAppData: AppData = {
   schedules: [],
   scheduleLogs: [],
   reconstitutionCalculations: [],
+  signalCheckIns: [],
   hasSeenDisclaimer: false,
   hasCompletedOnboarding: false,
   userMode: 'beginner',

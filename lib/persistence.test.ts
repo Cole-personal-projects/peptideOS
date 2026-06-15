@@ -394,7 +394,7 @@ describe('Dexie persistence', () => {
 
     const exported = await exportUserData(db, new Date('2026-05-23T00:00:00.000Z'));
 
-    expect(exported.schemaVersion).toBe(4);
+    expect(exported.schemaVersion).toBe(5);
     expect(exported.exportedAt).toBe('2026-05-23T00:00:00.000Z');
     expect(exported.data.vials).toHaveLength(1);
     expect(exported.data.vials[0]?.name).toBe('Exported vial');
@@ -408,6 +408,7 @@ describe('Dexie persistence', () => {
         drawUnits: 10,
       }),
     ]);
+    expect(exported.data.signalCheckIns).toEqual([]);
     expect(exported.data.userCompounds).toEqual([]);
     expect(exported.data).not.toHaveProperty('peptides');
     expect(exported.data).not.toHaveProperty('compounds');
@@ -573,6 +574,7 @@ describe('Dexie persistence', () => {
         schedules: [],
         scheduleLogs: [],
         reconstitutionCalculations: [],
+        signalCheckIns: [],
         userCompounds: [],
         settings: {
           hasSeenDisclaimer: false,
@@ -618,6 +620,7 @@ describe('Dexie persistence', () => {
         schedules: [],
         scheduleLogs: [],
         reconstitutionCalculations: [],
+        signalCheckIns: [],
         userCompounds: [],
         settings: {
           hasSeenDisclaimer: false,

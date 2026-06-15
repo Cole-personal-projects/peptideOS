@@ -111,7 +111,7 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">
-              Exports include your saved vials, doses, stacks, schedules, reconstitution calculations, custom compounds, and settings. Bundled reference compounds stay in the app and are not duplicated in backups.
+              Exports include your saved vials, doses, stacks, schedules, reconstitution calculations, signals, custom compounds, and settings. Bundled reference compounds stay in the app and are not duplicated in backups.
             </p>
             <Button variant="outline" className="w-full justify-start" onClick={() => void exportAllData()}>
               <Download className="w-4 h-4 mr-3" />
@@ -151,7 +151,7 @@ export default function SettingsPage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Clear all local data?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This removes your saved vials, doses, stacks, schedules, reconstitution calculations, custom compounds, and settings from this device. Bundled reference compounds stay available after reset.
+                    This removes your saved vials, doses, stacks, schedules, reconstitution calculations, signals, custom compounds, and settings from this device. Bundled reference compounds stay available after reset.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

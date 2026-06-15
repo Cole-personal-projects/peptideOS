@@ -11,5 +11,6 @@ describe('initial app data', () => {
     expect(initialAppData.schedules).toEqual([]);
     expect(initialAppData.scheduleLogs).toEqual([]);
     expect(initialAppData.reconstitutionCalculations).toEqual([]);
+    expect(initialAppData.signalCheckIns).toEqual([]);
   });
 });

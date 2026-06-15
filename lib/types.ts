@@ -265,6 +265,14 @@ export interface ReconstitutionCalculation {
   savedAt: string;
 }
 
+export interface SignalCheckIn {
+  id: string;
+  checkedAt: string;
+  energy: number;
+  sleepHours: number;
+  notes: string;
+}
+
 export interface AppData {
   peptides: Peptide[];
   compounds: Compound[];
@@ -274,6 +282,7 @@ export interface AppData {
   schedules: Schedule[];
   scheduleLogs: ScheduleLog[];
   reconstitutionCalculations: ReconstitutionCalculation[];
+  signalCheckIns: SignalCheckIn[];
   hasSeenDisclaimer: boolean;
   hasCompletedOnboarding: boolean;
   userMode: UserMode;
