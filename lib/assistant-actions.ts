@@ -1,10 +1,15 @@
-import type { SignalCheckIn } from './types';
+import type { DoseUnit, Route, ScheduleFrequency, ScheduleRecurrence, SignalCheckIn, Stack } from './types';
 
 export type AssistantAction =
   | {
       id: string;
       type: 'add_signal_check_in';
       payload: Omit<SignalCheckIn, 'id'>;
+    }
+  | {
+      id: string;
+      type: 'create_stack_from_protocol';
+      payload: Omit<Stack, 'id'>;
     };
 
 export interface AssistantActionProposal {
@@ -17,7 +22,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function isAssistantAction(value: unknown): value is AssistantAction {
-  if (!isRecord(value) || value.type !== 'add_signal_check_in' || typeof value.id !== 'string') {
+  if (!isRecord(value) || typeof value.id !== 'string') {
+    return false;
+  }
+
+  if (value.type === 'create_stack_from_protocol') {
+    return isStackDraft(value.payload);
+  }
+
+  if (value.type !== 'add_signal_check_in') {
     return false;
   }
 
@@ -27,6 +40,41 @@ export function isAssistantAction(value: unknown): value is AssistantAction {
     && typeof payload.energy === 'number'
     && typeof payload.sleepHours === 'number'
     && typeof payload.notes === 'string';
+}
+
+const doseUnits: DoseUnit[] = ['mcg', 'mg', 'iu'];
+const routes: Route[] = ['subq', 'im', 'intranasal', 'oral', 'topical'];
+const scheduleFrequencies: ScheduleFrequency[] = ['daily', 'weekly', 'interval', 'cycle'];
+
+function isScheduleRecurrence(value: unknown): value is ScheduleRecurrence {
+  if (!isRecord(value) || !scheduleFrequencies.includes(value.frequency as ScheduleFrequency) || !Array.isArray(value.timesOfDay)) {
+    return false;
+  }
+
+  return value.timesOfDay.every((time) => typeof time === 'string');
+}
+
+function isStackDraft(value: unknown): value is Omit<Stack, 'id'> {
+  if (!isRecord(value) || !Array.isArray(value.peptides)) {
+    return false;
+  }
+
+  return typeof value.name === 'string'
+    && typeof value.description === 'string'
+    && typeof value.startDate === 'string'
+    && typeof value.durationDays === 'number'
+    && value.status === 'planned'
+    && typeof value.notes === 'string'
+    && value.peptides.every((peptide) => (
+      isRecord(peptide)
+      && typeof peptide.peptideId === 'string'
+      && typeof peptide.doseValue === 'number'
+      && doseUnits.includes(peptide.doseUnit as DoseUnit)
+      && typeof peptide.frequency === 'string'
+      && routes.includes(peptide.route as Route)
+      && typeof peptide.timing === 'string'
+      && (peptide.schedule === undefined || isScheduleRecurrence(peptide.schedule))
+    ));
 }
 
 function clamp(value: number, min: number, max: number) {

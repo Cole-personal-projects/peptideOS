@@ -30,8 +30,10 @@ describe('assistant action proposals', () => {
       new Date('2026-06-15T08:00:00.000Z'),
     );
 
-    expect(action?.payload.energy).toBe(10);
-    expect(action?.payload.sleepHours).toBe(24);
+    expect(action?.type).toBe('add_signal_check_in');
+    if (action?.type !== 'add_signal_check_in') throw new Error('Expected Signal check-in action');
+    expect(action.payload.energy).toBe(10);
+    expect(action.payload.sleepHours).toBe(24);
   });
 
   test('accepts only well-formed assistant actions', () => {
@@ -56,6 +58,55 @@ describe('assistant action proposals', () => {
         energy: '7',
         sleepHours: 6,
         notes: 'shoulder calm',
+      },
+    })).toBe(false);
+  });
+
+  test('accepts planned stack schedule actions', () => {
+    expect(isAssistantAction({
+      id: 'haiku-schedule-action-1',
+      type: 'create_stack_from_protocol',
+      payload: {
+        name: 'AI BPC Schedule',
+        description: 'BPC-157 daily protocol from chat.',
+        peptides: [
+          {
+            peptideId: 'bpc-157',
+            doseValue: 250,
+            doseUnit: 'mcg',
+            frequency: 'daily',
+            route: 'subq',
+            timing: 'Morning',
+            schedule: { frequency: 'daily', timesOfDay: ['08:00'] },
+          },
+        ],
+        startDate: '2026-06-15T08:00:00.000Z',
+        durationDays: 28,
+        status: 'planned',
+        notes: '',
+      },
+    })).toBe(true);
+
+    expect(isAssistantAction({
+      id: 'haiku-schedule-action-2',
+      type: 'create_stack_from_protocol',
+      payload: {
+        name: 'Bad Schedule',
+        description: '',
+        peptides: [
+          {
+            peptideId: 'bpc-157',
+            doseValue: 250,
+            doseUnit: 'mcg',
+            frequency: 'daily',
+            route: 'unsupported',
+            timing: 'Morning',
+          },
+        ],
+        startDate: '2026-06-15T08:00:00.000Z',
+        durationDays: 28,
+        status: 'planned',
+        notes: '',
       },
     })).toBe(false);
   });

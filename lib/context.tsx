@@ -360,9 +360,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return setAndPersistData(prev => completeDueDose(prev, logId, completion));
   }, [setAndPersistData]);
 
-  const skipScheduleLog = useCallback((logId: string) => {
-    return setAndPersistData(prev => skipDueDose(prev, logId));
-  }, [setAndPersistData]);
+  const skipScheduleLog = useCallback(async (logId: string) => {
+    const previousData = dataRef.current;
+    const nextData = skipDueDose(previousData, logId);
+    if (nextData === previousData) return;
+
+    if (hydrated) {
+      const sequence = ++saveSequence.current;
+      await enqueuePersistenceOperation(() => savePersistedAppData(undefined, nextData)).catch((error) => {
+        if (sequence === saveSequence.current) {
+          console.error('Failed to persist PeptideOS data', error);
+        }
+      });
+    }
+
+    dataRef.current = nextData;
+    setData(nextData);
+  }, [enqueuePersistenceOperation, hydrated]);
 
   const getActiveStacks = useCallback(() => {
     return data.stacks.filter(s => s.status === 'active');

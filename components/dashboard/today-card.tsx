@@ -166,7 +166,8 @@ export function TodayCard() {
             const peptide = getPeptide(log.peptideId);
             const isTaken = log.status === 'taken';
             const isSkipped = log.status === 'skipped';
-            const statusLabel = isTaken ? 'Taken today' : isSkipped ? 'Skipped today' : state === 'overdue' ? 'Overdue' : 'Pending action';
+            const isSavingLog = savingLogId === log.id;
+            const statusLabel = isSavingLog ? 'Saving...' : isTaken ? 'Taken today' : isSkipped ? 'Skipped today' : state === 'overdue' ? 'Overdue' : 'Pending action';
             return (
               <div key={log.id} className={cn("rounded-md border border-border p-3", state === 'overdue' && "border-destructive/50 bg-destructive/5", (isTaken || isSkipped) && "opacity-60")}>
                 <div className="flex items-start gap-3">
@@ -191,10 +192,10 @@ export function TodayCard() {
                 </div>
                 {log.status === 'pending' && (
                   <div className="mt-3 grid grid-cols-2 gap-2">
-                    <Button size="sm" variant="outline" disabled={savingLogId === log.id} onClick={() => void handleSkipScheduleLog(log.id)}>
+                    <Button size="sm" variant="outline" disabled={isSavingLog} onClick={() => void handleSkipScheduleLog(log.id)}>
                       Skip
                     </Button>
-                    <Button size="sm" disabled={savingLogId === log.id} onClick={() => openCompletion(log)}>
+                    <Button size="sm" disabled={isSavingLog} onClick={() => openCompletion(log)}>
                       Complete
                     </Button>
                   </div>

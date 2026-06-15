@@ -14,14 +14,17 @@ import {
   type AssistantAction,
   type AssistantActionProposal,
 } from '@/lib/assistant-actions';
+import { getTrackableCompounds } from '@/lib/compound-workflows';
+import { formatDose } from '@/lib/dose-helpers';
 import { useApp } from '@/lib/context';
+import type { ProtocolCompoundInput } from '@/lib/ai-protocol';
 
-async function requestAssistantActionProposal(message: string): Promise<AssistantActionProposal | null> {
+async function requestAssistantActionProposal(message: string, compounds: ProtocolCompoundInput[]): Promise<AssistantActionProposal | null> {
   try {
     const response = await fetch('/api/ai/propose-action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, compounds }),
     });
 
     if (!response.ok) return null;
@@ -40,19 +43,27 @@ async function requestAssistantActionProposal(message: string): Promise<Assistan
 }
 
 export default function AIAssistantPage() {
-  const { addSignalCheckIn } = useApp();
+  const { data, addSignalCheckIn, addStack } = useApp();
   const [aiStackOpen, setAiStackOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [pendingAction, setPendingAction] = useState<AssistantAction | null>(null);
   const [assistantMessage, setAssistantMessage] = useState('Tell Haiku what you want to capture or change.');
+  const trackableCompounds = getTrackableCompounds(data);
+  const proposalCompounds = trackableCompounds.map((compound) => ({
+    id: compound.id,
+    name: compound.name,
+    defaultRoute: compound.defaultRoute,
+    supportedRoutes: compound.supportedRoutes,
+    defaultDoseUnit: compound.defaultDoseUnit,
+  }));
 
   const sendMessage = async () => {
     const trimmedMessage = message.trim();
     if (!trimmedMessage || isSending) return;
 
     setIsSending(true);
-    const haikuProposal = await requestAssistantActionProposal(trimmedMessage);
+    const haikuProposal = await requestAssistantActionProposal(trimmedMessage, proposalCompounds);
     setIsSending(false);
 
     if (haikuProposal) {
@@ -82,7 +93,19 @@ export default function AIAssistantPage() {
       setPendingAction(null);
       setAssistantMessage('Signal check-in saved.');
     }
+
+    if (pendingAction.type === 'create_stack_from_protocol') {
+      addStack(pendingAction.payload);
+      setPendingAction(null);
+      setAssistantMessage('Schedule saved.');
+    }
   };
+
+  const getCompoundName = (compoundId: string) => (
+    data.peptides.find((peptide) => peptide.id === compoundId)?.name
+    ?? data.compounds.find((compound) => compound.id === compoundId)?.name
+    ?? compoundId
+  );
 
   return (
     <AppShell>
@@ -114,6 +137,40 @@ export default function AIAssistantPage() {
                   <Button size="sm" onClick={confirmAction}>
                     <Check className="w-4 h-4" />
                     Confirm Signal
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setPendingAction(null)}>
+                    <X className="w-4 h-4" />
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {pendingAction?.type === 'create_stack_from_protocol' && (
+              <div className="space-y-3 rounded-md border bg-background p-3">
+                <div>
+                  <p className="font-medium">{pendingAction.payload.name}</p>
+                  {pendingAction.payload.description && (
+                    <p className="text-sm text-muted-foreground">{pendingAction.payload.description}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {pendingAction.payload.peptides.map((stackPeptide) => (
+                    <div key={`${stackPeptide.peptideId}-${stackPeptide.timing}`} className="rounded-md bg-secondary px-3 py-2 text-sm">
+                      <p className="font-medium">{getCompoundName(stackPeptide.peptideId)}</p>
+                      <p className="text-muted-foreground">
+                        {formatDose(stackPeptide.doseValue, stackPeptide.doseUnit)} · {stackPeptide.frequency} · {stackPeptide.route.toUpperCase()} · {stackPeptide.timing}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {pendingAction.payload.durationDays} days. Review before activating.
+                </p>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={confirmAction}>
+                    <Check className="w-4 h-4" />
+                    Confirm Schedule
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setPendingAction(null)}>
                     <X className="w-4 h-4" />
