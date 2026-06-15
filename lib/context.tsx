@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
-import type { AppData, Compound, Peptide, Vial, Dose, ReconstitutionCalculation, ScheduleLog, SiteCode, Stack, UserMode } from './types';
+import type { AppData, Compound, Peptide, Vial, Dose, ReconstitutionCalculation, ScheduleLog, SignalCheckIn, SiteCode, Stack, UserMode } from './types';
 import { initialAppData } from './mock-data';
 import { completeOnboarding as completeOnboardingState } from './onboarding';
 import { activateStackSchedules, normalizeStack, updateStackPeptideSchedule } from './schedules';
@@ -43,6 +43,8 @@ interface AppContextType {
   // Reconstitution
   addReconstitutionCalculation: (calculation: ReconstitutionCalculation) => void;
   deleteReconstitutionCalculation: (id: string) => void;
+  // Signals
+  addSignalCheckIn: (checkIn: Omit<SignalCheckIn, 'id'>) => void;
   // Stacks
   getStack: (id: string) => Stack | undefined;
   addStack: (stack: Omit<Stack, 'id'>) => void;
@@ -280,6 +282,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   }, [setAndPersistData]);
 
+  const addSignalCheckIn = useCallback((checkIn: Omit<SignalCheckIn, 'id'>) => {
+    const newCheckIn: SignalCheckIn = { ...checkIn, id: `signal-${Date.now()}` };
+    void setAndPersistData(prev => ({
+      ...prev,
+      signalCheckIns: [newCheckIn, ...prev.signalCheckIns],
+    }));
+  }, [setAndPersistData]);
+
   // Stacks
   const getStack = useCallback((id: string) => {
     return data.stacks.find(s => s.id === id);
@@ -421,6 +431,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       getStreak,
       addReconstitutionCalculation,
       deleteReconstitutionCalculation,
+      addSignalCheckIn,
       getStack,
       addStack,
       updateStack,

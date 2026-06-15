@@ -126,7 +126,7 @@ test.describe('local persistence', () => {
 
     await page.goto('/more/settings');
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await expect(page.getByText('Exports include your saved vials, doses, stacks, schedules, reconstitution calculations, custom compounds, and settings. Bundled reference compounds stay in the app and are not duplicated in backups.')).toBeVisible();
+    await expect(page.getByText('Exports include your saved vials, doses, stacks, schedules, reconstitution calculations, signals, custom compounds, and settings. Bundled reference compounds stay in the app and are not duplicated in backups.')).toBeVisible();
     await expect(page.getByText('Imports replace local user data from a PeptideOS JSON backup. Bundled reference compounds remain app-owned.')).toBeVisible();
     await page.getByLabel('Import Data File').setInputFiles(exportPath);
     await expect(page.getByRole('status')).toContainText('Data restored from backup.');

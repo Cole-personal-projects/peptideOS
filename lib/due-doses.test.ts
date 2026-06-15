@@ -44,6 +44,7 @@ function makeData(scheduleLogs: ScheduleLog[]): AppData {
     schedules: [schedule],
     scheduleLogs,
     reconstitutionCalculations: [],
+    signalCheckIns: [],
     hasSeenDisclaimer: true,
     hasCompletedOnboarding: true,
     userMode: 'researcher',
