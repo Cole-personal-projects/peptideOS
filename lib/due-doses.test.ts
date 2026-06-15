@@ -39,6 +39,7 @@ function makeData(scheduleLogs: ScheduleLog[]): AppData {
     peptides: [],
     compounds: [],
     vials: [],
+    inventoryBatches: [],
     doses: [],
     stacks: [],
     schedules: [schedule],
