@@ -72,19 +72,19 @@ export function AiStackSheet({ open, onOpenChange }: AiStackSheetProps) {
       const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        setError(payload?.error ?? 'AI assistant request failed. Try again.');
+        setError(payload?.error ?? 'Peppi request failed. Try again.');
         return;
       }
 
       const parsed = payload?.protocol as ParsedProtocol | undefined;
       if (!parsed) {
-        setError('AI assistant returned an unexpected response. Try again.');
+        setError('Peppi returned an unexpected response. Try again.');
         return;
       }
 
       setResult(parsedProtocolToStackDraft(parsed, compounds));
     } catch {
-      setError('Could not reach the AI assistant. Check your connection and try again.');
+      setError('Could not reach Peppi. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -222,7 +222,7 @@ export function AiStackSheet({ open, onOpenChange }: AiStackSheetProps) {
                         <Check className="w-4 h-4 mr-1" /> Create stack
                       </Button>
                       <p className="text-[11px] text-muted-foreground text-center">
-                        Review every dose and schedule before activating. This assistant only structures what you wrote — it does not give dosing advice.
+                        Review every dose and schedule before activating. Peppi only structures what you wrote — it does not give dosing advice.
                       </p>
                     </div>
                   ) : (

@@ -1,10 +1,12 @@
-import { db as defaultDb, PERSISTENCE_SCHEMA_VERSION, type PeptideOSDatabase, type PersistedDose, type PersistedReconstitutionCalculation, type PersistedSchedule, type PersistedScheduleLog, type PersistedSignalCheckIn, type PersistedStack, type PersistedUserCompound, type PersistedVial, type SyncState } from './db';
+import { db as defaultDb, PERSISTENCE_SCHEMA_VERSION, type PeptideOSDatabase, type PersistedDose, type PersistedInventoryBatch, type PersistedReconstitutionCalculation, type PersistedSchedule, type PersistedScheduleLog, type PersistedSignalCheckIn, type PersistedStack, type PersistedUserCompound, type PersistedVial, type SyncState } from './db';
+import { ensureInventoryBatches } from './inventory-batches';
 import { normalizeStacks } from './schedules';
 import { getPersistableUserCompounds, mergeCompoundLibrary } from './user-compounds';
-import type { AppData, AppSettings, Compound, Dose, ReconstitutionCalculation, Schedule, ScheduleLog, SignalCheckIn, Stack, Vial } from './types';
+import type { AppData, AppSettings, Compound, Dose, InventoryBatch, ReconstitutionCalculation, Schedule, ScheduleLog, SignalCheckIn, Stack, Vial } from './types';
 
 export interface PersistedUserData {
   vials: Vial[];
+  inventoryBatches: InventoryBatch[];
   doses: Dose[];
   stacks: Stack[];
   schedules: Schedule[];
@@ -62,9 +64,10 @@ function getDefaultSettings(defaults: AppData): AppSettings {
 }
 
 function applyUserData(defaults: AppData, persisted: PersistedUserData): AppData {
-  return {
+  return ensureInventoryBatches({
     ...defaults,
     vials: persisted.vials,
+    inventoryBatches: persisted.inventoryBatches,
     doses: persisted.doses,
     stacks: normalizeStacks(persisted.stacks),
     schedules: persisted.schedules,
@@ -73,7 +76,7 @@ function applyUserData(defaults: AppData, persisted: PersistedUserData): AppData
     signalCheckIns: persisted.signalCheckIns,
     compounds: mergeCompoundLibrary(persisted.userCompounds),
     ...persisted.settings,
-  };
+  });
 }
 
 function isHistoricalDemoVial(vial: Vial) {
@@ -97,6 +100,8 @@ function pruneHistoricalDemoUserData(persisted: PersistedUserData): { data: Pers
   const demoVialIds = new Set(persisted.vials.filter(isHistoricalDemoVial).map((vial) => vial.id));
   const demoStackIds = new Set(persisted.stacks.filter(isHistoricalDemoStack).map((stack) => stack.id));
   const vials = persisted.vials.filter((vial) => !demoVialIds.has(vial.id));
+  const remainingBatchIds = new Set(vials.map((vial) => vial.inventoryBatchId).filter(Boolean));
+  const inventoryBatches = persisted.inventoryBatches.filter((batch) => remainingBatchIds.has(batch.id));
   const doses = persisted.doses.filter((dose) => !isHistoricalDemoDose(dose, demoVialIds));
   const stacks = persisted.stacks.filter((stack) => !demoStackIds.has(stack.id));
   const removedScheduleIds = new Set(
@@ -113,6 +118,7 @@ function pruneHistoricalDemoUserData(persisted: PersistedUserData): { data: Pers
   ));
 
   const changed = vials.length !== persisted.vials.length
+    || inventoryBatches.length !== persisted.inventoryBatches.length
     || doses.length !== persisted.doses.length
     || stacks.length !== persisted.stacks.length
     || schedules.length !== persisted.schedules.length
@@ -122,6 +128,7 @@ function pruneHistoricalDemoUserData(persisted: PersistedUserData): { data: Pers
     data: {
       ...persisted,
       vials,
+      inventoryBatches,
       doses,
       stacks,
       schedules,
@@ -190,8 +197,9 @@ export async function loadPersistedAppData(database: PeptideOSDatabase = default
     return defaults;
   }
 
-  const [vials, doses, stacks, schedules, scheduleLogs, reconstitutionCalculations, signalCheckIns, userCompounds, settings] = await Promise.all([
+  const [vials, inventoryBatches, doses, stacks, schedules, scheduleLogs, reconstitutionCalculations, signalCheckIns, userCompounds, settings] = await Promise.all([
     database.vials.toArray(),
+    database.inventoryBatches.toArray(),
     database.doses.toArray(),
     database.stacks.toArray(),
     database.schedules.toArray(),
@@ -208,6 +216,7 @@ export async function loadPersistedAppData(database: PeptideOSDatabase = default
 
   const persistedUserData: PersistedUserData = {
     vials: vials.filter((vial) => !vial.deletedAt).map((vial) => stripPersistenceMetadata(vial) as Vial),
+    inventoryBatches: inventoryBatches.filter((batch) => !batch.deletedAt).map((batch) => stripPersistenceMetadata(batch) as InventoryBatch),
     doses: doses.filter((dose) => !dose.deletedAt).map((dose) => stripPersistenceMetadata(dose) as Dose),
     stacks: stacks.filter((stack) => !stack.deletedAt).map((stack) => stripPersistenceMetadata(stack) as Stack),
     schedules: schedules.filter((schedule) => !schedule.deletedAt).map((schedule) => stripPersistenceMetadata(schedule) as Schedule),
@@ -234,22 +243,25 @@ export async function loadPersistedAppData(database: PeptideOSDatabase = default
 
 export async function savePersistedAppData(database: PeptideOSDatabase = defaultDb, data: AppData, savedAt = new Date()) {
   const now = savedAt.toISOString();
-  const settings = withPersistenceMetadata({ id: 'app-settings' as const, ...getDefaultSettings(data) }, now);
-  const vials = data.vials.map((vial) => withPersistenceMetadata(vial, now) as PersistedVial);
-  const doses = data.doses.map((dose) => withPersistenceMetadata(dose, now) as PersistedDose);
-  const stacks = normalizeStacks(data.stacks).map((stack) => withPersistenceMetadata(stack, now) as PersistedStack);
-  const schedules = data.schedules.map((schedule) => withPersistenceMetadata(schedule, now) as PersistedSchedule);
-  const scheduleLogs = data.scheduleLogs.map((log) => withPersistenceMetadata(log, now) as PersistedScheduleLog);
-  const reconstitutionCalculations = data.reconstitutionCalculations.map((calculation) => withPersistenceMetadata(calculation, now) as PersistedReconstitutionCalculation);
-  const signalCheckIns = data.signalCheckIns.map((checkIn) => withPersistenceMetadata(checkIn, now) as PersistedSignalCheckIn);
-  const userCompounds = getPersistableUserCompounds(data.compounds).map((compound) => withPersistenceMetadata({
+  const normalizedData = ensureInventoryBatches(data);
+  const settings = withPersistenceMetadata({ id: 'app-settings' as const, ...getDefaultSettings(normalizedData) }, now);
+  const vials = normalizedData.vials.map((vial) => withPersistenceMetadata(vial, now) as PersistedVial);
+  const inventoryBatches = normalizedData.inventoryBatches.map((batch) => withPersistenceMetadata(batch, now) as PersistedInventoryBatch);
+  const doses = normalizedData.doses.map((dose) => withPersistenceMetadata(dose, now) as PersistedDose);
+  const stacks = normalizeStacks(normalizedData.stacks).map((stack) => withPersistenceMetadata(stack, now) as PersistedStack);
+  const schedules = normalizedData.schedules.map((schedule) => withPersistenceMetadata(schedule, now) as PersistedSchedule);
+  const scheduleLogs = normalizedData.scheduleLogs.map((log) => withPersistenceMetadata(log, now) as PersistedScheduleLog);
+  const reconstitutionCalculations = normalizedData.reconstitutionCalculations.map((calculation) => withPersistenceMetadata(calculation, now) as PersistedReconstitutionCalculation);
+  const signalCheckIns = normalizedData.signalCheckIns.map((checkIn) => withPersistenceMetadata(checkIn, now) as PersistedSignalCheckIn);
+  const userCompounds = getPersistableUserCompounds(normalizedData.compounds).map((compound) => withPersistenceMetadata({
     ...compound,
     source: 'user' as const,
   }, now) as PersistedUserCompound);
 
-  await database.transaction('rw', [database.vials, database.doses, database.stacks, database.schedules, database.scheduleLogs, database.reconstitutionCalculations, database.signalCheckIns, database.userCompounds, database.settings, database.metadata], async () => {
+  await database.transaction('rw', [database.vials, database.inventoryBatches, database.doses, database.stacks, database.schedules, database.scheduleLogs, database.reconstitutionCalculations, database.signalCheckIns, database.userCompounds, database.settings, database.metadata], async () => {
     await Promise.all([
       database.vials.clear(),
+      database.inventoryBatches.clear(),
       database.doses.clear(),
       database.stacks.clear(),
       database.schedules.clear(),
@@ -262,6 +274,7 @@ export async function savePersistedAppData(database: PeptideOSDatabase = default
 
     await Promise.all([
       database.vials.bulkPut(vials),
+      database.inventoryBatches.bulkPut(inventoryBatches),
       database.doses.bulkPut(doses),
       database.stacks.bulkPut(stacks),
       database.schedules.bulkPut(schedules),
@@ -276,9 +289,10 @@ export async function savePersistedAppData(database: PeptideOSDatabase = default
 }
 
 export async function resetPersistedAppData(database: PeptideOSDatabase = defaultDb, defaults: AppData): Promise<AppData> {
-  await database.transaction('rw', [database.vials, database.doses, database.stacks, database.schedules, database.scheduleLogs, database.reconstitutionCalculations, database.signalCheckIns, database.userCompounds, database.settings, database.metadata], async () => {
+  await database.transaction('rw', [database.vials, database.inventoryBatches, database.doses, database.stacks, database.schedules, database.scheduleLogs, database.reconstitutionCalculations, database.signalCheckIns, database.userCompounds, database.settings, database.metadata], async () => {
     await Promise.all([
       database.vials.clear(),
+      database.inventoryBatches.clear(),
       database.doses.clear(),
       database.stacks.clear(),
       database.schedules.clear(),
@@ -302,8 +316,9 @@ export async function exportUserData(database: PeptideOSDatabase = defaultDb, ex
     biometricLock: false,
     darkMode: true,
   };
-  const [vials, doses, stacks, schedules, scheduleLogs, reconstitutionCalculations, signalCheckIns, userCompounds, settings] = await Promise.all([
+  const [vials, inventoryBatches, doses, stacks, schedules, scheduleLogs, reconstitutionCalculations, signalCheckIns, userCompounds, settings] = await Promise.all([
     database.vials.toArray(),
+    database.inventoryBatches.toArray(),
     database.doses.toArray(),
     database.stacks.toArray(),
     database.schedules.toArray(),
@@ -319,6 +334,7 @@ export async function exportUserData(database: PeptideOSDatabase = defaultDb, ex
     exportedAt: exportedAt.toISOString(),
     data: {
       vials: vials.filter((vial) => !vial.deletedAt).map((vial) => stripPersistenceMetadata(vial) as Vial),
+      inventoryBatches: inventoryBatches.filter((batch) => !batch.deletedAt).map((batch) => stripPersistenceMetadata(batch) as InventoryBatch),
       doses: doses.filter((dose) => !dose.deletedAt).map((dose) => stripPersistenceMetadata(dose) as Dose),
       stacks: stacks.filter((stack) => !stack.deletedAt).map((stack) => stripPersistenceMetadata(stack) as Stack),
       schedules: schedules.filter((schedule) => !schedule.deletedAt).map((schedule) => stripPersistenceMetadata(schedule) as Schedule),
@@ -374,6 +390,9 @@ function parseUserDataExport(input: string): UserDataExport {
   if ('signalCheckIns' in data && data.signalCheckIns !== undefined) {
     assertArray(data.signalCheckIns, 'signalCheckIns');
   }
+  if ('inventoryBatches' in data && data.inventoryBatches !== undefined) {
+    assertArray(data.inventoryBatches, 'inventoryBatches');
+  }
   if ('userCompounds' in data && data.userCompounds !== undefined) {
     assertArray(data.userCompounds, 'userCompounds');
   }
@@ -387,6 +406,9 @@ function parseUserDataExport(input: string): UserDataExport {
     exportedAt: typeof parsed.exportedAt === 'string' ? parsed.exportedAt : new Date().toISOString(),
     data: {
       vials: data.vials as Vial[],
+      inventoryBatches: 'inventoryBatches' in data && Array.isArray(data.inventoryBatches)
+        ? data.inventoryBatches as InventoryBatch[]
+        : [],
       doses: data.doses as Dose[],
       stacks: data.stacks as Stack[],
       schedules: data.schedules as Schedule[],

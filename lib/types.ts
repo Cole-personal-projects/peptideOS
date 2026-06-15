@@ -143,6 +143,7 @@ export interface Compound {
 
 export interface Vial {
   id: string;
+  inventoryBatchId?: string;
   name: string;
   peptideId: string;
   containerType?: InventoryContainerType;
@@ -163,6 +164,25 @@ export interface Vial {
   reconstitutedDate: string | null;
   expirationDate: string;
   status: VialStatus;
+}
+
+export interface InventoryBatch {
+  id: string;
+  name: string;
+  peptideId: string;
+  containerType?: InventoryContainerType;
+  dateAdded: string;
+  source: string;
+  lotNumber: string;
+  mg: number;
+  totalAmount?: {
+    value: number;
+    unit: DoseUnit;
+  };
+  packageUnit?: 'vial' | 'kit';
+  packageQuantity?: number;
+  vialCount: number;
+  createdFrom: 'manual' | 'assistant' | 'import' | 'legacy';
 }
 
 export interface Dose {
@@ -277,6 +297,7 @@ export interface AppData {
   peptides: Peptide[];
   compounds: Compound[];
   vials: Vial[];
+  inventoryBatches: InventoryBatch[];
   doses: Dose[];
   stacks: Stack[];
   schedules: Schedule[];

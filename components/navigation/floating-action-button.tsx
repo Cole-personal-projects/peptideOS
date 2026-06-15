@@ -25,7 +25,7 @@ const actions: QuickAction[] = [
   { id: 'add-vial', label: 'Add Vial', icon: FlaskConical, color: 'text-accent' },
   { id: 'new-stack', label: 'New Stack', icon: Layers, color: 'text-chart-3' },
   { id: 'reconstitution', label: 'Calculate Reconstitution', icon: Calculator, color: 'text-chart-4' },
-  { id: 'ai-assistant', label: 'AI Assistant', icon: Bot, color: 'text-chart-5', href: '/more/ai-assistant' },
+  { id: 'ai-assistant', label: 'Peppi', icon: Bot, color: 'text-chart-5', href: '/more/ai-assistant' },
 ];
 
 export function FloatingActionButton() {

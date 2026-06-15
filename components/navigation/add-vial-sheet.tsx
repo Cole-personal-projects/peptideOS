@@ -77,13 +77,19 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
 
     if (vialPayloads.length === 0) return;
     
-    addVials(vialPayloads.map((vialPayload) => ({
-      ...vialPayload,
-      source,
-      lotNumber,
-      expirationDate: expirationDate.toISOString(),
-      status
-    })));
+    addVials(
+      vialPayloads.map((vialPayload) => ({
+        ...vialPayload,
+        source,
+        lotNumber,
+        expirationDate: expirationDate.toISOString(),
+        status
+      })),
+      {
+        packageUnit: usesConcentration ? 'vial' : packageUnit,
+        packageQuantity: usesConcentration ? 1 : parseFloat(packageQuantity),
+      },
+    );
 
     // Reset form
     setName('');

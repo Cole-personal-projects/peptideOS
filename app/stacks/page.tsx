@@ -51,7 +51,7 @@ export default function StacksPage() {
               variant="ghost"
               className="text-primary"
               onClick={() => setAiStackOpen(true)}
-              aria-label="AI protocol assistant"
+              aria-label="Peppi protocol assistant"
             >
               <Sparkles className="w-4 h-4 mr-1" /> AI
             </Button>

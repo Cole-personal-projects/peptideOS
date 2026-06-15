@@ -49,7 +49,7 @@ export default function AIAssistantPage() {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [pendingAction, setPendingAction] = useState<AssistantAction | null>(null);
-  const [assistantMessage, setAssistantMessage] = useState('Tell Haiku what you want to capture or change.');
+  const [assistantMessage, setAssistantMessage] = useState('Tell Peppi what you want to capture or change.');
   const trackableCompounds = getTrackableCompounds(data);
   const proposalCompounds = trackableCompounds.map((compound) => ({
     id: compound.id,
@@ -64,12 +64,12 @@ export default function AIAssistantPage() {
     if (!trimmedMessage || isSending) return;
 
     setIsSending(true);
-    const haikuProposal = await requestAssistantActionProposal(trimmedMessage, proposalCompounds);
+    const peppiProposal = await requestAssistantActionProposal(trimmedMessage, proposalCompounds);
     setIsSending(false);
 
-    if (haikuProposal) {
-      setPendingAction(haikuProposal.action);
-      setAssistantMessage(haikuProposal.message);
+    if (peppiProposal) {
+      setPendingAction(peppiProposal.action);
+      setAssistantMessage(peppiProposal.message);
       setMessage('');
       return;
     }
@@ -108,7 +108,11 @@ export default function AIAssistantPage() {
         return;
       }
 
-      addVials(vials);
+      addVials(vials, {
+        createdFrom: 'assistant',
+        packageUnit: pendingAction.payload.packageUnit,
+        packageQuantity: pendingAction.payload.packageQuantity,
+      });
       setPendingAction(null);
       setAssistantMessage('Inventory saved.');
     }
@@ -122,14 +126,14 @@ export default function AIAssistantPage() {
 
   return (
     <AppShell>
-      <PageHeader title="AI Assistant" backHref="/more" />
+      <PageHeader title="Peppi" backHref="/more" />
 
       <div className="p-4 space-y-3">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Bot className="w-4 h-4 text-primary" />
-              Haiku
+              Peppi
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -227,7 +231,7 @@ export default function AIAssistantPage() {
 
             <div className="space-y-2">
               <Textarea
-                aria-label="Message Haiku"
+                aria-label="Message Peppi"
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
                 placeholder="Energy was 7, slept 6 hours, shoulder calm today."

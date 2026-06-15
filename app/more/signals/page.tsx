@@ -96,7 +96,7 @@ export default function SignalsPage() {
                   id="signal-notes"
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
-                  placeholder="What changed, what you noticed, or what Haiku should remember"
+                  placeholder="What changed, what you noticed, or what Peppi should remember"
                 />
               </div>
 

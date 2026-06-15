@@ -505,6 +505,7 @@ export const initialAppData: AppData = {
   peptides: mockPeptides,
   compounds: [...referenceCompounds],
   vials: [],
+  inventoryBatches: [],
   doses: [],
   stacks: [],
   schedules: [],

@@ -38,7 +38,7 @@ describe('assistant action proposals', () => {
 
   test('accepts only well-formed assistant actions', () => {
     expect(isAssistantAction({
-      id: 'haiku-action-1',
+      id: 'peppi-action-1',
       type: 'add_signal_check_in',
       payload: {
         checkedAt: '2026-06-15T08:00:00.000Z',
@@ -51,7 +51,7 @@ describe('assistant action proposals', () => {
     expect(isAssistantAction(null)).toBe(false);
     expect(isAssistantAction({ type: 'add_signal_check_in' })).toBe(false);
     expect(isAssistantAction({
-      id: 'haiku-action-2',
+      id: 'peppi-action-2',
       type: 'add_signal_check_in',
       payload: {
         checkedAt: '2026-06-15T08:00:00.000Z',
@@ -64,7 +64,7 @@ describe('assistant action proposals', () => {
 
   test('accepts planned stack schedule actions', () => {
     expect(isAssistantAction({
-      id: 'haiku-schedule-action-1',
+      id: 'peppi-schedule-action-1',
       type: 'create_stack_from_protocol',
       payload: {
         name: 'AI BPC Schedule',
@@ -88,7 +88,7 @@ describe('assistant action proposals', () => {
     })).toBe(true);
 
     expect(isAssistantAction({
-      id: 'haiku-schedule-action-2',
+      id: 'peppi-schedule-action-2',
       type: 'create_stack_from_protocol',
       payload: {
         name: 'Bad Schedule',
@@ -113,7 +113,7 @@ describe('assistant action proposals', () => {
 
   test('accepts inventory vial creation actions', () => {
     expect(isAssistantAction({
-      id: 'haiku-inventory-action-1',
+      id: 'peppi-inventory-action-1',
       type: 'create_inventory_vials',
       payload: {
         name: 'AI KPV kit',
@@ -128,7 +128,7 @@ describe('assistant action proposals', () => {
     })).toBe(true);
 
     expect(isAssistantAction({
-      id: 'haiku-inventory-action-2',
+      id: 'peppi-inventory-action-2',
       type: 'create_inventory_vials',
       payload: {
         name: 'Bad inventory',

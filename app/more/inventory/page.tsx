@@ -43,11 +43,109 @@ export default function InventoryPage() {
   const activeVials = data.vials.filter(v => v.status === 'active');
   const sealedVials = data.vials.filter(v => v.status === 'sealed');
   const finishedVials = data.vials.filter(v => v.status === 'finished' || v.status === 'expired');
+  const batchesById = new Map(data.inventoryBatches.map((batch) => [batch.id, batch]));
 
   const formatDate = (date: string) => new Date(`${date.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+  });
+
+  const getInventoryGroups = (vials: typeof data.vials) => {
+    const groupedVials = new Map<string, typeof data.vials>();
+    const ungroupedVials: typeof data.vials = [];
+
+    for (const vial of vials) {
+      if (!vial.inventoryBatchId) {
+        ungroupedVials.push(vial);
+        continue;
+      }
+
+      groupedVials.set(vial.inventoryBatchId, [...(groupedVials.get(vial.inventoryBatchId) ?? []), vial]);
+    }
+
+    return [
+      ...Array.from(groupedVials.entries()).map(([batchId, batchVials]) => ({
+        type: 'batch' as const,
+        batchId,
+        vials: batchVials,
+      })),
+      ...ungroupedVials.map((vial) => ({
+        type: 'vial' as const,
+        vial,
+      })),
+    ].sort((a, b) => {
+      const aDate = a.type === 'batch' ? a.vials[0]?.dateAdded ?? '' : a.vial.dateAdded;
+      const bDate = b.type === 'batch' ? b.vials[0]?.dateAdded ?? '' : b.vial.dateAdded;
+      return bDate.localeCompare(aDate);
+    });
+  };
+
+  const renderBatchCard = (batchId: string, batchVials: typeof data.vials) => {
+    const firstVial = batchVials[0];
+    if (!firstVial) return null;
+
+    const batch = batchesById.get(batchId);
+    const compound = trackableCompounds.find((candidate) => candidate.id === firstVial.peptideId);
+    const metrics = getVialInventoryMetrics(firstVial, data.doses);
+    const statusLabel = firstVial.status === 'expired'
+      ? 'expired'
+      : firstVial.status === 'finished'
+        ? 'finished'
+        : firstVial.status;
+    const batchName = batch?.name ?? firstVial.name.replace(/\s+vial\s+\d+\s+of\s+\d+$/i, '');
+    const statusCounts = batchVials.reduce<Record<string, number>>((counts, vial) => ({
+      ...counts,
+      [vial.status]: (counts[vial.status] ?? 0) + 1,
+    }), {});
+    const statusSummary = Object.entries(statusCounts)
+      .map(([status, count]) => `${count} ${status} vial${count === 1 ? '' : 's'}`)
+      .join(' · ');
+
+    return (
+      <Link key={batchId} href={`/more/inventory/${firstVial.id}`}>
+        <Card className="hover:bg-secondary/30 transition-colors">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 space-y-1">
+                <h3 className="truncate font-semibold">{batchName}</h3>
+                <p className="text-xs text-muted-foreground">
+                  {compound?.name ?? 'Unknown compound'} · Added {formatDate(firstVial.dateAdded)}
+                </p>
+              </div>
+              <Badge variant={firstVial.status === 'active' ? 'default' : 'secondary'} className="shrink-0 capitalize">
+                {statusLabel}
+              </Badge>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Inventory</p>
+                <p className="font-medium">{statusSummary}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Amount</p>
+                <p className="font-medium">{metrics.originalLabel} each</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Source</p>
+                <p className="font-medium">{firstVial.source || 'Unknown'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Lot</p>
+                <p className="font-medium">{firstVial.lotNumber || 'Unknown'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    );
+  };
+
+  const renderInventoryItems = (vials: typeof data.vials) => getInventoryGroups(vials).map((item) => {
+    if (item.type === 'vial') return renderVialCard(item.vial);
+    if (item.vials.length === 1) return renderVialCard(item.vials[0]);
+    return renderBatchCard(item.batchId, item.vials);
   });
 
   const renderVialCard = (vial: typeof data.vials[0]) => {
@@ -188,7 +286,7 @@ export default function InventoryPage() {
             {activeVials.length === 0 ? (
               renderInventoryEmpty('inventory-active-empty')
             ) : (
-              activeVials.map(renderVialCard)
+              renderInventoryItems(activeVials)
             )}
           </TabsContent>
 
@@ -196,7 +294,7 @@ export default function InventoryPage() {
             {sealedVials.length === 0 ? (
               renderInventoryEmpty('inventory-sealed-empty')
             ) : (
-              sealedVials.map(renderVialCard)
+              renderInventoryItems(sealedVials)
             )}
           </TabsContent>
 
@@ -204,7 +302,7 @@ export default function InventoryPage() {
             {finishedVials.length === 0 ? (
               renderInventoryEmpty('inventory-history-empty')
             ) : (
-              finishedVials.map(renderVialCard)
+              renderInventoryItems(finishedVials)
             )}
           </TabsContent>
         </Tabs>

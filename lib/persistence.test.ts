@@ -98,6 +98,61 @@ describe('Dexie persistence', () => {
     expect(loaded.stacks).toEqual([]);
   });
 
+  test('saves and reloads inventory batches linked to physical vials', async () => {
+    await savePersistedAppData(db, {
+      ...clone(initialAppData),
+      vials: [
+        {
+          ...mockVials[0],
+          id: 'vial-batch-1',
+          name: 'KPV kit vial 1 of 10',
+          peptideId: 'kpv',
+          inventoryBatchId: 'batch-kpv-kit',
+          totalAmount: { value: 10, unit: 'mg' },
+          lotNumber: 'KPV-001',
+        },
+        {
+          ...mockVials[0],
+          id: 'vial-batch-2',
+          name: 'KPV kit vial 2 of 10',
+          peptideId: 'kpv',
+          inventoryBatchId: 'batch-kpv-kit',
+          totalAmount: { value: 10, unit: 'mg' },
+          lotNumber: 'KPV-001',
+        },
+      ],
+      inventoryBatches: [
+        {
+          id: 'batch-kpv-kit',
+          name: 'KPV kit',
+          peptideId: 'kpv',
+          containerType: 'lyophilized-vial',
+          dateAdded: '2026-06-15',
+          source: 'Source A',
+          lotNumber: 'KPV-001',
+          mg: 10,
+          totalAmount: { value: 10, unit: 'mg' },
+          packageUnit: 'kit',
+          packageQuantity: 1,
+          vialCount: 2,
+          createdFrom: 'manual',
+        },
+      ],
+    });
+
+    const loaded = await loadPersistedAppData(db, initialAppData);
+    const exported = await exportUserData(db, new Date('2026-06-15T00:00:00.000Z'));
+
+    expect(loaded.inventoryBatches).toEqual([
+      expect.objectContaining({ id: 'batch-kpv-kit', vialCount: 2 }),
+    ]);
+    expect(loaded.vials.map((vial) => vial.inventoryBatchId)).toEqual(['batch-kpv-kit', 'batch-kpv-kit']);
+    expect(exported.schemaVersion).toBe(6);
+    expect(exported.data.inventoryBatches).toEqual([
+      expect.objectContaining({ id: 'batch-kpv-kit', vialCount: 2 }),
+    ]);
+  });
+
   test('prunes historical bundled demo data from older persisted databases while keeping user records', async () => {
     const now = '2026-06-14T00:00:00.000Z';
     const userVial = {
@@ -394,7 +449,7 @@ describe('Dexie persistence', () => {
 
     const exported = await exportUserData(db, new Date('2026-05-23T00:00:00.000Z'));
 
-    expect(exported.schemaVersion).toBe(5);
+    expect(exported.schemaVersion).toBe(6);
     expect(exported.exportedAt).toBe('2026-05-23T00:00:00.000Z');
     expect(exported.data.vials).toHaveLength(1);
     expect(exported.data.vials[0]?.name).toBe('Exported vial');
