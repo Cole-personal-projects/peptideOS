@@ -7,6 +7,28 @@ export type AssistantAction =
       payload: Omit<SignalCheckIn, 'id'>;
     };
 
+export interface AssistantActionProposal {
+  message: string;
+  action: AssistantAction | null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+export function isAssistantAction(value: unknown): value is AssistantAction {
+  if (!isRecord(value) || value.type !== 'add_signal_check_in' || typeof value.id !== 'string') {
+    return false;
+  }
+
+  const payload = value.payload;
+  return isRecord(payload)
+    && typeof payload.checkedAt === 'string'
+    && typeof payload.energy === 'number'
+    && typeof payload.sleepHours === 'number'
+    && typeof payload.notes === 'string';
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }

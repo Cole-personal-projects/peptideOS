@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { proposeAssistantActionFromMessage } from './assistant-actions';
+import { isAssistantAction, proposeAssistantActionFromMessage } from './assistant-actions';
 
 describe('assistant action proposals', () => {
   test('creates a Signal check-in action from a user note', () => {
@@ -32,5 +32,31 @@ describe('assistant action proposals', () => {
 
     expect(action?.payload.energy).toBe(10);
     expect(action?.payload.sleepHours).toBe(24);
+  });
+
+  test('accepts only well-formed assistant actions', () => {
+    expect(isAssistantAction({
+      id: 'haiku-action-1',
+      type: 'add_signal_check_in',
+      payload: {
+        checkedAt: '2026-06-15T08:00:00.000Z',
+        energy: 7,
+        sleepHours: 6,
+        notes: 'shoulder calm',
+      },
+    })).toBe(true);
+
+    expect(isAssistantAction(null)).toBe(false);
+    expect(isAssistantAction({ type: 'add_signal_check_in' })).toBe(false);
+    expect(isAssistantAction({
+      id: 'haiku-action-2',
+      type: 'add_signal_check_in',
+      payload: {
+        checkedAt: '2026-06-15T08:00:00.000Z',
+        energy: '7',
+        sleepHours: 6,
+        notes: 'shoulder calm',
+      },
+    })).toBe(false);
   });
 });
