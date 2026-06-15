@@ -18,6 +18,7 @@ import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose } from '@/lib/dose-helpers';
 import { useApp } from '@/lib/context';
 import type { ProtocolCompoundInput } from '@/lib/ai-protocol';
+import { buildNewVialBatch, getPhysicalVialCount } from '@/lib/vial-create';
 
 async function requestAssistantActionProposal(message: string, compounds: ProtocolCompoundInput[]): Promise<AssistantActionProposal | null> {
   try {
@@ -43,7 +44,7 @@ async function requestAssistantActionProposal(message: string, compounds: Protoc
 }
 
 export default function AIAssistantPage() {
-  const { data, addSignalCheckIn, addStack } = useApp();
+  const { data, addSignalCheckIn, addStack, addVials } = useApp();
   const [aiStackOpen, setAiStackOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -98,6 +99,18 @@ export default function AIAssistantPage() {
       addStack(pendingAction.payload);
       setPendingAction(null);
       setAssistantMessage('Schedule saved.');
+    }
+
+    if (pendingAction.type === 'create_inventory_vials') {
+      const vials = buildNewVialBatch(pendingAction.payload);
+      if (vials.length < 1) {
+        setAssistantMessage('I could not create inventory from that draft.');
+        return;
+      }
+
+      addVials(vials);
+      setPendingAction(null);
+      setAssistantMessage('Inventory saved.');
     }
   };
 
@@ -171,6 +184,38 @@ export default function AIAssistantPage() {
                   <Button size="sm" onClick={confirmAction}>
                     <Check className="w-4 h-4" />
                     Confirm Schedule
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setPendingAction(null)}>
+                    <X className="w-4 h-4" />
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {pendingAction?.type === 'create_inventory_vials' && (
+              <div className="space-y-3 rounded-md border bg-background p-3">
+                <div>
+                  <p className="font-medium">{pendingAction.payload.name}</p>
+                  <p className="text-sm text-muted-foreground">{getCompoundName(pendingAction.payload.peptideId)}</p>
+                </div>
+                <div className="rounded-md bg-secondary px-3 py-2 text-sm">
+                  <p className="font-medium">
+                    {pendingAction.payload.totalAmountValue && pendingAction.payload.totalAmountUnit
+                      ? `${formatDose(pendingAction.payload.totalAmountValue, pendingAction.payload.totalAmountUnit)} each`
+                      : 'Amount not set'}
+                    {' · '}
+                    {getPhysicalVialCount(pendingAction.payload)} sealed vials
+                  </p>
+                  <p className="text-muted-foreground">
+                    {pendingAction.payload.packageUnit === 'kit' ? `${pendingAction.payload.packageQuantity ?? 1} kit` : `${pendingAction.payload.packageQuantity ?? 1} vial`}
+                    {pendingAction.payload.containerType ? ` · ${pendingAction.payload.containerType.replaceAll('-', ' ')}` : ''}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={confirmAction}>
+                    <Check className="w-4 h-4" />
+                    Confirm Inventory
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setPendingAction(null)}>
                     <X className="w-4 h-4" />

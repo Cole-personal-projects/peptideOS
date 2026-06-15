@@ -1,6 +1,56 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('AI assistant action approvals', () => {
+  test('proposes and confirms sealed kit inventory from chat', async ({ page }) => {
+    await page.route('**/api/ai/propose-action', async (route) => {
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: 'I will add 10 sealed KPV vials, 10 mg each. Confirm?',
+          action: {
+            id: 'haiku-inventory-action-1',
+            type: 'create_inventory_vials',
+            payload: {
+              name: 'AI KPV kit',
+              peptideId: 'kpv',
+              dateAdded: '2026-06-15',
+              containerType: 'lyophilized-vial',
+              totalAmountValue: 10,
+              totalAmountUnit: 'mg',
+              packageUnit: 'kit',
+              packageQuantity: 1,
+            },
+          },
+        }),
+      });
+    });
+
+    await page.goto('/more/ai-assistant');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('textbox', { name: 'Message Haiku' }).fill('Add one kit of KPV 10mg sealed.');
+    await page.getByRole('button', { name: 'Send message' }).click();
+
+    await expect(page.getByText('I will add 10 sealed KPV vials, 10 mg each. Confirm?')).toBeVisible();
+    await expect(page.getByText('AI KPV kit')).toBeVisible();
+    await expect(page.getByText('KPV', { exact: true })).toBeVisible();
+    await expect(page.getByText('10 mg each · 10 sealed vials')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Confirm Inventory' }).click();
+    await expect(page.getByText('Inventory saved.')).toBeVisible();
+
+    await page.getByRole('link', { name: 'More' }).click();
+    await page.getByRole('link', { name: /Inventory/ }).click();
+    await page.getByRole('tab', { name: /Sealed/ }).click();
+
+    await expect(page.getByRole('link', { name: /AI KPV kit vial/ })).toHaveCount(10);
+    await expect(page.getByRole('link', { name: /AI KPV kit vial 1 of 10/ })).toContainText('10 mg');
+
+    await page.reload();
+    await page.getByRole('tab', { name: /Sealed/ }).click();
+    await expect(page.getByRole('link', { name: /AI KPV kit vial/ })).toHaveCount(10);
+  });
+
   test('proposes and confirms a schedule from chat', async ({ page }) => {
     await page.route('**/api/ai/propose-action', async (route) => {
       await route.fulfill({
