@@ -36,11 +36,11 @@ const parsedProposalSchema = z.object({
   protocol: parsedProtocolSchema.nullable().describe('Structured protocol schedule data, or null when the user did not ask to create a schedule.'),
   inventory: z.object({
     compoundName: z.string().describe('Compound name stated by the user.'),
-    vialAmountValue: z.number().nullable().describe('Amount in each physical vial if stated, otherwise null.'),
-    vialAmountUnit: z.enum(['mcg', 'mg', 'iu']).nullable().describe('Unit for the amount in each physical vial, otherwise null.'),
-    containerType: z.enum(['lyophilized-vial', 'multi-dose-vial', 'prefilled-pen', 'capsule-bottle', 'other']).nullable().describe('Container type stated by the user, or lyophilized-vial for lyophilized/sealed peptide vials.'),
-    packageUnit: z.enum(['vial', 'kit']).nullable().describe('kit when the user says kit, otherwise vial when they say vial.'),
-    packageQuantity: z.number().nullable().describe('Number of kits or vials stated by the user. Null when not stated.'),
+    vialAmountValue: z.number().describe('Amount in each physical vial if stated, otherwise 0.'),
+    vialAmountUnit: z.enum(['mcg', 'mg', 'iu', 'unknown']).describe('Unit for the amount in each physical vial, otherwise unknown.'),
+    containerType: z.enum(['lyophilized-vial', 'multi-dose-vial', 'prefilled-pen', 'capsule-bottle', 'other', 'unknown']).describe('Container type stated by the user, or lyophilized-vial for lyophilized/sealed peptide vials.'),
+    packageUnit: z.enum(['vial', 'kit', 'unknown']).describe('kit when the user says kit, vial when they say vial, otherwise unknown.'),
+    packageQuantity: z.number().describe('Number of kits or vials stated by the user. Use 0 when not stated.'),
   }).nullable().describe('Structured inventory intake data, or null when the user did not ask to add inventory.'),
 });
 
@@ -56,12 +56,20 @@ function buildActionProposal(
   now = new Date(),
 ): AssistantActionProposal {
   if (parsed.inventory) {
-    const result = parsedInventoryToVialDraft(parsed.inventory, compounds, now);
+    const inventory = {
+      compoundName: parsed.inventory.compoundName,
+      vialAmountValue: parsed.inventory.vialAmountValue > 0 ? parsed.inventory.vialAmountValue : null,
+      vialAmountUnit: parsed.inventory.vialAmountUnit === 'unknown' ? null : parsed.inventory.vialAmountUnit,
+      containerType: parsed.inventory.containerType === 'unknown' ? null : parsed.inventory.containerType,
+      packageUnit: parsed.inventory.packageUnit === 'unknown' ? null : parsed.inventory.packageUnit,
+      packageQuantity: parsed.inventory.packageQuantity > 0 ? parsed.inventory.packageQuantity : null,
+    };
+    const result = parsedInventoryToVialDraft(inventory, compounds, now);
     if (!result.draft) {
       return {
         message: result.unmatchedCompound
           ? `I could not match ${result.unmatchedCompound} to the library.`
-          : `I need the vial amount for ${parsed.inventory.compoundName} before I can add inventory.`,
+          : `I need the vial amount for ${inventory.compoundName} before I can add inventory.`,
         action: null,
       };
     }
@@ -146,7 +154,7 @@ const SYSTEM_PROMPT = [
   '- Prefer inventory output when the user asks to add, record, scan, or inventory vials, kits, pens, bottles, or containers.',
   '- Prefer protocol schedule output when the user asks to schedule, plan, or create a protocol.',
   '- For protocols, never invent compounds, doses, frequencies, or routes. If a dose is missing, leave doseValue null.',
-  '- For inventory, never invent compound names or vial amounts. If amount per vial is missing, leave vialAmountValue and vialAmountUnit null.',
+  '- For inventory, never invent compound names or vial amounts. If amount per vial is missing, set vialAmountValue to 0 and vialAmountUnit to unknown.',
   '- For inventory, a kit means 10 physical vials. Return packageUnit kit and the number of kits.',
   '- For inventory, sealed lyophilized peptide vials should use containerType lyophilized-vial.',
   '- If the user gives energy, treat it as a 0-10 score.',
