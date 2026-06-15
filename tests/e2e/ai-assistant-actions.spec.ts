@@ -1,6 +1,62 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('AI assistant action approvals', () => {
+  test('proposes and confirms a schedule from chat', async ({ page }) => {
+    await page.route('**/api/ai/propose-action', async (route) => {
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: 'I will create this schedule for review.',
+          action: {
+            id: 'haiku-schedule-action-1',
+            type: 'create_stack_from_protocol',
+            payload: {
+              name: 'AI BPC Schedule',
+              description: 'BPC-157 daily protocol from chat.',
+              peptides: [
+                {
+                  peptideId: 'bpc-157',
+                  doseValue: 250,
+                  doseUnit: 'mcg',
+                  frequency: 'daily',
+                  route: 'subq',
+                  timing: 'Morning',
+                  schedule: {
+                    frequency: 'daily',
+                    timesOfDay: ['08:00'],
+                  },
+                },
+              ],
+              startDate: '2026-06-15T08:00:00.000Z',
+              durationDays: 28,
+              status: 'planned',
+              notes: 'Created from AI assistant approval.',
+            },
+          },
+        }),
+      });
+    });
+
+    await page.goto('/more/ai-assistant');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('textbox', { name: 'Message Haiku' }).fill('BPC-157 250 mcg daily for 4 weeks at 8am.');
+    await page.getByRole('button', { name: 'Send message' }).click();
+
+    await expect(page.getByText('I will create this schedule for review.')).toBeVisible();
+    await expect(page.getByText('AI BPC Schedule')).toBeVisible();
+    await expect(page.getByText('BPC-157', { exact: true })).toBeVisible();
+    await expect(page.getByText('250 mcg · daily · SUBQ · Morning')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Confirm Schedule' }).click();
+    await expect(page.getByText('Schedule saved.')).toBeVisible();
+
+    await page.getByRole('link', { name: 'Stacks' }).click();
+    await expect(page.getByText('AI BPC Schedule')).toBeVisible();
+    await page.reload();
+    await expect(page.getByText('AI BPC Schedule')).toBeVisible();
+  });
+
   test('uses the Haiku action proposal response when available', async ({ page }) => {
     await page.route('**/api/ai/propose-action', async (route) => {
       await route.fulfill({
