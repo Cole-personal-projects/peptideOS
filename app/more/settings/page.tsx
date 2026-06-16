@@ -90,7 +90,7 @@ export default function SettingsPage() {
     <AppShell>
       <PageHeader title="Settings" backHref="/more" />
 
-      <div className="p-4 space-y-4">
+      <div data-testid="settings-content" className="mx-auto w-full max-w-3xl p-4 space-y-4">
         {/* Account */}
         <Card>
           <CardHeader className="pb-2">

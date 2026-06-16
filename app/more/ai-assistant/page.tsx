@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from 'react';
-import { Bot, Check, Send, Sparkles, X } from 'lucide-react';
+import { Bot, Check, Plus, Send, X } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { AiStackSheet } from '@/components/navigation/ai-stack-sheet';
 import {
   isAssistantAction,
   proposeAssistantActionFromMessage,
@@ -19,6 +18,25 @@ import { formatDose } from '@/lib/dose-helpers';
 import { useApp } from '@/lib/context';
 import type { ProtocolCompoundInput } from '@/lib/ai-protocol';
 import { buildNewVialBatch, getPhysicalVialCount } from '@/lib/vial-create';
+
+const workflowPrompts = [
+  {
+    label: 'Add to my schedule',
+    prompt: 'Add to my schedule: ',
+  },
+  {
+    label: 'Add inventory',
+    prompt: 'Add inventory: ',
+  },
+  {
+    label: 'Log Signal',
+    prompt: 'Log Signal: energy was ',
+  },
+  {
+    label: 'Calculate reconstitution',
+    prompt: 'Calculate reconstitution: ',
+  },
+];
 
 async function requestAssistantActionProposal(message: string, compounds: ProtocolCompoundInput[]): Promise<AssistantActionProposal | null> {
   try {
@@ -45,7 +63,7 @@ async function requestAssistantActionProposal(message: string, compounds: Protoc
 
 export default function AIAssistantPage() {
   const { data, addSignalCheckIn, addStack, addVials } = useApp();
-  const [aiStackOpen, setAiStackOpen] = useState(false);
+  const [promptMenuOpen, setPromptMenuOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [pendingAction, setPendingAction] = useState<AssistantAction | null>(null);
@@ -84,6 +102,11 @@ export default function AIAssistantPage() {
     setPendingAction(nextAction);
     setAssistantMessage('I will add this Signal check-in.');
     setMessage('');
+  };
+
+  const applyWorkflowPrompt = (prompt: string) => {
+    setMessage(prompt);
+    setPromptMenuOpen(false);
   };
 
   const confirmAction = () => {
@@ -234,29 +257,40 @@ export default function AIAssistantPage() {
                 aria-label="Message Peppi"
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
-                placeholder="Energy was 7, slept 6 hours, shoulder calm today."
+                placeholder="Ask Peppi to add inventory, build a schedule, log a Signal, or run app math."
               />
-              <Button className="w-full" onClick={sendMessage} disabled={!message.trim() || isSending}>
-                <Send className="w-4 h-4" />
-                {isSending ? 'Sending...' : 'Send message'}
-              </Button>
+              {promptMenuOpen && (
+                <div className="grid grid-cols-2 gap-2" aria-label="Peppi workflow prompts">
+                  {workflowPrompts.map((workflowPrompt) => (
+                    <Button
+                      key={workflowPrompt.label}
+                      type="button"
+                      variant="secondary"
+                      className="justify-start text-left"
+                      onClick={() => applyWorkflowPrompt(workflowPrompt.prompt)}
+                    >
+                      {workflowPrompt.label}
+                    </Button>
+                  ))}
+                </div>
+              )}
+              <div className="grid grid-cols-[44px_1fr] gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  aria-label="Open Peppi workflow prompts"
+                  aria-expanded={promptMenuOpen}
+                  onClick={() => setPromptMenuOpen((open) => !open)}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+                <Button onClick={sendMessage} disabled={!message.trim() || isSending}>
+                  <Send className="w-4 h-4" />
+                  {isSending ? 'Sending...' : 'Send message'}
+                </Button>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-secondary/30">
-          <CardContent className="py-12 text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-              <Bot className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="font-semibold mb-2">Protocol Assistant</h3>
-            <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
-              Describe a protocol in plain English and the assistant builds the stack and dosing schedules for you.
-            </p>
-            <Button onClick={() => setAiStackOpen(true)}>
-              <Sparkles className="w-4 h-4 mr-2" />
-              Describe a protocol
-            </Button>
           </CardContent>
         </Card>
 
@@ -266,7 +300,6 @@ export default function AIAssistantPage() {
         </p>
       </div>
 
-      <AiStackSheet open={aiStackOpen} onOpenChange={setAiStackOpen} />
     </AppShell>
   );
 }

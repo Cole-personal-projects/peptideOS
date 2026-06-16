@@ -21,4 +21,18 @@ test.describe('Peppi assistant entrypoints', () => {
     await expect(aiAssistantLink).toBeVisible();
     await expect(aiAssistantLink).not.toContainText('Soon');
   });
+
+  test('keeps Peppi as one chat with workflow prompts inside the composer', async ({ page }) => {
+    await page.goto('/more/ai-assistant');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Protocol Assistant' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Describe a protocol' })).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Open Peppi workflow prompts' }).click();
+    await page.getByRole('button', { name: 'Add to my schedule' }).click();
+
+    await expect(page.getByRole('textbox', { name: 'Message Peppi' })).toHaveValue(/schedule/i);
+  });
 });
