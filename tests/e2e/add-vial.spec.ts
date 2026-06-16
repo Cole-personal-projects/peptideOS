@@ -127,6 +127,34 @@ test.describe('add vial', () => {
     await expect(page.getByText('KPV-EDIT-001')).toBeVisible();
   });
 
+  test('deletes an inventory item after confirmation', async ({ page }) => {
+    await page.goto('/more/inventory');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Vial name' }).fill('Delete Me KPV vial');
+    await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
+    await page.getByRole('option', { name: 'KPV' }).click();
+    await page.getByRole('spinbutton', { name: 'Vial size' }).fill('10');
+    await page.getByRole('button', { name: 'Add Vial' }).click();
+
+    await page.getByRole('tab', { name: /Sealed/ }).click();
+    await page.getByRole('link', { name: /Delete Me KPV vial/ }).click();
+    await page.getByRole('button', { name: 'Delete inventory' }).click();
+
+    const dialog = page.getByRole('alertdialog', { name: 'Delete inventory item?' });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Delete inventory' }).click();
+
+    await expect(page).toHaveURL(/\/more\/inventory$/);
+    await page.getByRole('tab', { name: /Sealed/ }).click();
+    await expect(page.getByRole('link', { name: /Delete Me KPV vial/ })).toHaveCount(0);
+
+    await page.reload();
+    await page.getByRole('tab', { name: /Sealed/ }).click();
+    await expect(page.getByRole('link', { name: /Delete Me KPV vial/ })).toHaveCount(0);
+  });
+
   test('creates a concentration-based testosterone multi-dose vial from quick actions', async ({ page }) => {
     await page.goto('/more/inventory');
 

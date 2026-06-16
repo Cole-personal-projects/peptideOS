@@ -32,6 +32,7 @@ interface AppContextType {
   addVial: (vial: Omit<Vial, 'id'>, options?: AddInventoryBatchOptions) => void;
   addVials: (vials: Array<Omit<Vial, 'id'>>, options?: AddInventoryBatchOptions) => void;
   updateVial: (id: string, updates: Partial<Vial>) => void;
+  deleteInventoryItem: (id: string) => Promise<void>;
   // Doses
   getDose: (id: string) => Dose | undefined;
   addDose: (dose: Omit<Dose, 'id'>) => void;
@@ -50,6 +51,7 @@ interface AppContextType {
   getStack: (id: string) => Stack | undefined;
   addStack: (stack: Omit<Stack, 'id'>) => void;
   updateStack: (id: string, updates: Partial<Stack>) => void;
+  deleteStack: (id: string) => Promise<void>;
   activateStack: (id: string) => void;
   updateStackItemSchedule: (stackId: string, stackPeptideId: string, preset: SchedulePreset) => void;
   getScheduleLogsForStack: (stackId: string) => ScheduleLog[];
@@ -200,6 +202,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   }, [setAndPersistData]);
 
+  const deleteInventoryItem = useCallback((id: string) => {
+    return setAndPersistData(prev => {
+      const targetVial = prev.vials.find((vial) => vial.id === id);
+      if (!targetVial) return prev;
+
+      const vialIdsToDelete = new Set(
+        prev.vials
+          .filter((vial) => (
+            targetVial.inventoryBatchId
+              ? vial.inventoryBatchId === targetVial.inventoryBatchId
+              : vial.id === targetVial.id
+          ))
+          .map((vial) => vial.id),
+      );
+      const vials = prev.vials.filter((vial) => !vialIdsToDelete.has(vial.id));
+      const remainingBatchIds = new Set(vials.map((vial) => vial.inventoryBatchId).filter(Boolean));
+
+      return {
+        ...prev,
+        vials,
+        inventoryBatches: prev.inventoryBatches.filter((batch) => remainingBatchIds.has(batch.id)),
+        doses: prev.doses.filter((dose) => !vialIdsToDelete.has(dose.vialId)),
+      };
+    });
+  }, [setAndPersistData]);
+
   // Doses
   const getDose = useCallback((id: string) => {
     return data.doses.find(d => d.id === id);
@@ -335,6 +363,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   }, [setAndPersistData]);
 
+  const deleteStack = useCallback((id: string) => {
+    return setAndPersistData(prev => {
+      const scheduleIdsToDelete = new Set(
+        prev.schedules
+          .filter((schedule) => schedule.stackId === id)
+          .map((schedule) => schedule.id),
+      );
+      const scheduleLogIdsToDelete = new Set(
+        prev.scheduleLogs
+          .filter((log) => log.stackId === id || scheduleIdsToDelete.has(log.scheduleId))
+          .map((log) => log.id),
+      );
+
+      return {
+        ...prev,
+        stacks: prev.stacks.filter((stack) => stack.id !== id),
+        schedules: prev.schedules.filter((schedule) => schedule.stackId !== id),
+        scheduleLogs: prev.scheduleLogs.filter((log) => (
+          log.stackId !== id && !scheduleIdsToDelete.has(log.scheduleId)
+        )),
+        doses: prev.doses.filter((dose) => (
+          !dose.scheduleLogId || !scheduleLogIdsToDelete.has(dose.scheduleLogId)
+        )),
+      };
+    });
+  }, [setAndPersistData]);
+
   const activateStack = useCallback((id: string) => {
     void setAndPersistData(prev => {
       const stack = prev.stacks.find((candidate) => candidate.id === id);
@@ -462,6 +517,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addVial,
       addVials,
       updateVial,
+      deleteInventoryItem,
       getDose,
       addDose,
       updateDose,
@@ -476,6 +532,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       getStack,
       addStack,
       updateStack,
+      deleteStack,
       activateStack,
       updateStackItemSchedule,
       getScheduleLogsForStack,
