@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register'
+import { AuthProvider } from '@/lib/auth-context'
 import { AppProvider } from '@/lib/context'
 import './globals.css'
 
@@ -37,9 +38,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark bg-background">
       <body className="font-sans antialiased">
-        <AppProvider>
-          {children}
-        </AppProvider>
+        <AuthProvider>
+          <AppProvider>
+            {children}
+          </AppProvider>
+        </AuthProvider>
         <ServiceWorkerRegister />
       </body>
     </html>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from 'react';
-import { Moon, Sun, Fingerprint, Download, Shield, Trash2, Upload } from 'lucide-react';
+import { Moon, Sun, Fingerprint, Download, Shield, Trash2, Upload, UserRound } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import {
@@ -18,11 +18,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/lib/auth-context';
 import { useApp } from '@/lib/context';
 
 export default function SettingsPage() {
   const { data, toggleDarkMode, toggleBiometricLock, exportAllData, importAllData, clearAllData } = useApp();
+  const { config: authConfig, status: authStatus, user, signInWithEmail, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [email, setEmail] = useState('');
+  const [authMessage, setAuthMessage] = useState('');
+  const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
   const [importStatus, setImportStatus] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
@@ -57,11 +63,102 @@ export default function SettingsPage() {
     }
   };
 
+  const handleEmailSignIn = async () => {
+    setIsSubmittingAuth(true);
+    setAuthMessage('');
+
+    try {
+      const result = await signInWithEmail(email);
+      setAuthMessage(result.message);
+    } finally {
+      setIsSubmittingAuth(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    setIsSubmittingAuth(true);
+
+    try {
+      await signOut();
+      setAuthMessage('Signed out.');
+    } finally {
+      setIsSubmittingAuth(false);
+    }
+  };
+
   return (
     <AppShell>
       <PageHeader title="Settings" backHref="/more" />
 
       <div className="p-4 space-y-4">
+        {/* Account */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Account</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-start gap-3">
+              <UserRound className="mt-0.5 h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium text-sm">
+                  {authStatus === 'signed-in' ? user?.email : 'Local-only mode'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {authStatus === 'signed-in'
+                    ? 'Signed in. Cloud sync will be added in a future slice.'
+                    : 'Your data remains on this device until you sign in and cloud sync is available.'}
+                </p>
+                {!authConfig.enabled && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Sign-in is ready for Supabase public config.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {authStatus === 'signed-in' ? (
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                disabled={isSubmittingAuth}
+                onClick={() => void handleSignOut()}
+              >
+                Sign out
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="account-email">Email address</Label>
+                  <Input
+                    id="account-email"
+                    aria-label="Email address"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  disabled={isSubmittingAuth}
+                  onClick={() => void handleEmailSignIn()}
+                >
+                  {isSubmittingAuth ? 'Sending sign-in link...' : 'Send sign-in link'}
+                </Button>
+              </div>
+            )}
+
+            {authMessage && (
+              <p className="rounded-md bg-secondary p-3 text-sm text-muted-foreground" role="status" aria-live="polite">
+                {authMessage}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Appearance */}
         <Card>
           <CardHeader className="pb-2">
