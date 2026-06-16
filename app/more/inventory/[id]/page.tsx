@@ -40,6 +40,18 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
   const [isDeletePending, setIsDeletePending] = useState(false);
   const [bacWaterInput, setBacWaterInput] = useState('2');
   const vial = getVial(id);
+  const [editName, setEditName] = useState(vial?.name ?? '');
+  const [editDateAdded, setEditDateAdded] = useState(vial?.dateAdded.slice(0, 10) ?? '');
+  const [editExpirationDate, setEditExpirationDate] = useState(vial?.expirationDate.slice(0, 10) ?? '');
+  const [editSource, setEditSource] = useState(vial?.source ?? '');
+  const [editLotNumber, setEditLotNumber] = useState(vial?.lotNumber ?? '');
+  const [editAmount, setEditAmount] = useState((vial?.totalAmount?.value ?? vial?.mg ?? '').toString());
+  const [editAmountUnit, setEditAmountUnit] = useState<DoseUnit>(vial?.totalAmount?.unit ?? 'mg');
+  const bacWaterMl = Number(bacWaterInput);
+  const reconstitutionPreview = useMemo(
+    () => vial ? getReconstitutionPreview({ vial, bacWaterMl }) : null,
+    [vial, bacWaterMl]
+  );
 
   if (!vial) {
     if (isDeletePending) return null;
@@ -49,13 +61,6 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
   const compound = getTrackableCompounds(data).find((candidate) => candidate.id === vial.peptideId);
   const canReconstitute = isReconstitutableCompound(compound);
   const inventoryMetrics = getVialInventoryMetrics(vial, data.doses);
-  const [editName, setEditName] = useState(vial.name);
-  const [editDateAdded, setEditDateAdded] = useState(vial.dateAdded.slice(0, 10));
-  const [editExpirationDate, setEditExpirationDate] = useState(vial.expirationDate.slice(0, 10));
-  const [editSource, setEditSource] = useState(vial.source);
-  const [editLotNumber, setEditLotNumber] = useState(vial.lotNumber);
-  const [editAmount, setEditAmount] = useState((vial.totalAmount?.value ?? vial.mg).toString());
-  const [editAmountUnit, setEditAmountUnit] = useState<DoseUnit>(vial.totalAmount?.unit ?? 'mg');
   const canEditTotalAmount = !vial.concentration;
 
   const getDaysUntilExpiration = () => {
@@ -78,11 +83,6 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
   const progress = getExpirationProgress();
   const isExpiringSoon = daysLeft <= 7 && daysLeft > 0;
   const isExpired = daysLeft <= 0;
-  const bacWaterMl = Number(bacWaterInput);
-  const reconstitutionPreview = useMemo(
-    () => getReconstitutionPreview({ vial, bacWaterMl }),
-    [vial, bacWaterMl]
-  );
 
   const handleMarkFinished = () => {
     updateVial(vial.id, { status: 'finished' });
