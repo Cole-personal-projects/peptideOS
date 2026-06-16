@@ -3,6 +3,7 @@ import type { AppSettings, Compound, Dose, InventoryBatch, ReconstitutionCalcula
 
 export const PERSISTENCE_SCHEMA_VERSION = 6;
 export const DEFAULT_DATABASE_NAME = 'PeptideOS';
+export const LOCAL_PERSISTENCE_OWNER_ID = 'local';
 
 export type SyncState = 'local' | 'synced' | 'dirty';
 
@@ -160,6 +161,20 @@ export class PeptideOSDatabase extends Dexie {
 
 export function createPeptideOSDatabase(databaseName = DEFAULT_DATABASE_NAME) {
   return new PeptideOSDatabase(databaseName);
+}
+
+export function getPersistenceOwnerId(user?: { id?: string | null } | null) {
+  const userId = user?.id?.trim();
+  return userId ? `user:${userId}` : LOCAL_PERSISTENCE_OWNER_ID;
+}
+
+export function getScopedDatabaseName(ownerId = LOCAL_PERSISTENCE_OWNER_ID) {
+  if (ownerId === LOCAL_PERSISTENCE_OWNER_ID) return DEFAULT_DATABASE_NAME;
+  return `${DEFAULT_DATABASE_NAME}:${encodeURIComponent(ownerId)}`;
+}
+
+export function createScopedPeptideOSDatabase(ownerId = LOCAL_PERSISTENCE_OWNER_ID) {
+  return createPeptideOSDatabase(getScopedDatabaseName(ownerId));
 }
 
 export const db = createPeptideOSDatabase();

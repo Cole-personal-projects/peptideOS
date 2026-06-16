@@ -1,4 +1,4 @@
-import { db as defaultDb, PERSISTENCE_SCHEMA_VERSION, type PeptideOSDatabase, type PersistedDose, type PersistedInventoryBatch, type PersistedReconstitutionCalculation, type PersistedSchedule, type PersistedScheduleLog, type PersistedSignalCheckIn, type PersistedStack, type PersistedUserCompound, type PersistedVial, type SyncState } from './db';
+import { db as defaultDb, LOCAL_PERSISTENCE_OWNER_ID, PERSISTENCE_SCHEMA_VERSION, type PeptideOSDatabase, type PersistedDose, type PersistedInventoryBatch, type PersistedReconstitutionCalculation, type PersistedSchedule, type PersistedScheduleLog, type PersistedSignalCheckIn, type PersistedStack, type PersistedUserCompound, type PersistedVial, type SyncState } from './db';
 import { ensureInventoryBatches } from './inventory-batches';
 import { normalizeStacks } from './schedules';
 import { getPersistableUserCompounds, mergeCompoundLibrary } from './user-compounds';
@@ -21,6 +21,10 @@ export interface UserDataExport {
   schemaVersion: number;
   exportedAt: string;
   data: PersistedUserData;
+}
+
+export interface PersistenceOptions {
+  ownerId?: string;
 }
 
 const HISTORICAL_DEMO_VIALS = [
@@ -174,7 +178,11 @@ async function isPersisted(database: PeptideOSDatabase) {
   return persisted?.value === true;
 }
 
-async function ensureMetadata(database: PeptideOSDatabase, now: string) {
+function getPersistenceOwner(options?: PersistenceOptions) {
+  return options?.ownerId?.trim() || LOCAL_PERSISTENCE_OWNER_ID;
+}
+
+async function ensureMetadata(database: PeptideOSDatabase, now: string, options?: PersistenceOptions) {
   let deviceId = await database.metadata.get('deviceId');
 
   if (!deviceId) {
@@ -187,12 +195,13 @@ async function ensureMetadata(database: PeptideOSDatabase, now: string) {
   await database.metadata.bulkPut([
     { key: 'schemaVersion', value: PERSISTENCE_SCHEMA_VERSION },
     { key: 'persisted', value: true },
+    { key: 'ownerId', value: getPersistenceOwner(options) },
     { key: 'lastSavedAt', value: now },
     deviceId,
   ]);
 }
 
-export async function loadPersistedAppData(database: PeptideOSDatabase = defaultDb, defaults: AppData): Promise<AppData> {
+export async function loadPersistedAppData(database: PeptideOSDatabase = defaultDb, defaults: AppData, options?: PersistenceOptions): Promise<AppData> {
   if (!(await hasValidSchemaMetadata(database)) || !(await isPersisted(database))) {
     return defaults;
   }
@@ -235,13 +244,13 @@ export async function loadPersistedAppData(database: PeptideOSDatabase = default
   const loaded = applyUserData(defaults, pruned.data);
 
   if (pruned.changed) {
-    await savePersistedAppData(database, loaded);
+    await savePersistedAppData(database, loaded, new Date(), options);
   }
 
   return loaded;
 }
 
-export async function savePersistedAppData(database: PeptideOSDatabase = defaultDb, data: AppData, savedAt = new Date()) {
+export async function savePersistedAppData(database: PeptideOSDatabase = defaultDb, data: AppData, savedAt = new Date(), options?: PersistenceOptions) {
   const now = savedAt.toISOString();
   const normalizedData = ensureInventoryBatches(data);
   const settings = withPersistenceMetadata({ id: 'app-settings' as const, ...getDefaultSettings(normalizedData) }, now);
@@ -283,7 +292,7 @@ export async function savePersistedAppData(database: PeptideOSDatabase = default
       database.signalCheckIns.bulkPut(signalCheckIns),
       database.userCompounds.bulkPut(userCompounds),
       database.settings.put(settings),
-      ensureMetadata(database, now),
+      ensureMetadata(database, now, options),
     ]);
   });
 }
@@ -432,11 +441,12 @@ export async function importUserData(
   defaults: AppData,
   input: string,
   importedAt = new Date(),
+  options?: PersistenceOptions,
 ): Promise<AppData> {
   const imported = parseUserDataExport(input);
   const nextData = applyUserData(defaults, imported.data);
 
-  await savePersistedAppData(database, nextData, importedAt);
+  await savePersistedAppData(database, nextData, importedAt, options);
 
   return nextData;
 }
