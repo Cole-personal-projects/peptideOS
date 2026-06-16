@@ -1,6 +1,11 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { createPeptideOSDatabase, type PeptideOSDatabase } from './db';
+import {
+  createPeptideOSDatabase,
+  createScopedPeptideOSDatabase,
+  getPersistenceOwnerId,
+  type PeptideOSDatabase,
+} from './db';
 import {
   downloadUserData,
   exportUserData,
@@ -96,6 +101,43 @@ describe('Dexie persistence', () => {
     expect(loaded.hasCompletedOnboarding).toBe(true);
     expect(loaded.userMode).toBe('researcher');
     expect(loaded.stacks).toEqual([]);
+  });
+
+  test('keeps local-only and signed-in persistence profiles isolated', async () => {
+    const localDb = createScopedPeptideOSDatabase();
+    const signedInDb = createScopedPeptideOSDatabase(getPersistenceOwnerId({ id: 'amy-user-id' }));
+
+    try {
+      await savePersistedAppData(localDb, {
+        ...clone(initialAppData),
+        vials: [{ ...mockVials[0], id: 'vial-local', name: 'Local-only vial' }],
+      });
+      await savePersistedAppData(signedInDb, {
+        ...clone(initialAppData),
+        vials: [{ ...mockVials[0], id: 'vial-amy', name: 'Amy cloud profile vial' }],
+      });
+
+      const localLoaded = await loadPersistedAppData(localDb, initialAppData);
+      const signedInLoaded = await loadPersistedAppData(signedInDb, initialAppData);
+
+      expect(localLoaded.vials).toEqual([expect.objectContaining({ id: 'vial-local' })]);
+      expect(signedInLoaded.vials).toEqual([expect.objectContaining({ id: 'vial-amy' })]);
+    } finally {
+      await localDb.delete();
+      await signedInDb.delete();
+    }
+  });
+
+  test('records the persistence owner on scoped saves', async () => {
+    await savePersistedAppData(db, {
+      ...clone(initialAppData),
+      vials: [{ ...mockVials[0], id: 'vial-owner-metadata', name: 'Owner metadata vial' }],
+    }, new Date('2026-06-16T00:00:00.000Z'), { ownerId: 'user:amy-user-id' });
+
+    await expect(db.metadata.get('ownerId')).resolves.toEqual({
+      key: 'ownerId',
+      value: 'user:amy-user-id',
+    });
   });
 
   test('saves and reloads inventory batches linked to physical vials', async () => {

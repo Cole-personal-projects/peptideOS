@@ -1,8 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import type { AppData, Compound, Peptide, Vial, Dose, InventoryBatch, ReconstitutionCalculation, ScheduleLog, SignalCheckIn, SiteCode, Stack, UserMode } from './types';
 import { initialAppData } from './mock-data';
+import { useAuth } from './auth-context';
+import { createScopedPeptideOSDatabase, getPersistenceOwnerId } from './db';
 import { createInventoryBatchForVials } from './inventory-batches';
 import { completeOnboarding as completeOnboardingState } from './onboarding';
 import { activateStackSchedules, normalizeStack, updateStackPeptideSchedule } from './schedules';
@@ -77,8 +79,12 @@ interface AddInventoryBatchOptions {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { status: authStatus, user: authUser } = useAuth();
+  const persistenceOwnerId = getPersistenceOwnerId(authStatus === 'signed-in' ? authUser : null);
+  const persistenceDb = useMemo(() => createScopedPeptideOSDatabase(persistenceOwnerId), [persistenceOwnerId]);
   const [data, setData] = useState<AppData>(initialAppData);
-  const [hydrated, setHydrated] = useState(false);
+  const [hydratedOwnerId, setHydratedOwnerId] = useState<string | null>(null);
+  const hydrated = authStatus !== 'loading' && hydratedOwnerId === persistenceOwnerId;
   const saveSequence = useRef(0);
   const persistenceQueue = useRef(Promise.resolve());
   const dataRef = useRef(data);
@@ -88,22 +94,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [data]);
 
   useEffect(() => {
+    return () => {
+      persistenceDb.close();
+    };
+  }, [persistenceDb]);
+
+  useEffect(() => {
+    if (authStatus === 'loading') return;
+
     let active = true;
 
-    loadPersistedAppData(undefined, initialAppData)
+    loadPersistedAppData(persistenceDb, initialAppData, { ownerId: persistenceOwnerId })
       .then((persistedData) => {
         if (!active) return;
+        dataRef.current = persistedData;
         setData(persistedData);
       })
       .finally(() => {
         if (!active) return;
-        setHydrated(true);
+        setHydratedOwnerId(persistenceOwnerId);
       });
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [authStatus, persistenceDb, persistenceOwnerId]);
 
   const enqueuePersistenceOperation = useCallback(<T,>(operation: () => Promise<T>) => {
     const queuedOperation = persistenceQueue.current.then(operation, operation);
@@ -118,13 +133,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     if (hydrated) {
       const sequence = ++saveSequence.current;
-      await enqueuePersistenceOperation(() => savePersistedAppData(undefined, nextData)).catch((error) => {
+      await enqueuePersistenceOperation(() => savePersistedAppData(persistenceDb, nextData, new Date(), { ownerId: persistenceOwnerId })).catch((error) => {
         if (sequence === saveSequence.current) {
           console.error('Failed to persist PeptideOS data', error);
         }
       });
     }
-  }, [enqueuePersistenceOperation, hydrated]);
+  }, [enqueuePersistenceOperation, hydrated, persistenceDb, persistenceOwnerId]);
 
   // Peptides
   const getPeptide = useCallback((id: string) => {
@@ -449,7 +464,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     if (hydrated) {
       const sequence = ++saveSequence.current;
-      await enqueuePersistenceOperation(() => savePersistedAppData(undefined, nextData)).catch((error) => {
+      await enqueuePersistenceOperation(() => savePersistedAppData(persistenceDb, nextData, new Date(), { ownerId: persistenceOwnerId })).catch((error) => {
         if (sequence === saveSequence.current) {
           console.error('Failed to persist PeptideOS data', error);
         }
@@ -458,7 +473,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     dataRef.current = nextData;
     setData(nextData);
-  }, [enqueuePersistenceOperation, hydrated]);
+  }, [enqueuePersistenceOperation, hydrated, persistenceDb, persistenceOwnerId]);
 
   const getActiveStacks = useCallback(() => {
     return data.stacks.filter(s => s.status === 'active');
@@ -483,23 +498,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const exportAllData = useCallback(async () => {
     await persistenceQueue.current;
-    const exported = await exportUserData();
+    const exported = await exportUserData(persistenceDb);
     downloadUserData(exported);
-  }, []);
+  }, [persistenceDb]);
 
   const importAllData = useCallback(async (file: File) => {
     const contents = await file.text();
     saveSequence.current++;
-    const importedData = await enqueuePersistenceOperation(() => importUserData(undefined, initialAppData, contents));
+    const importedData = await enqueuePersistenceOperation(() => importUserData(persistenceDb, initialAppData, contents, new Date(), { ownerId: persistenceOwnerId }));
     dataRef.current = importedData;
     setData(importedData);
-  }, [enqueuePersistenceOperation]);
+  }, [enqueuePersistenceOperation, persistenceDb, persistenceOwnerId]);
 
   const clearAllData = useCallback(async () => {
     saveSequence.current++;
-    const resetData = await enqueuePersistenceOperation(() => resetPersistedAppData(undefined, initialAppData));
+    const resetData = await enqueuePersistenceOperation(() => resetPersistedAppData(persistenceDb, initialAppData));
+    dataRef.current = resetData;
     setData(resetData);
-  }, [enqueuePersistenceOperation]);
+  }, [enqueuePersistenceOperation, persistenceDb]);
 
   if (!hydrated) {
     return null;
