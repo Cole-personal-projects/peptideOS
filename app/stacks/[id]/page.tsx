@@ -2,13 +2,23 @@
 
 import { use, useState } from 'react';
 import { notFound } from 'next/navigation';
-import { Calendar, AlertTriangle, Clock, Play, Pause, CheckCircle2, Syringe, Edit3 } from 'lucide-react';
+import { Calendar, AlertTriangle, Clock, Play, Pause, CheckCircle2, Syringe, Edit3, Trash2 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -41,12 +51,15 @@ const scheduleStatusConfig: Record<ScheduleLogStatus, { label: string; className
 
 export default function StackDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data, getStack, updateStack, activateStack, updateStackItemSchedule, getScheduleLogsForStack } = useApp();
+  const { data, getStack, updateStack, deleteStack, activateStack, updateStackItemSchedule, getScheduleLogsForStack } = useApp();
   const [calendarFilter, setCalendarFilter] = useState<CalendarFilter>('all');
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeletePending, setIsDeletePending] = useState(false);
   const stack = getStack(id);
 
   if (!stack) {
+    if (isDeletePending) return null;
     notFound();
   }
 
@@ -103,6 +116,13 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
     setIsEditOpen(false);
   };
 
+  const handleDelete = async () => {
+    setIsDeletePending(true);
+    setIsDeleteOpen(false);
+    await deleteStack(stack.id);
+    window.location.assign('/stacks');
+  };
+
   const scheduleLogs = getScheduleLogsForStack(stack.id);
   const filteredScheduleLogs = calendarFilter === 'all'
     ? scheduleLogs
@@ -125,10 +145,16 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
         title={stack.name}
         backHref="/stacks"
         rightElement={
-          <Button size="sm" variant="ghost" className="text-primary" onClick={openEditDialog}>
-            <Edit3 className="w-4 h-4 mr-1" /> Edit
-            <span className="sr-only"> protocol</span>
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="ghost" className="text-primary" onClick={openEditDialog}>
+              <Edit3 className="w-4 h-4 mr-1" /> Edit
+              <span className="sr-only"> protocol</span>
+            </Button>
+            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setIsDeleteOpen(true)}>
+              <Trash2 className="w-4 h-4 mr-1" /> Delete
+              <span className="sr-only"> protocol</span>
+            </Button>
+          </div>
         }
       />
 
@@ -427,6 +453,23 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete protocol?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the saved protocol, its generated schedule, and due-dose calendar entries. Dose logs created from that schedule are also removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => void handleDelete()}>
+              Delete protocol
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }

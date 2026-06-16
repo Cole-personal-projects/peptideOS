@@ -168,4 +168,32 @@ test.describe('stack builder', () => {
     await page.getByRole('tab', { name: 'Notes' }).click();
     await expect(page.getByText('Edited protocol notes')).toBeVisible();
   });
+
+  test('deletes a saved protocol after confirmation', async ({ page }) => {
+    await page.goto('/stacks');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('button', { name: 'New stack' }).click();
+    await page.getByLabel('Stack Name').fill('Delete Me Protocol Stack');
+    await page.getByLabel('Description').fill('Temporary protocol');
+    await page.getByLabel('Duration (days)').fill('14');
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('checkbox', { name: 'BPC-157' }).check();
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('button', { name: 'Create Stack' }).click();
+
+    await page.getByRole('link', { name: /Delete Me Protocol Stack/ }).click();
+    await page.getByRole('button', { name: 'Delete protocol' }).click();
+
+    const dialog = page.getByRole('alertdialog', { name: 'Delete protocol?' });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Delete protocol' }).click();
+
+    await expect(page).toHaveURL(/\/stacks$/);
+    await expect(page.getByRole('link', { name: /Delete Me Protocol Stack/ })).toHaveCount(0);
+
+    await page.reload();
+    await expect(page.getByRole('link', { name: /Delete Me Protocol Stack/ })).toHaveCount(0);
+  });
 });

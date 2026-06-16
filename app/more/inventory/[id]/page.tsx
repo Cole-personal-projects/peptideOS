@@ -3,7 +3,7 @@
 import { use } from 'react';
 import { useMemo, useState } from 'react';
 import { notFound } from 'next/navigation';
-import { Calendar, Hash, Droplet, AlertCircle, PackageSearch, Edit3 } from 'lucide-react';
+import { Calendar, Hash, Droplet, AlertCircle, PackageSearch, Edit3, Trash2 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/lib/context';
@@ -23,13 +33,16 @@ import type { DoseUnit } from '@/lib/types';
 
 export default function VialDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data, getVial, updateVial } = useApp();
+  const { data, getVial, updateVial, deleteInventoryItem } = useApp();
   const [isReconstituteOpen, setIsReconstituteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeletePending, setIsDeletePending] = useState(false);
   const [bacWaterInput, setBacWaterInput] = useState('2');
   const vial = getVial(id);
 
   if (!vial) {
+    if (isDeletePending) return null;
     notFound();
   }
 
@@ -122,16 +135,29 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
     setIsEditOpen(false);
   };
 
+  const handleDelete = async () => {
+    setIsDeletePending(true);
+    setIsDeleteOpen(false);
+    await deleteInventoryItem(vial.id);
+    window.location.assign('/more/inventory');
+  };
+
   return (
     <AppShell>
       <PageHeader
         title={vial.name}
         backHref="/more/inventory"
         rightElement={
-          <Button size="sm" variant="ghost" className="text-primary" onClick={openEditDialog}>
-            <Edit3 className="w-4 h-4 mr-1" /> Edit
-            <span className="sr-only"> vial</span>
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="ghost" className="text-primary" onClick={openEditDialog}>
+              <Edit3 className="w-4 h-4 mr-1" /> Edit
+              <span className="sr-only"> vial</span>
+            </Button>
+            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setIsDeleteOpen(true)}>
+              <Trash2 className="w-4 h-4 mr-1" /> Delete
+              <span className="sr-only"> inventory</span>
+            </Button>
+          </div>
         }
       />
 
@@ -503,6 +529,23 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete inventory item?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the inventory record and any dose logs tied directly to it. Grouped kit entries remove every vial in the kit.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => void handleDelete()}>
+              Delete inventory
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
