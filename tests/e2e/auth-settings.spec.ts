@@ -13,4 +13,18 @@ test.describe('account settings', () => {
     await expect(page.getByRole('button', { name: 'Send sign-in link' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
   });
+
+  test('anchors settings content in a stable readable column on full-screen iPad', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 1366 });
+    await page.goto('/more/settings');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+
+    const settingsContent = page.getByTestId('settings-content');
+    await expect(settingsContent).toBeVisible();
+
+    const box = await settingsContent.boundingBox();
+    expect(box?.width).toBeLessThanOrEqual(768);
+    expect(box?.x).toBeGreaterThan(120);
+  });
 });
