@@ -57,6 +57,10 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeletePending, setIsDeletePending] = useState(false);
   const stack = getStack(id);
+  const [editName, setEditName] = useState(stack?.name ?? '');
+  const [editDescription, setEditDescription] = useState(stack?.description ?? '');
+  const [editDurationDays, setEditDurationDays] = useState(stack?.durationDays.toString() ?? '');
+  const [editNotes, setEditNotes] = useState(stack?.notes ?? '');
 
   if (!stack) {
     if (isDeletePending) return null;
@@ -65,10 +69,6 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
 
   const config = statusConfig[stack.status];
   const StatusIcon = config.icon;
-  const [editName, setEditName] = useState(stack.name);
-  const [editDescription, setEditDescription] = useState(stack.description);
-  const [editDurationDays, setEditDurationDays] = useState(stack.durationDays.toString());
-  const [editNotes, setEditNotes] = useState(stack.notes);
 
   const startDate = new Date(stack.startDate);
   const endDate = new Date(startDate);
