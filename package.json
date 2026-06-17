@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage",
     "compound:validate": "vitest run lib/reference-compounds.test.ts",
     "compound:fetch-sources": "node tools/compound-curation/source-fetcher.mjs",
+    "compound:package-reviewed": "node tools/compound-curation/package-reviewed.mjs",
     "library:export-reviewed": "node tools/reference-library/export-reviewed.mjs",
     "library:import-reviewed": "node tools/reference-library/import-reviewed.mjs",
     "library:seed-reviewed-sql": "node tools/reference-library/seed-reviewed-sql.mjs",
