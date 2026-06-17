@@ -43,26 +43,71 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('heading', { name: 'Retatrutide' })).toBeVisible();
     await expect(page.getByText('Phase 3 Topline')).toBeVisible();
     await expect(page.getByText('Investigational')).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Evidence' }).click();
     await expect(page.getByText('GLP-1 receptor', { exact: true })).toBeVisible();
     await expect(page.getByText('GIP receptor', { exact: true })).toBeVisible();
     await expect(page.getByText('glucagon receptor', { exact: true })).toBeVisible();
 
-    await expect(page.getByText('Why people are watching this')).toBeVisible();
+    await page.getByRole('tab', { name: 'Field Brief' }).click();
+    await expect(page.getByText('Why people care')).toBeVisible();
     await expect(page.getByText('push past the current GLP-1/GIP ceiling')).toBeVisible();
-    await expect(page.getByText('Verify before you log it')).toBeVisible();
+    await expect(page.getByText('Verify before use')).toBeVisible();
     await expect(page.getByText('do not treat marketing names as identity proof')).toBeVisible();
-    await expect(page.getByText('Track like it matters')).toBeVisible();
+    await expect(page.getByText('Track in PeptideOS')).toBeVisible();
     await expect(page.getByText('Ask Peppi', { exact: true })).toBeVisible();
     await expect(page.getByText('The clinical Retatrutide story is not a gray-market vial.')).toBeVisible();
 
+    await page.getByRole('tab', { name: 'Evidence' }).click();
     await expect(page.getByText('Published phase 2 data reported dose-related body-weight reductions')).toBeVisible();
     await expect(page.getByText('Source Backed', { exact: true })).toBeVisible();
     await expect(page.getByText('Trial Registry', { exact: true })).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Tracking' }).click();
     await expect(page.getByText('Track inventory by exact vial, kit, lot, source, and container state.').first()).toBeVisible();
     await expect(page.getByText('Log labeled doses or ask Peppi to build a schedule').first()).toBeVisible();
     await expect(page.getByText('No FDA-approved US prescribing label or consumer storage instructions.')).toBeVisible();
 
     await expect(page.getByText(/recommended dose|dose recommendation/i)).toHaveCount(0);
+  });
+
+  test('presents Retatrutide as dedicated pro reference sections', async ({ page }) => {
+    await page.goto('/library/retatrutide');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await expect(page.getByRole('heading', { name: 'Retatrutide' })).toBeVisible();
+
+    for (const tabName of ['Field Brief', 'Evidence', 'Tracking', 'Safety Watch', 'Status', 'Citations']) {
+      await expect(page.getByRole('tab', { name: tabName })).toBeVisible();
+    }
+
+    await page.getByRole('tab', { name: 'Field Brief' }).click();
+    await expect(page.getByText('Why people care')).toBeVisible();
+    await expect(page.getByText('Verify before use')).toBeVisible();
+    await expect(page.getByText('Track in PeptideOS')).toBeVisible();
+    await expect(page.getByText('Reality check')).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Evidence' }).click();
+    await expect(page.getByText('Evidence Snapshot')).toBeVisible();
+    await expect(page.getByText('phase-2-randomized-controlled-trial')).toBeVisible();
+    await expect(page.getByText('phase-3-program')).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Tracking' }).click();
+    await expect(page.getByText('Practical Tracking Notes')).toBeVisible();
+    await expect(page.getByText('Peppi can help')).toBeVisible();
+    await expect(page.getByText('Evidence gaps')).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Safety Watch' }).click();
+    await expect(page.getByText('Safety Watch')).toBeVisible();
+    await expect(page.getByText('Gastrointestinal adverse events were common in published phase 2 obesity data.')).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Status' }).click();
+    await expect(page.getByText('Regulatory Status')).toBeVisible();
+    await expect(page.getByText('investigational in US')).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Citations' }).click();
+    await expect(page.getByText('Triple-Hormone-Receptor Agonist Retatrutide for Obesity')).toBeVisible();
+    await expect(page.getByText('ClinicalTrials.gov,').first()).toBeVisible();
   });
 
   test('creates, edits, persists, and deletes a custom compound', async ({ page }) => {
