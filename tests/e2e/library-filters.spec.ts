@@ -93,4 +93,25 @@ test.describe('library filters', () => {
     await page.getByRole('link', { name: /DSIP/ }).click();
     await expect(page).toHaveURL(/\/library\/dsip$/);
   });
+
+  test('surfaces evidence tier and regulatory status filters without marking investigational compounds approved', async ({ page }) => {
+    await page.goto('/library');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await expect(page.getByRole('heading', { name: 'Library' })).toBeVisible();
+
+    const retatrutideCard = page.getByRole('link', { name: /Retatrutide/ });
+    await expect(retatrutideCard).toBeVisible();
+    await expect(retatrutideCard.getByText('Strong Human')).toBeVisible();
+    await expect(retatrutideCard.getByText('Investigational')).toBeVisible();
+    await expect(retatrutideCard.getByText('GLP-1 / GIP / Glucagon')).toBeVisible();
+    await expect(retatrutideCard.getByText('Approved')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Strong Human' }).click();
+    await expect(page.getByRole('link', { name: /Retatrutide/ })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Approved Label' }).click();
+    await expect(page.getByRole('link', { name: /Retatrutide/ })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Semaglutide/ })).toBeVisible();
+  });
 });

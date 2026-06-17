@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { filterCompounds, filterPeptides } from './library-filters';
+import { referenceCompounds } from './reference-compounds';
 import type { Compound, Peptide } from './types';
 
 const peptides: Peptide[] = [
@@ -171,5 +172,24 @@ describe('compound library filters', () => {
     ], { search: 'focus', category: 'all', compoundType: 'all' }).map((compound) => compound.id)).toEqual([
       'custom-cognitive',
     ]);
+  });
+
+  it('filters compounds by PeptideOS evidence band', () => {
+    expect(filterCompounds(referenceCompounds, {
+      search: '',
+      category: 'all',
+      compoundType: 'all',
+      evidence: 'strong-human',
+    }).map((compound) => compound.id)).toContain('retatrutide');
+
+    const approvedIds = filterCompounds(referenceCompounds, {
+      search: '',
+      category: 'all',
+      compoundType: 'all',
+      evidence: 'approved-label',
+    }).map((compound) => compound.id);
+
+    expect(approvedIds).toContain('semaglutide');
+    expect(approvedIds).not.toContain('retatrutide');
   });
 });
