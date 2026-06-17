@@ -48,6 +48,8 @@ export interface ReferenceFormRow {
   primary_unit: string;
   allowed_units: string[];
   reconstitution_compatible: boolean;
+  typical_vial_amounts: Array<{ value: number; unit: string }>;
+  typical_bac_water_ml: number[];
   container_type: InventoryContainerType;
   form_notes: string;
 }
@@ -170,6 +172,8 @@ export function buildReferenceRegistrySeed(snapshot: ReferenceLibrarySnapshot): 
         ...compound.vialPresets.flatMap((preset) => preset.totalAmount?.unit ? [preset.totalAmount.unit] : []),
       ])].sort(),
       reconstitution_compatible: Boolean(compound.reconstitutionDefaults),
+      typical_vial_amounts: compound.reconstitutionDefaults?.typicalVialAmounts.map((amount) => ({ ...amount })) ?? [],
+      typical_bac_water_ml: [...(compound.reconstitutionDefaults?.typicalBacWaterMl ?? [])],
       container_type: getContainerType(compound.concentrationMode),
       form_notes: compound.storage,
     })),
