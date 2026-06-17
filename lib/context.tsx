@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import type { AppData, Compound, Peptide, Vial, Dose, InventoryBatch, ReconstitutionCalculation, ScheduleLog, SignalCheckIn, SiteCode, Stack, UserMode } from './types';
 import { initialAppData } from './mock-data';
 import { useAuth } from './auth-context';
+import { createSupabaseAuthClient } from './auth';
 import { createScopedPeptideOSDatabase, getPersistenceOwnerId } from './db';
 import { createInventoryBatchForVials } from './inventory-batches';
 import { completeOnboarding as completeOnboardingState } from './onboarding';
@@ -19,6 +20,12 @@ import {
 } from './persistence';
 import { createUserCompound, softDeleteUserCompound, updateUserCompound, type UserCompoundDraft } from './user-compounds';
 import { completeDueDose, skipDueDose } from './due-doses';
+import { referenceCompounds } from './reference-compounds';
+import { buildBundledReferenceSnapshot } from './reference-library-snapshot';
+import { createSupabaseReferenceLibraryReader, getReleasedReferenceLibrary, type SupabaseReferenceLibraryClient } from './reference-library-source';
+import { applyReleasedReferenceLibrarySnapshot } from './reference-library-state';
+
+const bundledReferenceLibrarySnapshot = buildBundledReferenceSnapshot(referenceCompounds);
 
 interface AppContextType {
   data: AppData;
@@ -79,15 +86,20 @@ interface AddInventoryBatchOptions {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const { status: authStatus, user: authUser } = useAuth();
+  const { config: authConfig, status: authStatus, user: authUser } = useAuth();
   const persistenceOwnerId = getPersistenceOwnerId(authStatus === 'signed-in' ? authUser : null);
   const persistenceDb = useMemo(() => createScopedPeptideOSDatabase(persistenceOwnerId), [persistenceOwnerId]);
+  const referenceLibraryReader = useMemo(() => {
+    const client = createSupabaseAuthClient(authConfig);
+    return client ? createSupabaseReferenceLibraryReader(client as unknown as SupabaseReferenceLibraryClient) : null;
+  }, [authConfig]);
   const [data, setData] = useState<AppData>(initialAppData);
   const [hydratedOwnerId, setHydratedOwnerId] = useState<string | null>(null);
   const hydrated = authStatus !== 'loading' && hydratedOwnerId === persistenceOwnerId;
   const saveSequence = useRef(0);
   const persistenceQueue = useRef(Promise.resolve());
   const dataRef = useRef(data);
+  const loadedReferenceLibraryKey = useRef<string | null>(null);
 
   useEffect(() => {
     dataRef.current = data;
@@ -119,6 +131,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
       active = false;
     };
   }, [authStatus, persistenceDb, persistenceOwnerId]);
+
+  useEffect(() => {
+    if (!hydrated || !referenceLibraryReader || !authConfig.url) return;
+
+    const libraryKey = `${persistenceOwnerId}:${authConfig.url}`;
+    if (loadedReferenceLibraryKey.current === libraryKey) return;
+    loadedReferenceLibraryKey.current = libraryKey;
+
+    let active = true;
+
+    getReleasedReferenceLibrary(referenceLibraryReader, {
+      fallbackSnapshot: bundledReferenceLibrarySnapshot,
+      exportedFrom: authConfig.url,
+    }).then((library) => {
+      if (!active || library.source !== 'supabase') return;
+
+      setData((previousData) => {
+        const nextData = applyReleasedReferenceLibrarySnapshot(previousData, library.snapshot);
+        dataRef.current = nextData;
+        return nextData;
+      });
+    }).catch((error) => {
+      console.error('Failed to load released PeptideOS reference library', error);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [authConfig.url, hydrated, persistenceOwnerId, referenceLibraryReader]);
 
   const enqueuePersistenceOperation = useCallback(<T,>(operation: () => Promise<T>) => {
     const queuedOperation = persistenceQueue.current.then(operation, operation);
