@@ -122,11 +122,20 @@ export type ReferenceEvidenceTier =
   | 'phase-3-active'
   | 'approved-label';
 
+export type ReferenceSourceQuality =
+  | 'source-backed'
+  | 'label-backed'
+  | 'trial-registry'
+  | 'community-reported'
+  | 'uncited-emerging';
+
 export interface ReferenceClinicalEvidence {
   design: string;
   population: string;
   finding: string;
   citationIds: string[];
+  sourceQuality?: ReferenceSourceQuality;
+  limitations?: string;
 }
 
 export interface ReferenceRegulatoryStatus {
@@ -134,6 +143,8 @@ export interface ReferenceRegulatoryStatus {
   region: string;
   summary: string;
   citationIds: string[];
+  sourceQuality?: ReferenceSourceQuality;
+  limitations?: string;
 }
 
 export interface CompoundBiohackerBrief {
