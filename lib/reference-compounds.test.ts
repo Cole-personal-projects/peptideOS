@@ -115,6 +115,50 @@ describe('reference compounds', () => {
     ]));
   });
 
+  test('uses Retatrutide as the reviewed flagship for pro-grade library data', () => {
+    const retatrutide = referenceCompounds.find((compound) => compound.id === 'retatrutide');
+
+    expect(retatrutide).toBeDefined();
+    expect(retatrutide?.referenceProfile).toEqual(expect.objectContaining({
+      evidenceTier: 'phase-3-topline',
+      regulatoryStatus: expect.objectContaining({
+        status: 'investigational',
+        region: 'US',
+      }),
+    }));
+    expect(retatrutide?.referenceProfile?.mechanismTargets).toEqual([
+      'GLP-1 receptor',
+      'GIP receptor',
+      'glucagon receptor',
+    ]);
+    expect(retatrutide?.referenceProfile?.clinicalEvidence).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        design: 'phase-2-randomized-controlled-trial',
+        population: expect.stringContaining('obesity'),
+      }),
+      expect.objectContaining({
+        design: 'phase-3-program',
+        population: expect.stringContaining('obesity'),
+      }),
+    ]));
+    expect(retatrutide?.referenceProfile?.peptideOSActions).toEqual(expect.arrayContaining([
+      expect.stringContaining('Log labeled doses'),
+      expect.stringContaining('Track inventory'),
+    ]));
+    expect(retatrutide?.referenceProfile?.biohackerBrief).toEqual(expect.objectContaining({
+      headline: expect.stringContaining('triple-agonist'),
+      realityCheck: expect.stringContaining('not a gray-market vial'),
+    }));
+    expect(retatrutide?.referenceProfile?.biohackerBrief.whyPeopleCare).toEqual(expect.arrayContaining([
+      expect.stringContaining('GLP-1'),
+      expect.stringContaining('phase 3'),
+    ]));
+    expect(retatrutide?.referenceProfile?.biohackerBrief.verifyBeforeUse).toEqual(expect.arrayContaining([
+      expect.stringContaining('lot'),
+      expect.stringContaining('concentration'),
+    ]));
+  });
+
   test('includes reviewed batch four expansion entries across core categories', () => {
     const batchFourIds = [
       'elamipretide',
@@ -254,5 +298,17 @@ describe('reference compounds', () => {
     };
 
     expect(validateReferenceCompound(invalid)).toContain(`${invalid.id}: reconstituted compounds require reconstitutionDefaults`);
+  });
+
+  test('requires pro-grade reference profile citations to resolve on the compound', () => {
+    const retatrutide = referenceCompounds.find((compound) => compound.id === 'retatrutide');
+    const invalid = {
+      ...retatrutide!,
+      citations: retatrutide!.citations.filter((citation) => citation.id !== 'clinicaltrials-retatrutide-triumph-5'),
+    };
+
+    expect(validateReferenceCompound(invalid)).toContain(
+      'retatrutide: reference profile field "clinicalEvidence" references missing citation "clinicaltrials-retatrutide-triumph-5"',
+    );
   });
 });

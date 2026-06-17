@@ -113,6 +113,50 @@ export interface CompoundConversion {
   notes?: string;
 }
 
+export type ReferenceEvidenceTier =
+  | 'identity-only'
+  | 'preclinical'
+  | 'early-human'
+  | 'phase-2-published'
+  | 'phase-3-topline'
+  | 'phase-3-active'
+  | 'approved-label';
+
+export interface ReferenceClinicalEvidence {
+  design: string;
+  population: string;
+  finding: string;
+  citationIds: string[];
+}
+
+export interface ReferenceRegulatoryStatus {
+  status: 'approved' | 'investigational' | 'research-use' | 'unknown';
+  region: string;
+  summary: string;
+  citationIds: string[];
+}
+
+export interface CompoundBiohackerBrief {
+  headline: string;
+  whyPeopleCare: string[];
+  verifyBeforeUse: string[];
+  trackInApp: string[];
+  realityCheck: string;
+}
+
+export interface CompoundReferenceProfile {
+  evidenceTier: ReferenceEvidenceTier;
+  biohackerBrief: CompoundBiohackerBrief;
+  reviewSummary: string;
+  mechanismTargets: string[];
+  clinicalEvidence: ReferenceClinicalEvidence[];
+  safetySignals: string[];
+  practicalNotes: string[];
+  evidenceGaps: string[];
+  regulatoryStatus: ReferenceRegulatoryStatus;
+  peptideOSActions: string[];
+}
+
 export interface Compound {
   id: string;
   name: string;
@@ -133,6 +177,7 @@ export interface Compound {
   safety: string;
   storage: string;
   citations: Citation[];
+  referenceProfile?: CompoundReferenceProfile;
   source: CompoundSource;
   curationStatus: CurationStatus;
   createdAt?: string;

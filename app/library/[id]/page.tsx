@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, Beaker, BookOpen, ExternalLink, FlaskConical, Pencil, Scale, Shield, Syringe, Thermometer, Trash2, User } from 'lucide-react';
+import { AlertTriangle, Beaker, BookOpen, CheckCircle2, ExternalLink, FlaskConical, ListChecks, MessageCircle, Pencil, Scale, Shield, Sparkles, Syringe, Thermometer, Trash2, User } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/lib/context';
 import { cn } from '@/lib/utils';
-import type { CompoundCategory } from '@/lib/types';
+import type { CompoundCategory, CompoundReferenceProfile } from '@/lib/types';
 
 const categoryColors: Partial<Record<CompoundCategory, string>> = {
   healing: 'bg-chart-3/20 text-chart-3 border-chart-3/30',
@@ -35,6 +35,68 @@ const categoryColors: Partial<Record<CompoundCategory, string>> = {
 
 function formatLabel(value: string): string {
   return value.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+}
+
+function BulletList({ items }: { items: string[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <ul className="space-y-2 text-sm text-muted-foreground">
+      {items.map((item) => (
+        <li key={item} className="flex gap-2">
+          <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function FieldBrief({ profile }: { profile: CompoundReferenceProfile }) {
+  const brief = profile.biohackerBrief;
+
+  return (
+    <Card className="border-primary/30 bg-primary/5">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-primary" />
+          Field Brief
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-base font-medium leading-relaxed text-foreground">{brief.headline}</p>
+
+        <div className="grid gap-3">
+          <div className="rounded-lg border border-border bg-background/70 p-3">
+            <p className="mb-2 text-sm font-medium">Why people are watching this</p>
+            <BulletList items={brief.whyPeopleCare} />
+          </div>
+          <div className="rounded-lg border border-chart-4/30 bg-chart-4/5 p-3">
+            <p className="mb-2 text-sm font-medium">Verify before you log it</p>
+            <BulletList items={brief.verifyBeforeUse} />
+          </div>
+          <div className="rounded-lg border border-border bg-background/70 p-3">
+            <p className="mb-2 text-sm font-medium">Track like it matters</p>
+            <BulletList items={brief.trackInApp} />
+          </div>
+          <div className="rounded-lg border border-primary/20 bg-primary/10 p-3">
+            <p className="mb-2 flex items-center gap-2 text-sm font-medium">
+              <MessageCircle className="h-4 w-4 text-primary" />
+              Ask Peppi
+            </p>
+            <BulletList items={profile.peptideOSActions} />
+          </div>
+        </div>
+
+        <Alert className="border-chart-4/40 bg-chart-4/5">
+          <AlertTriangle className="h-4 w-4 text-chart-4" />
+          <AlertDescription className="text-xs">
+            {brief.realityCheck}
+          </AlertDescription>
+        </Alert>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function LibraryDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -174,6 +236,12 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
             {compound.defaultRoute.toUpperCase()}
           </Badge>
           <Badge variant="outline">{compound.defaultDoseUnit.toUpperCase()}</Badge>
+          {compound.referenceProfile ? (
+            <>
+              <Badge variant="outline">{formatLabel(compound.referenceProfile.evidenceTier)}</Badge>
+              <Badge variant="outline">{formatLabel(compound.referenceProfile.regulatoryStatus.status)}</Badge>
+            </>
+          ) : null}
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
@@ -185,6 +253,8 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
           </TabsList>
 
           <TabsContent value="overview" className="mt-4 space-y-4">
+            {compound.referenceProfile ? <FieldBrief profile={compound.referenceProfile} /> : null}
+
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -224,6 +294,56 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
                 <p className="text-sm text-muted-foreground">{compound.storage}</p>
               </CardContent>
             </Card>
+
+            {compound.referenceProfile ? (
+              <>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <ListChecks className="w-4 h-4" />
+                      Evidence Snapshot
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">{compound.referenceProfile.reviewSummary}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {compound.referenceProfile.mechanismTargets.map((target) => (
+                        <Badge key={target} variant="secondary">{target}</Badge>
+                      ))}
+                    </div>
+                    <div className="space-y-3">
+                      {compound.referenceProfile.clinicalEvidence.map((evidence) => (
+                        <div key={`${evidence.design}-${evidence.population}`} className="rounded-lg border border-border bg-secondary/40 p-3">
+                          <p className="text-sm font-medium">{formatLabel(evidence.design)}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{evidence.population}</p>
+                          <p className="mt-2 text-sm text-muted-foreground">{evidence.finding}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Beaker className="w-4 h-4" />
+                      Research Tracking
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <BulletList items={compound.referenceProfile.practicalNotes} />
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                      <p className="mb-2 text-sm font-medium">PeptideOS can help</p>
+                      <BulletList items={compound.referenceProfile.peptideOSActions} />
+                    </div>
+                    <div className="rounded-lg border border-chart-4/20 bg-chart-4/5 p-3">
+                      <p className="mb-2 text-sm font-medium">Evidence gaps</p>
+                      <BulletList items={compound.referenceProfile.evidenceGaps} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : null}
           </TabsContent>
 
           <TabsContent value="safety" className="mt-4 space-y-4">
@@ -238,6 +358,32 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
                 <p className="text-sm text-muted-foreground">{compound.safety}</p>
               </CardContent>
             </Card>
+            {compound.referenceProfile ? (
+              <>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4" />
+                      Watch Items
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <BulletList items={compound.referenceProfile.safetySignals} />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <BookOpen className="w-4 h-4" />
+                      Evidence Gaps
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <BulletList items={compound.referenceProfile.evidenceGaps} />
+                  </CardContent>
+                </Card>
+              </>
+            ) : null}
           </TabsContent>
 
           <TabsContent value="citations" className="mt-4 space-y-4">
@@ -277,6 +423,12 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
               <CardContent className="space-y-3 text-sm text-muted-foreground">
                 <p>Research purposes only. PeptideOS does not provide medical advice, diagnosis, or treatment.</p>
                 <p>Reference entries are read-only. Custom entries are local user notes.</p>
+                {compound.referenceProfile ? (
+                  <div className="rounded-lg border border-border bg-secondary/40 p-3">
+                    <p className="font-medium text-foreground">{formatLabel(compound.referenceProfile.regulatoryStatus.status)} in {compound.referenceProfile.regulatoryStatus.region}</p>
+                    <p className="mt-1">{compound.referenceProfile.regulatoryStatus.summary}</p>
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
           </TabsContent>
