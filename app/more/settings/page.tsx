@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from 'react';
-import { Moon, Sun, Fingerprint, Download, Shield, Trash2, Upload, UserRound } from 'lucide-react';
+import { Database, Moon, Sun, Fingerprint, Download, Shield, Trash2, Upload, UserRound } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import {
@@ -21,9 +21,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/auth-context';
 import { useApp } from '@/lib/context';
+import { formatReferenceLibraryStatus } from '@/lib/reference-library-status';
 
 export default function SettingsPage() {
-  const { data, toggleDarkMode, toggleBiometricLock, exportAllData, importAllData, clearAllData } = useApp();
+  const { data, referenceLibraryStatus, toggleDarkMode, toggleBiometricLock, exportAllData, importAllData, clearAllData } = useApp();
   const { config: authConfig, status: authStatus, user, signInWithEmail, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [email, setEmail] = useState('');
@@ -33,6 +34,7 @@ export default function SettingsPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const formattedReferenceLibraryStatus = formatReferenceLibraryStatus(referenceLibraryStatus);
 
   const handleImportFile = async (file: File | undefined) => {
     if (!file) return;
@@ -156,6 +158,24 @@ export default function SettingsPage() {
                 {authMessage}
               </p>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Reference Library */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Reference library</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-start gap-3">
+              <Database className="mt-0.5 h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium text-sm">{formattedReferenceLibraryStatus.label}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formattedReferenceLibraryStatus.detail}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

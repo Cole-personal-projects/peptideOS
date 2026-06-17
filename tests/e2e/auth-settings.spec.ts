@@ -11,6 +11,8 @@ test.describe('account settings', () => {
     await expect(page.getByText('Your data remains on this device until you sign in and cloud sync is available.')).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Send sign-in link' })).toBeVisible();
+    await expect(page.getByText('Reference library', { exact: true })).toBeVisible();
+    await expect(page.getByText(/Bundled fallback \d{4}\.\d{2}\.\d+/)).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
   });
 
