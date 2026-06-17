@@ -24,11 +24,19 @@ import { referenceCompounds } from './reference-compounds';
 import { buildBundledReferenceSnapshot } from './reference-library-snapshot';
 import { createSupabaseReferenceLibraryReader, getReleasedReferenceLibrary, type SupabaseReferenceLibraryClient } from './reference-library-source';
 import { applyReleasedReferenceLibrarySnapshot } from './reference-library-state';
+import { buildReferenceLibraryStatus, type ReferenceLibraryStatus } from './reference-library-status';
 
 const bundledReferenceLibrarySnapshot = buildBundledReferenceSnapshot(referenceCompounds);
+const bundledReferenceLibraryStatus: ReferenceLibraryStatus = {
+  source: 'bundled-fallback',
+  version: bundledReferenceLibrarySnapshot.libraryVersion,
+  loadedAt: bundledReferenceLibrarySnapshot.exportedAt,
+  fallbackReason: 'Supabase reference library is not configured.',
+};
 
 interface AppContextType {
   data: AppData;
+  referenceLibraryStatus: ReferenceLibraryStatus;
   // Peptides
   getPeptide: (id: string) => Peptide | undefined;
   // Compounds
@@ -94,6 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return client ? createSupabaseReferenceLibraryReader(client as unknown as SupabaseReferenceLibraryClient) : null;
   }, [authConfig]);
   const [data, setData] = useState<AppData>(initialAppData);
+  const [referenceLibraryStatus, setReferenceLibraryStatus] = useState<ReferenceLibraryStatus>(bundledReferenceLibraryStatus);
   const [hydratedOwnerId, setHydratedOwnerId] = useState<string | null>(null);
   const hydrated = authStatus !== 'loading' && hydratedOwnerId === persistenceOwnerId;
   const saveSequence = useRef(0);
@@ -145,7 +154,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       fallbackSnapshot: bundledReferenceLibrarySnapshot,
       exportedFrom: authConfig.url,
     }).then((library) => {
-      if (!active || library.source !== 'supabase') return;
+      if (!active) return;
+
+      setReferenceLibraryStatus(buildReferenceLibraryStatus(library, new Date().toISOString()));
+      if (library.source !== 'supabase') return;
 
       setData((previousData) => {
         const nextData = applyReleasedReferenceLibrarySnapshot(previousData, library.snapshot);
@@ -153,6 +165,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return nextData;
       });
     }).catch((error) => {
+      setReferenceLibraryStatus({
+        source: 'bundled-fallback',
+        version: bundledReferenceLibrarySnapshot.libraryVersion,
+        loadedAt: new Date().toISOString(),
+        fallbackReason: error instanceof Error ? error.message : 'Reference library release could not be loaded.',
+      });
       console.error('Failed to load released PeptideOS reference library', error);
     });
 
@@ -565,6 +583,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider value={{
       data,
+      referenceLibraryStatus,
       getPeptide,
       getCompound,
       addUserCompound,
