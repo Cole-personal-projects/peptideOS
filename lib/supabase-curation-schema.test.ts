@@ -49,4 +49,14 @@ describe('Supabase reference registry schema', () => {
     expect(readme).toContain('Service role keys must not be exposed to the browser');
     expect(readme).toContain('supabase db push');
   });
+
+  test('stores form-level reconstitution defaults for exportable calculator context', () => {
+    const sql = [
+      readFileSync(migrationPath, 'utf8'),
+      readFileSync('supabase/migrations/20260617001000_add_reference_form_reconstitution_defaults.sql', 'utf8'),
+    ].join('\n');
+
+    expect(sql).toContain("typical_vial_amounts jsonb not null default '[]'::jsonb");
+    expect(sql).toContain('typical_bac_water_ml numeric[] not null default');
+  });
 });
