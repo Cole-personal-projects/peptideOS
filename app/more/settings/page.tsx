@@ -24,9 +24,10 @@ import { useApp } from '@/lib/context';
 
 export default function SettingsPage() {
   const { data, toggleDarkMode, toggleBiometricLock, exportAllData, importAllData, clearAllData } = useApp();
-  const { config: authConfig, status: authStatus, user, signInWithEmail, signOut } = useAuth();
+  const { config: authConfig, status: authStatus, user, signInWithEmail, verifyEmailCode, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [email, setEmail] = useState('');
+  const [emailCode, setEmailCode] = useState('');
   const [authMessage, setAuthMessage] = useState('');
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
   const [importStatus, setImportStatus] = useState('');
@@ -70,6 +71,21 @@ export default function SettingsPage() {
     try {
       const result = await signInWithEmail(email);
       setAuthMessage(result.message);
+    } finally {
+      setIsSubmittingAuth(false);
+    }
+  };
+
+  const handleVerifyEmailCode = async () => {
+    setIsSubmittingAuth(true);
+    setAuthMessage('');
+
+    try {
+      const result = await verifyEmailCode(email, emailCode);
+      setAuthMessage(result.message);
+      if (result.ok) {
+        setEmailCode('');
+      }
     } finally {
       setIsSubmittingAuth(false);
     }
@@ -148,6 +164,29 @@ export default function SettingsPage() {
                 >
                   {isSubmittingAuth ? 'Sending sign-in link...' : 'Send sign-in link'}
                 </Button>
+                <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                  <div className="space-y-2">
+                    <Label htmlFor="account-email-code">Sign-in code</Label>
+                    <Input
+                      id="account-email-code"
+                      aria-label="Sign-in code"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="123456"
+                      value={emailCode}
+                      onChange={(event) => setEmailCode(event.target.value)}
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    disabled={isSubmittingAuth}
+                    onClick={() => void handleVerifyEmailCode()}
+                  >
+                    Verify sign-in code
+                  </Button>
+                </div>
               </div>
             )}
 

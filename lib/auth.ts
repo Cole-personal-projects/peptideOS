@@ -16,6 +16,12 @@ export type AuthStatus = 'loading' | 'signed-out' | 'signed-in';
 
 export type PublicEnv = Record<string, string | undefined>;
 
+export interface PasswordlessOtpClient {
+  auth: {
+    verifyOtp: (params: { email: string; token: string; type: 'email' }) => Promise<{ error: { message: string } | null }>;
+  };
+}
+
 export function getAuthConfig(env: PublicEnv): AuthConfig {
   const url = env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const anonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
@@ -60,4 +66,33 @@ export function getAuthUserFromSession(session: Session | null): AuthUser | null
   if (!id || !email) return null;
 
   return { id, email };
+}
+
+export async function verifyEmailOtp(
+  client: PasswordlessOtpClient,
+  email: string,
+  token: string,
+): Promise<{ ok: boolean; message: string }> {
+  const trimmedEmail = email.trim();
+  const trimmedToken = token.trim();
+
+  if (!trimmedEmail) {
+    return { ok: false, message: 'Enter an email address.' };
+  }
+
+  if (!trimmedToken) {
+    return { ok: false, message: 'Enter the sign-in code from your email.' };
+  }
+
+  const { error } = await client.auth.verifyOtp({
+    email: trimmedEmail,
+    token: trimmedToken,
+    type: 'email',
+  });
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  return { ok: true, message: 'Signed in.' };
 }

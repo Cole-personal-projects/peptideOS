@@ -5,6 +5,7 @@ import {
   getAuthConfig,
   getAuthUserFromSession,
   getBrowserAuthConfig,
+  verifyEmailOtp,
 } from './auth';
 
 describe('auth configuration', () => {
@@ -76,5 +77,19 @@ describe('auth configuration', () => {
   test('returns no auth user when the Supabase session cannot identify an email user', () => {
     expect(getAuthUserFromSession(null)).toBeNull();
     expect(getAuthUserFromSession({ user: { id: 'user-1' } } as Session)).toBeNull();
+  });
+
+  test('verifies an email one-time code for PWA sign-in', async () => {
+    const verifyOtp = vi.fn().mockResolvedValue({ error: null });
+    const client = { auth: { verifyOtp } };
+
+    const result = await verifyEmailOtp(client, ' amy@example.com ', ' 123456 ');
+
+    expect(verifyOtp).toHaveBeenCalledWith({
+      email: 'amy@example.com',
+      token: '123456',
+      type: 'email',
+    });
+    expect(result).toEqual({ ok: true, message: 'Signed in.' });
   });
 });

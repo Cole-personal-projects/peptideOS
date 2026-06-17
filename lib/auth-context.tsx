@@ -6,6 +6,7 @@ import {
   createSupabaseAuthClient,
   getAuthUserFromSession,
   getBrowserAuthConfig,
+  verifyEmailOtp,
   type AuthConfig,
   type AuthStatus,
   type AuthUser,
@@ -16,6 +17,7 @@ interface AuthContextType {
   status: AuthStatus;
   user: AuthUser | null;
   signInWithEmail: (email: string) => Promise<{ ok: boolean; message: string }>;
+  verifyEmailCode: (email: string, token: string) => Promise<{ ok: boolean; message: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -79,6 +81,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true, message: 'Check your email for a sign-in link.' };
   }, [client]);
 
+  const verifyEmailCode = useCallback(async (email: string, token: string) => {
+    if (!client) {
+      return { ok: false, message: 'Sign-in is not configured yet. You can keep using local-only mode.' };
+    }
+
+    const result = await verifyEmailOtp(client, email, token);
+
+    if (result.ok) {
+      const { data } = await client.auth.getSession();
+      const nextUser = getAuthUserFromSession(data.session);
+      setUser(nextUser);
+      setStatus(nextUser ? 'signed-in' : 'signed-out');
+    }
+
+    return result;
+  }, [client]);
+
   const signOut = useCallback(async () => {
     if (!client) return;
     await client.auth.signOut();
@@ -91,8 +110,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     status,
     user,
     signInWithEmail,
+    verifyEmailCode,
     signOut,
-  }), [config, signInWithEmail, signOut, status, user]);
+  }), [config, signInWithEmail, signOut, status, user, verifyEmailCode]);
 
   return (
     <AuthContext.Provider value={value}>

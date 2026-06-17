@@ -11,6 +11,8 @@ test.describe('account settings', () => {
     await expect(page.getByText('Your data remains on this device until you sign in and cloud sync is available.')).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Send sign-in link' })).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Sign-in code' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Verify sign-in code' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
   });
 
