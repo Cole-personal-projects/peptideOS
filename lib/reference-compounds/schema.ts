@@ -51,6 +51,55 @@ export function validateReferenceCompound(compound: ReferenceCompound): string[]
     if (!/^https:\/\//.test(citation.url)) issues.push(`${compound.id}: citation URLs must be HTTPS`);
   });
 
+  if (compound.referenceProfile) {
+    const citationIds = new Set(compound.citations.map((citation) => citation.id));
+
+    if (!compound.referenceProfile.reviewSummary.trim()) {
+      issues.push(`${compound.id}: reference profile reviewSummary is required`);
+    }
+    if (!compound.referenceProfile.biohackerBrief.headline.trim()) {
+      issues.push(`${compound.id}: reference profile biohackerBrief headline is required`);
+    }
+    if (!compound.referenceProfile.biohackerBrief.realityCheck.trim()) {
+      issues.push(`${compound.id}: reference profile biohackerBrief realityCheck is required`);
+    }
+    if (compound.referenceProfile.biohackerBrief.whyPeopleCare.length === 0) {
+      issues.push(`${compound.id}: reference profile biohackerBrief whyPeopleCare is required`);
+    }
+    if (compound.referenceProfile.biohackerBrief.verifyBeforeUse.length === 0) {
+      issues.push(`${compound.id}: reference profile biohackerBrief verifyBeforeUse is required`);
+    }
+    if (compound.referenceProfile.biohackerBrief.trackInApp.length === 0) {
+      issues.push(`${compound.id}: reference profile biohackerBrief trackInApp is required`);
+    }
+    if (compound.referenceProfile.mechanismTargets.length === 0) {
+      issues.push(`${compound.id}: reference profile mechanismTargets are required`);
+    }
+    if (compound.referenceProfile.clinicalEvidence.length === 0) {
+      issues.push(`${compound.id}: reference profile clinicalEvidence is required`);
+    }
+    if (!compound.referenceProfile.regulatoryStatus.summary.trim()) {
+      issues.push(`${compound.id}: reference profile regulatory status summary is required`);
+    }
+
+    compound.referenceProfile.clinicalEvidence.forEach((evidence) => {
+      requireProfileCitationIds({
+        compoundId: compound.id,
+        field: 'clinicalEvidence',
+        citationIds: evidence.citationIds,
+        availableCitationIds: citationIds,
+        issues,
+      });
+    });
+    requireProfileCitationIds({
+      compoundId: compound.id,
+      field: 'regulatoryStatus',
+      citationIds: compound.referenceProfile.regulatoryStatus.citationIds,
+      availableCitationIds: citationIds,
+      issues,
+    });
+  }
+
   compound.dosePresets.forEach((preset) => {
     if (preset.intent === 'recommendation') issues.push(`${compound.id}: dose presets cannot be recommendations`);
     if (!preset.sourceNote.trim()) issues.push(`${compound.id}: dose preset sourceNote is required`);
@@ -77,4 +126,28 @@ export function validateReferenceCompound(compound: ReferenceCompound): string[]
   }
 
   return issues;
+}
+
+function requireProfileCitationIds({
+  compoundId,
+  field,
+  citationIds,
+  availableCitationIds,
+  issues,
+}: {
+  compoundId: string;
+  field: string;
+  citationIds: string[];
+  availableCitationIds: Set<string>;
+  issues: string[];
+}) {
+  if (citationIds.length === 0) {
+    issues.push(`${compoundId}: reference profile field "${field}" requires at least one citation`);
+  }
+
+  citationIds.forEach((citationId) => {
+    if (!availableCitationIds.has(citationId)) {
+      issues.push(`${compoundId}: reference profile field "${field}" references missing citation "${citationId}"`);
+    }
+  });
 }
