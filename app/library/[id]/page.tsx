@@ -68,15 +68,15 @@ function FieldBrief({ profile }: { profile: CompoundReferenceProfile }) {
 
         <div className="grid gap-3">
           <div className="rounded-lg border border-border bg-background/70 p-3">
-            <p className="mb-2 text-sm font-medium">Why people are watching this</p>
+            <p className="mb-2 text-sm font-medium">Why people care</p>
             <BulletList items={brief.whyPeopleCare} />
           </div>
           <div className="rounded-lg border border-chart-4/30 bg-chart-4/5 p-3">
-            <p className="mb-2 text-sm font-medium">Verify before you log it</p>
+            <p className="mb-2 text-sm font-medium">Verify before use</p>
             <BulletList items={brief.verifyBeforeUse} />
           </div>
           <div className="rounded-lg border border-border bg-background/70 p-3">
-            <p className="mb-2 text-sm font-medium">Track like it matters</p>
+            <p className="mb-2 text-sm font-medium">Track in PeptideOS</p>
             <BulletList items={brief.trackInApp} />
           </div>
           <div className="rounded-lg border border-primary/20 bg-primary/10 p-3">
@@ -91,9 +91,36 @@ function FieldBrief({ profile }: { profile: CompoundReferenceProfile }) {
         <Alert className="border-chart-4/40 bg-chart-4/5">
           <AlertTriangle className="h-4 w-4 text-chart-4" />
           <AlertDescription className="text-xs">
+            <span className="mb-1 block font-medium text-foreground">Reality check</span>
             {brief.realityCheck}
           </AlertDescription>
         </Alert>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SummaryCard({
+  researcherMode,
+  beginnerSummary,
+  researcherDetails,
+}: {
+  researcherMode: boolean;
+  beginnerSummary: string;
+  researcherDetails: string;
+}) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <BookOpen className="w-4 h-4" />
+          Summary
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm">
+          {researcherMode ? researcherDetails : beginnerSummary}
+        </p>
       </CardContent>
     </Card>
   );
@@ -146,6 +173,7 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
   }
 
   const isCustom = compound.source === 'user';
+  const referenceProfile = compound.referenceProfile;
 
   const saveEdit = () => {
     if (!editName.trim()) return;
@@ -244,30 +272,39 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
           ) : null}
         </div>
 
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="w-full grid grid-cols-4 overflow-x-auto">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="safety">Safety</TabsTrigger>
-            <TabsTrigger value="citations">Citations</TabsTrigger>
-            <TabsTrigger value="legal">Legal</TabsTrigger>
+        <Tabs defaultValue={referenceProfile ? 'field-brief' : 'overview'} className="w-full">
+          <TabsList className={cn(
+            "w-full overflow-x-auto",
+            referenceProfile ? "justify-start" : "grid grid-cols-4",
+          )}>
+            {referenceProfile ? (
+              <>
+                <TabsTrigger value="field-brief" className="min-w-fit px-3">Field Brief</TabsTrigger>
+                <TabsTrigger value="evidence" className="min-w-fit px-3">Evidence</TabsTrigger>
+                <TabsTrigger value="tracking" className="min-w-fit px-3">Tracking</TabsTrigger>
+                <TabsTrigger value="safety" className="min-w-fit px-3">Safety Watch</TabsTrigger>
+                <TabsTrigger value="status" className="min-w-fit px-3">Status</TabsTrigger>
+                <TabsTrigger value="citations" className="min-w-fit px-3">Citations</TabsTrigger>
+                <TabsTrigger value="legal" className="min-w-fit px-3">Legal</TabsTrigger>
+              </>
+            ) : (
+              <>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="safety">Safety</TabsTrigger>
+                <TabsTrigger value="citations">Citations</TabsTrigger>
+                <TabsTrigger value="legal">Legal</TabsTrigger>
+              </>
+            )}
           </TabsList>
 
-          <TabsContent value="overview" className="mt-4 space-y-4">
-            {compound.referenceProfile ? <FieldBrief profile={compound.referenceProfile} /> : null}
+          <TabsContent value={referenceProfile ? 'field-brief' : 'overview'} className="mt-4 space-y-4">
+            {referenceProfile ? <FieldBrief profile={referenceProfile} /> : null}
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
-                  Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm">
-                  {researcherMode ? compound.researcherDetails : compound.beginnerSummary}
-                </p>
-              </CardContent>
-            </Card>
+            <SummaryCard
+              researcherMode={researcherMode}
+              beginnerSummary={compound.beginnerSummary}
+              researcherDetails={compound.researcherDetails}
+            />
 
             {researcherMode && compound.mechanism ? (
               <Card>
@@ -294,9 +331,11 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
                 <p className="text-sm text-muted-foreground">{compound.storage}</p>
               </CardContent>
             </Card>
+          </TabsContent>
 
-            {compound.referenceProfile ? (
-              <>
+          {referenceProfile ? (
+            <>
+              <TabsContent value="evidence" className="mt-4 space-y-4">
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
@@ -305,17 +344,17 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground">{compound.referenceProfile.reviewSummary}</p>
+                    <p className="text-sm text-muted-foreground">{referenceProfile.reviewSummary}</p>
                     <div className="flex flex-wrap gap-2">
-                      {compound.referenceProfile.mechanismTargets.map((target) => (
+                      {referenceProfile.mechanismTargets.map((target) => (
                         <Badge key={target} variant="secondary">{target}</Badge>
                       ))}
                     </div>
                     <div className="space-y-3">
-                      {compound.referenceProfile.clinicalEvidence.map((evidence) => (
+                      {referenceProfile.clinicalEvidence.map((evidence) => (
                         <div key={`${evidence.design}-${evidence.population}`} className="rounded-lg border border-border bg-secondary/40 p-3">
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-sm font-medium">{formatLabel(evidence.design)}</p>
+                            <p className="text-sm font-medium">{evidence.design}</p>
                             {evidence.sourceQuality ? (
                               <Badge variant="outline">{formatLabel(evidence.sourceQuality)}</Badge>
                             ) : null}
@@ -332,29 +371,31 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
 
+              <TabsContent value="tracking" className="mt-4 space-y-4">
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Beaker className="w-4 h-4" />
-                      Research Tracking
+                      Practical Tracking Notes
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <BulletList items={compound.referenceProfile.practicalNotes} />
+                    <BulletList items={referenceProfile.practicalNotes} />
                     <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-                      <p className="mb-2 text-sm font-medium">PeptideOS can help</p>
-                      <BulletList items={compound.referenceProfile.peptideOSActions} />
+                      <p className="mb-2 text-sm font-medium">Peppi can help</p>
+                      <BulletList items={referenceProfile.peptideOSActions} />
                     </div>
                     <div className="rounded-lg border border-chart-4/20 bg-chart-4/5 p-3">
                       <p className="mb-2 text-sm font-medium">Evidence gaps</p>
-                      <BulletList items={compound.referenceProfile.evidenceGaps} />
+                      <BulletList items={referenceProfile.evidenceGaps} />
                     </div>
                   </CardContent>
                 </Card>
-              </>
-            ) : null}
-          </TabsContent>
+              </TabsContent>
+            </>
+          ) : null}
 
           <TabsContent value="safety" className="mt-4 space-y-4">
             <Card>
@@ -368,17 +409,17 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
                 <p className="text-sm text-muted-foreground">{compound.safety}</p>
               </CardContent>
             </Card>
-            {compound.referenceProfile ? (
+            {referenceProfile ? (
               <>
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4" />
-                      Watch Items
+                      Safety Signals
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <BulletList items={compound.referenceProfile.safetySignals} />
+                    <BulletList items={referenceProfile.safetySignals} />
                   </CardContent>
                 </Card>
                 <Card>
@@ -389,12 +430,39 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <BulletList items={compound.referenceProfile.evidenceGaps} />
+                    <BulletList items={referenceProfile.evidenceGaps} />
                   </CardContent>
                 </Card>
               </>
             ) : null}
           </TabsContent>
+
+          {referenceProfile ? (
+            <TabsContent value="status" className="mt-4 space-y-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Scale className="w-4 h-4" />
+                    Regulatory Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline">{formatLabel(referenceProfile.regulatoryStatus.status)} in {referenceProfile.regulatoryStatus.region}</Badge>
+                    {referenceProfile.regulatoryStatus.sourceQuality ? (
+                      <Badge variant="secondary">{formatLabel(referenceProfile.regulatoryStatus.sourceQuality)}</Badge>
+                    ) : null}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{referenceProfile.regulatoryStatus.summary}</p>
+                  {referenceProfile.regulatoryStatus.limitations ? (
+                    <p className="rounded-md border border-chart-4/20 bg-chart-4/5 p-2 text-xs text-muted-foreground">
+                      {referenceProfile.regulatoryStatus.limitations}
+                    </p>
+                  ) : null}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          ) : null}
 
           <TabsContent value="citations" className="mt-4 space-y-4">
             <Card>
