@@ -314,9 +314,19 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
                     <div className="space-y-3">
                       {compound.referenceProfile.clinicalEvidence.map((evidence) => (
                         <div key={`${evidence.design}-${evidence.population}`} className="rounded-lg border border-border bg-secondary/40 p-3">
-                          <p className="text-sm font-medium">{formatLabel(evidence.design)}</p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-medium">{formatLabel(evidence.design)}</p>
+                            {evidence.sourceQuality ? (
+                              <Badge variant="outline">{formatLabel(evidence.sourceQuality)}</Badge>
+                            ) : null}
+                          </div>
                           <p className="mt-1 text-xs text-muted-foreground">{evidence.population}</p>
                           <p className="mt-2 text-sm text-muted-foreground">{evidence.finding}</p>
+                          {evidence.limitations ? (
+                            <p className="mt-2 rounded-md border border-chart-4/20 bg-chart-4/5 p-2 text-xs text-muted-foreground">
+                              {evidence.limitations}
+                            </p>
+                          ) : null}
                         </div>
                       ))}
                     </div>

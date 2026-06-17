@@ -89,12 +89,15 @@ export const retatrutide: ReferenceCompound = {
         population: 'Adults with obesity or overweight plus at least one weight-related condition',
         finding: 'Published phase 2 data reported dose-related body-weight reductions at 24 and 48 weeks, with gastrointestinal events and heart-rate increases among notable safety signals.',
         citationIds: ['pubmed-retatrutide-obesity-phase-2'],
+        sourceQuality: 'source-backed',
       },
       {
         design: 'phase-3-program',
         population: 'Adults with obesity, overweight, type 2 diabetes, cardiovascular disease, obstructive sleep apnea, or related trial subgroups',
         finding: 'Lilly reports completed phase 3 studies and additional ongoing TRIUMPH and TRANSCEND-T2D trials; the compound remains under development while regulatory review has not produced an approved US label.',
         citationIds: ['lilly-retatrutide-investigational', 'clinicaltrials-retatrutide-triumph-1', 'clinicaltrials-retatrutide-triumph-5'],
+        sourceQuality: 'trial-registry',
+        limitations: 'Some phase 3 details are company-announced/topline or trial-registry status rather than an FDA-reviewed label.',
       },
     ],
     safetySignals: [
@@ -120,6 +123,7 @@ export const retatrutide: ReferenceCompound = {
       region: 'US',
       summary: 'Lilly describes Retatrutide as not FDA approved and investigational while phase 3 trials evaluate safety and efficacy.',
       citationIds: ['lilly-retatrutide-investigational'],
+      sourceQuality: 'source-backed',
     },
     peptideOSActions: [
       'Log labeled doses or ask Peppi to build a schedule from the user-confirmed label without converting trial arms into recommendations.',

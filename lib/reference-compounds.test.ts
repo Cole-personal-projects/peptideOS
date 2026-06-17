@@ -300,6 +300,80 @@ describe('reference compounds', () => {
     expect(validateReferenceCompound(invalid)).toContain(`${invalid.id}: reconstituted compounds require reconstitutionDefaults`);
   });
 
+  test('allows cutting-edge profiles when weak evidence is transparent', () => {
+    const retatrutide = referenceCompounds.find((compound) => compound.id === 'retatrutide');
+    const emerging = {
+      ...retatrutide!,
+      id: 'emerging-test-compound',
+      name: 'Emerging Test Compound',
+      aliases: ['ETC-1'],
+      citations: [],
+      referenceProfile: {
+        ...retatrutide!.referenceProfile!,
+        evidenceTier: 'identity-only',
+        reviewSummary: 'Early community interest only; PeptideOS can track it but cannot verify efficacy claims.',
+        clinicalEvidence: [{
+          design: 'community-reported',
+          population: 'Biohacking community reports; no verified clinical population.',
+          finding: 'Anecdotal reports exist, but reviewed source-backed human evidence is not available.',
+          citationIds: [],
+          sourceQuality: 'uncited-emerging',
+          limitations: 'No source-backed human study or authoritative identity record is attached yet.',
+        }],
+        evidenceGaps: [
+          'No authoritative identity source is attached.',
+          'No reviewed clinical evidence is attached.',
+          'Community reports may not match the compound, purity, dose, or route users actually have.',
+        ],
+        regulatoryStatus: {
+          status: 'unknown',
+          region: 'US',
+          summary: 'No confirmed US regulatory status is attached; users should treat status as unknown.',
+          citationIds: [],
+          sourceQuality: 'uncited-emerging',
+          limitations: 'Regulatory status has not been verified against an authoritative source.',
+        },
+      },
+    } as never;
+
+    expect(validateReferenceCompound(emerging)).toEqual([]);
+  });
+
+  test('requires limitation text when cutting-edge profiles are not citation-backed', () => {
+    const retatrutide = referenceCompounds.find((compound) => compound.id === 'retatrutide');
+    const opaque = {
+      ...retatrutide!,
+      id: 'opaque-emerging-compound',
+      citations: [],
+      referenceProfile: {
+        ...retatrutide!.referenceProfile!,
+        evidenceTier: 'identity-only',
+        clinicalEvidence: [{
+          design: 'community-reported',
+          population: 'Biohacking community reports.',
+          finding: 'Anecdotal reports exist.',
+          citationIds: [],
+          sourceQuality: 'community-reported',
+          limitations: '',
+        }],
+        evidenceGaps: ['No reviewed clinical evidence is attached.'],
+        regulatoryStatus: {
+          status: 'unknown',
+          region: 'US',
+          summary: 'No confirmed US regulatory status is attached.',
+          citationIds: [],
+          sourceQuality: 'uncited-emerging',
+          limitations: '',
+        },
+      },
+    } as never;
+
+    expect(validateReferenceCompound(opaque)).toEqual(expect.arrayContaining([
+      'opaque-emerging-compound: reference profile field "clinicalEvidence" with weak evidence requires limitations',
+      'opaque-emerging-compound: reference profile field "regulatoryStatus" with weak evidence requires limitations',
+    ]));
+  });
+
   test('requires pro-grade reference profile citations to resolve on the compound', () => {
     const retatrutide = referenceCompounds.find((compound) => compound.id === 'retatrutide');
     const invalid = {

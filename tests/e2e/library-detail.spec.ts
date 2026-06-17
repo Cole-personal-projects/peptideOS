@@ -56,6 +56,8 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('The clinical Retatrutide story is not a gray-market vial.')).toBeVisible();
 
     await expect(page.getByText('Published phase 2 data reported dose-related body-weight reductions')).toBeVisible();
+    await expect(page.getByText('Source Backed', { exact: true })).toBeVisible();
+    await expect(page.getByText('Trial Registry', { exact: true })).toBeVisible();
     await expect(page.getByText('Track inventory by exact vial, kit, lot, source, and container state.').first()).toBeVisible();
     await expect(page.getByText('Log labeled doses or ask Peppi to build a schedule').first()).toBeVisible();
     await expect(page.getByText('No FDA-approved US prescribing label or consumer storage instructions.')).toBeVisible();

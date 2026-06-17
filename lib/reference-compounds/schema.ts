@@ -42,7 +42,9 @@ export function validateReferenceCompound(compound: ReferenceCompound): string[]
   if (!compound.researcherDetails.trim()) issues.push(`${compound.id}: researcherDetails is required`);
   if (!compound.safety.trim()) issues.push(`${compound.id}: safety is required`);
   if (!compound.storage.trim()) issues.push(`${compound.id}: storage is required`);
-  if (compound.citations.length === 0) issues.push(`${compound.id}: at least one citation is required`);
+  if (compound.citations.length === 0 && !hasTransparentCitationGap(compound)) {
+    issues.push(`${compound.id}: at least one citation is required unless uncited evidence gaps are explicit`);
+  }
 
   compound.citations.forEach((citation) => {
     if (!citation.id.trim()) issues.push(`${compound.id}: citation id is required`);
@@ -78,6 +80,9 @@ export function validateReferenceCompound(compound: ReferenceCompound): string[]
     if (compound.referenceProfile.clinicalEvidence.length === 0) {
       issues.push(`${compound.id}: reference profile clinicalEvidence is required`);
     }
+    if (compound.referenceProfile.evidenceGaps.length === 0) {
+      issues.push(`${compound.id}: reference profile evidenceGaps are required`);
+    }
     if (!compound.referenceProfile.regulatoryStatus.summary.trim()) {
       issues.push(`${compound.id}: reference profile regulatory status summary is required`);
     }
@@ -87,6 +92,8 @@ export function validateReferenceCompound(compound: ReferenceCompound): string[]
         compoundId: compound.id,
         field: 'clinicalEvidence',
         citationIds: evidence.citationIds,
+        sourceQuality: evidence.sourceQuality,
+        limitations: evidence.limitations,
         availableCitationIds: citationIds,
         issues,
       });
@@ -95,6 +102,8 @@ export function validateReferenceCompound(compound: ReferenceCompound): string[]
       compoundId: compound.id,
       field: 'regulatoryStatus',
       citationIds: compound.referenceProfile.regulatoryStatus.citationIds,
+      sourceQuality: compound.referenceProfile.regulatoryStatus.sourceQuality,
+      limitations: compound.referenceProfile.regulatoryStatus.limitations,
       availableCitationIds: citationIds,
       issues,
     });
@@ -132,17 +141,31 @@ function requireProfileCitationIds({
   compoundId,
   field,
   citationIds,
+  sourceQuality,
+  limitations,
   availableCitationIds,
   issues,
 }: {
   compoundId: string;
   field: string;
   citationIds: string[];
+  sourceQuality?: string;
+  limitations?: string;
   availableCitationIds: Set<string>;
   issues: string[];
 }) {
+  const allowsCitationGap = sourceQuality === 'uncited-emerging' || sourceQuality === 'community-reported';
+
   if (citationIds.length === 0) {
-    issues.push(`${compoundId}: reference profile field "${field}" requires at least one citation`);
+    if (!allowsCitationGap) {
+      issues.push(`${compoundId}: reference profile field "${field}" requires at least one citation or transparent weak-evidence sourceQuality`);
+      return;
+    }
+
+    if (!limitations?.trim()) {
+      issues.push(`${compoundId}: reference profile field "${field}" with weak evidence requires limitations`);
+    }
+    return;
   }
 
   citationIds.forEach((citationId) => {
@@ -150,4 +173,19 @@ function requireProfileCitationIds({
       issues.push(`${compoundId}: reference profile field "${field}" references missing citation "${citationId}"`);
     }
   });
+}
+
+function hasTransparentCitationGap(compound: ReferenceCompound): boolean {
+  const profile = compound.referenceProfile;
+  if (!profile) return false;
+  if (profile.evidenceGaps.length === 0) return false;
+
+  const evidenceSources = profile.clinicalEvidence.map((evidence) => evidence.sourceQuality);
+  const regulatorySource = profile.regulatoryStatus.sourceQuality;
+  const sourceQualities = [...evidenceSources, regulatorySource];
+
+  return sourceQualities.some((sourceQuality) => (
+    sourceQuality === 'uncited-emerging'
+    || sourceQuality === 'community-reported'
+  ));
 }
