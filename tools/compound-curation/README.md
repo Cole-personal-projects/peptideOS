@@ -31,6 +31,10 @@ This workflow is for bundled stock-library data. User-created compounds belong i
 4. Run a safety review for recommendation language.
 5. Run `pnpm compound:validate`.
 6. Ask for human approval before adding the entry to `lib/reference-compounds/index.ts`.
+7. Package approved entries with `pnpm compound:package-reviewed`.
+   Example: `pnpm compound:package-reviewed -- --compound retatrutide --release-version 2026.06.4 --output ./retatrutide-package.json`
+8. Apply packaged releases with `pnpm library:import-reviewed`.
+   Example: `pnpm library:import-reviewed -- --input ./retatrutide-package.json --output ./retatrutide-import.sql`, then run the generated SQL against Supabase.
 
 ## Review Checklist
 
@@ -39,6 +43,7 @@ This workflow is for bundled stock-library data. User-created compounds belong i
 - Presets are labeled for logging/reference only.
 - Citations use HTTPS URLs and identify the source.
 - Copy is original, concise, and research/tracking oriented.
+- The packaged snapshot validates and imports before the release is applied.
 
 ## Source Fetcher Limits
 
