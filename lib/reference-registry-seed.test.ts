@@ -9,7 +9,8 @@ describe('reference registry seed', () => {
     const snapshot = buildBundledReferenceSnapshot(referenceCompounds);
     const seed = buildReferenceRegistrySeed(snapshot);
 
-    expect(validateReferenceSnapshot(seed.sourceSnapshot)).toEqual([]);
+    expect(seed.sourceSnapshot).toBeDefined();
+    expect(validateReferenceSnapshot(seed.sourceSnapshot!)).toEqual([]);
     expect(seed.compounds).toHaveLength(referenceCompounds.length);
     expect(seed.compounds.every((compound) => compound.review_status === 'reviewed')).toBe(true);
     expect(seed.aliases.length).toBe(referenceCompounds.flatMap((compound) => compound.aliases).length);

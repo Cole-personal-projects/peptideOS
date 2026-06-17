@@ -87,4 +87,18 @@ describe('user compounds', () => {
     expect(merged.filter((compound) => compound.id === referenceCompounds[0].id)).toHaveLength(1);
     expect(getPersistableUserCompounds(merged)).toEqual([custom]);
   });
+
+  test('merges visible user compounds onto a supplied released reference library', () => {
+    const releasedReference = {
+      ...referenceCompounds[0],
+      beginnerSummary: 'Loaded from released Supabase library.',
+    };
+    const custom = createUserCompound(draft, new Date('2026-05-24T00:00:00.000Z'));
+
+    const merged = mergeCompoundLibrary([custom], [releasedReference]);
+
+    expect(merged).toHaveLength(2);
+    expect(merged[0].beginnerSummary).toBe('Loaded from released Supabase library.');
+    expect(merged[1]).toBe(custom);
+  });
 });

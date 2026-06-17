@@ -5,16 +5,17 @@ export type UserCompoundDraft = Omit<Compound, 'source' | 'curationStatus' | 'cr
 
 const bundledCompoundIds = new Set(referenceCompounds.map((compound) => compound.id));
 
-export function getPersistableUserCompounds(compounds: Compound[]): Compound[] {
-  return compounds.filter((compound) => compound.source === 'user' && !bundledCompoundIds.has(compound.id));
+export function getPersistableUserCompounds(compounds: Compound[], referenceLibrary: readonly Compound[] = referenceCompounds): Compound[] {
+  const referenceCompoundIds = new Set(referenceLibrary.map((compound) => compound.id));
+  return compounds.filter((compound) => compound.source === 'user' && !bundledCompoundIds.has(compound.id) && !referenceCompoundIds.has(compound.id));
 }
 
-export function getVisibleUserCompounds(compounds: Compound[]): Compound[] {
-  return getPersistableUserCompounds(compounds).filter((compound) => !compound.deletedAt);
+export function getVisibleUserCompounds(compounds: Compound[], referenceLibrary: readonly Compound[] = referenceCompounds): Compound[] {
+  return getPersistableUserCompounds(compounds, referenceLibrary).filter((compound) => !compound.deletedAt);
 }
 
-export function mergeCompoundLibrary(userCompounds: Compound[] = []): Compound[] {
-  return [...referenceCompounds, ...getVisibleUserCompounds(userCompounds)];
+export function mergeCompoundLibrary(userCompounds: Compound[] = [], referenceLibrary: readonly Compound[] = referenceCompounds): Compound[] {
+  return [...referenceLibrary, ...getVisibleUserCompounds(userCompounds, referenceLibrary)];
 }
 
 export function createUserCompound(draft: UserCompoundDraft, createdAt = new Date()): Compound {

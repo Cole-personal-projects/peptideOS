@@ -154,7 +154,16 @@ export function validateReferenceRegistrySeedForExport(seed: ReferenceRegistrySe
     }
   });
 
+  seed.compounds.forEach((compound) => {
+    if (compound.review_status !== 'reviewed') {
+      issues.push(`${compound.slug}: release exports can only include reviewed compounds`);
+    }
+  });
+
   seed.contentBlocks.forEach((block) => {
+    if (block.review_status !== 'reviewed') {
+      issues.push(`${block.compound_slug}: content block "${block.id}" is not reviewed`);
+    }
     block.citation_ids.forEach((citationId) => {
       if (!seed.citations.some((citation) => citation.id === citationId)) {
         issues.push(`${block.compound_slug}: content block "${block.id}" references missing citation "${citationId}"`);

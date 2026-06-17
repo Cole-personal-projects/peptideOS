@@ -59,4 +59,41 @@ describe('Supabase reference registry schema', () => {
     expect(sql).toContain("typical_vial_amounts jsonb not null default '[]'::jsonb");
     expect(sql).toContain('typical_bac_water_ml numeric[] not null default');
   });
+
+  test('allows runtime clients to read reviewed reference library rows without draft write access', () => {
+    const sql = readFileSync('supabase/migrations/20260617002000_add_reference_runtime_read_policies.sql', 'utf8');
+
+    [
+      'reference_compounds',
+      'reference_compound_aliases',
+      'reference_compound_categories',
+      'reference_compound_forms',
+      'reference_citations',
+      'reference_compound_citations',
+      'reference_dose_presets',
+      'reference_vial_presets',
+      'reference_workflow_metadata',
+      'reference_content_blocks',
+      'reference_library_releases',
+      'reference_library_release_items',
+    ].forEach((table) => {
+      expect(sql).toContain(`on public.${table}`);
+      expect(sql).toContain('for select');
+      expect(sql).toContain('to anon, authenticated');
+    });
+
+    expect(sql).toContain("review_status = 'reviewed'");
+    expect(sql).not.toContain('for insert');
+    expect(sql).not.toContain('for update');
+    expect(sql).not.toContain('for delete');
+  });
+
+  test('uses stable text ids for release content blocks', () => {
+    const sql = readFileSync('supabase/migrations/20260617003000_stabilize_reference_content_block_ids.sql', 'utf8');
+
+    expect(sql).toContain('alter table public.reference_content_blocks');
+    expect(sql).toContain('alter column id type text');
+    expect(sql).toContain('alter column content_block_id type text');
+    expect(sql).toContain('references public.reference_content_blocks(id)');
+  });
 });

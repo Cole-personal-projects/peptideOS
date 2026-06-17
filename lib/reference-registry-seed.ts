@@ -2,7 +2,7 @@ import type { CompoundDosePreset, CompoundReferenceProfile, CompoundVialPreset, 
 import type { ReferenceLibrarySnapshot } from './reference-library-snapshot';
 
 export interface ReferenceRegistrySeed {
-  sourceSnapshot: ReferenceLibrarySnapshot;
+  sourceSnapshot?: ReferenceLibrarySnapshot;
   compounds: ReferenceCompoundRow[];
   aliases: ReferenceAliasRow[];
   categories: ReferenceCategoryRow[];
@@ -121,6 +121,7 @@ export interface ReferenceLibraryReleaseRow {
   release_notes: string;
   source_snapshot_version: string;
   published_by: string;
+  published_at: string;
 }
 
 export interface ReferenceLibraryReleaseItemRow {
@@ -207,6 +208,7 @@ export function buildReferenceRegistrySeed(snapshot: ReferenceLibrarySnapshot): 
       release_notes: 'Generated from reviewed PeptideOS bundled reference library.',
       source_snapshot_version: snapshot.libraryVersion,
       published_by: 'peptideos-bundled-export',
+      published_at: snapshot.exportedAt,
     },
     releaseItems: contentBlocks.map((block, index) => ({
       release_version: snapshot.libraryVersion,
