@@ -1,4 +1,4 @@
-import type { CompoundDosePreset, CompoundVialPreset, InventoryContainerType } from './types';
+import type { CompoundDosePreset, CompoundReferenceProfile, CompoundVialPreset, InventoryContainerType } from './types';
 import type { ReferenceLibrarySnapshot } from './reference-library-snapshot';
 
 export interface ReferenceRegistrySeed {
@@ -12,6 +12,9 @@ export interface ReferenceRegistrySeed {
   dosePresets: ReferenceDosePresetRow[];
   vialPresets: ReferenceVialPresetRow[];
   workflowMetadata: ReferenceWorkflowMetadataRow[];
+  contentBlocks: ReferenceContentBlockRow[];
+  libraryRelease: ReferenceLibraryReleaseRow;
+  releaseItems: ReferenceLibraryReleaseItemRow[];
 }
 
 export interface ReferenceCompoundRow {
@@ -100,8 +103,38 @@ export interface ReferenceWorkflowMetadataRow {
   workflow_notes: string;
 }
 
+export interface ReferenceContentBlockRow {
+  id: string;
+  compound_slug: string;
+  block_type: 'field_brief' | 'evidence_snapshot' | 'safety_watch' | 'regulatory_status';
+  title: string;
+  content: Record<string, unknown>;
+  citation_ids: string[];
+  review_status: 'reviewed';
+  content_version: number;
+}
+
+export interface ReferenceLibraryReleaseRow {
+  release_version: string;
+  release_notes: string;
+  source_snapshot_version: string;
+  published_by: string;
+}
+
+export interface ReferenceLibraryReleaseItemRow {
+  release_version: string;
+  compound_slug: string;
+  content_block_id: string;
+  sort_order: number;
+}
+
 export function buildReferenceRegistrySeed(snapshot: ReferenceLibrarySnapshot): ReferenceRegistrySeed {
   const compounds = [...snapshot.compounds].sort((a, b) => a.id.localeCompare(b.id));
+  const contentBlocks = compounds.flatMap((compound) => (
+    compound.referenceProfile
+      ? toContentBlockRows(compound.id, compound.referenceProfile)
+      : []
+  ));
 
   return {
     sourceSnapshot: snapshot,
@@ -164,7 +197,75 @@ export function buildReferenceRegistrySeed(snapshot: ReferenceLibrarySnapshot): 
       can_track_inventory: true,
       workflow_notes: 'Generated from reviewed PeptideOS bundled reference metadata.',
     })),
+    contentBlocks,
+    libraryRelease: {
+      release_version: snapshot.libraryVersion,
+      release_notes: 'Generated from reviewed PeptideOS bundled reference library.',
+      source_snapshot_version: snapshot.libraryVersion,
+      published_by: 'peptideos-bundled-export',
+    },
+    releaseItems: contentBlocks.map((block, index) => ({
+      release_version: snapshot.libraryVersion,
+      compound_slug: block.compound_slug,
+      content_block_id: block.id,
+      sort_order: index,
+    })),
   };
+}
+
+function toContentBlockRows(compoundSlug: string, profile: CompoundReferenceProfile): ReferenceContentBlockRow[] {
+  return [
+    {
+      id: `${compoundSlug}-field-brief-v1`,
+      compound_slug: compoundSlug,
+      block_type: 'field_brief',
+      title: 'Field Brief',
+      content: { ...profile.biohackerBrief },
+      citation_ids: [],
+      review_status: 'reviewed',
+      content_version: 1,
+    },
+    {
+      id: `${compoundSlug}-evidence-snapshot-v1`,
+      compound_slug: compoundSlug,
+      block_type: 'evidence_snapshot',
+      title: 'Evidence Snapshot',
+      content: {
+        evidenceTier: profile.evidenceTier,
+        reviewSummary: profile.reviewSummary,
+        mechanismTargets: profile.mechanismTargets,
+        clinicalEvidence: profile.clinicalEvidence,
+        evidenceGaps: profile.evidenceGaps,
+      },
+      citation_ids: unique(profile.clinicalEvidence.flatMap((evidence) => evidence.citationIds)),
+      review_status: 'reviewed',
+      content_version: 1,
+    },
+    {
+      id: `${compoundSlug}-safety-watch-v1`,
+      compound_slug: compoundSlug,
+      block_type: 'safety_watch',
+      title: 'Safety Watch',
+      content: {
+        safetySignals: profile.safetySignals,
+        practicalNotes: profile.practicalNotes,
+        peptideOSActions: profile.peptideOSActions,
+      },
+      citation_ids: [],
+      review_status: 'reviewed',
+      content_version: 1,
+    },
+    {
+      id: `${compoundSlug}-regulatory-status-v1`,
+      compound_slug: compoundSlug,
+      block_type: 'regulatory_status',
+      title: 'Regulatory Status',
+      content: { ...profile.regulatoryStatus },
+      citation_ids: [...profile.regulatoryStatus.citationIds],
+      review_status: 'reviewed',
+      content_version: 1,
+    },
+  ];
 }
 
 function toDosePresetRow(compoundSlug: string, preset: CompoundDosePreset, index: number): ReferenceDosePresetRow {
@@ -211,4 +312,8 @@ function inferCitationSourceType(source: string): ReferenceCitationRow['source_t
   if (normalized.includes('pubchem')) return 'database';
   if (normalized.includes('pubmed') || normalized.includes('journal')) return 'publication';
   return 'other';
+}
+
+function unique(values: string[]): string[] {
+  return [...new Set(values)].sort();
 }
