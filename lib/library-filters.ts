@@ -1,4 +1,5 @@
 import type { Compound, CompoundCategory, CompoundType, Peptide, PeptideCategory } from './types';
+import { getLibraryEvidenceDisplay, type LibraryEvidenceFilter } from './library-evidence';
 
 export interface LibraryFilterOptions {
   search: string;
@@ -9,6 +10,7 @@ export interface CompoundLibraryFilterOptions {
   search: string;
   category: CompoundCategory | 'all';
   compoundType: CompoundType | 'all';
+  evidence?: LibraryEvidenceFilter;
 }
 
 function searchableText(peptide: Peptide): string {
@@ -62,6 +64,7 @@ export function filterCompounds(compounds: Compound[], options: CompoundLibraryF
     const matchesSearch = search.length === 0 || searchableCompoundText(compound).includes(search);
     const matchesCategory = options.category === 'all' || compound.category === options.category;
     const matchesType = options.compoundType === 'all' || compound.compoundType === options.compoundType;
-    return matchesSearch && matchesCategory && matchesType;
+    const matchesEvidence = !options.evidence || options.evidence === 'all' || getLibraryEvidenceDisplay(compound).filter === options.evidence;
+    return matchesSearch && matchesCategory && matchesType && matchesEvidence;
   });
 }

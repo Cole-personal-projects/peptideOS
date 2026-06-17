@@ -17,6 +17,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/lib/context';
 import { formatCompoundDisplayLabel, libraryCategoryOptions, libraryCompoundTypeOptions } from '@/lib/compound-display';
 import { getEmptyStateContent } from '@/lib/empty-states';
+import {
+  formatLibraryEvidenceFilter,
+  getLibraryEvidenceDisplay,
+  libraryEvidenceOptions,
+  type LibraryEvidenceFilter,
+} from '@/lib/library-evidence';
 import { filterCompounds } from '@/lib/library-filters';
 import { cn } from '@/lib/utils';
 import type { CompoundCategory, CompoundType, DoseUnit, Route } from '@/lib/types';
@@ -37,6 +43,7 @@ const categoryColors: Partial<Record<CompoundCategory, string>> = {
 
 const categories = libraryCategoryOptions;
 const compoundTypes = libraryCompoundTypeOptions;
+const evidenceFilters = libraryEvidenceOptions;
 const routes: Route[] = ['subq', 'im', 'intranasal', 'oral', 'topical'];
 const doseUnits: DoseUnit[] = ['mcg', 'mg', 'iu'];
 
@@ -53,6 +60,7 @@ export default function LibraryPage() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CompoundCategory | 'all'>('all');
   const [selectedType, setSelectedType] = useState<CompoundType | 'all'>('all');
+  const [selectedEvidence, setSelectedEvidence] = useState<LibraryEvidenceFilter>('all');
   const [researcherMode, setResearcherMode] = useState(data.userMode === 'researcher');
   const [addOpen, setAddOpen] = useState(false);
   const [name, setName] = useState('');
@@ -64,8 +72,13 @@ export default function LibraryPage() {
   const emptyState = getEmptyStateContent('library-no-results');
 
   const filteredCompounds = useMemo(
-    () => filterCompounds(data.compounds, { search, category: selectedCategory, compoundType: selectedType }),
-    [data.compounds, search, selectedCategory, selectedType],
+    () => filterCompounds(data.compounds, {
+      search,
+      category: selectedCategory,
+      compoundType: selectedType,
+      evidence: selectedEvidence,
+    }),
+    [data.compounds, search, selectedCategory, selectedType, selectedEvidence],
   );
 
   const resetForm = () => {
@@ -231,6 +244,22 @@ export default function LibraryPage() {
           ))}
         </div>
 
+        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar" aria-label="Filter by evidence">
+          {evidenceFilters.map((evidence) => (
+            <Button
+              key={evidence}
+              type="button"
+              variant={selectedEvidence === evidence ? 'default' : 'outline'}
+              size="sm"
+              className="h-6 whitespace-nowrap rounded-full px-2.5 text-xs"
+              aria-pressed={selectedEvidence === evidence}
+              onClick={() => setSelectedEvidence(evidence)}
+            >
+              {formatLibraryEvidenceFilter(evidence)}
+            </Button>
+          ))}
+        </div>
+
         <Label className="text-xs text-muted-foreground">
           {researcherMode ? 'Researcher Mode: Showing detailed information' : 'Beginner Mode: Showing simplified summaries'}
         </Label>
@@ -254,6 +283,7 @@ export default function LibraryPage() {
                     setSearch('');
                     setSelectedCategory('all');
                     setSelectedType('all');
+                    setSelectedEvidence('all');
                   }}
                 >
                   {emptyState.actionLabel}
@@ -261,36 +291,47 @@ export default function LibraryPage() {
               </EmptyContent>
             </Empty>
           ) : (
-            filteredCompounds.map((compound) => (
-              <Link key={compound.id} href={`/library/${compound.id}`} className="block">
-                <Card className="hover:bg-secondary/30 transition-colors">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0 pr-3">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <h3 className="font-semibold">{compound.name}</h3>
-                          <Badge variant="outline" className={cn("text-[10px] capitalize", categoryColors[compound.category])}>
-                            {formatLabel(compound.category)}
-                          </Badge>
-                          <Badge variant={compound.source === 'user' ? 'default' : 'secondary'} className="text-[10px]">
-                            {compound.source === 'user' ? 'Custom' : 'Reference'}
-                          </Badge>
+            filteredCompounds.map((compound) => {
+              const evidence = getLibraryEvidenceDisplay(compound);
+
+              return (
+                <Link key={compound.id} href={`/library/${compound.id}`} className="block">
+                  <Card className="hover:bg-secondary/30 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0 pr-3">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h3 className="font-semibold">{compound.name}</h3>
+                            <Badge variant="outline" className={cn("text-[10px] capitalize", categoryColors[compound.category])}>
+                              {formatLabel(compound.category)}
+                            </Badge>
+                            <Badge variant={compound.source === 'user' ? 'default' : 'secondary'} className="text-[10px]">
+                              {compound.source === 'user' ? 'Custom' : 'Reference'}
+                            </Badge>
+                            <Badge variant="outline" className="border-primary/30 bg-primary/5 text-[10px] text-primary">
+                              {evidence.tierLabel}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px]">
+                              {evidence.statusLabel}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {researcherMode ? compound.researcherDetails : compound.beginnerSummary}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted-foreground">
+                            <span>{formatLabel(compound.compoundType)}</span>
+                            <span>{evidence.mechanismClass}</span>
+                            <span>Route: {compound.defaultRoute.toUpperCase()}</span>
+                            <span>Unit: {compound.defaultDoseUnit.toUpperCase()}</span>
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {researcherMode ? compound.researcherDetails : compound.beginnerSummary}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted-foreground">
-                          <span>{formatLabel(compound.compoundType)}</span>
-                          <span>Route: {compound.defaultRoute.toUpperCase()}</span>
-                          <span>Unit: {compound.defaultDoseUnit.toUpperCase()}</span>
-                        </div>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                       </div>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })
           )}
         </div>
       </div>
