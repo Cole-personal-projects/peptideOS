@@ -1,0 +1,130 @@
+import type { ReferenceCompound } from '../schema';
+
+export const enclomiphene: ReferenceCompound = {
+  id: 'enclomiphene',
+  name: 'Enclomiphene',
+  aliases: ['Enclomiphene citrate', 'Enclomifene', 'Androxal'],
+  compoundType: 'small-molecule',
+  category: 'hormone-endocrine',
+  defaultRoute: 'oral',
+  supportedRoutes: ['oral'],
+  defaultDoseUnit: 'mg',
+  concentrationMode: 'none',
+  dosePresets: [
+    {
+      label: 'User-entered oral tablet/capsule strength',
+      value: 12.5,
+      unit: 'mg',
+      intent: 'loggingPreset',
+      sourceNote: 'Commonly encountered strength for logging convenience only; verify against the actual prescription or compounded label.',
+      citationIds: ['pubchem-enclomiphene-citrate'],
+    },
+  ],
+  vialPresets: [
+    {
+      label: 'User-labeled oral container',
+      sourceNote: 'Track exact bottle, capsule, or tablet label details; oral compounded products vary by pharmacy and source.',
+      citationIds: ['pubchem-enclomiphene-citrate'],
+    },
+  ],
+  beginnerSummary: 'A SERM-style hormone-endocrine compound tracked for identity, source, label strength, schedule, and endocrine-context notes.',
+  researcherDetails: 'Enclomiphene is the trans isomer associated with clomiphene chemistry. PeptideOS tracks it as a hormone-adjacent small molecule because users often log it beside testosterone, hCG, gonadorelin, or fertility/endocrine stacks, while regulatory status and product sourcing require clear separation from approved clomiphene labels.',
+  mechanism: 'Selective estrogen receptor modulation can reduce estrogen negative feedback at the hypothalamic-pituitary-gonadal axis, affecting LH/FSH signaling in research and clinical contexts.',
+  safety: 'Hormone-endocrine small molecule. Track adverse notes, mood/vision notes, lab context, product source, and clinician/pharmacy documentation without treating the entry as medical advice.',
+  storage: 'Store according to the exact prescription, pharmacy, or product label attached to the bottle or capsule container.',
+  referenceProfile: {
+    evidenceTier: 'early-human',
+    biohackerBrief: {
+      headline: 'Enclomiphene is a hormone-adjacent SERM users often track beside testosterone or hCG because it affects the endocrine feedback loop rather than supplying testosterone directly.',
+      whyPeopleCare: [
+        'It is discussed in men because SERM activity can change LH/FSH signaling and downstream testosterone-context labs.',
+        'It is easy for users to confuse enclomiphene, clomiphene citrate, and pharmacy-compounded products unless the label is captured cleanly.',
+        'It often appears in endocrine or fertility-adjacent stacks where schedule, labs, symptoms, and product source all matter.',
+      ],
+      verifyBeforeUse: [
+        'Exact prescription or pharmacy label, lot or fill identifier, source, strength, capsule/tablet count, and whether the label says enclomiphene or clomiphene.',
+        'Whether the product is a compounded enclomiphene item, a clomiphene citrate label, or a marketing name without clear active ingredient identity.',
+        'Relevant clinician/pharmacy documentation and any lab context the user wants PeptideOS to track alongside the schedule.',
+      ],
+      trackInApp: [
+        'Inventory by bottle or container with strength, count, source, fill date, lot/fill identifier, and expiration when available.',
+        'Schedule adherence, missed doses, symptom notes, mood/vision notes, and user-entered lab-marker context over time.',
+        'Stack context when paired with testosterone esters, hCG, gonadorelin, kisspeptin, or other hormone-endocrine entries.',
+      ],
+      realityCheck: 'Enclomiphene is not interchangeable with testosterone replacement or generic clomiphene labels. PeptideOS should keep identity, source, and user-entered context explicit.',
+    },
+    reviewSummary: 'Enclomiphene is a high-demand hormone-adjacent tracking compound with identity and regulatory ambiguity in real-world use. The app should make exact label capture, source transparency, schedule adherence, and endocrine-context notes first-class.',
+    mechanismTargets: [
+      'Estrogen receptor signaling',
+      'Hypothalamic-pituitary-gonadal axis',
+      'LH/FSH signaling context',
+    ],
+    clinicalEvidence: [
+      {
+        design: 'compound-identity-record',
+        population: 'Reference chemistry identity record',
+        finding: 'PubChem identifies enclomiphene citrate and supports identity-level tracking for names, isomer context, and molecular record linkage.',
+        citationIds: ['pubchem-enclomiphene-citrate'],
+        sourceQuality: 'source-backed',
+      },
+      {
+        design: 'approved-related-label-context',
+        population: 'Clomiphene citrate label context',
+        finding: 'DailyMed clomiphene citrate labeling describes clomiphene as a mixture of isomers including enclomiphene, which helps prevent users from conflating pure enclomiphene products with approved clomiphene labels.',
+        citationIds: ['dailymed-clomiphene-citrate'],
+        sourceQuality: 'label-backed',
+        limitations: 'The label is for clomiphene citrate, not a standalone FDA-approved enclomiphene product for male hormone optimization.',
+      },
+    ],
+    safetySignals: [
+      'Endocrine feedback changes can affect hormone-context labs and symptoms users may want to track carefully.',
+      'SERM-related tolerability notes such as mood, visual symptoms, libido, sleep, or headache context should be logged when users choose to record them.',
+      'Compounded or research-market products can vary in active ingredient identity, strength, excipients, and documentation quality.',
+      'Do not collapse clomiphene citrate and enclomiphene into one inventory identity without user-confirmed label evidence.',
+    ],
+    practicalNotes: [
+      'Capture photos or structured fields for label name, strength, source, fill date, lot/fill identifier, count, and expiration.',
+      'Track it as an oral hormone-endocrine small molecule, not as a peptide or vial-based reconstitution item.',
+      'When users add it through Peppi, ask whether the label says enclomiphene, enclomiphene citrate, clomiphene citrate, or a brand/compound name.',
+      'Keep lab values and symptom notes user-entered; PeptideOS should organize context without interpreting treatment changes.',
+    ],
+    evidenceGaps: [
+      'Standalone enclomiphene products in common biohacking use may not have an FDA-approved US label matching the item in the user hand.',
+      'Clomiphene citrate label evidence does not prove identity, dose, quality, or indication for compounded enclomiphene products.',
+      'Long-term outcomes and product-specific risk differ by population, source, and clinical supervision.',
+    ],
+    regulatoryStatus: {
+      status: 'investigational',
+      region: 'US',
+      summary: 'Track as hormone-adjacent/investigational for PeptideOS purposes unless the user attaches a verified prescription or product-specific label; clomiphene citrate has labels, but standalone enclomiphene status is distinct.',
+      citationIds: ['dailymed-clomiphene-citrate', 'pubchem-enclomiphene-citrate'],
+      sourceQuality: 'source-backed',
+      limitations: 'Related clomiphene label evidence is not the same as a standalone approved enclomiphene label.',
+    },
+    peptideOSActions: [
+      'Add oral-container inventory with label name, strength, source, fill date, lot/fill identifier, and remaining count.',
+      'Build a user-approved schedule from the confirmed label without interpreting endocrine treatment decisions.',
+      'Attach lab markers, symptom notes, and stack context to the user timeline when entered by the user.',
+      'Flag possible identity ambiguity between enclomiphene and clomiphene before saving inventory.',
+      'Let Peppi ask follow-up questions when the photo or label does not clearly identify the active ingredient.',
+    ],
+  },
+  citations: [
+    {
+      id: 'pubchem-enclomiphene-citrate',
+      title: 'Enclomiphene Citrate compound record',
+      url: 'https://pubchem.ncbi.nlm.nih.gov/compound/Enclomiphene-Citrate',
+      source: 'PubChem',
+      year: 2026,
+    },
+    {
+      id: 'dailymed-clomiphene-citrate',
+      title: 'CLOMIPHENE CITRATE tablet label',
+      url: 'https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=e9950303-9322-4f27-9e28-f1cedaf87b20',
+      source: 'DailyMed',
+      year: 2026,
+    },
+  ],
+  source: 'bundled',
+  curationStatus: 'reviewed',
+};

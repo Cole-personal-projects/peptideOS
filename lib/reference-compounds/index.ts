@@ -8,6 +8,7 @@ import { dihexa } from './entries/dihexa';
 import { dsip } from './entries/dsip';
 import { elamipretide } from './entries/elamipretide';
 import { epitalon } from './entries/epitalon';
+import { enclomiphene } from './entries/enclomiphene';
 import { foxo4Dri } from './entries/foxo4-dri';
 import { ghkCu } from './entries/ghk-cu';
 import { gonadorelin } from './entries/gonadorelin';
@@ -46,6 +47,7 @@ const reviewedReferenceCompounds = [
   testosteroneCypionate,
   testosteroneEnanthate,
   testosteronePropionate,
+  enclomiphene,
   bpc157,
   tb500,
   ghkCu,

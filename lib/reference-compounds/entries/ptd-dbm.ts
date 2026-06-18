@@ -17,6 +17,80 @@ export const ptdDbm: ReferenceCompound = {
   mechanism: 'Studied in Wnt/beta-catenin pathway research contexts involving Dishevelled-binding motifs.',
   safety: 'Research compound context. This entry is not medical advice or use guidance.',
   storage: 'Storage depends on formulation and supplier label.',
+  referenceProfile: {
+    evidenceTier: 'identity-only',
+    biohackerBrief: {
+      headline: 'PTD-DBM is a Wnt-pathway skin-hair research compound where PeptideOS should track formulation, source, and topical-use context without overclaiming.',
+      whyPeopleCare: [
+        'It is discussed in hair and Wnt/beta-catenin pathway research communities.',
+        'Users may encounter topical formulas, powders, or vendor blends where formulation details matter more than generic compound identity.',
+        'The bundled source supports identity metadata, not a consumer product or clinical protocol.',
+      ],
+      verifyBeforeUse: [
+        'Exact label name, formulation, amount or concentration, route, lot, expiration, source, and container type.',
+        'Whether the product is PTD-DBM alone, a topical blend, or another Wnt-pathway compound.',
+        'COA, excipients, storage instructions, topical vehicle details, and supplier documentation when available.',
+      ],
+      trackInApp: [
+        'Inventory by exact formulation with concentration or amount, container volume, source, and active status.',
+        'User-entered schedule, application-area notes, hair/skin context notes, photos if the user adds them, and tolerability notes.',
+        'Source-quality flags when formulation, concentration, lot, or vehicle details are missing.',
+      ],
+      realityCheck: 'PTD-DBM is cutting-edge and uncertain. PeptideOS should make formulation and evidence gaps visible while supporting clean records.',
+    },
+    reviewSummary: 'PTD-DBM is represented as a research compound with PubChem-backed identity metadata and topical/formulation-sensitive tracking.',
+    mechanismTargets: [
+      'Wnt/beta-catenin pathway research',
+      'Dishevelled-binding motif context',
+    ],
+    clinicalEvidence: [
+      {
+        design: 'compound-identity-record',
+        population: 'Reference identity and alias matching for skin-hair research compound tracking',
+        finding: 'PubChem supports identity and naming metadata for PTD-DBM.',
+        citationIds: ['pubchem-ptd-dbm'],
+        sourceQuality: 'source-backed',
+      },
+      {
+        design: 'formulation-tracking-context',
+        population: 'Users logging PTD-DBM topical formulas, powders, or blends',
+        finding: 'PeptideOS needs confirmed formulation, vehicle, concentration or amount, source, lot, and container details before useful tracking is possible.',
+        citationIds: [],
+        sourceQuality: 'community-reported',
+        limitations: 'This is product-quality and formulation tracking context, not clinical efficacy evidence.',
+      },
+    ],
+    safetySignals: [
+      'The bundled source set does not establish approved-label safety context.',
+      'Topical formulas can vary by vehicle, concentration, excipients, contamination risk, and stability.',
+      'Hair and skin changes are slow, subjective, and confounded by lighting, grooming, other products, and concurrent treatments.',
+    ],
+    practicalNotes: [
+      'Capture formulation and vehicle details before comparing logs or photos over time.',
+      'Keep application-area notes and photo timestamps separate from claims about effect.',
+      'Prompt for concentration or amount when a topical label is vague.',
+    ],
+    evidenceGaps: [
+      'No approved US product label is attached to this reference entry.',
+      'The bundled citation does not establish standardized human safety or efficacy claims.',
+      'Topical products may differ from the reference identity record in formulation, concentration, vehicle, and stability.',
+    ],
+    regulatoryStatus: {
+      status: 'research-use',
+      region: 'US',
+      summary: 'PeptideOS treats PTD-DBM as research-use context with PubChem identity metadata and no approved US product label attached to this entry.',
+      citationIds: [],
+      sourceQuality: 'community-reported',
+      limitations: 'Regulatory treatment depends on product claims, formulation, and source; this entry does not validate legality or use.',
+    },
+    peptideOSActions: [
+      'Add PTD-DBM topical products or containers after user confirmation.',
+      'Ask for formulation, concentration or amount, vehicle, container volume, lot, source, expiration, and storage details when missing.',
+      'Build schedules only from user-entered instructions and attach logs to the exact product.',
+      'Track application notes, hair/skin context notes, photos, tolerability notes, adherence, and remaining supply.',
+      'Surface formulation and evidence-gap flags in Peppi summaries.',
+    ],
+  },
   citations: [
     {
       id: 'pubchem-ptd-dbm',

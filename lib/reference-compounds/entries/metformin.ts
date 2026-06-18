@@ -17,6 +17,79 @@ export const metformin: ReferenceCompound = {
   mechanism: 'Studied in metabolic contexts involving hepatic glucose production, insulin sensitivity, and AMPK-linked pathways.',
   safety: 'Prescription-drug class compound. This reference entry is not medical advice or use guidance.',
   storage: 'Storage depends on the product label and dosage form.',
+  referenceProfile: {
+    evidenceTier: 'approved-label',
+    biohackerBrief: {
+      headline: 'Metformin is a label-backed metabolic compound PeptideOS should handle as exact-product tracking with longevity-interest context kept separate.',
+      whyPeopleCare: [
+        'It is a familiar metabolic drug that also appears in longevity and healthspan discussions.',
+        'Users may track prescription bottles, pharmacy labels, refill timing, adherence, tolerability, and metabolic notes.',
+        'DailyMed label context exists, but biohacker use cases still need careful separation from medical advice.',
+      ],
+      verifyBeforeUse: [
+        'Exact product name, strength, release form, prescription or source context, lot or pharmacy fill details, expiration, and container label.',
+        'Whether the item is immediate-release, extended-release, compounded, imported, or part of a combination product.',
+        'Product-specific storage, warning, interaction, and handling language from the actual label.',
+      ],
+      trackInApp: [
+        'Inventory by exact bottle or pharmacy-labeled container with strength, quantity, source, expiration, and active status.',
+        'User-entered schedule, adherence, missed entries, GI tolerability notes, metabolic context notes, and stack changes.',
+        'Label and source flags when release form, strength, source, or product identity is unclear.',
+      ],
+      realityCheck: 'Metformin is common and label-backed, but PeptideOS should still track only user-confirmed product details and user-entered logs.',
+    },
+    reviewSummary: 'Metformin is an approved-label metabolic small molecule with PubChem identity metadata and DailyMed label context. PeptideOS uses it for inventory, schedule, and user-note tracking.',
+    mechanismTargets: [
+      'hepatic glucose production context',
+      'insulin sensitivity context',
+      'AMPK-linked metabolic research',
+    ],
+    clinicalEvidence: [
+      {
+        design: 'approved-product-label',
+        population: 'People using labeled metformin products under product-specific prescribing contexts',
+        finding: 'DailyMed provides product-label context for metformin, including strength, dosage form, warnings, and handling information.',
+        citationIds: ['dailymed-metformin'],
+        sourceQuality: 'label-backed',
+      },
+      {
+        design: 'compound-identity-record',
+        population: 'Reference chemistry and alias matching for metformin tracking',
+        finding: 'PubChem supports identity and naming metadata for metformin.',
+        citationIds: ['pubchem-metformin'],
+        sourceQuality: 'source-backed',
+      },
+    ],
+    safetySignals: [
+      'Use the exact product label for warnings, contraindications, adverse reactions, interactions, and handling context.',
+      'Track GI tolerability, missed entries, user-entered schedule changes, and metabolic context notes as records only.',
+      'Flag unclear release form, missing strength, compounded product status, missing source, or mismatched label names.',
+    ],
+    practicalNotes: [
+      'Record immediate-release versus extended-release form when the label provides it.',
+      'Keep prescription/product tracking separate from longevity-interest notes.',
+      'Peppi can summarize adherence and user-entered notes without interpreting glucose, labs, or medical appropriateness.',
+    ],
+    evidenceGaps: [
+      'PeptideOS does not determine whether metformin is appropriate for a user.',
+      'Longevity-oriented use cases may not map to approved-label indications or study populations.',
+      'Compounded or relabeled products may not match DailyMed labeling and require explicit user confirmation.',
+    ],
+    regulatoryStatus: {
+      status: 'approved',
+      region: 'US',
+      summary: 'DailyMed provides US label records for metformin products; PeptideOS uses that as label-backed tracking context only.',
+      citationIds: ['dailymed-metformin'],
+      sourceQuality: 'label-backed',
+    },
+    peptideOSActions: [
+      'Add labeled Metformin containers to inventory after user confirmation.',
+      'Ask for strength, release form, quantity, source, expiration, storage, and prescription/container details when missing.',
+      'Build schedules only from user-entered instructions and tie logs to the exact inventory item.',
+      'Track adherence, missed entries, GI tolerability notes, metabolic notes, stack changes, and remaining supply.',
+      'Surface label-backed and product-form flags in Peppi summaries.',
+    ],
+  },
   citations: [
     {
       id: 'pubchem-metformin',

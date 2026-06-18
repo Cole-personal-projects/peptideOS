@@ -100,7 +100,7 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('ClinicalTrials.gov,').first()).toBeVisible();
   });
 
-  test('shows pro-data priority context for high-value compounds waiting on full profiles', async ({ page }) => {
+  test('shows full pro-profile context for high-value compounds after profile completion', async ({ page }) => {
     await page.goto('/library/hgh-somatropin');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
@@ -108,10 +108,12 @@ test.describe('library detail pages', () => {
 
     await expect(page.getByRole('heading', { name: 'At a glance' })).toBeVisible();
     await expect(page.getByText('Approved Label', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText('Label Backed', { exact: true })).toBeVisible();
     await expect(page.getByText('Prefilled', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
+    await expect(page.getByText('label-backed hormone entry')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Evidence and transparency' })).toBeVisible();
-    await expect(page.getByText('Full pro profile is not yet attached')).toBeVisible();
+    await expect(page.getByText('Full pro profile is not yet attached')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Regulatory context' })).toBeVisible();
   });
 
   test('renders actionable app guidance for profiled database-backed compounds', async ({ page }) => {
@@ -192,11 +194,11 @@ test.describe('library detail pages', () => {
     await page.getByLabel('Summary').fill('Private focus tracking note.');
     await page.getByRole('button', { name: 'Save compound' }).click();
 
-    await expect(page.getByRole('link', { name: /Custom Focus Blend/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Custom Focus Blend Cognitive' })).toBeVisible();
     await page.reload();
-    await expect(page.getByRole('link', { name: /Custom Focus Blend/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Custom Focus Blend Cognitive' })).toBeVisible();
 
-    await page.getByRole('link', { name: /Custom Focus Blend/ }).click();
+    await page.getByRole('link', { name: 'Custom Focus Blend Cognitive' }).click();
     await page.getByRole('button', { name: 'Edit compound' }).click();
     await page.getByLabel('Name').fill('Custom Focus Blend Edited');
     await page.getByLabel('Summary').fill('Edited private focus tracking note.');
