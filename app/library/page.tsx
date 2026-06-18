@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ChevronRight, FlaskConical, Plus, Search, SlidersHorizontal, User, X } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
@@ -75,6 +76,7 @@ function FilterSection({ title, children }: { title: string; children: ReactNode
 
 export default function LibraryPage() {
   const { data, addUserCompound } = useApp();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CompoundCategory | 'all'>('all');
   const [selectedType, setSelectedType] = useState<CompoundType | 'all'>('all');
@@ -88,6 +90,7 @@ export default function LibraryPage() {
   const [defaultDoseUnit, setDefaultDoseUnit] = useState<DoseUnit>('mg');
   const [summary, setSummary] = useState('');
   const emptyState = getEmptyStateContent('library-no-results');
+  const compareCompound = data.compounds.find((compound) => compound.id === searchParams.get('compare'));
 
   const filteredCompounds = useMemo(
     () => filterCompounds(data.compounds, {
@@ -349,6 +352,17 @@ export default function LibraryPage() {
               Clear all filters
             </Button>
           </div>
+        ) : null}
+
+        {compareCompound ? (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-3">
+              <p className="text-sm font-medium">Comparing compounds related to {compareCompound.name}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Use the filters and evidence labels to compare nearby compounds without losing the source profile.
+              </p>
+            </CardContent>
+          </Card>
         ) : null}
 
         <Label className="text-xs text-muted-foreground">

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Plus, Play, Pause, Clock, CheckCircle2, Sparkles } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
@@ -25,8 +26,10 @@ const statusConfig = {
 
 export default function StacksPage() {
   const { data } = useApp();
-  const [newStackOpen, setNewStackOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const [newStackOpen, setNewStackOpen] = useState(() => searchParams.get('add') === 'protocol');
   const [aiStackOpen, setAiStackOpen] = useState(false);
+  const initialCompoundId = searchParams.get('compound') ?? undefined;
   const stacks = data.stacks;
   const emptyState = getEmptyStateContent('stacks-empty');
   const trackableCompounds = getTrackableCompounds(data);
@@ -137,7 +140,12 @@ export default function StacksPage() {
           })
         )}
       </div>
-      <NewStackSheet open={newStackOpen} onOpenChange={setNewStackOpen} />
+      <NewStackSheet
+        key={initialCompoundId ?? 'manual-stack'}
+        open={newStackOpen}
+        onOpenChange={setNewStackOpen}
+        initialCompoundId={initialCompoundId}
+      />
       <AiStackSheet open={aiStackOpen} onOpenChange={setAiStackOpen} />
     </AppShell>
   );

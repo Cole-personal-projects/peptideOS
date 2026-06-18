@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -22,26 +22,28 @@ import type { SchedulePreset } from '@/lib/schedules';
 interface NewStackSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialCompoundId?: string;
 }
 
 const steps = ['Basics', 'Compounds', 'Schedule', 'Review'] as const;
 type BuilderStep = typeof steps[number];
 
-export function NewStackSheet({ open, onOpenChange }: NewStackSheetProps) {
+export function NewStackSheet({ open, onOpenChange, initialCompoundId }: NewStackSheetProps) {
   const { data, addStack } = useApp();
+  const trackableCompounds = useMemo(() => getTrackableCompounds(data), [data]);
+  const initialCompound = trackableCompounds.find((candidate) => candidate.id === initialCompoundId);
   const [currentStep, setCurrentStep] = useState(0);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [selectedPeptides, setSelectedPeptides] = useState<string[]>([]);
+  const [name, setName] = useState(initialCompound ? `${initialCompound.name} research plan` : '');
+  const [description, setDescription] = useState(initialCompound ? `Track ${initialCompound.name} from user-confirmed label details.` : '');
+  const [selectedPeptides, setSelectedPeptides] = useState<string[]>(initialCompound ? [initialCompound.id] : []);
   const [templatePeptides, setTemplatePeptides] = useState<StackPeptide[] | null>(null);
   const [durationDays, setDurationDays] = useState('28');
-  const trackableCompounds = getTrackableCompounds(data);
 
   const resetForm = () => {
     setCurrentStep(0);
-    setName('');
-    setDescription('');
-    setSelectedPeptides([]);
+    setName(initialCompound ? `${initialCompound.name} research plan` : '');
+    setDescription(initialCompound ? `Track ${initialCompound.name} from user-confirmed label details.` : '');
+    setSelectedPeptides(initialCompound ? [initialCompound.id] : []);
     setTemplatePeptides(null);
     setDurationDays('28');
   };

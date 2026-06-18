@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Plus, AlertCircle } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
@@ -20,8 +21,10 @@ import { cn } from '@/lib/utils';
 
 export default function InventoryPage() {
   const { data } = useApp();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('active');
-  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(() => searchParams.get('add') === 'inventory');
+  const initialCompoundId = searchParams.get('compound') ?? undefined;
   const trackableCompounds = getTrackableCompounds(data);
 
   const getDaysUntilExpiration = (expirationDate: string) => {
@@ -309,7 +312,9 @@ export default function InventoryPage() {
       </div>
 
       <AddVialSheet
+        key={initialCompoundId ?? 'manual-inventory'}
         open={isAddOpen}
+        initialCompoundId={initialCompoundId}
         onOpenChange={(open) => {
           setIsAddOpen(open);
           if (!open) setActiveTab('sealed');

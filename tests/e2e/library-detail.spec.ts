@@ -181,6 +181,35 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('tablist')).toHaveCount(0);
   });
 
+  test('turns library compounds into app actions with compound context', async ({ page }) => {
+    await page.goto('/library/retatrutide');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await expect(page.getByRole('heading', { name: 'Retatrutide' })).toBeVisible();
+
+    await page.getByRole('link', { name: 'Add Retatrutide to inventory' }).click();
+    await expect(page).toHaveURL(/\/more\/inventory\?compound=retatrutide&add=inventory/);
+    await expect(page.getByRole('dialog', { name: 'Add Vial' })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Compound' })).toHaveText('Retatrutide');
+
+    await page.goto('/library/retatrutide');
+    await page.getByRole('link', { name: 'Create Retatrutide protocol' }).click();
+    await expect(page).toHaveURL(/\/stacks\?compound=retatrutide&add=protocol/);
+    await expect(page.getByRole('dialog', { name: 'New Stack' })).toBeVisible();
+    await expect(page.getByLabel('Stack Name')).toHaveValue('Retatrutide research plan');
+
+    await page.goto('/library/retatrutide');
+    await page.getByRole('link', { name: 'Ask Peppi about Retatrutide' }).click();
+    await expect(page).toHaveURL(/\/more\/ai-assistant\?compound=retatrutide/);
+    await expect(page.getByRole('textbox', { name: 'Message Peppi' })).toHaveValue('Help me understand Retatrutide and what I can track in PeptideOS.');
+
+    await page.goto('/library/retatrutide');
+    await page.getByRole('link', { name: 'Compare Retatrutide with related compounds' }).click();
+    await expect(page).toHaveURL(/\/library\?compare=retatrutide/);
+    await expect(page.getByRole('heading', { name: 'Library' })).toBeVisible();
+    await expect(page.getByText('Comparing compounds related to Retatrutide')).toBeVisible();
+  });
+
   test('creates, edits, persists, and deletes a custom compound', async ({ page }) => {
     await page.goto('/library');
 

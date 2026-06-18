@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,25 +14,27 @@ import type { ConcentrationUnit, DoseUnit, InventoryContainerType, VialStatus } 
 interface AddVialSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialCompoundId?: string;
 }
 
-export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
+export function AddVialSheet({ open, onOpenChange, initialCompoundId }: AddVialSheetProps) {
   const { data, addVials } = useApp();
+  const trackableCompounds = useMemo(() => getTrackableCompounds(data), [data]);
+  const initialCompound = trackableCompounds.find((compound) => compound.id === initialCompoundId);
   const [name, setName] = useState('');
-  const [peptideId, setPeptideId] = useState('');
+  const [peptideId, setPeptideId] = useState(initialCompound?.id ?? '');
   const [dateAdded, setDateAdded] = useState(() => new Date().toISOString().slice(0, 10));
-  const [containerType, setContainerType] = useState<InventoryContainerType>('lyophilized-vial');
+  const [containerType, setContainerType] = useState<InventoryContainerType>(() => getDefaultContainerType(initialCompound));
   const [source, setSource] = useState('');
   const [lotNumber, setLotNumber] = useState('');
   const [amount, setAmount] = useState('');
-  const [amountUnit, setAmountUnit] = useState<DoseUnit>('mg');
+  const [amountUnit, setAmountUnit] = useState<DoseUnit>(initialCompound?.defaultDoseUnit === 'iu' ? 'iu' : 'mg');
   const [packageUnit, setPackageUnit] = useState<'vial' | 'kit'>('vial');
   const [packageQuantity, setPackageQuantity] = useState('1');
   const [concentration, setConcentration] = useState('');
-  const [concentrationUnit, setConcentrationUnit] = useState<ConcentrationUnit>('mg/ml');
+  const [concentrationUnit, setConcentrationUnit] = useState<ConcentrationUnit>(initialCompound?.defaultDoseUnit === 'iu' ? 'iu/ml' : 'mg/ml');
   const [volumeMl, setVolumeMl] = useState('');
   const [status, setStatus] = useState<VialStatus>('sealed');
-  const trackableCompounds = getTrackableCompounds(data);
   const selectedCompound = trackableCompounds.find((compound) => compound.id === peptideId);
   const usesConcentration = containerType === 'multi-dose-vial' || containerType === 'prefilled-pen';
   const canSubmit = Boolean(peptideId) && (usesConcentration ? Boolean(concentration && volumeMl) : Boolean(amount && packageQuantity));
@@ -43,15 +45,7 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
     setAmountUnit(compound?.defaultDoseUnit === 'iu' ? 'iu' : 'mg');
     setConcentrationUnit(compound?.defaultDoseUnit === 'iu' ? 'iu/ml' : 'mg/ml');
 
-    if (compound?.concentrationMode === 'concentration') {
-      setContainerType('multi-dose-vial');
-    } else if (compound?.concentrationMode === 'prefilled') {
-      setContainerType('prefilled-pen');
-    } else if (compound?.concentrationMode === 'none') {
-      setContainerType('capsule-bottle');
-    } else {
-      setContainerType('lyophilized-vial');
-    }
+    setContainerType(getDefaultContainerType(compound));
   };
 
   const handleSubmit = () => {
@@ -319,4 +313,11 @@ export function AddVialSheet({ open, onOpenChange }: AddVialSheetProps) {
       </SheetContent>
     </Sheet>
   );
+}
+
+function getDefaultContainerType(compound?: { concentrationMode: string }): InventoryContainerType {
+  if (compound?.concentrationMode === 'concentration') return 'multi-dose-vial';
+  if (compound?.concentrationMode === 'prefilled') return 'prefilled-pen';
+  if (compound?.concentrationMode === 'none') return 'capsule-bottle';
+  return 'lyophilized-vial';
 }
