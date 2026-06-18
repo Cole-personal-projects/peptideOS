@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils';
 import { LogDoseSheet } from './log-dose-sheet';
 import { AddVialSheet } from './add-vial-sheet';
 import { NewStackSheet } from './new-stack-sheet';
-import { ReconstitutionSheet } from './reconstitution-sheet';
 import type { LucideIcon } from 'lucide-react';
 
 type QuickAction = {
@@ -24,7 +23,7 @@ const actions: QuickAction[] = [
   { id: 'log-dose', label: 'Log Dose', icon: Syringe, color: 'text-primary' },
   { id: 'add-vial', label: 'Add Vial', icon: FlaskConical, color: 'text-accent' },
   { id: 'new-stack', label: 'New Stack', icon: Layers, color: 'text-chart-3' },
-  { id: 'reconstitution', label: 'Calculate Reconstitution', icon: Calculator, color: 'text-chart-4' },
+  { id: 'reconstitution', label: 'Calculate Reconstitution', icon: Calculator, color: 'text-chart-4', href: '/more/reconstitution' },
   { id: 'ai-assistant', label: 'Peppi', icon: Bot, color: 'text-chart-5', href: '/more/ai-assistant' },
 ];
 
@@ -86,7 +85,6 @@ export function FloatingActionButton() {
       <LogDoseSheet open={activeSheet === 'log-dose'} onOpenChange={(o) => !o && setActiveSheet(null)} />
       <AddVialSheet open={activeSheet === 'add-vial'} onOpenChange={(o) => !o && setActiveSheet(null)} />
       <NewStackSheet open={activeSheet === 'new-stack'} onOpenChange={(o) => !o && setActiveSheet(null)} />
-      <ReconstitutionSheet open={activeSheet === 'reconstitution'} onOpenChange={(o) => !o && setActiveSheet(null)} />
     </>
   );
 }
