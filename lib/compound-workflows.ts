@@ -9,6 +9,7 @@ export interface TrackableCompound {
   defaultDoseUnit: DoseUnit;
   concentrationMode: Compound['concentrationMode'];
   dosePresets: Compound['dosePresets'];
+  vialPresets: Compound['vialPresets'];
   source: Compound['source'] | 'legacy';
 }
 
@@ -28,6 +29,7 @@ function fromPeptide(peptide: Peptide): TrackableCompound {
     defaultDoseUnit: canUseIU(peptide.id) ? 'iu' : peptide.id === 'tb-500' ? 'mg' : 'mcg',
     concentrationMode: 'reconstituted',
     dosePresets: [],
+    vialPresets: [],
     source: 'legacy',
   };
 }
@@ -41,6 +43,7 @@ function fromCompound(compound: Compound): TrackableCompound {
     defaultDoseUnit: compound.defaultDoseUnit,
     concentrationMode: compound.concentrationMode,
     dosePresets: compound.dosePresets,
+    vialPresets: compound.vialPresets,
     source: compound.source,
   };
 }
@@ -55,9 +58,7 @@ export function getTrackableCompounds(data: Pick<AppData, 'peptides' | 'compound
   data.compounds
     .filter((compound) => !compound.deletedAt)
     .forEach((compound) => {
-      if (!compoundsById.has(compound.id)) {
-        compoundsById.set(compound.id, fromCompound(compound));
-      }
+      compoundsById.set(compound.id, fromCompound(compound));
     });
 
   return Array.from(compoundsById.values());
