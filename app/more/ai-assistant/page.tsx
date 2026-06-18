@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Bot, Check, Plus, Send, X } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
@@ -63,12 +64,17 @@ async function requestAssistantActionProposal(message: string, compounds: Protoc
 
 export default function AIAssistantPage() {
   const { data, addSignalCheckIn, addStack, addVials } = useApp();
+  const searchParams = useSearchParams();
+  const trackableCompounds = useMemo(() => getTrackableCompounds(data), [data]);
+  const initialCompoundId = searchParams.get('compound');
+  const initialCompound = trackableCompounds.find((candidate) => candidate.id === initialCompoundId);
   const [promptMenuOpen, setPromptMenuOpen] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(
+    initialCompound ? `Help me understand ${initialCompound.name} and what I can track in PeptideOS.` : '',
+  );
   const [isSending, setIsSending] = useState(false);
   const [pendingAction, setPendingAction] = useState<AssistantAction | null>(null);
   const [assistantMessage, setAssistantMessage] = useState('Tell Peppi what you want to capture or change.');
-  const trackableCompounds = getTrackableCompounds(data);
   const proposalCompounds = trackableCompounds.map((compound) => ({
     id: compound.id,
     name: compound.name,

@@ -1,8 +1,9 @@
 "use client";
 
 import { use, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, BookOpen, FlaskConical, Pencil, Syringe, Trash2, User } from 'lucide-react';
+import { AlertTriangle, BookOpen, Boxes, FlaskConical, GitCompare, MessageCircle, Pencil, Syringe, Trash2, User } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { LibraryProfileView } from '@/components/library-profile-view';
 import { PageHeader } from '@/components/page-header';
@@ -182,6 +183,33 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
             </>
           ) : null}
         </div>
+
+        <section aria-label={`${compound.name} app actions`} className="grid gap-2 sm:grid-cols-2">
+          <Button asChild variant="secondary" className="justify-start">
+            <Link href={`/more/inventory?compound=${compound.id}&add=inventory`} aria-label={`Add ${compound.name} to inventory`}>
+              <Boxes className="w-4 h-4" />
+              Add to inventory
+            </Link>
+          </Button>
+          <Button asChild variant="secondary" className="justify-start">
+            <Link href={`/stacks?compound=${compound.id}&add=protocol`} aria-label={`Create ${compound.name} protocol`}>
+              <Syringe className="w-4 h-4" />
+              Create protocol
+            </Link>
+          </Button>
+          <Button asChild variant="secondary" className="justify-start">
+            <Link href={`/more/ai-assistant?compound=${compound.id}`} aria-label={`Ask Peppi about ${compound.name}`}>
+              <MessageCircle className="w-4 h-4" />
+              Ask Peppi
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="justify-start">
+            <Link href={`/library?compare=${compound.id}`} aria-label={`Compare ${compound.name} with related compounds`}>
+              <GitCompare className="w-4 h-4" />
+              Compare related
+            </Link>
+          </Button>
+        </section>
 
         <LibraryProfileView model={libraryProfile} />
       </div>
