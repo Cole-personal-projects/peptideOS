@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ChevronRight, FlaskConical, Plus, Search, User } from 'lucide-react';
+import { ChevronRight, FlaskConical, Plus, Search, SlidersHorizontal, User, X } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/lib/context';
@@ -24,7 +25,6 @@ import {
   type LibraryEvidenceFilter,
 } from '@/lib/library-evidence';
 import { filterCompounds } from '@/lib/library-filters';
-import { getProfileUpgradeQueue } from '@/lib/library-profile-priority';
 import { cn } from '@/lib/utils';
 import type { CompoundCategory, CompoundType, DoseUnit, Route } from '@/lib/types';
 
@@ -56,6 +56,23 @@ function slugify(value: string): string {
   return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'custom-compound';
 }
 
+interface ActiveFilter {
+  key: string;
+  label: string;
+  clear: () => void;
+}
+
+function FilterSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="space-y-2">
+      <h3 className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">{title}</h3>
+      <div className="flex flex-wrap gap-2">
+        {children}
+      </div>
+    </section>
+  );
+}
+
 export default function LibraryPage() {
   const { data, addUserCompound } = useApp();
   const [search, setSearch] = useState('');
@@ -81,11 +98,23 @@ export default function LibraryPage() {
     }),
     [data.compounds, search, selectedCategory, selectedType, selectedEvidence],
   );
-  const profileQueue = useMemo(() => getProfileUpgradeQueue(data.compounds).slice(0, 5), [data.compounds]);
-  const showProfileQueue = search.trim().length === 0
-    && selectedCategory === 'all'
-    && selectedType === 'all'
-    && selectedEvidence === 'all';
+  const activeFilters: ActiveFilter[] = [
+    selectedType !== 'all'
+      ? { key: 'type', label: formatLabel(selectedType), clear: () => setSelectedType('all') }
+      : null,
+    selectedCategory !== 'all'
+      ? { key: 'category', label: formatLabel(selectedCategory), clear: () => setSelectedCategory('all') }
+      : null,
+    selectedEvidence !== 'all'
+      ? { key: 'evidence', label: formatLibraryEvidenceFilter(selectedEvidence), clear: () => setSelectedEvidence('all') }
+      : null,
+  ].filter((filter): filter is ActiveFilter => Boolean(filter));
+  const activeFilterCount = activeFilters.length;
+  const clearFilters = () => {
+    setSelectedCategory('all');
+    setSelectedType('all');
+    setSelectedEvidence('all');
+  };
 
   const resetForm = () => {
     setName('');
@@ -161,6 +190,91 @@ export default function LibraryPage() {
             />
           </div>
 
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button type="button" variant="outline" className="shrink-0 gap-1.5 px-3">
+                <SlidersHorizontal className="w-4 h-4" />
+                <span>Filters</span>
+                {activeFilterCount > 0 ? (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">
+                    {activeFilterCount}
+                  </span>
+                ) : null}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="max-h-[88vh] rounded-t-2xl">
+              <SheetHeader className="border-b pb-3">
+                <div className="flex items-center justify-between gap-4 pr-8">
+                  <SheetTitle>Filters</SheetTitle>
+                  {activeFilterCount > 0 ? (
+                    <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>
+                      Clear all
+                    </Button>
+                  ) : null}
+                </div>
+              </SheetHeader>
+              <div className="space-y-5 overflow-y-auto px-4 pb-2">
+                <FilterSection title="Type">
+                  {compoundTypes.map((type) => (
+                    <Button
+                      key={type}
+                      type="button"
+                      variant={selectedType === type ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-8 whitespace-nowrap rounded-full px-3 text-xs"
+                      aria-pressed={selectedType === type}
+                      onClick={() => setSelectedType(type)}
+                    >
+                      {type === 'all' ? 'All types' : formatLabel(type)}
+                    </Button>
+                  ))}
+                </FilterSection>
+
+                <FilterSection title="Category">
+                  {categories.map((cat) => (
+                    <Button
+                      key={cat}
+                      type="button"
+                      variant={selectedCategory === cat ? 'default' : 'outline'}
+                      size="sm"
+                      aria-pressed={selectedCategory === cat}
+                      className={cn(
+                        "h-8 whitespace-nowrap rounded-full px-3 text-xs",
+                        cat !== 'all' && selectedCategory === cat && categoryColors[cat],
+                      )}
+                      onClick={() => setSelectedCategory(cat)}
+                    >
+                      {cat === 'all' ? 'All categories' : formatLabel(cat)}
+                    </Button>
+                  ))}
+                </FilterSection>
+
+                <FilterSection title="Evidence">
+                  {evidenceFilters.map((evidence) => (
+                    <Button
+                      key={evidence}
+                      type="button"
+                      variant={selectedEvidence === evidence ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-8 whitespace-nowrap rounded-full px-3 text-xs"
+                      aria-pressed={selectedEvidence === evidence}
+                      onClick={() => setSelectedEvidence(evidence)}
+                    >
+                      {formatLibraryEvidenceFilter(evidence)}
+                    </Button>
+                  ))}
+                </FilterSection>
+              </div>
+              <SheetFooter className="border-t bg-background">
+                <SheetClose asChild>
+                  <Button type="button">
+                    Show {filteredCompounds.length} compounds
+                  </Button>
+                </SheetClose>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+
           <Dialog open={addOpen} onOpenChange={setAddOpen}>
             <DialogTrigger asChild>
               <Button type="button" size="icon" aria-label="Add compound">
@@ -215,93 +329,31 @@ export default function LibraryPage() {
           </Dialog>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar" aria-label="Filter by compound type">
-          {compoundTypes.map((type) => (
-            <Button
-              key={type}
-              type="button"
-              variant={selectedType === type ? 'default' : 'outline'}
-              size="sm"
-              className="h-6 whitespace-nowrap rounded-full px-2.5 text-xs"
-              aria-pressed={selectedType === type}
-              onClick={() => setSelectedType(type)}
-            >
-              {type === 'all' ? 'All types' : formatLabel(type)}
+        {activeFilters.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-2" aria-label="Active filters">
+            {activeFilters.map((filter) => (
+              <Button
+                key={filter.key}
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="h-7 gap-1 rounded-full px-3 text-xs"
+                aria-label={`${filter.label}, remove filter`}
+                onClick={filter.clear}
+              >
+                {filter.label}
+                <X className="w-3 h-3" />
+              </Button>
+            ))}
+            <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={clearFilters}>
+              Clear all filters
             </Button>
-          ))}
-        </div>
-
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar" aria-label="Filter by category">
-          {categories.map((cat) => (
-            <Button
-              key={cat}
-              variant={selectedCategory === cat ? 'default' : 'outline'}
-              size="sm"
-              type="button"
-              aria-pressed={selectedCategory === cat}
-              className={cn(
-                "h-6 whitespace-nowrap rounded-full px-2.5 text-xs",
-                cat !== 'all' && selectedCategory === cat && categoryColors[cat],
-              )}
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {cat === 'all' ? 'All categories' : formatLabel(cat)}
-            </Button>
-          ))}
-        </div>
-
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar" aria-label="Filter by evidence">
-          {evidenceFilters.map((evidence) => (
-            <Button
-              key={evidence}
-              type="button"
-              variant={selectedEvidence === evidence ? 'default' : 'outline'}
-              size="sm"
-              className="h-6 whitespace-nowrap rounded-full px-2.5 text-xs"
-              aria-pressed={selectedEvidence === evidence}
-              onClick={() => setSelectedEvidence(evidence)}
-            >
-              {formatLibraryEvidenceFilter(evidence)}
-            </Button>
-          ))}
-        </div>
+          </div>
+        ) : null}
 
         <Label className="text-xs text-muted-foreground">
           {researcherMode ? 'Researcher Mode: Showing detailed information' : 'Beginner Mode: Showing simplified summaries'}
         </Label>
-
-        {showProfileQueue && profileQueue.length > 0 ? (
-          <section className="space-y-2" aria-label="Pro data queue">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-semibold">Pro data queue</h2>
-                <p className="text-xs text-muted-foreground">Next compounds to promote into full reference profiles.</p>
-              </div>
-              <Badge variant="outline" className="shrink-0 text-[10px]">
-                {profileQueue.length} next
-              </Badge>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-              {profileQueue.map((item, index) => (
-                <Link
-                  key={item.compound.id}
-                  href={`/library/${item.compound.id}`}
-                  className="min-w-[168px] rounded-lg border border-border bg-secondary/35 p-3 transition-colors hover:bg-secondary/60"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                      {index + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{item.compound.name}</p>
-                      <p className="text-xs text-muted-foreground">{item.priority.label}</p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
 
         <div className="space-y-2">
           {filteredCompounds.length === 0 ? (
@@ -320,9 +372,7 @@ export default function LibraryPage() {
                   size="sm"
                   onClick={() => {
                     setSearch('');
-                    setSelectedCategory('all');
-                    setSelectedType('all');
-                    setSelectedEvidence('all');
+                    clearFilters();
                   }}
                 >
                   {emptyState.actionLabel}
