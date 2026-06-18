@@ -67,11 +67,39 @@ describe('reference registry seed', () => {
         .map((block) => block.block_type)
         .sort()
       ).toEqual([
+        'actionable_profile',
         'evidence_snapshot',
         'field_brief',
         'regulatory_status',
         'safety_watch',
       ]);
+    });
+  });
+
+  test('exports actionable app content blocks for every reviewed compound', () => {
+    const snapshot = buildBundledReferenceSnapshot(referenceCompounds);
+    const seed = buildReferenceRegistrySeed(snapshot);
+
+    referenceCompounds.forEach((compound) => {
+      const actionableBlock = seed.contentBlocks.find((block) => (
+        block.compound_slug === compound.id
+        && block.block_type === 'actionable_profile'
+      ));
+
+      expect(actionableBlock).toBeDefined();
+      expect(actionableBlock?.title).toBe('Actionable Profile');
+      expect(actionableBlock?.review_status).toBe('reviewed');
+      expect(actionableBlock?.content).toEqual(expect.objectContaining({
+        primaryActions: expect.any(Array),
+        verifyBeforeUse: expect.any(Array),
+        trackInApp: expect.any(Array),
+        inventoryGuidance: expect.any(Array),
+        transparencyFlags: expect.any(Array),
+      }));
+      expect(seed.releaseItems.some((item) => (
+        item.compound_slug === compound.id
+        && item.content_block_id === `${compound.id}-actionable-profile-v1`
+      ))).toBe(true);
     });
   });
 });

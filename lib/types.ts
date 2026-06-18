@@ -168,6 +168,19 @@ export interface CompoundReferenceProfile {
   peptideOSActions: string[];
 }
 
+export interface CompoundActionableProfile {
+  headline: string;
+  summary: string;
+  evidenceLabel: string;
+  statusLabel: string;
+  mechanismClass: string;
+  primaryActions: string[];
+  verifyBeforeUse: string[];
+  trackInApp: string[];
+  inventoryGuidance: string[];
+  transparencyFlags: string[];
+}
+
 export interface Compound {
   id: string;
   name: string;
@@ -189,6 +202,7 @@ export interface Compound {
   storage: string;
   citations: Citation[];
   referenceProfile?: CompoundReferenceProfile;
+  actionableProfile?: CompoundActionableProfile;
   source: CompoundSource;
   curationStatus: CurationStatus;
   createdAt?: string;
