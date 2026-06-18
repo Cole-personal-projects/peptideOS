@@ -14,13 +14,13 @@ describe('library evidence display', () => {
     }));
   });
 
-  test('labels DailyMed-backed compounds as approved label entries', () => {
+  test('labels profiled DailyMed-backed compounds as approved label entries', () => {
     const semaglutide = referenceCompounds.find((compound) => compound.id === 'semaglutide');
 
     expect(getLibraryEvidenceDisplay(semaglutide!)).toEqual(expect.objectContaining({
       filter: 'approved-label',
       tierLabel: 'Approved Label',
-      statusLabel: 'Label Backed',
+      statusLabel: 'Approved',
     }));
   });
 

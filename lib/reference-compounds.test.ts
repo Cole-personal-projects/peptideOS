@@ -159,6 +159,35 @@ describe('reference compounds', () => {
     ]));
   });
 
+  test('upgrades the first priority batch to full pro-grade profiles', () => {
+    const firstPriorityBatch = [
+      ['tirzepatide', 'approved-label', 'approved'],
+      ['semaglutide', 'approved-label', 'approved'],
+      ['bpc-157', 'preclinical', 'research-use'],
+      ['tb-500', 'early-human', 'research-use'],
+      ['mots-c', 'early-human', 'research-use'],
+    ] as const;
+
+    firstPriorityBatch.forEach(([id, evidenceTier, status]) => {
+      const compound = referenceCompounds.find((entry) => entry.id === id);
+
+      expect(compound, id).toBeDefined();
+      expect(compound?.referenceProfile, id).toEqual(expect.objectContaining({
+        evidenceTier,
+        regulatoryStatus: expect.objectContaining({ status }),
+      }));
+      expect(compound?.referenceProfile?.biohackerBrief.headline, id).toContain(compound?.name.split(' ')[0]);
+      expect(compound?.referenceProfile?.biohackerBrief.whyPeopleCare.length, id).toBeGreaterThanOrEqual(3);
+      expect(compound?.referenceProfile?.biohackerBrief.verifyBeforeUse.length, id).toBeGreaterThanOrEqual(3);
+      expect(compound?.referenceProfile?.biohackerBrief.trackInApp.length, id).toBeGreaterThanOrEqual(3);
+      expect(compound?.referenceProfile?.clinicalEvidence.length, id).toBeGreaterThanOrEqual(2);
+      expect(compound?.referenceProfile?.safetySignals.length, id).toBeGreaterThanOrEqual(3);
+      expect(compound?.referenceProfile?.practicalNotes.length, id).toBeGreaterThanOrEqual(3);
+      expect(compound?.referenceProfile?.evidenceGaps.length, id).toBeGreaterThanOrEqual(2);
+      expect(compound?.referenceProfile?.peptideOSActions.length, id).toBeGreaterThanOrEqual(4);
+    });
+  });
+
   test('includes reviewed batch four expansion entries across core categories', () => {
     const batchFourIds = [
       'elamipretide',

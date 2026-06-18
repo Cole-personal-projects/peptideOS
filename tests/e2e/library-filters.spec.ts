@@ -122,9 +122,11 @@ test.describe('library filters', () => {
     await expect(page.getByRole('heading', { name: 'Library' })).toBeVisible();
 
     await expect(page.getByText('Pro data queue')).toBeVisible();
-    await expect(page.getByRole('link', { name: /1 Tirzepatide Pro data priority/ })).toBeVisible();
-    await expect(page.getByRole('link', { name: /2 Semaglutide Pro data priority/ })).toBeVisible();
-    await expect(page.getByRole('link', { name: /3 BPC-157 Pro data priority/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /1 hGH \/ Somatropin Pro data priority/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /2 Tesamorelin Pro data priority/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /3 Sermorelin Pro data priority/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Tirzepatide Pro data priority/ })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /BPC-157 Pro data priority/ })).toHaveCount(0);
     await expect(page.getByText('Retatrutide').first()).toBeVisible();
     await expect(page.getByRole('link', { name: /Retatrutide Pro data priority/ })).toHaveCount(0);
   });

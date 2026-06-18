@@ -16,7 +16,7 @@ describe('library profile view model', () => {
 
     expect(tirzepatide.atAGlance).toEqual(expect.arrayContaining([
       { label: 'Evidence', value: 'Approved Label' },
-      { label: 'Status', value: 'Label Backed' },
+      { label: 'Status', value: 'Approved' },
       { label: 'Route', value: 'SUBQ' },
       { label: 'Form', value: 'Prefilled' },
     ]));
