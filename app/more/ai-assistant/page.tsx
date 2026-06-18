@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Bot, Check, Plus, Send, X } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
@@ -36,6 +36,7 @@ const workflowPrompts = [
   {
     label: 'Calculate reconstitution',
     prompt: 'Calculate reconstitution: ',
+    href: '/more/reconstitution',
   },
 ];
 
@@ -64,6 +65,7 @@ async function requestAssistantActionProposal(message: string, compounds: Protoc
 
 export default function AIAssistantPage() {
   const { data, addSignalCheckIn, addStack, addVials } = useApp();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const trackableCompounds = useMemo(() => getTrackableCompounds(data), [data]);
   const initialCompoundId = searchParams.get('compound');
@@ -110,7 +112,13 @@ export default function AIAssistantPage() {
     setMessage('');
   };
 
-  const applyWorkflowPrompt = (prompt: string) => {
+  const applyWorkflowPrompt = (workflowPrompt: typeof workflowPrompts[number]) => {
+    if (workflowPrompt.href) {
+      router.push(workflowPrompt.href);
+      return;
+    }
+
+    const { prompt } = workflowPrompt;
     setMessage(prompt);
     setPromptMenuOpen(false);
   };
@@ -273,7 +281,7 @@ export default function AIAssistantPage() {
                       type="button"
                       variant="secondary"
                       className="justify-start text-left"
-                      onClick={() => applyWorkflowPrompt(workflowPrompt.prompt)}
+                      onClick={() => applyWorkflowPrompt(workflowPrompt)}
                     >
                       {workflowPrompt.label}
                     </Button>

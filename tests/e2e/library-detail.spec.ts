@@ -210,6 +210,29 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('Comparing compounds related to Retatrutide')).toBeVisible();
   });
 
+  test('opens the full reconstitution calculator from supported compound detail pages', async ({ page }) => {
+    await page.goto('/library/bpc-157');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await expect(page.getByRole('heading', { name: 'BPC-157' })).toBeVisible();
+
+    await page.getByRole('link', { name: 'Calculate BPC-157 reconstitution' }).click();
+
+    await expect(page).toHaveURL(/\/more\/reconstitution\?compound=bpc-157$/);
+    await expect(page.getByRole('heading', { name: 'Reconstitution Calculator' })).toBeVisible();
+    await expect(page.getByRole('combobox').filter({ hasText: 'BPC-157' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeVisible();
+  });
+
+  test('does not offer reconstitution actions for unsupported compound detail pages', async ({ page }) => {
+    await page.goto('/library/retatrutide');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await expect(page.getByRole('heading', { name: 'Retatrutide' })).toBeVisible();
+
+    await expect(page.getByRole('link', { name: 'Calculate Retatrutide reconstitution' })).toHaveCount(0);
+  });
+
   test('creates, edits, persists, and deletes a custom compound', async ({ page }) => {
     await page.goto('/library');
 
