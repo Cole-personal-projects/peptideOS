@@ -17,6 +17,78 @@ export const sirolimus: ReferenceCompound = {
   mechanism: 'Known for mTOR pathway inhibition in approved drug and research contexts.',
   safety: 'Prescription-drug class compound with significant safety considerations; this entry is not treatment guidance.',
   storage: 'Storage varies by product form and label; follow the specific product label.',
+  referenceProfile: {
+    evidenceTier: 'approved-label',
+    biohackerBrief: {
+      headline: 'Sirolimus is the rapamycin/mTOR compound PeptideOS should treat as label-backed but high-caution: exact product, schedule, labs-notes, and source context matter.',
+      whyPeopleCare: [
+        'It is widely discussed in longevity communities because of mTOR-pathway biology.',
+        'It is also an approved prescription-drug class compound with product-specific labeling and serious safety context.',
+        'Users need clean separation between tracking a labeled product and interpreting longevity experiments.',
+      ],
+      verifyBeforeUse: [
+        'Exact product name, strength, dosage form, prescription or source context, lot, expiration, and container label.',
+        'Whether the label says sirolimus, rapamycin, Rapamune, a compounded product, or another mTOR-related compound.',
+        'Product-specific storage, warning, interaction, and handling language from the actual label.',
+      ],
+      trackInApp: [
+        'Inventory by exact bottle or labeled container with strength, quantity, source, expiration, and active status.',
+        'User-entered schedule, adherence, skipped entries, tolerability notes, lab-context notes, infection/illness notes, and stack changes.',
+        'Source and label flags when the product is compounded, relabeled, imported, or missing prescription/container details.',
+      ],
+      realityCheck: 'Sirolimus is label-backed, but PeptideOS should not translate longevity interest into care guidance. The app should track exact user-entered details and keep warnings visible.',
+    },
+    reviewSummary: 'Sirolimus is an approved-label small molecule with PubChem identity metadata and DailyMed label context; PeptideOS treats it as a high-caution tracking object, not longevity advice.',
+    mechanismTargets: [
+      'mTOR pathway',
+      'immunology and longevity research context',
+    ],
+    clinicalEvidence: [
+      {
+        design: 'approved-product-label',
+        population: 'People using labeled sirolimus products under product-specific prescribing contexts',
+        finding: 'DailyMed provides product-label context for sirolimus, including prescription safety and handling information.',
+        citationIds: ['dailymed-sirolimus'],
+        sourceQuality: 'label-backed',
+      },
+      {
+        design: 'compound-identity-record',
+        population: 'Reference chemistry and alias matching for rapamycin/sirolimus tracking',
+        finding: 'PubChem supports identity and naming metadata for sirolimus.',
+        citationIds: ['pubchem-sirolimus'],
+        sourceQuality: 'source-backed',
+      },
+    ],
+    safetySignals: [
+      'Use product labeling for contraindications, warnings, adverse reactions, interactions, and handling context.',
+      'Track infection/illness notes, tolerability notes, lab-context notes, and missed or changed user-entered schedules as records only.',
+      'Flag compounded, relabeled, imported, missing-prescription, missing-lot, or missing-expiration products for user review.',
+    ],
+    practicalNotes: [
+      'Preserve exact label strength and dosage form rather than normalizing across products.',
+      'Keep longevity experiment notes separate from approved-label context.',
+      'Let Peppi summarize adherence and user-entered notes without interpreting lab results or giving clinical advice.',
+    ],
+    evidenceGaps: [
+      'PeptideOS does not determine whether sirolimus is appropriate for any user.',
+      'Longevity-oriented use cases may not map to approved-label indications or dosing contexts.',
+      'Compounded or nonstandard products require explicit user confirmation and may not match DailyMed labeling.',
+    ],
+    regulatoryStatus: {
+      status: 'approved',
+      region: 'US',
+      summary: 'DailyMed provides US label records for sirolimus products; PeptideOS uses that as label-backed tracking context only.',
+      citationIds: ['dailymed-sirolimus'],
+      sourceQuality: 'label-backed',
+    },
+    peptideOSActions: [
+      'Add labeled Sirolimus or Rapamycin containers to inventory after user confirmation.',
+      'Ask for strength, dosage form, quantity, lot, expiration, prescription/source context, and storage details when missing.',
+      'Build schedules only from user-entered instructions and tie logs to the exact inventory item.',
+      'Track adherence, skipped entries, tolerability notes, lab-context notes, illness notes, stack changes, and remaining supply.',
+      'Surface label-backed caution and source-quality flags in Peppi summaries.',
+    ],
+  },
   citations: [
     {
       id: 'pubchem-sirolimus',

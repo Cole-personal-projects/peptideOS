@@ -111,6 +111,7 @@ export function getCompoundProfilePriority(compound: Compound): CompoundProfileP
 
 export function getProfileUpgradeQueue(compounds: Compound[]): ProfileUpgradeQueueItem[] {
   return compounds
+    .filter((compound) => compound.source === 'bundled' && !compound.deletedAt)
     .map((compound) => ({
       compound,
       priority: getCompoundProfilePriority(compound),

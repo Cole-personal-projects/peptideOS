@@ -115,16 +115,16 @@ test.describe('library filters', () => {
     await expect(page.getByRole('link', { name: /Semaglutide/ })).toBeVisible();
   });
 
-  test('surfaces the next pro-data upgrade targets', async ({ page }) => {
+  test('hides the pro-data upgrade queue once all bundled profiles are complete', async ({ page }) => {
     await page.goto('/library');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
     await expect(page.getByRole('heading', { name: 'Library' })).toBeVisible();
 
-    await expect(page.getByText('Pro data queue')).toBeVisible();
-    await expect(page.getByRole('link', { name: /1 hGH \/ Somatropin Pro data priority/ })).toBeVisible();
-    await expect(page.getByRole('link', { name: /2 Tesamorelin Pro data priority/ })).toBeVisible();
-    await expect(page.getByRole('link', { name: /3 Sermorelin Pro data priority/ })).toBeVisible();
+    await expect(page.getByText('Pro data queue')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /hGH \/ Somatropin/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Tesamorelin/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Sermorelin/ })).toBeVisible();
     await expect(page.getByRole('link', { name: /Tirzepatide Pro data priority/ })).toHaveCount(0);
     await expect(page.getByRole('link', { name: /BPC-157 Pro data priority/ })).toHaveCount(0);
     await expect(page.getByText('Retatrutide').first()).toBeVisible();

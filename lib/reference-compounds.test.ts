@@ -110,6 +110,7 @@ describe('reference compounds', () => {
       'metabolic',
       'growth-hormone',
       'sexual-reproductive',
+      'hormone-endocrine',
       'cognitive',
       'skin-hair',
     ]));
@@ -185,6 +186,53 @@ describe('reference compounds', () => {
       expect(compound?.referenceProfile?.practicalNotes.length, id).toBeGreaterThanOrEqual(3);
       expect(compound?.referenceProfile?.evidenceGaps.length, id).toBeGreaterThanOrEqual(2);
       expect(compound?.referenceProfile?.peptideOSActions.length, id).toBeGreaterThanOrEqual(4);
+    });
+  });
+
+  test('ships a complete pro-grade profile for every bundled reference compound', () => {
+    referenceCompounds.forEach((compound) => {
+      expect(compound.referenceProfile, compound.id).toEqual(expect.objectContaining({
+        evidenceTier: expect.any(String),
+        reviewSummary: expect.any(String),
+        regulatoryStatus: expect.objectContaining({
+          status: expect.any(String),
+          region: expect.any(String),
+          summary: expect.any(String),
+        }),
+      }));
+      expect(compound.referenceProfile?.biohackerBrief.headline.length, compound.id).toBeGreaterThan(40);
+      expect(compound.referenceProfile?.biohackerBrief.whyPeopleCare.length, compound.id).toBeGreaterThanOrEqual(3);
+      expect(compound.referenceProfile?.biohackerBrief.verifyBeforeUse.length, compound.id).toBeGreaterThanOrEqual(3);
+      expect(compound.referenceProfile?.biohackerBrief.trackInApp.length, compound.id).toBeGreaterThanOrEqual(3);
+      expect(compound.referenceProfile?.mechanismTargets.length, compound.id).toBeGreaterThanOrEqual(1);
+      expect(compound.referenceProfile?.clinicalEvidence.length, compound.id).toBeGreaterThanOrEqual(2);
+      expect(compound.referenceProfile?.safetySignals.length, compound.id).toBeGreaterThanOrEqual(3);
+      expect(compound.referenceProfile?.practicalNotes.length, compound.id).toBeGreaterThanOrEqual(3);
+      expect(compound.referenceProfile?.evidenceGaps.length, compound.id).toBeGreaterThanOrEqual(2);
+      expect(compound.referenceProfile?.peptideOSActions.length, compound.id).toBeGreaterThanOrEqual(4);
+    });
+  });
+
+  test('includes hormone-adjacent compounds users expect to track', () => {
+    const hormoneIds = [
+      'testosterone-cypionate',
+      'testosterone-enanthate',
+      'testosterone-propionate',
+      'hcg',
+      'enclomiphene',
+    ];
+
+    expect(referenceCompounds.map((compound) => compound.id)).toEqual(expect.arrayContaining(hormoneIds));
+    hormoneIds.forEach((id) => {
+      const compound = referenceCompounds.find((entry) => entry.id === id);
+
+      expect(compound, id).toEqual(expect.objectContaining({
+        category: 'hormone-endocrine',
+        curationStatus: 'reviewed',
+      }));
+      expect(compound?.referenceProfile?.biohackerBrief.verifyBeforeUse, id).toEqual(expect.arrayContaining([
+        expect.stringMatching(/label|lot|source|prescription|container/i),
+      ]));
     });
   });
 

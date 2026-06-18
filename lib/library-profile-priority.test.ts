@@ -15,24 +15,32 @@ describe('library profile priority', () => {
       'tb-500',
       'mots-c',
     ]));
-    expect(queueIds.slice(0, 5)).toEqual([
-      'hgh-somatropin',
-      'tesamorelin',
-      'sermorelin',
-      'ipamorelin',
-      'thymosin-alpha-1',
-    ]);
+    expect(queueIds).toEqual([]);
   });
 
-  it('explains why a compound is next in the pro-data queue', () => {
+  it('marks hormone entries as profiled once pro-grade content is present', () => {
     expect(getCompoundProfilePriority(referenceCompounds.find((compound) => compound.id === 'hgh-somatropin')!)).toMatchObject({
-      band: 'priority',
-      label: 'Pro data priority',
-      reasons: expect.arrayContaining([
-        'High user value',
-        'Protocol and inventory impact',
-        'Source-backed upgrade path',
-      ]),
+      band: 'profiled',
+      label: 'Pro profile live',
+      reasons: ['Full reference profile available'],
     });
+  });
+
+  it('keeps user-created and deleted compounds out of the pro-data queue', () => {
+    const custom = {
+      ...referenceCompounds[0],
+      id: 'custom-focus-blend',
+      name: 'Custom Focus Blend',
+      referenceProfile: undefined,
+      source: 'user',
+      curationStatus: 'draft',
+    } as const;
+    const deletedReference = {
+      ...referenceCompounds[1],
+      referenceProfile: undefined,
+      deletedAt: '2026-06-18T00:00:00.000Z',
+    } as const;
+
+    expect(getProfileUpgradeQueue([custom, deletedReference])).toEqual([]);
   });
 });
