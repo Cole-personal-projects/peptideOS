@@ -114,4 +114,18 @@ test.describe('library filters', () => {
     await expect(page.getByRole('link', { name: /Retatrutide/ })).toHaveCount(0);
     await expect(page.getByRole('link', { name: /Semaglutide/ })).toBeVisible();
   });
+
+  test('surfaces the next pro-data upgrade targets', async ({ page }) => {
+    await page.goto('/library');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await expect(page.getByRole('heading', { name: 'Library' })).toBeVisible();
+
+    await expect(page.getByText('Pro data queue')).toBeVisible();
+    await expect(page.getByRole('link', { name: /1 Tirzepatide Pro data priority/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /2 Semaglutide Pro data priority/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /3 BPC-157 Pro data priority/ })).toBeVisible();
+    await expect(page.getByText('Retatrutide').first()).toBeVisible();
+    await expect(page.getByRole('link', { name: /Retatrutide Pro data priority/ })).toHaveCount(0);
+  });
 });

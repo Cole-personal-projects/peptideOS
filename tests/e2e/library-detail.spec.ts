@@ -110,6 +110,20 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('ClinicalTrials.gov,').first()).toBeVisible();
   });
 
+  test('shows pro-data priority context for high-value compounds waiting on full profiles', async ({ page }) => {
+    await page.goto('/library/bpc-157');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await expect(page.getByRole('heading', { name: 'BPC-157' })).toBeVisible();
+
+    await expect(page.getByText('Reference Intelligence')).toBeVisible();
+    await expect(page.getByText('Pro data priority')).toBeVisible();
+    await expect(page.getByText('Research Only')).toBeVisible();
+    await expect(page.getByText('High user value')).toBeVisible();
+    await expect(page.getByText('Protocol and inventory impact')).toBeVisible();
+    await expect(page.getByText('Source-backed upgrade path')).toBeVisible();
+  });
+
   test('creates, edits, persists, and deletes a custom compound', async ({ page }) => {
     await page.goto('/library');
 

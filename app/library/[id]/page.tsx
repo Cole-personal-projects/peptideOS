@@ -16,6 +16,8 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/lib/context';
+import { getLibraryEvidenceDisplay } from '@/lib/library-evidence';
+import { getCompoundProfilePriority } from '@/lib/library-profile-priority';
 import { cn } from '@/lib/utils';
 import type { CompoundCategory, CompoundReferenceProfile } from '@/lib/types';
 
@@ -174,6 +176,8 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
 
   const isCustom = compound.source === 'user';
   const referenceProfile = compound.referenceProfile;
+  const evidenceDisplay = getLibraryEvidenceDisplay(compound);
+  const profilePriority = getCompoundProfilePriority(compound);
 
   const saveEdit = () => {
     if (!editName.trim()) return;
@@ -267,10 +271,37 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
           {compound.referenceProfile ? (
             <>
               <Badge variant="outline">{formatLabel(compound.referenceProfile.evidenceTier)}</Badge>
-              <Badge variant="outline">{formatLabel(compound.referenceProfile.regulatoryStatus.status)}</Badge>
             </>
           ) : null}
         </div>
+
+        <Card className="border-primary/20 bg-secondary/25">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ListChecks className="w-4 h-4 text-primary" />
+              Reference Intelligence
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="border-primary/30 bg-primary/5 text-primary">
+                {evidenceDisplay.tierLabel}
+              </Badge>
+              <Badge variant="outline">{evidenceDisplay.statusLabel}</Badge>
+              <Badge variant={profilePriority.band === 'priority' ? 'default' : 'secondary'}>
+                {profilePriority.label}
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">{evidenceDisplay.mechanismClass}</p>
+            <div className="flex flex-wrap gap-2">
+              {profilePriority.reasons.map((reason) => (
+                <Badge key={reason} variant="outline" className="text-[10px]">
+                  {reason}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         <Tabs defaultValue={referenceProfile ? 'field-brief' : 'overview'} className="w-full">
           <TabsList className={cn(
