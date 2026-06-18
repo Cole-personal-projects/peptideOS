@@ -41,6 +41,8 @@ export function buildActionableLibraryProfile(compound: Compound): ActionableLib
       ...getTransparencyFlags(compound),
       ...(profile?.evidenceGaps ?? []),
     ]),
+    trackingDomains: unique(getTrackingDomains(compound)),
+    peppiPrompts: unique(getPeppiPrompts(compound)),
   };
 }
 
@@ -105,6 +107,56 @@ function getTrackingChecklist(compound: Compound): string[] {
   return checklist;
 }
 
+function getTrackingDomains(compound: Compound): string[] {
+  const domains = [
+    'Schedule adherence',
+    'Inventory status',
+    'Subjective response notes',
+  ];
+
+  if (compound.reconstitutionDefaults) {
+    domains.push('Reconstitution math and vial status');
+  }
+
+  switch (compound.category) {
+    case 'metabolic':
+      domains.push('Metabolic trend notes', 'Appetite and tolerability notes');
+      break;
+    case 'healing':
+      domains.push('Recovery or tissue-support notes', 'Site rotation and local response notes');
+      break;
+    case 'growth-hormone':
+      domains.push('Recovery, sleep, and training context notes', 'Water-retention or tolerability notes');
+      break;
+    case 'cognitive':
+      domains.push('Focus, mood, and cognition notes', 'Sleep and timing context');
+      break;
+    case 'longevity':
+      domains.push('Energy, endurance, and recovery notes', 'Longitudinal trend notes');
+      break;
+    case 'immune':
+      domains.push('Immune-support context notes', 'Tolerability and flare notes');
+      break;
+    case 'skin-hair':
+      domains.push('Skin, hair, or local tissue notes', 'Topical or site-specific context');
+      break;
+    case 'sexual-reproductive':
+      domains.push('Timing, response, and tolerability notes', 'Hormone/reproductive context notes');
+      break;
+    case 'sleep':
+      domains.push('Sleep quality and timing notes', 'Next-day effect notes');
+      break;
+    case 'hormone-endocrine':
+      domains.push('Lab-adjacent notes the user chooses to track', 'Injection schedule and container status');
+      break;
+    case 'custom':
+      domains.push('Custom user-defined trend notes');
+      break;
+  }
+
+  return domains;
+}
+
 function getInventoryGuidance(compound: Compound): string[] {
   const guidance = [
     'Record vial amount, container state, lot, source, date added, and expiration.',
@@ -132,6 +184,29 @@ function getInventoryGuidance(compound: Compound): string[] {
   });
 
   return guidance;
+}
+
+function getPeppiPrompts(compound: Compound): string[] {
+  const prompts = [
+    `Add my labeled ${compound.name} container to inventory`,
+    `Build a ${compound.name} schedule from my confirmed label details`,
+    `Show my ${compound.name} inventory, schedule, notes, and missed entries`,
+  ];
+
+  if (compound.reconstitutionDefaults) {
+    prompts.push(`Calculate ${compound.name} concentration from vial amount and BAC water`);
+    prompts.push(`Add a ${compound.name} kit or vial to inventory`);
+  }
+
+  if (compound.concentrationMode === 'prefilled') {
+    prompts.push(`Help me log a ${compound.name} pen or prefilled container`);
+  }
+
+  if (compound.category === 'metabolic') {
+    prompts.push(`Review my ${compound.name} metabolic trend notes and tolerability log`);
+  }
+
+  return prompts;
 }
 
 function getTransparencyFlags(compound: Compound): string[] {

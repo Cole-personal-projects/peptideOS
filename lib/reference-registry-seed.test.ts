@@ -95,7 +95,11 @@ describe('reference registry seed', () => {
         trackInApp: expect.any(Array),
         inventoryGuidance: expect.any(Array),
         transparencyFlags: expect.any(Array),
+        trackingDomains: expect.any(Array),
+        peppiPrompts: expect.any(Array),
       }));
+      expect((actionableBlock?.content.trackingDomains as unknown[]).length).toBeGreaterThanOrEqual(3);
+      expect((actionableBlock?.content.peppiPrompts as unknown[]).length).toBeGreaterThanOrEqual(3);
       expect(seed.releaseItems.some((item) => (
         item.compound_slug === compound.id
         && item.content_block_id === `${compound.id}-actionable-profile-v1`
