@@ -136,6 +136,12 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('Container label, lot, expiration, strength, and route')).toBeVisible();
     await expect(page.getByText('What to track')).toBeVisible();
     await expect(page.getByText('Inventory depletion and active container status')).toBeVisible();
+    await expect(page.getByText('Tracking domains')).toBeVisible();
+    await expect(page.getByText('Metabolic trend notes', { exact: true })).toBeVisible();
+    await expect(page.getByText('Appetite and tolerability notes', { exact: true })).toBeVisible();
+    await expect(page.getByText('Peppi prompts')).toBeVisible();
+    await expect(page.getByText('Add my labeled Tirzepatide container to inventory')).toBeVisible();
+    await expect(page.getByText('Build a Tirzepatide schedule from my confirmed label details')).toBeVisible();
     await expect(page.getByText('Transparency')).toBeVisible();
     await expect(page.getByText('Full pro profile is not yet attached')).toBeVisible();
 
@@ -144,6 +150,7 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('Common vial amount presets: 5 mg, 10 mg.')).toBeVisible();
     await expect(page.getByText('BAC water calculator presets: 1 mL, 2 mL.')).toBeVisible();
     await expect(page.getByText('Reconstitution date, concentration, active vial status, and remaining inventory')).toBeVisible();
+    await expect(page.getByText('Calculate MOTS-c concentration from vial amount and BAC water')).toBeVisible();
   });
 
   test('creates, edits, persists, and deletes a custom compound', async ({ page }) => {

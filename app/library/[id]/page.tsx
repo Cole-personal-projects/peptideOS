@@ -156,6 +156,17 @@ function ActionableLibraryProfileCard({ profile }: { profile: ActionableLibraryP
             <p className="mb-2 text-sm font-medium">Inventory and math</p>
             <BulletList items={profile.inventoryGuidance} />
           </div>
+          <div className="rounded-lg border border-border bg-secondary/35 p-3">
+            <p className="mb-2 text-sm font-medium">Tracking domains</p>
+            <BulletList items={profile.trackingDomains} />
+          </div>
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+            <p className="mb-2 flex items-center gap-2 text-sm font-medium">
+              <MessageCircle className="h-4 w-4 text-primary" />
+              Peppi prompts
+            </p>
+            <BulletList items={profile.peppiPrompts} />
+          </div>
         </div>
         <div className="rounded-lg border border-chart-4/25 bg-chart-4/5 p-3">
           <p className="mb-2 text-sm font-medium">Transparency</p>

@@ -240,6 +240,8 @@ function toActionableProfileContentBlock(compound: ReferenceLibrarySnapshot['com
       trackInApp: profile.trackInApp,
       inventoryGuidance: profile.inventoryGuidance,
       transparencyFlags: profile.transparencyFlags,
+      trackingDomains: profile.trackingDomains,
+      peppiPrompts: profile.peppiPrompts,
     },
     citation_ids: compound.citations.map((citation) => citation.id),
     review_status: 'reviewed',

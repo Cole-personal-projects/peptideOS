@@ -179,6 +179,8 @@ export interface CompoundActionableProfile {
   trackInApp: string[];
   inventoryGuidance: string[];
   transparencyFlags: string[];
+  trackingDomains: string[];
+  peppiPrompts: string[];
 }
 
 export interface Compound {

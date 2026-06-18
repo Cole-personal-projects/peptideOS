@@ -54,6 +54,8 @@ describe('actionable library profiles', () => {
         trackInApp: ['Database tracking'],
         inventoryGuidance: ['Database inventory guidance'],
         transparencyFlags: ['Database transparency flag'],
+        trackingDomains: ['Database tracking domain'],
+        peppiPrompts: ['Database Peppi prompt'],
       },
     });
 
@@ -69,6 +71,8 @@ describe('actionable library profiles', () => {
       trackInApp: ['Database tracking'],
       inventoryGuidance: ['Database inventory guidance'],
       transparencyFlags: ['Database transparency flag'],
+      trackingDomains: ['Database tracking domain'],
+      peppiPrompts: ['Database Peppi prompt'],
     });
   });
 
@@ -95,5 +99,37 @@ describe('actionable library profiles', () => {
       'Research-use entries are tracking references, not medical guidance.',
       'Source strength varies by compound; review citations before relying on a claim.',
     ]));
+  });
+
+  it('gives every reviewed compound Peppi-ready prompts and concrete tracking domains', () => {
+    const profiles = referenceCompounds.map(buildActionableLibraryProfile);
+
+    profiles.forEach((profile) => {
+      expect(profile.trackingDomains.length).toBeGreaterThanOrEqual(3);
+      expect(profile.peppiPrompts.length).toBeGreaterThanOrEqual(3);
+      expect(JSON.stringify(profile.peppiPrompts)).not.toMatch(/recommended dose|dose recommendation|should take/i);
+    });
+
+    expect(buildActionableLibraryProfile(compound('tirzepatide'))).toEqual(expect.objectContaining({
+      trackingDomains: expect.arrayContaining([
+        'Metabolic trend notes',
+        'Appetite and tolerability notes',
+      ]),
+      peppiPrompts: expect.arrayContaining([
+        'Add my labeled Tirzepatide container to inventory',
+        'Build a Tirzepatide schedule from my confirmed label details',
+      ]),
+    }));
+
+    expect(buildActionableLibraryProfile(compound('bpc-157'))).toEqual(expect.objectContaining({
+      trackingDomains: expect.arrayContaining([
+        'Reconstitution math and vial status',
+        'Recovery or tissue-support notes',
+      ]),
+      peppiPrompts: expect.arrayContaining([
+        'Calculate BPC-157 concentration from vial amount and BAC water',
+        'Add a BPC-157 kit or vial to inventory',
+      ]),
+    }));
   });
 });
