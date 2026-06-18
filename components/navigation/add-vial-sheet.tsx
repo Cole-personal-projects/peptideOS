@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useApp } from '@/lib/context';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { buildNewVialBatch } from '@/lib/vial-create';
+import type { TrackableCompound } from '@/lib/compound-workflows';
 import type { ConcentrationUnit, DoseUnit, InventoryContainerType, VialStatus } from '@/lib/types';
 
 interface AddVialSheetProps {
@@ -21,14 +22,15 @@ export function AddVialSheet({ open, onOpenChange, initialCompoundId }: AddVialS
   const { data, addVials } = useApp();
   const trackableCompounds = useMemo(() => getTrackableCompounds(data), [data]);
   const initialCompound = trackableCompounds.find((compound) => compound.id === initialCompoundId);
-  const [name, setName] = useState('');
+  const initialVialAmount = getDefaultVialAmount(initialCompound);
+  const [name, setName] = useState(() => getDefaultInventoryName(initialCompound));
   const [peptideId, setPeptideId] = useState(initialCompound?.id ?? '');
   const [dateAdded, setDateAdded] = useState(() => new Date().toISOString().slice(0, 10));
   const [containerType, setContainerType] = useState<InventoryContainerType>(() => getDefaultContainerType(initialCompound));
   const [source, setSource] = useState('');
   const [lotNumber, setLotNumber] = useState('');
-  const [amount, setAmount] = useState('');
-  const [amountUnit, setAmountUnit] = useState<DoseUnit>(initialCompound?.defaultDoseUnit === 'iu' ? 'iu' : 'mg');
+  const [amount, setAmount] = useState(() => initialVialAmount?.value.toString() ?? '');
+  const [amountUnit, setAmountUnit] = useState<DoseUnit>(initialVialAmount?.unit ?? (initialCompound?.defaultDoseUnit === 'iu' ? 'iu' : 'mg'));
   const [packageUnit, setPackageUnit] = useState<'vial' | 'kit'>('vial');
   const [packageQuantity, setPackageQuantity] = useState('1');
   const [concentration, setConcentration] = useState('');
@@ -41,8 +43,16 @@ export function AddVialSheet({ open, onOpenChange, initialCompoundId }: AddVialS
 
   const handleCompoundChange = (value: string) => {
     const compound = trackableCompounds.find((candidate) => candidate.id === value);
+    const defaultAmount = getDefaultVialAmount(compound);
+    const previousDefaultName = getDefaultInventoryName(selectedCompound);
     setPeptideId(value);
-    setAmountUnit(compound?.defaultDoseUnit === 'iu' ? 'iu' : 'mg');
+    setName((currentName) => (
+      !currentName.trim() || currentName === previousDefaultName
+        ? getDefaultInventoryName(compound)
+        : currentName
+    ));
+    setAmount(defaultAmount?.value.toString() ?? '');
+    setAmountUnit(defaultAmount?.unit ?? (compound?.defaultDoseUnit === 'iu' ? 'iu' : 'mg'));
     setConcentrationUnit(compound?.defaultDoseUnit === 'iu' ? 'iu/ml' : 'mg/ml');
 
     setContainerType(getDefaultContainerType(compound));
@@ -320,4 +330,16 @@ function getDefaultContainerType(compound?: { concentrationMode: string }): Inve
   if (compound?.concentrationMode === 'prefilled') return 'prefilled-pen';
   if (compound?.concentrationMode === 'none') return 'capsule-bottle';
   return 'lyophilized-vial';
+}
+
+function getDefaultInventoryName(compound?: Pick<TrackableCompound, 'name' | 'concentrationMode'>): string {
+  if (!compound) return '';
+  if (compound.concentrationMode === 'concentration' || compound.concentrationMode === 'prefilled') {
+    return `${compound.name} container`;
+  }
+  return `${compound.name} inventory`;
+}
+
+function getDefaultVialAmount(compound?: Pick<TrackableCompound, 'vialPresets'>) {
+  return compound?.vialPresets.find((preset) => preset.totalAmount)?.totalAmount;
 }

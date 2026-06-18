@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, AlertCircle } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 
 export default function InventoryPage() {
   const { data } = useApp();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('active');
   const [isAddOpen, setIsAddOpen] = useState(() => searchParams.get('add') === 'inventory');
@@ -104,6 +105,9 @@ export default function InventoryPage() {
     const statusSummary = Object.entries(statusCounts)
       .map(([status, count]) => `${count} ${status} vial${count === 1 ? '' : 's'}`)
       .join(' · ');
+    const inventorySummary = batch?.packageUnit === 'kit' && batch.packageQuantity
+      ? `${batch.packageQuantity} kit${batch.packageQuantity === 1 ? '' : 's'} / ${batch.vialCount} vials`
+      : `${batch?.vialCount ?? batchVials.length} vial${(batch?.vialCount ?? batchVials.length) === 1 ? '' : 's'}`;
 
     return (
       <Link key={batchId} href={`/more/inventory/${firstVial.id}`}>
@@ -124,7 +128,8 @@ export default function InventoryPage() {
             <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
               <div>
                 <p className="text-xs text-muted-foreground">Inventory</p>
-                <p className="font-medium">{statusSummary}</p>
+                <p className="font-medium">{inventorySummary}</p>
+                <p className="text-xs text-muted-foreground">{statusSummary}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Amount</p>
@@ -317,7 +322,12 @@ export default function InventoryPage() {
         initialCompoundId={initialCompoundId}
         onOpenChange={(open) => {
           setIsAddOpen(open);
-          if (!open) setActiveTab('sealed');
+          if (!open) {
+            setActiveTab('sealed');
+            if (searchParams.get('add') === 'inventory' || searchParams.get('compound')) {
+              router.replace('/more/inventory');
+            }
+          }
         }}
       />
     </AppShell>
