@@ -24,6 +24,7 @@ import {
   type LibraryEvidenceFilter,
 } from '@/lib/library-evidence';
 import { filterCompounds } from '@/lib/library-filters';
+import { getProfileUpgradeQueue } from '@/lib/library-profile-priority';
 import { cn } from '@/lib/utils';
 import type { CompoundCategory, CompoundType, DoseUnit, Route } from '@/lib/types';
 
@@ -80,6 +81,11 @@ export default function LibraryPage() {
     }),
     [data.compounds, search, selectedCategory, selectedType, selectedEvidence],
   );
+  const profileQueue = useMemo(() => getProfileUpgradeQueue(data.compounds).slice(0, 5), [data.compounds]);
+  const showProfileQueue = search.trim().length === 0
+    && selectedCategory === 'all'
+    && selectedType === 'all'
+    && selectedEvidence === 'all';
 
   const resetForm = () => {
     setName('');
@@ -263,6 +269,39 @@ export default function LibraryPage() {
         <Label className="text-xs text-muted-foreground">
           {researcherMode ? 'Researcher Mode: Showing detailed information' : 'Beginner Mode: Showing simplified summaries'}
         </Label>
+
+        {showProfileQueue && profileQueue.length > 0 ? (
+          <section className="space-y-2" aria-label="Pro data queue">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold">Pro data queue</h2>
+                <p className="text-xs text-muted-foreground">Next compounds to promote into full reference profiles.</p>
+              </div>
+              <Badge variant="outline" className="shrink-0 text-[10px]">
+                {profileQueue.length} next
+              </Badge>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+              {profileQueue.map((item, index) => (
+                <Link
+                  key={item.compound.id}
+                  href={`/library/${item.compound.id}`}
+                  className="min-w-[168px] rounded-lg border border-border bg-secondary/35 p-3 transition-colors hover:bg-secondary/60"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                      {index + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{item.compound.name}</p>
+                      <p className="text-xs text-muted-foreground">{item.priority.label}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <div className="space-y-2">
           {filteredCompounds.length === 0 ? (
