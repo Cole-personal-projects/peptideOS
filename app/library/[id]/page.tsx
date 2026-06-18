@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { buildActionableLibraryProfile, type ActionableLibraryProfile } from '@/lib/actionable-library-profile';
 import { useApp } from '@/lib/context';
 import { getLibraryEvidenceDisplay } from '@/lib/library-evidence';
 import { getCompoundProfilePriority } from '@/lib/library-profile-priority';
@@ -128,6 +129,43 @@ function SummaryCard({
   );
 }
 
+function ActionableLibraryProfileCard({ profile }: { profile: ActionableLibraryProfile }) {
+  return (
+    <Card className="border-primary/20 bg-background">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-primary" />
+          Actionable Profile
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+            <p className="mb-2 text-sm font-medium">What you can do</p>
+            <BulletList items={profile.primaryActions} />
+          </div>
+          <div className="rounded-lg border border-border bg-secondary/35 p-3">
+            <p className="mb-2 text-sm font-medium">What to verify</p>
+            <BulletList items={profile.verifyBeforeUse} />
+          </div>
+          <div className="rounded-lg border border-border bg-secondary/35 p-3">
+            <p className="mb-2 text-sm font-medium">What to track</p>
+            <BulletList items={profile.trackInApp} />
+          </div>
+          <div className="rounded-lg border border-border bg-secondary/35 p-3">
+            <p className="mb-2 text-sm font-medium">Inventory and math</p>
+            <BulletList items={profile.inventoryGuidance} />
+          </div>
+        </div>
+        <div className="rounded-lg border border-chart-4/25 bg-chart-4/5 p-3">
+          <p className="mb-2 text-sm font-medium">Transparency</p>
+          <BulletList items={profile.transparencyFlags} />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function LibraryDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -178,6 +216,7 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
   const referenceProfile = compound.referenceProfile;
   const evidenceDisplay = getLibraryEvidenceDisplay(compound);
   const profilePriority = getCompoundProfilePriority(compound);
+  const actionableProfile = buildActionableLibraryProfile(compound);
 
   const saveEdit = () => {
     if (!editName.trim()) return;
@@ -302,6 +341,8 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
             </div>
           </CardContent>
         </Card>
+
+        {!referenceProfile ? <ActionableLibraryProfileCard profile={actionableProfile} /> : null}
 
         <Tabs defaultValue={referenceProfile ? 'field-brief' : 'overview'} className="w-full">
           <TabsList className={cn(

@@ -34,12 +34,24 @@ describe('reference library export pipeline', () => {
     }));
 
     const retatrutide = exported.compounds.find((compound) => compound.id === 'retatrutide');
+    const tirzepatide = exported.compounds.find((compound) => compound.id === 'tirzepatide');
 
     expect(retatrutide?.referenceProfile?.biohackerBrief.headline).toContain('triple-agonist');
     expect(retatrutide?.referenceProfile?.clinicalEvidence.some((evidence) => (
       evidence.sourceQuality === 'trial-registry'
       && evidence.limitations?.includes('topline')
     ))).toBe(true);
+    expect(tirzepatide?.actionableProfile).toEqual(expect.objectContaining({
+      primaryActions: expect.arrayContaining([
+        'Add the exact labeled container or pen to inventory',
+      ]),
+      verifyBeforeUse: expect.arrayContaining([
+        'Container label, lot, expiration, strength, and route',
+      ]),
+      transparencyFlags: expect.arrayContaining([
+        'Approved-label or label-adjacent citations may describe a regulated product, not an unlabeled research item.',
+      ]),
+    }));
   });
 
   test('reports release and content block problems before export', () => {

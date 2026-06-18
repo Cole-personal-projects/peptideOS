@@ -124,6 +124,28 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('Source-backed upgrade path')).toBeVisible();
   });
 
+  test('renders actionable app guidance for database-backed compounds without full pro profiles', async ({ page }) => {
+    await page.goto('/library/tirzepatide');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await expect(page.getByRole('heading', { name: 'Tirzepatide' })).toBeVisible();
+    await expect(page.getByText('What you can do')).toBeVisible();
+    await expect(page.getByText('Add the exact labeled container or pen to inventory')).toBeVisible();
+    await expect(page.getByText('Build a schedule from user-confirmed label details')).toBeVisible();
+    await expect(page.getByText('What to verify')).toBeVisible();
+    await expect(page.getByText('Container label, lot, expiration, strength, and route')).toBeVisible();
+    await expect(page.getByText('What to track')).toBeVisible();
+    await expect(page.getByText('Inventory depletion and active container status')).toBeVisible();
+    await expect(page.getByText('Transparency')).toBeVisible();
+    await expect(page.getByText('Full pro profile is not yet attached')).toBeVisible();
+
+    await page.goto('/library/mots-c');
+    await expect(page.getByRole('heading', { name: 'MOTS-c' })).toBeVisible();
+    await expect(page.getByText('Common vial amount presets: 5 mg, 10 mg.')).toBeVisible();
+    await expect(page.getByText('BAC water calculator presets: 1 mL, 2 mL.')).toBeVisible();
+    await expect(page.getByText('Reconstitution date, concentration, active vial status, and remaining inventory')).toBeVisible();
+  });
+
   test('creates, edits, persists, and deletes a custom compound', async ({ page }) => {
     await page.goto('/library');
 

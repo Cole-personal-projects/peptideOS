@@ -1,3 +1,4 @@
+import { buildActionableLibraryProfile } from './actionable-library-profile';
 import type { CompoundDosePreset, CompoundReferenceProfile, CompoundVialPreset, InventoryContainerType } from './types';
 import type { ReferenceLibrarySnapshot } from './reference-library-snapshot';
 
@@ -108,7 +109,7 @@ export interface ReferenceWorkflowMetadataRow {
 export interface ReferenceContentBlockRow {
   id: string;
   compound_slug: string;
-  block_type: 'field_brief' | 'evidence_snapshot' | 'safety_watch' | 'regulatory_status';
+  block_type: 'actionable_profile' | 'field_brief' | 'evidence_snapshot' | 'safety_watch' | 'regulatory_status';
   title: string;
   content: Record<string, unknown>;
   citation_ids: string[];
@@ -134,9 +135,10 @@ export interface ReferenceLibraryReleaseItemRow {
 export function buildReferenceRegistrySeed(snapshot: ReferenceLibrarySnapshot): ReferenceRegistrySeed {
   const compounds = [...snapshot.compounds].sort((a, b) => a.id.localeCompare(b.id));
   const contentBlocks = compounds.flatMap((compound) => (
-    compound.referenceProfile
-      ? toContentBlockRows(compound.id, compound.referenceProfile)
-      : []
+    [
+      toActionableProfileContentBlock(compound),
+      ...(compound.referenceProfile ? toContentBlockRows(compound.id, compound.referenceProfile) : []),
+    ]
   ));
 
   return {
@@ -216,6 +218,32 @@ export function buildReferenceRegistrySeed(snapshot: ReferenceLibrarySnapshot): 
       content_block_id: block.id,
       sort_order: index,
     })),
+  };
+}
+
+function toActionableProfileContentBlock(compound: ReferenceLibrarySnapshot['compounds'][number]): ReferenceContentBlockRow {
+  const profile = buildActionableLibraryProfile(compound);
+
+  return {
+    id: `${compound.id}-actionable-profile-v1`,
+    compound_slug: compound.id,
+    block_type: 'actionable_profile',
+    title: 'Actionable Profile',
+    content: {
+      headline: profile.headline,
+      summary: profile.summary,
+      evidenceLabel: profile.evidenceLabel,
+      statusLabel: profile.statusLabel,
+      mechanismClass: profile.mechanismClass,
+      primaryActions: profile.primaryActions,
+      verifyBeforeUse: profile.verifyBeforeUse,
+      trackInApp: profile.trackInApp,
+      inventoryGuidance: profile.inventoryGuidance,
+      transparencyFlags: profile.transparencyFlags,
+    },
+    citation_ids: compound.citations.map((citation) => citation.id),
+    review_status: 'reviewed',
+    content_version: 1,
   };
 }
 

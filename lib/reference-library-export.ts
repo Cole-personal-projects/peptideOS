@@ -6,6 +6,7 @@ import type {
 } from './reference-registry-seed';
 import type {
   CompoundBiohackerBrief,
+  CompoundActionableProfile,
   CompoundReferenceProfile,
   ReferenceClinicalEvidence,
   ReferenceRegulatoryStatus,
@@ -101,6 +102,9 @@ export function buildReferenceLibrarySnapshotFromRegistrySeed(
       storage: primaryForm?.form_notes ?? '',
       citations,
       referenceProfile: buildReferenceProfileFromContentBlocks(
+        seed.contentBlocks.filter((block) => block.compound_slug === compoundRow.slug),
+      ),
+      actionableProfile: buildActionableProfileFromContentBlocks(
         seed.contentBlocks.filter((block) => block.compound_slug === compoundRow.slug),
       ),
       source: 'bundled',
@@ -206,6 +210,10 @@ function buildReferenceProfileFromContentBlocks(blocks: ReferenceContentBlockRow
     regulatoryStatus,
     peptideOSActions: safetyWatch.peptideOSActions,
   };
+}
+
+function buildActionableProfileFromContentBlocks(blocks: ReferenceContentBlockRow[]): CompoundActionableProfile | undefined {
+  return getBlockContent<CompoundActionableProfile>(blocks, 'actionable_profile');
 }
 
 function getBlockContent<T>(blocks: ReferenceContentBlockRow[], blockType: ReferenceContentBlockRow['block_type']): T | undefined {
