@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -52,13 +53,19 @@ import {
 
 export default function ReconstitutionPage() {
   const { data, addReconstitutionCalculation, deleteReconstitutionCalculation } = useApp();
+  const searchParams = useSearchParams();
+  const initialCompoundFromQuery = getConversionById(searchParams.get('compound') ?? '');
+  const initialCompoundId = initialCompoundFromQuery?.id ?? 'bpc-157';
+  const initialCompound = getConversionById(initialCompoundId);
   // State
-  const [selectedCompoundId, setSelectedCompoundId] = useState<string>('bpc-157');
-  const [vialSize, setVialSize] = useState<string>('5');
-  const [vialUnit, setVialUnit] = useState<VialUnit>('mg');
+  const [selectedCompoundId, setSelectedCompoundId] = useState<string>(initialCompoundId);
+  const [vialSize, setVialSize] = useState<string>(() => initialCompoundFromQuery?.typicalVialSizes[0]?.value.toString() ?? '5');
+  const [vialUnit, setVialUnit] = useState<VialUnit>(initialCompoundFromQuery?.dosingMode === 'iu-primary' ? 'iu' : 'mg');
   const [bacWaterMl, setBacWaterMl] = useState<number>(2);
-  const [doseValue, setDoseValue] = useState<string>('250');
-  const [doseUnit, setDoseUnit] = useState<DoseUnit>('mcg');
+  const [doseValue, setDoseValue] = useState<string>(() => initialCompoundFromQuery?.typicalDoseRange.min.toString() ?? '250');
+  const [doseUnit, setDoseUnit] = useState<DoseUnit>(
+    initialCompoundFromQuery?.dosingMode === 'iu-primary' ? 'iu' : initialCompoundFromQuery?.defaultUnit === 'mg' ? 'mg' : 'mcg',
+  );
   const [syringeTypeId, setSyringeTypeId] = useState<string>('u100-1ml');
   const [vialCost, setVialCost] = useState<string>('');
   const [cycleDays, setCycleDays] = useState<string>('');

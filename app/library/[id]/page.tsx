@@ -3,7 +3,7 @@
 import { use, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, BookOpen, Boxes, FlaskConical, GitCompare, MessageCircle, Pencil, Syringe, Trash2, User } from 'lucide-react';
+import { AlertTriangle, BookOpen, Boxes, Calculator, FlaskConical, GitCompare, MessageCircle, Pencil, Syringe, Trash2, User } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { LibraryProfileView } from '@/components/library-profile-view';
 import { PageHeader } from '@/components/page-header';
@@ -18,6 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/lib/context';
 import { buildLibraryProfileViewModel } from '@/lib/library-profile-view';
+import { getConversionById } from '@/lib/peptide-conversions';
 import { cn } from '@/lib/utils';
 import type { CompoundCategory } from '@/lib/types';
 
@@ -87,6 +88,7 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
 
   const isCustom = compound.source === 'user';
   const libraryProfile = buildLibraryProfileViewModel(compound, { researcherMode });
+  const supportsReconstitutionCalculator = Boolean(getConversionById(compound.id));
 
   const saveEdit = () => {
     if (!editName.trim()) return;
@@ -185,6 +187,14 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
         </div>
 
         <section aria-label={`${compound.name} app actions`} className="grid gap-2 sm:grid-cols-2">
+          {supportsReconstitutionCalculator ? (
+            <Button asChild variant="secondary" className="justify-start">
+              <Link href={`/more/reconstitution?compound=${compound.id}`} aria-label={`Calculate ${compound.name} reconstitution`}>
+                <Calculator className="w-4 h-4" />
+                Calculate reconstitution
+              </Link>
+            </Button>
+          ) : null}
           <Button asChild variant="secondary" className="justify-start">
             <Link href={`/more/inventory?compound=${compound.id}&add=inventory`} aria-label={`Add ${compound.name} to inventory`}>
               <Boxes className="w-4 h-4" />
