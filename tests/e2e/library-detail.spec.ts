@@ -14,7 +14,7 @@ test.describe('library detail pages', () => {
     await page.getByRole('switch', { name: 'Researcher mode' }).click();
     await expect(page.getByText('BPC-157 is described in preclinical literature')).toBeVisible();
 
-    await expect(page.getByRole('heading', { name: 'Safety' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Safety', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Storage' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Citations' })).toBeVisible();
     await expect(page.getByText('Stable Gastric Pentadecapeptide BPC 157 and Wound Healing')).toBeVisible();
@@ -101,26 +101,29 @@ test.describe('library detail pages', () => {
   });
 
   test('shows pro-data priority context for high-value compounds waiting on full profiles', async ({ page }) => {
-    await page.goto('/library/bpc-157');
+    await page.goto('/library/hgh-somatropin');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await expect(page.getByRole('heading', { name: 'BPC-157' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'hGH / Somatropin' })).toBeVisible();
 
     await expect(page.getByRole('heading', { name: 'At a glance' })).toBeVisible();
-    await expect(page.getByText('Research Only')).toBeVisible();
-    await expect(page.getByText('Reconstituted')).toBeVisible();
+    await expect(page.getByText('Approved Label', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('Label Backed', { exact: true })).toBeVisible();
+    await expect(page.getByText('Prefilled', { exact: true }).first()).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Evidence and transparency' })).toBeVisible();
     await expect(page.getByText('Full pro profile is not yet attached')).toBeVisible();
   });
 
-  test('renders actionable app guidance for database-backed compounds without full pro profiles', async ({ page }) => {
+  test('renders actionable app guidance for profiled database-backed compounds', async ({ page }) => {
     await page.goto('/library/tirzepatide');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
     await expect(page.getByRole('heading', { name: 'Tirzepatide' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
+    await expect(page.getByText('dual-incretin benchmark')).toBeVisible();
     await expect(page.getByText('What you can do')).toBeVisible();
     await expect(page.getByText('Add the exact labeled container or pen to inventory')).toBeVisible();
-    await expect(page.getByText('Build a schedule from user-confirmed label details')).toBeVisible();
+    await expect(page.getByText('Build a schedule from user-confirmed label details', { exact: true })).toBeVisible();
     await expect(page.getByText('What to verify')).toBeVisible();
     await expect(page.getByText('Container label, lot, expiration, strength, and route')).toBeVisible();
     await expect(page.getByText('What to track')).toBeVisible();
@@ -131,11 +134,12 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('Peppi prompts')).toBeVisible();
     await expect(page.getByText('Add my labeled Tirzepatide container to inventory')).toBeVisible();
     await expect(page.getByText('Build a Tirzepatide schedule from my confirmed label details')).toBeVisible();
-    await expect(page.getByText('Transparency')).toBeVisible();
-    await expect(page.getByText('Full pro profile is not yet attached')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Regulatory context' })).toBeVisible();
+    await expect(page.getByText('DailyMed provides US label records for tirzepatide products').first()).toBeVisible();
 
     await page.goto('/library/mots-c');
     await expect(page.getByRole('heading', { name: 'MOTS-c' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
     await expect(page.getByText('Common vial amount presets: 5 mg, 10 mg.')).toBeVisible();
     await expect(page.getByText('BAC water calculator presets: 1 mL, 2 mL.')).toBeVisible();
     await expect(page.getByText('Reconstitution date, concentration, active vial status, and remaining inventory')).toBeVisible();
@@ -148,14 +152,14 @@ test.describe('library detail pages', () => {
     await page.getByRole('button', { name: 'I Understand' }).click();
     await expect(page.getByRole('heading', { name: 'At a glance' })).toBeVisible();
     await expect(page.getByText('Evidence', { exact: true })).toBeVisible();
-    await expect(page.getByText('Approved Label', { exact: true })).toBeVisible();
+    await expect(page.getByText('Approved Label', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('Form', { exact: true })).toBeVisible();
     await expect(page.getByText('Prefilled', { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Peppi prompts' })).toBeVisible();
 
     await page.goto('/library/bpc-157');
     await expect(page.getByRole('heading', { name: 'At a glance' })).toBeVisible();
-    await expect(page.getByText('Reconstituted')).toBeVisible();
+    await expect(page.getByText('Reconstituted', { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Inventory and math' })).toBeVisible();
     await expect(page.getByText('BAC water calculator presets: 1 mL, 2 mL.')).toBeVisible();
 
