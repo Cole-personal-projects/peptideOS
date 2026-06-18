@@ -23,8 +23,6 @@ export function SavedCalculations({
 }: SavedCalculationsProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   
-  if (calculations.length === 0) return null;
-  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -51,7 +49,13 @@ export function SavedCalculations({
         )}
       </button>
       
-      {isExpanded && (
+      {isExpanded && calculations.length === 0 ? (
+        <div className="p-4 text-sm text-muted-foreground">
+          Saved reconstitution calculations will appear here after you save them.
+        </div>
+      ) : null}
+
+      {isExpanded && calculations.length > 0 && (
         <div className="divide-y divide-border">
           {calculations.map((calc) => (
             <div key={calc.id} className="p-4 space-y-3">

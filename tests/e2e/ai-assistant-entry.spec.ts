@@ -1,6 +1,19 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('Peppi assistant entrypoints', () => {
+  test('opens the full reconstitution calculator from quick actions', async ({ page }) => {
+    await page.goto('/');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('button', { name: 'Quick actions' }).click();
+    await page.getByRole('button', { name: 'Calculate Reconstitution' }).click();
+
+    await expect(page).toHaveURL(/\/more\/reconstitution$/);
+    await expect(page.getByRole('heading', { name: 'Reconstitution Calculator' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeVisible();
+    await expect(page.getByLabel('Saved reconstitution calculations')).toBeVisible();
+  });
+
   test('opens Peppi from quick actions', async ({ page }) => {
     await page.goto('/');
 

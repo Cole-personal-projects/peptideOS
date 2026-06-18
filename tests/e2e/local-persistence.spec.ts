@@ -39,7 +39,7 @@ test.describe('local persistence', () => {
     await page.goto('/more/reconstitution');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await page.getByRole('button', { name: 'Save' }).click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(page.getByText('Saved Calculations (1)')).toBeVisible();
 
     await page.reload();
