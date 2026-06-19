@@ -16,6 +16,7 @@ interface AuthContextType {
   status: AuthStatus;
   user: AuthUser | null;
   signInWithEmail: (email: string) => Promise<{ ok: boolean; message: string }>;
+  verifyEmailCode: (email: string, token: string) => Promise<{ ok: boolean; message: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -76,7 +77,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { ok: false, message: error.message };
     }
 
-    return { ok: true, message: 'Check your email for a sign-in link.' };
+    return { ok: true, message: 'Check your email for a sign-in link, or paste the verification code below.' };
+  }, [client]);
+
+  const verifyEmailCode = useCallback(async (email: string, token: string) => {
+    const trimmedEmail = email.trim();
+    const trimmedToken = token.replace(/\s+/g, '');
+
+    if (!trimmedEmail) {
+      return { ok: false, message: 'Enter the email address you used for sign-in.' };
+    }
+
+    if (!trimmedToken) {
+      return { ok: false, message: 'Enter the verification code from your email.' };
+    }
+
+    if (!client) {
+      return { ok: false, message: 'Sign-in is not configured yet. You can keep using local-only mode.' };
+    }
+
+    const { data, error } = await client.auth.verifyOtp({
+      email: trimmedEmail,
+      token: trimmedToken,
+      type: 'email',
+    });
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+
+    const nextUser = getAuthUserFromSession(data.session);
+    setUser(nextUser);
+    setStatus(nextUser ? 'signed-in' : 'signed-out');
+
+    return { ok: true, message: 'Signed in.' };
   }, [client]);
 
   const signOut = useCallback(async () => {
@@ -91,8 +125,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     status,
     user,
     signInWithEmail,
+    verifyEmailCode,
     signOut,
-  }), [config, signInWithEmail, signOut, status, user]);
+  }), [config, signInWithEmail, signOut, status, user, verifyEmailCode]);
 
   return (
     <AuthContext.Provider value={value}>
