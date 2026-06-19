@@ -1,7 +1,7 @@
 {
   "libraryVersion": "2026.05.0",
   "schemaVersion": 1,
-  "exportedAt": "2026-06-19T19:58:35.030Z",
+  "exportedAt": "2026-06-19T21:18:13.726Z",
   "source": {
     "kind": "bundled",
     "registry": "peptideos-reference-registry"
@@ -67,7 +67,10 @@
             "Verify any claimed human outcome data separately from the 2007 ex vivo/in vitro paper."
           ],
           "trackInApp": [
-            "Application site, photos, local tolerability, shedding notes, visible scalp or skin changes, product batch, carrier base, and formulation changes."
+            "Application site and product consistency.",
+            "Scalp or skin photos at user-chosen checkpoints.",
+            "Local tolerability, irritation notes, and formulation or carrier changes.",
+            "Product batch, lot number, and expiration changes."
           ],
           "realityCheck": "AHK-Cu has a real cataloged identity and a peer-reviewed ex vivo/in vitro hair-follicle paper, but this record does not support injectable use or clinical outcome claims for finished topical products."
         },
