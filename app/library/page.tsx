@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -71,6 +72,17 @@ function FilterSection({ title, children }: { title: string; children: ReactNode
         {children}
       </div>
     </section>
+  );
+}
+
+function CompoundField({ id, label, children }: { id: string; label: string; children: ReactNode }) {
+  return (
+    <div data-field={id} className="grid min-w-0 gap-1.5">
+      <Label htmlFor={`custom-compound-${id}`} className="text-sm font-semibold text-foreground">
+        {label}
+      </Label>
+      {children}
+    </div>
   );
 }
 
@@ -284,49 +296,84 @@ export default function LibraryPage() {
                 <Plus className="w-4 h-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
+            <DialogContent className="max-h-[88vh] gap-0 overflow-hidden border-border bg-card p-0 text-card-foreground shadow-2xl sm:max-w-xl">
+              <DialogHeader className="border-b bg-card px-6 py-4 text-left">
                 <DialogTitle>Add compound</DialogTitle>
               </DialogHeader>
-              <div className="grid gap-3">
-                <div className="grid gap-1.5">
-                  <Label htmlFor="custom-compound-name">Name</Label>
-                  <Input id="custom-compound-name" value={name} onChange={(event) => setName(event.target.value)} />
+              <div className="grid gap-4 overflow-y-auto bg-card px-6 py-5">
+                <CompoundField id="name" label="Name">
+                  <Input
+                    id="custom-compound-name"
+                    data-field-control="true"
+                    placeholder="e.g., KPV or custom blend"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                  />
+                </CompoundField>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  <CompoundField id="type" label="Type">
+                    <Select value={compoundType} onValueChange={(value) => setCompoundType(value as CompoundType)}>
+                      <SelectTrigger id="custom-compound-type" data-field-control="true" className="w-full bg-secondary/40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {compoundTypes.filter((type) => type !== 'all').map((type) => (
+                          <SelectItem key={type} value={type}>{formatLabel(type)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </CompoundField>
+                  <CompoundField id="category" label="Category">
+                    <Select value={category} onValueChange={(value) => setCategory(value as CompoundCategory)}>
+                      <SelectTrigger id="custom-compound-category" data-field-control="true" className="w-full bg-secondary/40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.filter((cat) => cat !== 'all').map((cat) => (
+                          <SelectItem key={cat} value={cat}>{formatLabel(cat)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </CompoundField>
+                  <CompoundField id="route" label="Route">
+                    <Select value={defaultRoute} onValueChange={(value) => setDefaultRoute(value as Route)}>
+                      <SelectTrigger id="custom-compound-route" data-field-control="true" className="w-full bg-secondary/40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {routes.map((route) => (
+                          <SelectItem key={route} value={route}>{route.toUpperCase()}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </CompoundField>
+                  <CompoundField id="unit" label="Unit">
+                    <Select value={defaultDoseUnit} onValueChange={(value) => setDefaultDoseUnit(value as DoseUnit)}>
+                      <SelectTrigger id="custom-compound-unit" data-field-control="true" className="w-full bg-secondary/40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {doseUnits.map((unit) => (
+                          <SelectItem key={unit} value={unit}>{unit.toUpperCase()}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </CompoundField>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="custom-compound-type">Type</Label>
-                    <select id="custom-compound-type" className="h-9 rounded-md border bg-background px-3 text-sm" value={compoundType} onChange={(event) => setCompoundType(event.target.value as CompoundType)}>
-                      {compoundTypes.filter((type) => type !== 'all').map((type) => <option key={type} value={type}>{formatLabel(type)}</option>)}
-                    </select>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="custom-compound-category">Category</Label>
-                    <select id="custom-compound-category" className="h-9 rounded-md border bg-background px-3 text-sm" value={category} onChange={(event) => setCategory(event.target.value as CompoundCategory)}>
-                      {categories.filter((cat) => cat !== 'all').map((cat) => <option key={cat} value={cat}>{formatLabel(cat)}</option>)}
-                    </select>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="custom-compound-route">Route</Label>
-                    <select id="custom-compound-route" className="h-9 rounded-md border bg-background px-3 text-sm" value={defaultRoute} onChange={(event) => setDefaultRoute(event.target.value as Route)}>
-                      {routes.map((route) => <option key={route} value={route}>{route.toUpperCase()}</option>)}
-                    </select>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="custom-compound-unit">Unit</Label>
-                    <select id="custom-compound-unit" className="h-9 rounded-md border bg-background px-3 text-sm" value={defaultDoseUnit} onChange={(event) => setDefaultDoseUnit(event.target.value as DoseUnit)}>
-                      {doseUnits.map((unit) => <option key={unit} value={unit}>{unit.toUpperCase()}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="custom-compound-summary">Summary</Label>
-                  <Textarea id="custom-compound-summary" value={summary} onChange={(event) => setSummary(event.target.value)} />
-                </div>
+                <CompoundField id="summary" label="Summary">
+                  <Textarea
+                    id="custom-compound-summary"
+                    data-field-control="true"
+                    className="min-h-24 resize-none bg-secondary/40"
+                    placeholder="What should PeptideOS show in the library card?"
+                    value={summary}
+                    onChange={(event) => setSummary(event.target.value)}
+                  />
+                </CompoundField>
               </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-                <Button type="button" onClick={handleAddCompound}>Save compound</Button>
+              <DialogFooter className="flex-col border-t bg-card px-6 py-4 sm:justify-start">
+                <Button type="button" className="w-full" onClick={handleAddCompound}>Save compound</Button>
+                <Button type="button" variant="outline" className="w-full" onClick={() => setAddOpen(false)}>Cancel</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

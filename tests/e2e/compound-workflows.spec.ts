@@ -1,4 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+async function chooseAddCompoundOption(page: Page, name: string, optionName: string) {
+  const dialog = page.getByRole('dialog', { name: 'Add compound' });
+  await dialog.getByRole('combobox', { name }).click();
+  await page.getByRole('option', { name: optionName }).click();
+}
 
 test.describe('compound workflows', () => {
   test('uses a custom compound in vial, dose, and stack flows', async ({ page }) => {
@@ -7,10 +13,10 @@ test.describe('compound workflows', () => {
     await page.getByRole('button', { name: 'I Understand' }).click();
     await page.getByRole('button', { name: 'Add compound' }).click();
     await page.getByLabel('Name').fill('Custom Recovery Blend');
-    await page.getByLabel('Type', { exact: true }).selectOption('peptide');
-    await page.getByLabel('Category', { exact: true }).selectOption('healing');
-    await page.getByLabel('Route', { exact: true }).selectOption('subq');
-    await page.getByLabel('Unit', { exact: true }).selectOption('mg');
+    await chooseAddCompoundOption(page, 'Type', 'Peptide');
+    await chooseAddCompoundOption(page, 'Category', 'Healing');
+    await chooseAddCompoundOption(page, 'Route', 'SUBQ');
+    await chooseAddCompoundOption(page, 'Unit', 'MG');
     await page.getByLabel('Summary').fill('Private recovery compound for workflow testing.');
     await page.getByRole('button', { name: 'Save compound' }).click();
     await expect(page.getByRole('link', { name: /Custom Recovery Blend/ })).toBeVisible();

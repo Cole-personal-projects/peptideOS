@@ -1,4 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+async function chooseAddCompoundOption(page: Page, name: string, optionName: string) {
+  const dialog = page.getByRole('dialog', { name: 'Add compound' });
+  await dialog.getByRole('combobox', { name }).click();
+  await page.getByRole('option', { name: optionName }).click();
+}
 
 test.describe('library detail pages', () => {
   test('supports beginner and researcher compound detail modes across the unified profile', async ({ page }) => {
@@ -239,10 +245,10 @@ test.describe('library detail pages', () => {
     await page.getByRole('button', { name: 'I Understand' }).click();
     await page.getByRole('button', { name: 'Add compound' }).click();
     await page.getByLabel('Name').fill('Custom Focus Blend');
-    await page.getByLabel('Type', { exact: true }).selectOption('small-molecule');
-    await page.getByLabel('Category', { exact: true }).selectOption('cognitive');
-    await page.getByLabel('Route', { exact: true }).selectOption('oral');
-    await page.getByLabel('Unit', { exact: true }).selectOption('mg');
+    await chooseAddCompoundOption(page, 'Type', 'Small Molecule');
+    await chooseAddCompoundOption(page, 'Category', 'Cognitive');
+    await chooseAddCompoundOption(page, 'Route', 'ORAL');
+    await chooseAddCompoundOption(page, 'Unit', 'MG');
     await page.getByLabel('Summary').fill('Private focus tracking note.');
     await page.getByRole('button', { name: 'Save compound' }).click();
 
@@ -261,5 +267,65 @@ test.describe('library detail pages', () => {
     await page.getByRole('button', { name: 'Delete' }).click();
     await expect(page).toHaveURL(/\/library$/);
     await expect(page.getByRole('link', { name: /Custom Focus Blend Edited/ })).toHaveCount(0);
+  });
+
+  test('presents custom compound creation as a polished stable form', async ({ page }) => {
+    await page.setViewportSize({ width: 393, height: 852 });
+    await page.goto('/library');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('button', { name: 'Add compound' }).click();
+
+    const dialog = page.getByRole('dialog', { name: 'Add compound' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByPlaceholder('e.g., KPV or custom blend')).toBeVisible();
+    await expect(dialog.getByPlaceholder('What should PeptideOS show in the library card?')).toBeVisible();
+    await expect(dialog.locator('select')).toHaveCount(0);
+    await expect(dialog.locator('[data-slot="select-trigger"]')).toHaveCount(4);
+
+    for (const name of ['Type', 'Category', 'Route', 'Unit']) {
+      const control = dialog.getByRole('combobox', { name });
+      await expect(control).toBeVisible();
+      await expect(control.locator('svg')).toBeVisible();
+    }
+
+    const metrics = await dialog.evaluate((element) => {
+      const controls = [...element.querySelectorAll('[data-field-control="true"]')].map((control) => {
+        const rect = control.getBoundingClientRect();
+        return { left: rect.left, right: rect.right, width: rect.width };
+      });
+      const type = element.querySelector('[data-field="type"] [data-field-control="true"]')?.getBoundingClientRect();
+      const route = element.querySelector('[data-field="route"] [data-field-control="true"]')?.getBoundingClientRect();
+      const category = element.querySelector('[data-field="category"] [data-field-control="true"]')?.getBoundingClientRect();
+      const unit = element.querySelector('[data-field="unit"] [data-field-control="true"]')?.getBoundingClientRect();
+      const dialogRect = element.getBoundingClientRect();
+
+      return {
+        dialogLeft: dialogRect.left,
+        dialogRight: dialogRect.right,
+        viewportWidth: document.documentElement.clientWidth,
+        controls,
+        alignedLeftColumn: type && route ? Math.abs(type.left - route.left) : 99,
+        alignedRightColumn: category && unit ? Math.abs(category.left - unit.left) : 99,
+        matchedColumnWidths: type && category ? Math.abs(type.width - category.width) : 99,
+      };
+    });
+
+    expect(metrics.dialogLeft).toBeGreaterThanOrEqual(12);
+    expect(metrics.dialogRight).toBeLessThanOrEqual(metrics.viewportWidth - 12);
+    expect(metrics.alignedLeftColumn).toBeLessThanOrEqual(1);
+    expect(metrics.alignedRightColumn).toBeLessThanOrEqual(1);
+    expect(metrics.matchedColumnWidths).toBeLessThanOrEqual(1);
+
+    for (const control of metrics.controls) {
+      expect(control.left).toBeGreaterThanOrEqual(metrics.dialogLeft + 24);
+      expect(control.right).toBeLessThanOrEqual(metrics.dialogRight - 24);
+    }
+
+    const topElementAtQuickAction = await page.evaluate(() => {
+      const element = document.elementFromPoint(window.innerWidth / 2, window.innerHeight - 105);
+      return element?.getAttribute('data-slot');
+    });
+    expect(topElementAtQuickAction).toBe('dialog-overlay');
   });
 });
