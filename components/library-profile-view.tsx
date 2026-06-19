@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from 'react';
-import { AlertTriangle, CheckCircle2, MessageCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -56,7 +56,6 @@ function LibraryProfileSectionDrawer({ section }: { section: LibraryProfileSecti
     >
       <AccordionTrigger className="py-3 hover:no-underline">
         <span className="flex min-w-0 items-center gap-2">
-          {section.title === 'Peppi prompts' ? <MessageCircle className="h-4 w-4 shrink-0 text-primary" /> : null}
           {section.tone === 'warning' ? <AlertTriangle className="h-4 w-4 shrink-0 text-chart-4" /> : null}
           <span className="min-w-0">
             <span className="block truncate text-base font-semibold leading-tight">

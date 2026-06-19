@@ -21,20 +21,24 @@ describe('library profile view model', () => {
       { label: 'Form', value: 'Prefilled' },
     ]));
     expect(tirzepatide.sections.map((section) => section.title)).toEqual(expect.arrayContaining([
-      'What you can do',
-      'Peppi prompts',
+      'Field brief',
+      'Why people care',
+      'Storage',
+      'Safety',
       'Evidence and transparency',
       'Citations',
     ]));
-    expect(tirzepatide.sections.find((section) => section.title === 'Peppi prompts')?.items).toEqual(expect.arrayContaining([
-      'Add my labeled Tirzepatide container to inventory',
+    expect(tirzepatide.sections.map((section) => section.title)).not.toEqual(expect.arrayContaining([
+      'What you can do',
+      'Peppi prompts',
+      'Inventory and math',
+      'Tracking domains',
+      'Practical tracking',
+      'Legal',
     ]));
 
-    expect(bpc157.sections.find((section) => section.title === 'Inventory and math')?.items).toEqual(expect.arrayContaining([
-      'Common vial amount presets: 5 mg.',
-      'BAC water calculator presets: 1 mL, 2 mL.',
-    ]));
-    expect(bpc157.sections.find((section) => section.title === 'Tracking domains')?.items).toContain('Recovery or tissue-support notes');
+    expect(bpc157.sections.map((section) => section.title)).not.toContain('Inventory and math');
+    expect(bpc157.sections.map((section) => section.title)).not.toContain('Tracking domains');
 
     expect(retatrutide.atAGlance).toEqual(expect.arrayContaining([
       { label: 'Evidence', value: 'Strong Human' },
@@ -58,5 +62,29 @@ describe('library profile view model', () => {
       'The clinical Retatrutide story is not a gray-market vial. PeptideOS should help the user track what they actually have, what they actually did, and what is still uncertain.',
     ]));
     expect(retatrutide.sections.find((section) => section.title === 'Evidence details')?.items.join(' ')).toContain('phase-2-randomized-controlled-trial');
+  });
+
+  it('keeps AHK-Cu topical data prominent without generic workflow sections', () => {
+    const ahkCu = buildLibraryProfileViewModel(compound('ahk-cu'), { researcherMode: true });
+
+    expect(ahkCu.atAGlance).toEqual(expect.arrayContaining([
+      { label: 'Evidence', value: 'Preclinical' },
+      { label: 'Route', value: 'TOPICAL' },
+      { label: 'Form', value: 'None' },
+    ]));
+    expect(ahkCu.sections.map((section) => section.title)).not.toEqual(expect.arrayContaining([
+      'What you can do',
+      'Peppi prompts',
+      'Inventory and math',
+      'Tracking domains',
+      'Practical tracking',
+      'Legal',
+    ]));
+    expect(ahkCu.sections.find((section) => section.title === 'Storage')?.items.join(' ')).toContain(
+      'Finished topical AHK-Cu products',
+    );
+    expect(ahkCu.sections.find((section) => section.title === 'Safety')?.items.join(' ')).toContain(
+      'Label confusion with GHK-Cu',
+    );
   });
 });
