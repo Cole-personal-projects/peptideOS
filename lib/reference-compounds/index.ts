@@ -39,6 +39,8 @@ import { testosteroneEnanthate } from './entries/testosterone-enanthate';
 import { testosteronePropionate } from './entries/testosterone-propionate';
 import { tb500 } from './entries/tb-500';
 import { tirzepatide } from './entries/tirzepatide';
+import generatedReferenceLibrarySnapshot from '../../app/generated/reference-library.snapshot.json';
+import type { ReferenceLibrarySnapshot } from '../reference-library-snapshot';
 export { validateReferenceCompound } from './schema';
 export type { ReferenceCompound } from './schema';
 
@@ -86,4 +88,11 @@ const reviewedReferenceCompounds = [
   foxo4Dri,
 ] as const;
 
-export const referenceCompounds = [...reviewedReferenceCompounds];
+const generatedReferenceCompounds = (generatedReferenceLibrarySnapshot as ReferenceLibrarySnapshot).compounds;
+const generatedReferenceCompoundsById = new Map(generatedReferenceCompounds.map((compound) => [compound.id, compound]));
+const reviewedReferenceCompoundIds = new Set(reviewedReferenceCompounds.map((compound) => compound.id));
+
+export const referenceCompounds = [
+  ...reviewedReferenceCompounds.map((compound) => generatedReferenceCompoundsById.get(compound.id) ?? compound),
+  ...generatedReferenceCompounds.filter((compound) => !reviewedReferenceCompoundIds.has(compound.id)),
+];

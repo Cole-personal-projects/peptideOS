@@ -116,6 +116,21 @@ describe('reference compounds', () => {
     ]));
   });
 
+  test('uses approved generated records to override stale bundled entries', () => {
+    const ahkCu = referenceCompounds.find((compound) => compound.id === 'ahk-cu');
+
+    expect(ahkCu?.supportedRoutes).toEqual(['topical']);
+    expect(ahkCu?.concentrationMode).toBe('none');
+    expect(ahkCu?.referenceProfile?.biohackerBrief.headline).toBe(
+      'Topical-first copper peptide with preclinical hair-follicle signal.',
+    );
+    expect(ahkCu?.referenceProfile?.evidenceTier).toBe('preclinical');
+    expect(ahkCu?.citations.map((citation) => citation.id)).toEqual([
+      'src-pubchem-ahk-cu',
+      'src-pyo-2007-ahk-cu-hair',
+    ]);
+  });
+
   test('uses Retatrutide as the reviewed flagship for pro-grade library data', () => {
     const retatrutide = referenceCompounds.find((compound) => compound.id === 'retatrutide');
 
