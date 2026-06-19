@@ -49,6 +49,7 @@ interface AppContextType {
   addVial: (vial: Omit<Vial, 'id'>, options?: AddInventoryBatchOptions) => void;
   addVials: (vials: Array<Omit<Vial, 'id'>>, options?: AddInventoryBatchOptions) => void;
   updateVial: (id: string, updates: Partial<Vial>) => void;
+  updateInventoryBatch: (id: string, updates: InventoryBatchUpdate) => void;
   deleteInventoryItem: (id: string) => Promise<void>;
   // Doses
   getDose: (id: string) => Dose | undefined;
@@ -91,6 +92,16 @@ interface AddInventoryBatchOptions {
   createdFrom?: InventoryBatch['createdFrom'];
   packageUnit?: InventoryBatch['packageUnit'];
   packageQuantity?: number;
+}
+
+interface InventoryBatchUpdate {
+  name?: string;
+  dateAdded?: string;
+  expirationDate?: string;
+  source?: string;
+  lotNumber?: string;
+  mg?: number;
+  totalAmount?: Vial['totalAmount'];
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -274,6 +285,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ...prev,
       vials: prev.vials.map(v => v.id === id ? { ...v, ...updates } : v)
     }));
+  }, [setAndPersistData]);
+
+  const updateInventoryBatch = useCallback((id: string, updates: InventoryBatchUpdate) => {
+    void setAndPersistData(prev => {
+      const batchVials = prev.vials.filter((vial) => vial.inventoryBatchId === id);
+      const vialCount = batchVials.length;
+
+      return {
+        ...prev,
+        inventoryBatches: prev.inventoryBatches.map((batch) => (
+          batch.id === id
+            ? {
+                ...batch,
+                ...(updates.name !== undefined ? { name: updates.name } : {}),
+                ...(updates.dateAdded !== undefined ? { dateAdded: updates.dateAdded } : {}),
+                ...(updates.source !== undefined ? { source: updates.source } : {}),
+                ...(updates.lotNumber !== undefined ? { lotNumber: updates.lotNumber } : {}),
+                ...(updates.mg !== undefined ? { mg: updates.mg } : {}),
+                ...(updates.totalAmount !== undefined ? { totalAmount: updates.totalAmount } : {}),
+              }
+            : batch
+        )),
+        vials: prev.vials.map((vial) => {
+          if (vial.inventoryBatchId !== id) return vial;
+          const batchIndex = batchVials.findIndex((candidate) => candidate.id === vial.id);
+          const batchName = updates.name?.trim();
+
+          return {
+            ...vial,
+            ...(batchName && vialCount > 1 ? { name: `${batchName} vial ${batchIndex + 1} of ${vialCount}` } : {}),
+            ...(updates.dateAdded !== undefined ? { dateAdded: updates.dateAdded } : {}),
+            ...(updates.expirationDate !== undefined ? { expirationDate: updates.expirationDate } : {}),
+            ...(updates.source !== undefined ? { source: updates.source } : {}),
+            ...(updates.lotNumber !== undefined ? { lotNumber: updates.lotNumber } : {}),
+            ...(updates.mg !== undefined ? { mg: updates.mg } : {}),
+            ...(updates.totalAmount !== undefined ? { totalAmount: updates.totalAmount } : {}),
+          };
+        }),
+      };
+    });
   }, [setAndPersistData]);
 
   const deleteInventoryItem = useCallback((id: string) => {
@@ -593,6 +644,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addVial,
       addVials,
       updateVial,
+      updateInventoryBatch,
       deleteInventoryItem,
       getDose,
       addDose,
