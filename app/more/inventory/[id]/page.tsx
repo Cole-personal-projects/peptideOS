@@ -39,6 +39,7 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeletePending, setIsDeletePending] = useState(false);
   const [bacWaterInput, setBacWaterInput] = useState('2');
+  const [reconstitutingVialId, setReconstitutingVialId] = useState<string | null>(null);
   const vial = getVial(id);
   const batch = vial?.inventoryBatchId
     ? data.inventoryBatches.find((candidate) => candidate.id === vial.inventoryBatchId)
@@ -55,7 +56,12 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
   const [editAmount, setEditAmount] = useState((vial?.totalAmount?.value ?? vial?.mg ?? '').toString());
   const [editAmountUnit, setEditAmountUnit] = useState<DoseUnit>(vial?.totalAmount?.unit ?? 'mg');
   const bacWaterMl = Number(bacWaterInput);
-  const reconstitutionPreview = vial ? getReconstitutionPreview({ vial, bacWaterMl }) : null;
+  const reconstitutionTarget = reconstitutingVialId
+    ? data.vials.find((candidate) => candidate.id === reconstitutingVialId) ?? vial
+    : vial;
+  const reconstitutionPreview = reconstitutionTarget
+    ? getReconstitutionPreview({ vial: reconstitutionTarget, bacWaterMl })
+    : null;
 
   if (!vial) {
     if (isDeletePending) return null;
@@ -77,6 +83,12 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
   const batchStatusSummary = Object.entries(statusCounts)
     .map(([status, count]) => `${count} ${status} vial${count === 1 ? '' : 's'}`)
     .join(' · ');
+  const reconstitutionTargetIndex = reconstitutionTarget
+    ? batchVials.findIndex((candidate) => candidate.id === reconstitutionTarget.id)
+    : -1;
+  const reconstitutionDialogTitle = isBatchDetail && reconstitutionTargetIndex >= 0
+    ? `Reconstitute vial ${reconstitutionTargetIndex + 1} of ${batchVials.length}`
+    : 'Reconstitute vial';
   const formatDate = (date: string) => new Date(`${date.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -109,11 +121,20 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const handleReconstitute = () => {
-    const update = buildReconstitutedVialUpdate({ vial, bacWaterMl });
+    if (!reconstitutionTarget) return;
+
+    const update = buildReconstitutedVialUpdate({ vial: reconstitutionTarget, bacWaterMl });
     if (!update) return;
 
-    updateVial(vial.id, update);
+    updateVial(reconstitutionTarget.id, update);
     setIsReconstituteOpen(false);
+    setReconstitutingVialId(null);
+  };
+
+  const openBatchReconstitutionDialog = (vialId: string) => {
+    setReconstitutingVialId(vialId);
+    setBacWaterInput('2');
+    setIsReconstituteOpen(true);
   };
 
   const openEditDialog = () => {
@@ -268,22 +289,91 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
             </CardHeader>
             <CardContent className="space-y-2">
               {batchVials.map((candidate, index) => (
-                <div key={candidate.id} className="flex items-center justify-between gap-3 rounded-lg border bg-secondary/20 px-3 py-2">
+                <div
+                  key={candidate.id}
+                  className="flex items-center justify-between gap-3 rounded-lg border bg-secondary/20 px-3 py-2"
+                  aria-label={`Vial ${index + 1} of ${batchVials.length}`}
+                >
                   <div>
                     <p className="text-sm font-medium">Vial {index + 1} of {batchVials.length}</p>
                     <p className="text-xs text-muted-foreground">{candidate.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {getVialInventoryMetrics(candidate, data.doses).originalLabel} · {candidate.source || 'Unknown'} · {candidate.lotNumber || 'Unknown'}
                     </p>
+                    {candidate.bacWaterMl > 0 && (
+                      <p className="text-xs text-muted-foreground">{candidate.bacWaterMl}mL BAC</p>
+                    )}
                   </div>
-                  <Badge variant={candidate.status === 'active' ? 'default' : 'secondary'} className="capitalize">
-                    {candidate.status}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge variant={candidate.status === 'active' ? 'default' : 'secondary'} className="capitalize">
+                      {candidate.status}
+                    </Badge>
+                    {candidate.status === 'sealed' && canReconstitute && (
+                      <Button size="sm" variant="outline" onClick={() => openBatchReconstitutionDialog(candidate.id)}>
+                        Reconstitute
+                        <span className="sr-only"> vial {index + 1} of {batchVials.length}</span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </CardContent>
           </Card>
         </div>
+
+        <Dialog
+          open={isReconstituteOpen}
+          onOpenChange={(open) => {
+            setIsReconstituteOpen(open);
+            if (!open) setReconstitutingVialId(null);
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{reconstitutionDialogTitle}</DialogTitle>
+              <DialogDescription>
+                Enter BAC water volume to activate this vial and calculate inventory concentration.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="batch-bac-water-volume">BAC water volume</Label>
+                <Input
+                  id="batch-bac-water-volume"
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  inputMode="decimal"
+                  value={bacWaterInput}
+                  onChange={(event) => setBacWaterInput(event.target.value)}
+                  aria-label="BAC water volume"
+                />
+              </div>
+
+              <Card className="bg-secondary/40">
+                <CardContent className="p-4 space-y-1">
+                  <p className="text-xs text-muted-foreground">Concentration preview</p>
+                  <p className="font-medium">
+                    {reconstitutionPreview?.concentrationLabel ?? 'Enter a BAC water volume'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Expiration defaults to 28 days after reconstitution.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsReconstituteOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleReconstitute} disabled={!reconstitutionPreview}>
+                Activate vial
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
           <DialogContent>

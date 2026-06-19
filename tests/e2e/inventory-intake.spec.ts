@@ -104,4 +104,33 @@ test.describe('compound-aware inventory intake', () => {
     await expect(page.getByRole('link', { name: /BPC-157 inventory/ })).toHaveCount(0);
     await expect(page.getByText('No sealed vials')).toBeVisible();
   });
+
+  test('reconstitutes one vial from a grouped kit without activating the whole batch', async ({ page }) => {
+    await page.goto('/library/ghk-cu');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('link', { name: 'Add GHK-Cu to inventory' }).click();
+    await page.getByRole('combobox', { name: 'Inventory unit' }).click();
+    await page.getByRole('option', { name: 'Kits (10 vials)' }).click();
+    await page.getByRole('button', { name: 'Add Vial' }).click();
+    await page.getByRole('link', { name: /GHK-Cu inventory/ }).click();
+
+    await page.getByRole('button', { name: 'Reconstitute vial 1 of 10' }).click();
+    await expect(page.getByRole('dialog', { name: 'Reconstitute vial 1 of 10' })).toBeVisible();
+    await page.getByRole('spinbutton', { name: 'BAC water volume' }).fill('2');
+    await expect(page.getByText('25.00 mg/mL (25000 mcg/mL)')).toBeVisible();
+    await page.getByRole('button', { name: 'Activate vial' }).click();
+
+    await expect(page.getByRole('dialog', { name: 'Reconstitute vial 1 of 10' })).toHaveCount(0);
+    await expect(page.getByText('1 active vial · 9 sealed vials')).toBeVisible();
+    await expect(page.getByLabel('Vial 1 of 10')).toContainText('active');
+    await expect(page.getByLabel('Vial 1 of 10')).toContainText('2mL BAC');
+    await expect(page.getByLabel('Vial 2 of 10')).toContainText('sealed');
+    await expect(page.getByLabel('Vial 10 of 10')).toContainText('sealed');
+
+    await page.reload();
+    await expect(page.getByText('1 active vial · 9 sealed vials')).toBeVisible();
+    await expect(page.getByLabel('Vial 1 of 10')).toContainText('active');
+    await expect(page.getByLabel('Vial 10 of 10')).toContainText('sealed');
+  });
 });
