@@ -6,6 +6,10 @@ async function chooseAddCompoundOption(page: Page, name: string, optionName: str
   await page.getByRole('option', { name: optionName }).click();
 }
 
+async function openProfileDrawer(page: Page, name: string) {
+  await page.getByRole('button', { name: new RegExp(name) }).click();
+}
+
 test.describe('library detail pages', () => {
   test('supports beginner and researcher compound detail modes across the unified profile', async ({ page }) => {
     await page.goto('/library/bpc-157');
@@ -23,8 +27,10 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('heading', { name: 'Safety', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Storage' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Citations' })).toBeVisible();
+    await openProfileDrawer(page, 'Citations');
     await expect(page.getByText('Stable Gastric Pentadecapeptide BPC 157 and Wound Healing')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Legal' })).toBeVisible();
+    await openProfileDrawer(page, 'Legal');
     await expect(
       page.getByText('PeptideOS does not provide medical advice, diagnosis, or treatment.')
     ).toBeVisible();
@@ -38,6 +44,33 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('IU', { exact: true }).first()).toBeVisible();
   });
 
+  test('keeps compound facts prominent and places verbose guidance in drawers', async ({ page }) => {
+    await page.goto('/library/tirzepatide');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await expect(page.getByRole('heading', { name: 'Tirzepatide' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'At a glance' })).toBeVisible();
+    await expect(page.getByText('Approved Label', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('SUBQ', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('MG', { exact: true }).first()).toBeVisible();
+
+    const atAGlanceBox = await page.getByRole('heading', { name: 'At a glance' }).boundingBox();
+    const addInventoryBox = await page.getByRole('link', { name: 'Add Tirzepatide to inventory' }).boundingBox();
+    expect(atAGlanceBox?.y).toBeLessThan(addInventoryBox?.y ?? 0);
+
+    await expect(page.getByRole('button', { name: /What you can do/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Peppi prompts/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Inventory and math/ })).toBeVisible();
+    await expect(page.getByText('Add the exact labeled container or pen to inventory')).toBeHidden();
+    await expect(page.getByText('Add my labeled Tirzepatide container to inventory')).toBeHidden();
+
+    await openProfileDrawer(page, 'What you can do');
+    await expect(page.getByText('Add the exact labeled container or pen to inventory')).toBeVisible();
+
+    await openProfileDrawer(page, 'Peppi prompts');
+    await expect(page.getByText('Add my labeled Tirzepatide container to inventory')).toBeVisible();
+  });
+
   test('surfaces pro-grade Retatrutide evidence without turning it into dosing advice', async ({ page }) => {
     await page.goto('/library/retatrutide');
 
@@ -47,17 +80,22 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('Investigational', { exact: true })).toBeVisible();
 
     await expect(page.getByRole('heading', { name: 'Evidence details' })).toBeVisible();
+    await openProfileDrawer(page, 'Evidence details');
     await expect(page.getByText('GLP-1 receptor', { exact: true })).toBeVisible();
     await expect(page.getByText('GIP receptor', { exact: true })).toBeVisible();
     await expect(page.getByText('glucagon receptor', { exact: true })).toBeVisible();
 
     await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
+    await openProfileDrawer(page, 'Field brief');
     await expect(page.getByText('Why people care')).toBeVisible();
+    await openProfileDrawer(page, 'Why people care');
     await expect(page.getByText('push past the current GLP-1/GIP ceiling')).toBeVisible();
     await expect(page.getByText('What to verify')).toBeVisible();
+    await openProfileDrawer(page, 'What to verify');
     await expect(page.getByText('do not treat marketing names as identity proof')).toBeVisible();
     await expect(page.getByText('What to track')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Peppi prompts' })).toBeVisible();
+    await openProfileDrawer(page, 'Reality check');
     await expect(page.getByText('The clinical Retatrutide story is not a gray-market vial.')).toBeVisible();
 
     await expect(page.getByText('Published phase 2 data reported dose-related body-weight reductions')).toBeVisible();
@@ -65,9 +103,11 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('Trial Registry')).toBeVisible();
 
     await expect(page.getByRole('heading', { name: 'Practical tracking' })).toBeVisible();
-    await expect(page.getByText('Track inventory by exact vial, kit, lot, source, and container state.').first()).toBeVisible();
-    await expect(page.getByText('Log labeled doses or ask Peppi to build a schedule').first()).toBeVisible();
-    await expect(page.getByText('No FDA-approved US prescribing label or consumer storage instructions.')).toBeVisible();
+    await openProfileDrawer(page, 'Practical tracking');
+    await expect(page.getByText('Record the exact supplier, lot, vial amount, concentration, and container state')).toBeVisible();
+    await expect(page.getByText('Treat trial-arm values as literature context only')).toBeVisible();
+    await openProfileDrawer(page, 'Storage');
+    await expect(page.getByText('No approved US product label defines consumer storage')).toBeVisible();
 
     await expect(page.getByText(/recommended dose|dose recommendation/i)).toHaveCount(0);
   });
@@ -88,6 +128,7 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('Reality check')).toBeVisible();
 
     await expect(page.getByRole('heading', { name: 'Evidence details' })).toBeVisible();
+    await openProfileDrawer(page, 'Evidence details');
     await expect(page.getByText('phase-2-randomized-controlled-trial')).toBeVisible();
     await expect(page.getByText('phase-3-program')).toBeVisible();
 
@@ -96,12 +137,15 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('heading', { name: 'Evidence and transparency' })).toBeVisible();
 
     await expect(page.getByRole('heading', { name: 'Safety watch' })).toBeVisible();
+    await openProfileDrawer(page, 'Safety watch');
     await expect(page.getByText('Gastrointestinal adverse events were common in published phase 2 obesity data.')).toBeVisible();
 
     await expect(page.getByRole('heading', { name: 'Regulatory context' })).toBeVisible();
-    await expect(page.getByText('Investigational in US')).toBeVisible();
+    await openProfileDrawer(page, 'Regulatory context');
+    await expect(page.getByText('not FDA approved and investigational')).toBeVisible();
 
     await expect(page.getByRole('heading', { name: 'Citations' })).toBeVisible();
+    await openProfileDrawer(page, 'Citations');
     await expect(page.getByText('Triple-Hormone-Receptor Agonist Retatrutide for Obesity')).toBeVisible();
     await expect(page.getByText('ClinicalTrials.gov,').first()).toBeVisible();
   });
@@ -116,6 +160,7 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('Approved Label', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('Prefilled', { exact: true }).first()).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
+    await openProfileDrawer(page, 'Field brief');
     await expect(page.getByText('label-backed hormone entry')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Evidence and transparency' })).toBeVisible();
     await expect(page.getByText('Full pro profile is not yet attached')).toHaveCount(0);
@@ -128,29 +173,39 @@ test.describe('library detail pages', () => {
     await page.getByRole('button', { name: 'I Understand' }).click();
     await expect(page.getByRole('heading', { name: 'Tirzepatide' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
+    await openProfileDrawer(page, 'Field brief');
     await expect(page.getByText('dual-incretin benchmark')).toBeVisible();
     await expect(page.getByText('What you can do')).toBeVisible();
+    await openProfileDrawer(page, 'What you can do');
     await expect(page.getByText('Add the exact labeled container or pen to inventory')).toBeVisible();
     await expect(page.getByText('Build a schedule from user-confirmed label details', { exact: true })).toBeVisible();
     await expect(page.getByText('What to verify')).toBeVisible();
+    await openProfileDrawer(page, 'What to verify');
     await expect(page.getByText('Container label, lot, expiration, strength, and route')).toBeVisible();
     await expect(page.getByText('What to track')).toBeVisible();
+    await openProfileDrawer(page, 'What to track');
     await expect(page.getByText('Inventory depletion and active container status')).toBeVisible();
     await expect(page.getByText('Tracking domains')).toBeVisible();
+    await openProfileDrawer(page, 'Tracking domains');
     await expect(page.getByText('Metabolic trend notes', { exact: true })).toBeVisible();
     await expect(page.getByText('Appetite and tolerability notes', { exact: true })).toBeVisible();
     await expect(page.getByText('Peppi prompts')).toBeVisible();
+    await openProfileDrawer(page, 'Peppi prompts');
     await expect(page.getByText('Add my labeled Tirzepatide container to inventory')).toBeVisible();
     await expect(page.getByText('Build a Tirzepatide schedule from my confirmed label details')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Regulatory context' })).toBeVisible();
+    await openProfileDrawer(page, 'Regulatory context');
     await expect(page.getByText('DailyMed provides US label records for tirzepatide products').first()).toBeVisible();
 
     await page.goto('/library/mots-c');
     await expect(page.getByRole('heading', { name: 'MOTS-c' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
+    await openProfileDrawer(page, 'Inventory and math');
     await expect(page.getByText('Common vial amount presets: 5 mg, 10 mg.')).toBeVisible();
     await expect(page.getByText('BAC water calculator presets: 1 mL, 2 mL.')).toBeVisible();
+    await openProfileDrawer(page, 'What to track');
     await expect(page.getByText('Reconstitution date, concentration, active vial status, and remaining inventory')).toBeVisible();
+    await openProfileDrawer(page, 'Peppi prompts');
     await expect(page.getByText('Calculate MOTS-c concentration from vial amount and BAC water')).toBeVisible();
   });
 
@@ -169,6 +224,7 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('heading', { name: 'At a glance' })).toBeVisible();
     await expect(page.getByText('Reconstituted', { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Inventory and math' })).toBeVisible();
+    await openProfileDrawer(page, 'Inventory and math');
     await expect(page.getByText('BAC water calculator presets: 1 mL, 2 mL.')).toBeVisible();
 
     await page.goto('/library/retatrutide');
@@ -176,13 +232,17 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('Strong Human')).toBeVisible();
     await expect(page.getByText('Investigational', { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
+    await openProfileDrawer(page, 'Field brief');
     await expect(page.getByText('push past the current GLP-1/GIP ceiling')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Why people care' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Regulatory context' })).toBeVisible();
+    await openProfileDrawer(page, 'Regulatory context');
     await expect(page.getByText('not FDA approved and investigational').first()).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Reality check' })).toBeVisible();
+    await openProfileDrawer(page, 'Reality check');
     await expect(page.getByText('The clinical Retatrutide story is not a gray-market vial.')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Evidence details' })).toBeVisible();
+    await openProfileDrawer(page, 'Evidence details');
     await expect(page.getByText('phase-2-randomized-controlled-trial')).toBeVisible();
     await expect(page.getByRole('tablist')).toHaveCount(0);
   });
