@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from 'react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { notFound } from 'next/navigation';
 import { Calendar, Hash, Droplet, AlertCircle, PackageSearch, Edit3, Trash2 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
@@ -33,13 +33,20 @@ import type { DoseUnit } from '@/lib/types';
 
 export default function VialDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data, getVial, updateVial, deleteInventoryItem } = useApp();
+  const { data, getVial, updateVial, updateInventoryBatch, deleteInventoryItem } = useApp();
   const [isReconstituteOpen, setIsReconstituteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeletePending, setIsDeletePending] = useState(false);
   const [bacWaterInput, setBacWaterInput] = useState('2');
   const vial = getVial(id);
+  const batch = vial?.inventoryBatchId
+    ? data.inventoryBatches.find((candidate) => candidate.id === vial.inventoryBatchId)
+    : undefined;
+  const batchVials = batch
+    ? data.vials.filter((candidate) => candidate.inventoryBatchId === batch.id)
+    : [];
+  const isBatchDetail = Boolean(batch && batchVials.length > 1);
   const [editName, setEditName] = useState(vial?.name ?? '');
   const [editDateAdded, setEditDateAdded] = useState(vial?.dateAdded.slice(0, 10) ?? '');
   const [editExpirationDate, setEditExpirationDate] = useState(vial?.expirationDate.slice(0, 10) ?? '');
@@ -48,10 +55,7 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
   const [editAmount, setEditAmount] = useState((vial?.totalAmount?.value ?? vial?.mg ?? '').toString());
   const [editAmountUnit, setEditAmountUnit] = useState<DoseUnit>(vial?.totalAmount?.unit ?? 'mg');
   const bacWaterMl = Number(bacWaterInput);
-  const reconstitutionPreview = useMemo(
-    () => vial ? getReconstitutionPreview({ vial, bacWaterMl }) : null,
-    [vial, bacWaterMl]
-  );
+  const reconstitutionPreview = vial ? getReconstitutionPreview({ vial, bacWaterMl }) : null;
 
   if (!vial) {
     if (isDeletePending) return null;
@@ -62,6 +66,22 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
   const canReconstitute = isReconstitutableCompound(compound);
   const inventoryMetrics = getVialInventoryMetrics(vial, data.doses);
   const canEditTotalAmount = !vial.concentration;
+  const batchName = batch?.name ?? vial.name.replace(/\s+vial\s+\d+\s+of\s+\d+$/i, '');
+  const batchInventorySummary = batch?.packageUnit === 'kit' && batch.packageQuantity
+    ? `${batch.packageQuantity} kit${batch.packageQuantity === 1 ? '' : 's'} / ${batch.vialCount} vials`
+    : `${batch?.vialCount ?? batchVials.length} vials`;
+  const statusCounts = batchVials.reduce<Record<string, number>>((counts, candidate) => ({
+    ...counts,
+    [candidate.status]: (counts[candidate.status] ?? 0) + 1,
+  }), {});
+  const batchStatusSummary = Object.entries(statusCounts)
+    .map(([status, count]) => `${count} ${status} vial${count === 1 ? '' : 's'}`)
+    .join(' · ');
+  const formatDate = (date: string) => new Date(`${date.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
   const getDaysUntilExpiration = () => {
     const exp = new Date(vial.expirationDate);
@@ -107,6 +127,17 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
     setIsEditOpen(true);
   };
 
+  const openBatchEditDialog = () => {
+    setEditName(batchName);
+    setEditDateAdded((batch?.dateAdded ?? vial.dateAdded).slice(0, 10));
+    setEditExpirationDate(vial.expirationDate.slice(0, 10));
+    setEditSource(batch?.source ?? vial.source);
+    setEditLotNumber(batch?.lotNumber ?? vial.lotNumber);
+    setEditAmount((batch?.totalAmount?.value ?? batch?.mg ?? vial.totalAmount?.value ?? vial.mg).toString());
+    setEditAmountUnit(batch?.totalAmount?.unit ?? vial.totalAmount?.unit ?? 'mg');
+    setIsEditOpen(true);
+  };
+
   const handleSaveEdit = () => {
     const trimmedName = editName.trim();
     if (!trimmedName) return;
@@ -135,12 +166,249 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
     setIsEditOpen(false);
   };
 
+  const handleSaveBatchEdit = () => {
+    if (!batch) return;
+
+    const trimmedName = editName.trim();
+    if (!trimmedName) return;
+
+    const amountValue = Number(editAmount);
+    const amountMg = canEditTotalAmount && Number.isFinite(amountValue) && amountValue > 0
+      ? convertDoseToMg(vial.peptideId, amountValue, editAmountUnit) ?? vial.mg
+      : vial.mg;
+
+    updateInventoryBatch(batch.id, {
+      name: trimmedName,
+      dateAdded: editDateAdded,
+      expirationDate: new Date(`${editExpirationDate}T00:00:00.000Z`).toISOString(),
+      source: editSource,
+      lotNumber: editLotNumber,
+      ...(canEditTotalAmount && Number.isFinite(amountValue) && amountValue > 0
+        ? {
+            mg: amountMg,
+            totalAmount: {
+              value: amountValue,
+              unit: editAmountUnit,
+            },
+          }
+        : {}),
+    });
+    setIsEditOpen(false);
+  };
+
   const handleDelete = async () => {
     setIsDeletePending(true);
     setIsDeleteOpen(false);
     await deleteInventoryItem(vial.id);
     window.location.assign('/more/inventory');
   };
+
+  if (isBatchDetail && batch) {
+    return (
+      <AppShell>
+        <PageHeader
+          title={batchName}
+          backHref="/more/inventory"
+          rightElement={
+            <div className="flex items-center gap-1">
+              <Button size="sm" variant="ghost" className="text-primary" onClick={openBatchEditDialog}>
+                <Edit3 className="w-4 h-4 mr-1" /> Edit
+                <span className="sr-only"> batch</span>
+              </Button>
+              <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setIsDeleteOpen(true)}>
+                <Trash2 className="w-4 h-4 mr-1" /> Delete
+                <span className="sr-only"> batch</span>
+              </Button>
+            </div>
+          }
+        />
+
+        <div className="p-4 space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <h2 className="text-base font-semibold leading-none">Batch Details</h2>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Inventory</p>
+                  <p className="font-medium">{batchInventorySummary}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Amount</p>
+                  <p className="font-medium">{inventoryMetrics.originalLabel} each</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Compound</p>
+                  <p className="font-medium">{compound?.name ?? 'Unknown compound'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Added</p>
+                  <p className="font-medium">{formatDate(batch.dateAdded)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Source</p>
+                  <p className="font-medium">{batch.source || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Lot</p>
+                  <p className="font-medium">{batch.lotNumber || 'Unknown'}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Status</p>
+                <p className="font-medium">{batchStatusSummary}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <h2 className="text-base font-semibold leading-none">Vials in batch</h2>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {batchVials.map((candidate, index) => (
+                <div key={candidate.id} className="flex items-center justify-between gap-3 rounded-lg border bg-secondary/20 px-3 py-2">
+                  <div>
+                    <p className="text-sm font-medium">Vial {index + 1} of {batchVials.length}</p>
+                    <p className="text-xs text-muted-foreground">{candidate.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {getVialInventoryMetrics(candidate, data.doses).originalLabel} · {candidate.source || 'Unknown'} · {candidate.lotNumber || 'Unknown'}
+                    </p>
+                  </div>
+                  <Badge variant={candidate.status === 'active' ? 'default' : 'secondary'} className="capitalize">
+                    {candidate.status}
+                  </Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit batch</DialogTitle>
+              <DialogDescription>
+                Update this grouped inventory batch and every vial inside it.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-batch-name">Batch name</Label>
+                <Input
+                  id="edit-batch-name"
+                  aria-label="Batch name"
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-batch-date-added">Date added</Label>
+                  <Input
+                    id="edit-batch-date-added"
+                    aria-label="Date added"
+                    type="date"
+                    value={editDateAdded}
+                    onChange={(event) => setEditDateAdded(event.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-batch-expiration-date">Expiration date</Label>
+                  <Input
+                    id="edit-batch-expiration-date"
+                    aria-label="Expiration date"
+                    type="date"
+                    value={editExpirationDate}
+                    onChange={(event) => setEditExpirationDate(event.target.value)}
+                  />
+                </div>
+              </div>
+
+              {canEditTotalAmount && (
+                <div className="grid grid-cols-[1fr_104px] gap-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-batch-vial-size">Vial size</Label>
+                    <Input
+                      id="edit-batch-vial-size"
+                      aria-label="Vial size"
+                      type="number"
+                      step="any"
+                      value={editAmount}
+                      onChange={(event) => setEditAmount(event.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-batch-vial-size-unit">Unit</Label>
+                    <select
+                      id="edit-batch-vial-size-unit"
+                      aria-label="Vial size unit"
+                      value={editAmountUnit}
+                      onChange={(event) => setEditAmountUnit(event.target.value as DoseUnit)}
+                      className="border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                    >
+                      <option value="mg">mg</option>
+                      <option value="mcg">mcg</option>
+                      <option value="iu">IU</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-batch-source">Source</Label>
+                <Input
+                  id="edit-batch-source"
+                  aria-label="Source"
+                  value={editSource}
+                  onChange={(event) => setEditSource(event.target.value)}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-batch-lot-number">Lot Number</Label>
+                <Input
+                  id="edit-batch-lot-number"
+                  aria-label="Lot Number"
+                  value={editLotNumber}
+                  onChange={(event) => setEditLotNumber(event.target.value)}
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveBatchEdit} disabled={!editName.trim()}>
+                Save changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete inventory batch?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This removes every vial in this grouped inventory batch and any dose logs tied directly to those vials.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => void handleDelete()}>
+                Delete batch
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
