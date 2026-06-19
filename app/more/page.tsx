@@ -6,6 +6,7 @@ import {
   Calculator, 
   TestTube, 
   Activity,
+  BookOpen,
   Heart, 
   Users, 
   Bot, 
@@ -39,6 +40,7 @@ const menuSections: MenuSection[] = [
     items: [
       { href: '/more/inventory', label: 'Inventory', icon: FlaskConical, description: 'Manage your vials' },
       { href: '/more/reconstitution', label: 'Reconstitution Calculator', icon: Calculator, description: 'Calculate dosing' },
+      { href: '/more/compound-guide', label: 'Compound Guide', icon: BookOpen, description: 'Shared compound workflows' },
     ]
   },
   {

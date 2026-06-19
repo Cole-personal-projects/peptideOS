@@ -101,7 +101,7 @@ function getTierLabel(tier: ReferenceEvidenceTier): string {
     case 'identity-only':
       return 'Emerging';
     case 'preclinical':
-      return 'Research Only';
+      return 'Preclinical';
   }
 }
 

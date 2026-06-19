@@ -112,6 +112,12 @@ tracking:
     - Create reminders from user-confirmed label instructions without inventing frequency or protocol guidance.
     - Summarize site notes, photos, and batch changes for user review.
 
+handling:
+  storage:
+    - "Finished topical AHK-Cu products: record and follow the product label storage instructions because carrier base, preservative system, and packaging determine handling."
+    - "Raw AHK-Cu cosmetic ingredient: capture supplier COA, SDS, and container storage language before treating it as inventory-ready."
+    - "Do not infer refrigerated vial handling unless the label or supplier documentation states it."
+
 app_profile:
   headline: Topical-first copper peptide with preclinical hair-follicle signal.
   summary: >-

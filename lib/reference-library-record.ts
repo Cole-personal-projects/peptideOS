@@ -65,6 +65,9 @@ export interface ReferenceLibraryRecord {
     inventory_fields: string[];
     peppi_actions: string[];
   };
+  handling?: {
+    storage?: string[];
+  };
   app_profile: {
     headline: string;
     summary: string;
@@ -192,7 +195,7 @@ export function referenceLibraryRecordToCompound(record: ReferenceLibraryRecord)
     researcherDetails: record.app_profile.summary,
     mechanism: record.evidence.mechanism_targets.join(', '),
     safety: safetySignals.join(' ') || 'No route-scoped risks were asserted in the reviewed record.',
-    storage: 'Verify storage and handling from the labeled product or source-backed container details.',
+    storage: buildStorageSummary(record),
     citations,
     referenceProfile: {
       evidenceTier: mapEvidenceTier(record.evidence.tier),
@@ -238,6 +241,15 @@ export function referenceLibraryRecordToCompound(record: ReferenceLibraryRecord)
   }
 
   return compound;
+}
+
+function buildStorageSummary(record: ReferenceLibraryRecord): string {
+  const storageNotes = record.handling?.storage?.filter((note) => note.trim().length > 0) ?? [];
+  if (storageNotes.length > 0) {
+    return storageNotes.join(' ');
+  }
+
+  return 'Verify storage and handling from the labeled product or source-backed container details.';
 }
 
 function sourceToCitation(source: ReferenceLibrarySource): Citation {

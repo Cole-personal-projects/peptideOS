@@ -29,11 +29,8 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('heading', { name: 'Citations' })).toBeVisible();
     await openProfileDrawer(page, 'Citations');
     await expect(page.getByText('Stable Gastric Pentadecapeptide BPC 157 and Wound Healing')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Legal' })).toBeVisible();
-    await openProfileDrawer(page, 'Legal');
-    await expect(
-      page.getByText('PeptideOS does not provide medical advice, diagnosis, or treatment.')
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Legal' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Open compound guide for BPC-157' })).toBeVisible();
   });
 
   test('preserves IU display on hGH compound detail pages', async ({ page }) => {
@@ -58,17 +55,15 @@ test.describe('library detail pages', () => {
     const addInventoryBox = await page.getByRole('link', { name: 'Add Tirzepatide to inventory' }).boundingBox();
     expect(atAGlanceBox?.y).toBeLessThan(addInventoryBox?.y ?? 0);
 
-    await expect(page.getByRole('button', { name: /What you can do/ })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Peppi prompts/ })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Inventory and math/ })).toBeVisible();
-    await expect(page.getByText('Add the exact labeled container or pen to inventory')).toBeHidden();
-    await expect(page.getByText('Add my labeled Tirzepatide container to inventory')).toBeHidden();
+    await expect(page.getByRole('button', { name: /What you can do/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Peppi prompts/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Inventory and math/ })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Open compound guide for Tirzepatide' })).toBeVisible();
 
-    await openProfileDrawer(page, 'What you can do');
-    await expect(page.getByText('Add the exact labeled container or pen to inventory')).toBeVisible();
-
-    await openProfileDrawer(page, 'Peppi prompts');
-    await expect(page.getByText('Add my labeled Tirzepatide container to inventory')).toBeVisible();
+    await page.getByRole('link', { name: 'Open compound guide for Tirzepatide' }).click();
+    await expect(page).toHaveURL(/\/more\/compound-guide\?compound=tirzepatide/);
+    await expect(page.getByText('Workflow reference')).toBeVisible();
+    await expect(page.getByText('Peppi', { exact: true })).toBeVisible();
   });
 
   test('surfaces pro-grade Retatrutide evidence without turning it into dosing advice', async ({ page }) => {
@@ -94,7 +89,8 @@ test.describe('library detail pages', () => {
     await openProfileDrawer(page, 'What to verify');
     await expect(page.getByText('do not treat marketing names as identity proof')).toBeVisible();
     await expect(page.getByText('What to track')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Peppi prompts' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Peppi prompts' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Open compound guide for Retatrutide' })).toBeVisible();
     await openProfileDrawer(page, 'Reality check');
     await expect(page.getByText('The clinical Retatrutide story is not a gray-market vial.')).toBeVisible();
 
@@ -102,10 +98,7 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('Source Backed')).toBeVisible();
     await expect(page.getByText('Trial Registry')).toBeVisible();
 
-    await expect(page.getByRole('heading', { name: 'Practical tracking' })).toBeVisible();
-    await openProfileDrawer(page, 'Practical tracking');
-    await expect(page.getByText('Record the exact supplier, lot, vial amount, concentration, and container state')).toBeVisible();
-    await expect(page.getByText('Treat trial-arm values as literature context only')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Practical tracking' })).toHaveCount(0);
     await openProfileDrawer(page, 'Storage');
     await expect(page.getByText('No approved US product label defines consumer storage')).toBeVisible();
 
@@ -118,7 +111,7 @@ test.describe('library detail pages', () => {
     await page.getByRole('button', { name: 'I Understand' }).click();
     await expect(page.getByRole('heading', { name: 'Retatrutide' })).toBeVisible();
 
-    for (const heading of ['Field brief', 'Evidence details', 'Practical tracking', 'Safety watch', 'Regulatory context', 'Citations']) {
+    for (const heading of ['Field brief', 'Evidence details', 'Safety watch', 'Regulatory context', 'Citations']) {
       await expect(page.getByRole('heading', { name: heading })).toBeVisible();
     }
 
@@ -132,8 +125,8 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('phase-2-randomized-controlled-trial')).toBeVisible();
     await expect(page.getByText('phase-3-program')).toBeVisible();
 
-    await expect(page.getByRole('heading', { name: 'Practical tracking' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Peppi prompts' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Practical tracking' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Peppi prompts' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Evidence and transparency' })).toBeVisible();
 
     await expect(page.getByRole('heading', { name: 'Safety watch' })).toBeVisible();
@@ -175,24 +168,16 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
     await openProfileDrawer(page, 'Field brief');
     await expect(page.getByText('dual-incretin benchmark')).toBeVisible();
-    await expect(page.getByText('What you can do')).toBeVisible();
-    await openProfileDrawer(page, 'What you can do');
-    await expect(page.getByText('Add the exact labeled container or pen to inventory')).toBeVisible();
-    await expect(page.getByText('Build a schedule from user-confirmed label details', { exact: true })).toBeVisible();
+    await expect(page.getByText('What you can do')).toHaveCount(0);
     await expect(page.getByText('What to verify')).toBeVisible();
     await openProfileDrawer(page, 'What to verify');
-    await expect(page.getByText('Container label, lot, expiration, strength, and route')).toBeVisible();
+    await expect(page.getByText('Exact product name, labeled strength, container type, lot, expiration, source, and route from the physical label.')).toBeVisible();
     await expect(page.getByText('What to track')).toBeVisible();
     await openProfileDrawer(page, 'What to track');
-    await expect(page.getByText('Inventory depletion and active container status')).toBeVisible();
-    await expect(page.getByText('Tracking domains')).toBeVisible();
-    await openProfileDrawer(page, 'Tracking domains');
-    await expect(page.getByText('Metabolic trend notes', { exact: true })).toBeVisible();
-    await expect(page.getByText('Appetite and tolerability notes', { exact: true })).toBeVisible();
-    await expect(page.getByText('Peppi prompts')).toBeVisible();
-    await openProfileDrawer(page, 'Peppi prompts');
-    await expect(page.getByText('Add my labeled Tirzepatide container to inventory')).toBeVisible();
-    await expect(page.getByText('Build a Tirzepatide schedule from my confirmed label details')).toBeVisible();
+    await expect(page.getByText('Schedule adherence, missed-dose notes, appetite/tolerability notes, weight trend notes, and user-entered dose changes over time.')).toBeVisible();
+    await expect(page.getByText('Tracking domains')).toHaveCount(0);
+    await expect(page.getByText('Peppi prompts')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Open compound guide for Tirzepatide' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Regulatory context' })).toBeVisible();
     await openProfileDrawer(page, 'Regulatory context');
     await expect(page.getByText('DailyMed provides US label records for tirzepatide products').first()).toBeVisible();
@@ -200,13 +185,11 @@ test.describe('library detail pages', () => {
     await page.goto('/library/mots-c');
     await expect(page.getByRole('heading', { name: 'MOTS-c' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
-    await openProfileDrawer(page, 'Inventory and math');
-    await expect(page.getByText('Common vial amount presets: 5 mg, 10 mg.')).toBeVisible();
-    await expect(page.getByText('BAC water calculator presets: 1 mL, 2 mL.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Inventory and math' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Calculate MOTS-c reconstitution' })).toBeVisible();
     await openProfileDrawer(page, 'What to track');
-    await expect(page.getByText('Reconstitution date, concentration, active vial status, and remaining inventory')).toBeVisible();
-    await openProfileDrawer(page, 'Peppi prompts');
-    await expect(page.getByText('Calculate MOTS-c concentration from vial amount and BAC water')).toBeVisible();
+    await expect(page.getByText('Metabolic context notes, energy/exercise notes, sleep/recovery notes, appetite notes, and user-entered biomarker context.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Peppi prompts' })).toHaveCount(0);
   });
 
   test('renders approved, reconstituted, and pro-profile compounds through the unified profile view', async ({ page }) => {
@@ -218,14 +201,14 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('Approved Label', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('Form', { exact: true })).toBeVisible();
     await expect(page.getByText('Prefilled', { exact: true })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Peppi prompts' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Peppi prompts' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Open compound guide for Tirzepatide' })).toBeVisible();
 
     await page.goto('/library/bpc-157');
     await expect(page.getByRole('heading', { name: 'At a glance' })).toBeVisible();
     await expect(page.getByText('Reconstituted', { exact: true })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Inventory and math' })).toBeVisible();
-    await openProfileDrawer(page, 'Inventory and math');
-    await expect(page.getByText('BAC water calculator presets: 1 mL, 2 mL.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Inventory and math' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Calculate BPC-157 reconstitution' })).toBeVisible();
 
     await page.goto('/library/retatrutide');
     await expect(page.getByRole('heading', { name: 'At a glance' })).toBeVisible();

@@ -215,6 +215,12 @@ export default function LibraryDetailPage({ params }: { params: Promise<{ id: st
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start">
+              <Link href={`/more/compound-guide?compound=${compound.id}`} aria-label={`Open compound guide for ${compound.name}`}>
+                <BookOpen className="w-4 h-4" />
+                Compound guide
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="justify-start">
               <Link href={`/library?compare=${compound.id}`} aria-label={`Compare ${compound.name} with related compounds`}>
                 <GitCompare className="w-4 h-4" />
                 Compare related

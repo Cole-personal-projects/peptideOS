@@ -45,20 +45,6 @@ export function buildLibraryProfileViewModel(
       },
     ] : []),
     {
-      title: 'What you can do',
-      items: actionableProfile.primaryActions,
-      tone: 'primary',
-    },
-    {
-      title: 'Peppi prompts',
-      items: actionableProfile.peppiPrompts,
-      tone: 'primary',
-    },
-    {
-      title: 'Inventory and math',
-      items: actionableProfile.inventoryGuidance,
-    },
-    {
       title: 'Storage',
       items: [compound.storage],
     },
@@ -68,20 +54,22 @@ export function buildLibraryProfileViewModel(
       tone: 'warning',
     },
     {
-      title: 'Tracking domains',
-      items: actionableProfile.trackingDomains,
-    },
-    {
       title: 'What to verify',
-      items: actionableProfile.verifyBeforeUse,
+      items: referenceProfile?.biohackerBrief.verifyBeforeUse ?? [
+        'Container label, lot, expiration, strength, route, and storage instructions.',
+      ],
     },
     {
       title: 'What to track',
-      items: actionableProfile.trackInApp,
+      items: referenceProfile?.biohackerBrief.trackInApp ?? [
+        'Inventory status, schedule adherence, and user-entered notes.',
+      ],
     },
     {
       title: 'Evidence and transparency',
-      items: actionableProfile.transparencyFlags,
+      items: referenceProfile?.evidenceGaps ?? [
+        'Full pro profile is not yet attached; this view is generated from reviewed reference metadata.',
+      ],
       tone: 'warning',
     },
     ...(referenceProfile ? [
@@ -112,10 +100,6 @@ export function buildLibraryProfileViewModel(
         ],
       },
       {
-        title: 'Practical tracking',
-        items: referenceProfile.practicalNotes,
-      },
-      {
         title: 'Safety watch',
         items: referenceProfile.safetySignals,
         tone: 'warning' as const,
@@ -124,17 +108,6 @@ export function buildLibraryProfileViewModel(
     {
       title: 'Citations',
       items: compound.citations.map((citation) => `${citation.title} (${citation.source}, ${citation.year})`),
-    },
-    {
-      title: 'Legal',
-      items: [
-        'Research purposes only. PeptideOS does not provide medical advice, diagnosis, or treatment.',
-        compound.source === 'user' ? 'Custom entries are local user notes.' : 'Reference entries are read-only.',
-        ...(referenceProfile ? [
-          `${formatLabel(referenceProfile.regulatoryStatus.status)} in ${referenceProfile.regulatoryStatus.region}: ${referenceProfile.regulatoryStatus.summary}`,
-        ] : []),
-      ],
-      tone: 'warning',
     },
   ];
 

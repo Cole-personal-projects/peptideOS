@@ -32,6 +32,21 @@ describe('lean reference library records', () => {
     });
   });
 
+  test('carries record-specific storage into the app compound', () => {
+    const record = parseReferenceLibraryRecord(validAhkCuYaml('approved'));
+
+    const snapshot = buildReferenceLibrarySnapshotFromRecords([record], {
+      exportedAt: '2026-06-19T00:00:00.000Z',
+    });
+
+    expect(snapshot.compounds[0].storage).toContain(
+      'Finished topical AHK-Cu products: record and follow label storage instructions.',
+    );
+    expect(snapshot.compounds[0].storage).toContain(
+      'Do not infer refrigerated vial handling unless the label or supplier documentation states it.',
+    );
+  });
+
   test('rejects source-backed claims that do not cite a source', () => {
     const record = parseReferenceLibraryRecord(validAhkCuYaml('draft'));
     record.claims[0].source_ids = [];
@@ -138,6 +153,12 @@ tracking:
   peppi_actions:
     - Add a labeled AHK-Cu topical container to inventory.
     - Track application-site notes and photos over time.
+
+handling:
+  storage:
+    - "Finished topical AHK-Cu products: record and follow label storage instructions."
+    - "Raw AHK-Cu cosmetic ingredient: capture supplier COA/SDS/container storage language before treating it as inventory-ready."
+    - "Do not infer refrigerated vial handling unless the label or supplier documentation states it."
 
 app_profile:
   headline: Topical copper peptide tracked for skin and hair research.
