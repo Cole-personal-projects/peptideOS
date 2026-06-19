@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Database, Moon, Sun, Fingerprint, Download, Shield, Trash2, Upload, UserRound } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
@@ -24,6 +25,8 @@ import { useApp } from '@/lib/context';
 import { formatReferenceLibraryStatus } from '@/lib/reference-library-status';
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { data, referenceLibraryStatus, toggleDarkMode, toggleBiometricLock, exportAllData, importAllData, clearAllData } = useApp();
   const { config: authConfig, status: authStatus, user, signInWithEmail, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -83,13 +86,14 @@ export default function SettingsPage() {
     try {
       await signOut();
       setAuthMessage('Signed out.');
+      router.push('/welcome');
     } finally {
       setIsSubmittingAuth(false);
     }
   };
 
   return (
-    <AppShell>
+    <AppShell showDisclaimer={searchParams.get('entry') !== 'signin'}>
       <PageHeader title="Settings" backHref="/more" />
 
       <div data-testid="settings-content" className="mx-auto w-full max-w-3xl p-4 space-y-4">

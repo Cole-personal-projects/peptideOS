@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 test.describe('PWA readiness', () => {
   test('registers a service worker and serves the offline fallback for uncached routes', async ({ page, context }) => {
     await page.goto('/');
+    await page.getByRole('button', { name: 'Get started' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
 
     await page.evaluate(async () => {
@@ -27,6 +28,7 @@ test.describe('PWA readiness', () => {
 
   test('reloads visited core shell routes while offline', async ({ page, context }) => {
     await page.goto('/');
+    await page.getByRole('button', { name: 'Get started' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
     await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ })).toBeVisible();
 
