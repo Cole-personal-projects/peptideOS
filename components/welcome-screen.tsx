@@ -97,21 +97,21 @@ export function WelcomeScreen({ onGetStarted, completedOnboarding = false }: Wel
         </header>
 
         <section className="grid flex-1 items-center gap-8 py-8 md:grid-cols-[1fr_360px] md:py-12">
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <p className="text-xs font-medium uppercase tracking-[0.24em] text-primary">Private research tracking</p>
-              <h1 className="max-w-xl text-5xl font-bold leading-none tracking-normal sm:text-6xl">
-                PeptideOS
-              </h1>
-              <p className="max-w-lg text-lg text-muted-foreground">
-                Your peptide research operating system.
-              </p>
-            </div>
+          <div className="space-y-4 md:self-end">
+            <p className="text-xs font-medium uppercase tracking-[0.24em] text-primary">Private research tracking</p>
+            <h1 className="max-w-xl text-5xl font-bold leading-none tracking-normal sm:text-6xl">
+              PeptideOS
+            </h1>
+            <p className="max-w-lg text-lg text-muted-foreground">
+              Your peptide research operating system.
+            </p>
+          </div>
 
-            <div className="md:hidden">
-              <WelcomeGraphic />
-            </div>
+          <div className="md:col-start-2 md:row-span-2 md:row-start-1 md:self-center">
+            <WelcomeGraphic />
+          </div>
 
+          <div className="space-y-6 md:col-start-1 md:self-start">
             <div className="grid max-w-xl gap-2 text-sm text-muted-foreground sm:grid-cols-3">
               <div className="rounded-lg border bg-secondary/30 p-3">
                 <p className="font-medium text-foreground">Inventory</p>
@@ -141,10 +141,6 @@ export function WelcomeScreen({ onGetStarted, completedOnboarding = false }: Wel
                 <Link href="/library">Browse library</Link>
               </Button>
             </div>
-          </div>
-
-          <div className="hidden md:block">
-            <WelcomeGraphic />
           </div>
         </section>
 
