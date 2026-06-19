@@ -8,6 +8,7 @@ test.describe('welcome screen', () => {
     await expect(page.getByText('Your peptide research operating system.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Get started' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible();
+    await expect(page.getByLabel('Animated Peppi science graphic')).toHaveCount(1);
     await expect(page.getByText('For research tracking only. Not medical advice.')).toBeVisible();
     await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ })).toHaveCount(0);
 
