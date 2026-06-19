@@ -6,6 +6,7 @@ test.describe('dashboard polish', () => {
   test('shows briefing and adherence widgets after first-run accept', async ({ page }) => {
     await page.goto('/');
 
+    await page.getByRole('button', { name: 'Get started' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
 
     await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ })).toBeVisible();

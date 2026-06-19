@@ -5,6 +5,7 @@ test.describe('MVP tester walkthrough', () => {
     await page.clock.setFixedTime(new Date('2026-05-26T12:00:00-07:00'));
 
     await page.goto('/');
+    await page.getByRole('button', { name: 'Get started' }).click();
     await page.getByRole('button', { name: 'Set up profile' }).click();
     await page.getByRole('radio', { name: 'Researcher' }).click();
     await page.getByRole('button', { name: 'Next' }).click();

@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { TodayCard } from '@/components/dashboard/today-card';
 import { ActiveStacksCarousel } from '@/components/dashboard/active-stacks-carousel';
@@ -6,6 +9,8 @@ import { StreakCard } from '@/components/dashboard/streak-card';
 import { RecentActivityCard } from '@/components/dashboard/recent-activity-card';
 import { BriefingCard } from '@/components/dashboard/briefing-card';
 import { AdherenceCard } from '@/components/dashboard/adherence-card';
+import { WelcomeScreen } from '@/components/welcome-screen';
+import { useApp } from '@/lib/context';
 
 function DashboardHeader() {
   const now = new Date();
@@ -21,6 +26,13 @@ function DashboardHeader() {
 }
 
 export default function DashboardPage() {
+  const { data } = useApp();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  if (!data.hasCompletedOnboarding && !showOnboarding) {
+    return <WelcomeScreen onGetStarted={() => setShowOnboarding(true)} />;
+  }
+
   return (
     <AppShell>
       <DashboardHeader />

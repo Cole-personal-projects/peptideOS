@@ -4,10 +4,15 @@ import { BottomNav } from '@/components/navigation/bottom-nav';
 import { FloatingActionButton } from '@/components/navigation/floating-action-button';
 import { DisclaimerDialog } from '@/components/disclaimer-dialog';
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+interface AppShellProps {
+  children: React.ReactNode;
+  showDisclaimer?: boolean;
+}
+
+export function AppShell({ children, showDisclaimer = true }: AppShellProps) {
   return (
     <div className="min-h-screen bg-background pb-32">
-      <DisclaimerDialog />
+      {showDisclaimer && <DisclaimerDialog />}
       {children}
       <FloatingActionButton />
       <BottomNav />
