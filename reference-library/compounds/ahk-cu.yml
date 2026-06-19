@@ -1,0 +1,152 @@
+schema_version: 1
+compound_id: ahk-cu
+status: draft
+updated_at: "2026-06-19"
+
+identity:
+  name: AHK-Cu
+  aliases:
+    - L-alanyl-L-histidyl-L-lysine-Cu2+
+    - Alanine-histidine-lysine copper
+  non_aliases:
+    - GHK-Cu
+  compound_type: peptide
+  categories:
+    - skin-hair
+
+forms:
+  primary_route: topical
+  supported_routes:
+    - topical
+  excluded_routes:
+    - route: subq
+      reason: No source-backed route evidence in reviewed sources for this draft record.
+    - route: im
+      reason: No source-backed route evidence in reviewed sources for this draft record.
+  form_factors:
+    - Topical serum
+    - Cosmetic scalp or skin formulation
+  verification_fields:
+    - exact compound name
+    - concentration
+    - carrier base
+    - lot number
+    - expiration date
+
+positioning:
+  why_use_this_compound:
+    - Track AHK-Cu as a topical copper-peptide compound distinct from GHK-Cu.
+    - Log product identity, carrier, site response, and photo changes over time.
+  who_is_tracking_this:
+    - Users comparing topical copper-peptide products for skin or scalp research.
+    - Users who want inventory records to distinguish AHK-Cu from other copper peptides.
+  common_user_goals:
+    - Separate label-verified topical AHK-Cu products from GHK-Cu products.
+    - Track local cosmetic response notes and photos by application site.
+
+evidence:
+  tier: preclinical
+  mechanism_targets:
+    - dermal papilla cell proliferation research
+    - human hair follicle organ-culture research
+    - copper-peptide identity tracking
+  claim_summary:
+    - AHK-Cu is cataloged as a copper-binding peptide identity.
+    - Published AHK-Cu evidence located for this draft centers on ex vivo human hair follicles and cultured dermal papilla cells, not human clinical outcome trials.
+  evidence_gaps:
+    - No reviewed source in this draft supports injectable use.
+    - Human clinical outcome data for finished topical AHK-Cu products is not established in this draft.
+    - Product-specific tolerability and performance depend on the finished formulation.
+
+risks:
+  by_route:
+    topical:
+      known_contraindications: []
+      caution_populations: []
+      negative_stack_flags: []
+      formulation_risks:
+        - Irritation potential depends on concentration, carrier base, excipients, and individual sensitivity.
+        - Copper-peptide identity can be confused with GHK-Cu unless the label is checked.
+      unknowns:
+        - Long-term outcomes for consumer topical products are formulation-specific and not resolved by the reviewed sources.
+
+tracking:
+  useful_logs:
+    - application site
+    - local irritation or tolerability notes
+    - skin or scalp photo checkpoints
+    - product consistency notes
+  inventory_fields:
+    - exact label name
+    - concentration
+    - carrier base
+    - lot number
+    - expiration date
+  peppi_actions:
+    - Add a labeled AHK-Cu topical product to inventory after user confirmation.
+    - Ask whether the product label says AHK-Cu or GHK-Cu when the photo is ambiguous.
+    - Create recurring topical-use reminders only from user-confirmed label details.
+    - Summarize logged site notes and photos for the user's review.
+
+app_profile:
+  headline: Topical-first copper peptide for skin and hair tracking.
+  summary: AHK-Cu is best represented in PeptideOS as a topical-first copper-peptide record for label verification, inventory, and response tracking. The reviewed draft evidence supports identity and preclinical hair-follicle/dermal-papilla context, not injectable protocols.
+  why_people_care:
+    - It helps users keep AHK-Cu separate from the more commonly discussed GHK-Cu.
+    - It gives topical product users a structured place to track concentration, carrier, site notes, and photos.
+    - It lets Peppi flag unsupported route assumptions instead of treating every peptide as injectable by default.
+  what_to_verify:
+    - Confirm the label says AHK-Cu, not GHK-Cu or a generic copper peptide blend.
+    - Confirm route, concentration, carrier base, lot number, and expiration date from the product label.
+    - Confirm whether the product is a finished topical product or a raw ingredient.
+  what_to_track:
+    - Application site, local response, irritation notes, photos, product lot, and formulation changes.
+  reality_check: This record should stay topical-first until a reviewed source supports another route; PeptideOS should not infer injectable use from peptide status alone.
+
+sources:
+  - id: src-pubchem-ahk-cu
+    title: PubChem Compound Summary for AHK-Cu
+    url: https://pubchem.ncbi.nlm.nih.gov/compound/AHK-Cu
+    source_type: database
+    publisher: PubChem
+    year: 2026
+  - id: src-pyo-2007-ahk-cu-hair
+    title: The effect of tripeptide-copper complex on human hair growth in vitro
+    url: https://pubmed.ncbi.nlm.nih.gov/17703734/
+    source_type: publication
+    publisher: Archives of Pharmacal Research
+    year: 2007
+
+claims:
+  - id: claim-identity-ahk-cu
+    text: AHK-Cu is a cataloged copper-peptide compound identity.
+    claim_type: identity
+    evidence_level: identity
+    route_scope:
+      - topical
+    source_ids:
+      - src-pubchem-ahk-cu
+    confidence: high
+    limitations:
+      - Database identity does not establish route, product quality, or user outcomes.
+  - id: claim-hair-follicle-preclinical-context
+    text: Published AHK-Cu work includes ex vivo human hair follicle and cultured dermal papilla cell research.
+    claim_type: evidence
+    evidence_level: preclinical
+    route_scope:
+      - topical
+    source_ids:
+      - src-pyo-2007-ahk-cu-hair
+    confidence: medium
+    limitations:
+      - Ex vivo and in vitro findings do not equal human clinical outcome evidence for a finished topical product.
+  - id: claim-formulation-specific-tolerability
+    text: Topical tolerability is formulation-specific because carrier base, excipients, and concentration vary by product.
+    claim_type: formulation
+    evidence_level: theoretical
+    route_scope:
+      - topical
+    source_ids: []
+    confidence: medium
+    limitations:
+      - Product-specific risk statements require product-specific label or formulation review.
