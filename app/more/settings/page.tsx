@@ -28,11 +28,12 @@ export default function SettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data, referenceLibraryStatus, toggleDarkMode, toggleBiometricLock, exportAllData, importAllData, clearAllData } = useApp();
-  const { config: authConfig, status: authStatus, user, signInWithEmail, signOut } = useAuth();
+  const { config: authConfig, status: authStatus, user, signInWithEmail, verifyEmailCode, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [email, setEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [authMessage, setAuthMessage] = useState('');
-  const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
+  const [authAction, setAuthAction] = useState<'email' | 'code' | 'sign-out' | null>(null);
   const [importStatus, setImportStatus] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
@@ -69,26 +70,41 @@ export default function SettingsPage() {
   };
 
   const handleEmailSignIn = async () => {
-    setIsSubmittingAuth(true);
+    setAuthAction('email');
     setAuthMessage('');
 
     try {
       const result = await signInWithEmail(email);
       setAuthMessage(result.message);
     } finally {
-      setIsSubmittingAuth(false);
+      setAuthAction(null);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    setAuthAction('code');
+    setAuthMessage('');
+
+    try {
+      const result = await verifyEmailCode(email, verificationCode);
+      setAuthMessage(result.message);
+      if (result.ok) {
+        setVerificationCode('');
+      }
+    } finally {
+      setAuthAction(null);
     }
   };
 
   const handleSignOut = async () => {
-    setIsSubmittingAuth(true);
+    setAuthAction('sign-out');
 
     try {
       await signOut();
       setAuthMessage('Signed out.');
       router.push('/welcome');
     } finally {
-      setIsSubmittingAuth(false);
+      setAuthAction(null);
     }
   };
 
@@ -126,7 +142,7 @@ export default function SettingsPage() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                disabled={isSubmittingAuth}
+                disabled={authAction !== null}
                 onClick={() => void handleSignOut()}
               >
                 Sign out
@@ -149,10 +165,30 @@ export default function SettingsPage() {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  disabled={isSubmittingAuth}
+                  disabled={authAction !== null}
                   onClick={() => void handleEmailSignIn()}
                 >
-                  {isSubmittingAuth ? 'Sending sign-in link...' : 'Send sign-in link'}
+                  {authAction === 'email' ? 'Sending sign-in link...' : 'Send sign-in link'}
+                </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="account-verification-code">Verification code</Label>
+                  <Input
+                    id="account-verification-code"
+                    aria-label="Verification code"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="Paste email code"
+                    value={verificationCode}
+                    onChange={(event) => setVerificationCode(event.target.value)}
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  disabled={authAction !== null}
+                  onClick={() => void handleVerifyCode()}
+                >
+                  {authAction === 'code' ? 'Verifying code...' : 'Verify sign-in code'}
                 </Button>
               </div>
             )}
@@ -241,7 +277,7 @@ export default function SettingsPage() {
             <p className="text-xs text-muted-foreground">
               Imports replace local user data from a PeptideOS JSON backup. Bundled reference compounds remain app-owned.
             </p>
-            <Input
+            <input
               ref={fileInputRef}
               type="file"
               accept="application/json,.json"

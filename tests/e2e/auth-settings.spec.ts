@@ -11,6 +11,8 @@ test.describe('account settings', () => {
     await expect(page.getByText('Your data remains on this device until you sign in and cloud sync is available.')).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Send sign-in link' })).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Verification code' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Verify sign-in code' })).toBeVisible();
     await expect(page.getByText('Reference library', { exact: true })).toBeVisible();
     await expect(page.getByText(/Bundled fallback \d{4}\.\d{2}\.\d+/)).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
@@ -28,5 +30,18 @@ test.describe('account settings', () => {
     const box = await settingsContent.boundingBox();
     expect(box?.width).toBeLessThanOrEqual(768);
     expect(box?.x).toBeGreaterThan(120);
+
+    const pageMetrics = await page.evaluate(() => ({
+      bodyScrollWidth: document.body.scrollWidth,
+      documentScrollWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+      initialScrollX: window.scrollX,
+    }));
+    expect(pageMetrics.bodyScrollWidth).toBeLessThanOrEqual(pageMetrics.viewportWidth);
+    expect(pageMetrics.documentScrollWidth).toBeLessThanOrEqual(pageMetrics.viewportWidth);
+    expect(pageMetrics.initialScrollX).toBe(0);
+
+    await page.evaluate(() => window.scrollTo(80, window.scrollY));
+    await expect.poll(() => page.evaluate(() => window.scrollX)).toBe(0);
   });
 });
