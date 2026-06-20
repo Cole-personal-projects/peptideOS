@@ -1,7 +1,7 @@
 {
   "libraryVersion": "2026.05.0",
   "schemaVersion": 1,
-  "exportedAt": "2026-06-19T21:50:02.962Z",
+  "exportedAt": "2026-06-20T00:46:13.974Z",
   "source": {
     "kind": "bundled",
     "registry": "peptideos-reference-registry"
@@ -187,9 +187,471 @@
       "source": "bundled",
       "curationStatus": "reviewed",
       "updatedAt": "2026-06-19"
+    },
+    {
+      "id": "retatrutide",
+      "name": "Retatrutide",
+      "aliases": [
+        "LY3437943",
+        "LY-3437943"
+      ],
+      "compoundType": "glp-1",
+      "category": "metabolic",
+      "defaultRoute": "subq",
+      "supportedRoutes": [
+        "subq"
+      ],
+      "defaultDoseUnit": "mg",
+      "concentrationMode": "reconstituted",
+      "dosePresets": [
+        {
+          "label": "1 mg",
+          "value": 1,
+          "unit": "mg",
+          "intent": "commonResearchRange",
+          "sourceNote": "Protocol-ready tracking preset from the reviewed compound intelligence record; included for user-confirmed logging context, not as guidance.",
+          "citationIds": [
+            "pubmed-retatrutide-obesity-phase-2"
+          ]
+        },
+        {
+          "label": "2 mg",
+          "value": 2,
+          "unit": "mg",
+          "intent": "commonResearchRange",
+          "sourceNote": "Protocol-ready tracking preset from the reviewed compound intelligence record; included for user-confirmed logging context, not as guidance.",
+          "citationIds": [
+            "pubmed-retatrutide-obesity-phase-2"
+          ]
+        },
+        {
+          "label": "4 mg",
+          "value": 4,
+          "unit": "mg",
+          "intent": "commonResearchRange",
+          "sourceNote": "Protocol-ready tracking preset from the reviewed compound intelligence record; included for user-confirmed logging context, not as guidance.",
+          "citationIds": [
+            "pubmed-retatrutide-obesity-phase-2"
+          ]
+        },
+        {
+          "label": "8 mg",
+          "value": 8,
+          "unit": "mg",
+          "intent": "commonResearchRange",
+          "sourceNote": "Protocol-ready tracking preset from the reviewed compound intelligence record; included for user-confirmed logging context, not as guidance.",
+          "citationIds": [
+            "pubmed-retatrutide-obesity-phase-2"
+          ]
+        },
+        {
+          "label": "12 mg",
+          "value": 12,
+          "unit": "mg",
+          "intent": "commonResearchRange",
+          "sourceNote": "Protocol-ready tracking preset from the reviewed compound intelligence record; included for user-confirmed logging context, not as guidance.",
+          "citationIds": [
+            "pubmed-retatrutide-obesity-phase-2"
+          ]
+        }
+      ],
+      "vialPresets": [
+        {
+          "label": "5 mg vial",
+          "totalAmount": {
+            "value": 5,
+            "unit": "mg"
+          },
+          "sourceNote": "Protocol-ready tracking default from reviewed compound intelligence record; verify against the actual vial label.",
+          "citationIds": [
+            "pubmed-retatrutide-obesity-phase-2"
+          ]
+        },
+        {
+          "label": "10 mg vial",
+          "totalAmount": {
+            "value": 10,
+            "unit": "mg"
+          },
+          "sourceNote": "Protocol-ready tracking default from reviewed compound intelligence record; verify against the actual vial label.",
+          "citationIds": [
+            "pubmed-retatrutide-obesity-phase-2"
+          ]
+        }
+      ],
+      "reconstitutionDefaults": {
+        "typicalVialAmounts": [
+          {
+            "value": 5,
+            "unit": "mg"
+          },
+          {
+            "value": 10,
+            "unit": "mg"
+          }
+        ],
+        "typicalBacWaterMl": [
+          1,
+          2
+        ]
+      },
+      "beginnerSummary": "Retatrutide is a research-stage GLP-1, GIP, and glucagon receptor agonist. PeptideOS tracks it through user-confirmed inventory, reconstitution math, schedule previews, tolerability notes, and trend data while keeping trial evidence separate from research-market product assumptions.",
+      "researcherDetails": "Retatrutide is a research-stage GLP-1, GIP, and glucagon receptor agonist. PeptideOS tracks it through user-confirmed inventory, reconstitution math, schedule previews, tolerability notes, and trend data while keeping trial evidence separate from research-market product assumptions.",
+      "mechanism": "Triple GLP-1, GIP, and glucagon receptor agonist.",
+      "safety": "subq: Gastrointestinal adverse events were common in published phase 2 obesity data. subq: Review overlap with other incretin, appetite-suppressing, glucose-modulating, or stimulant compounds before saving a stack. subq: Track resting heart rate, HRV, sleep, appetite suppression, and gastrointestinal tolerability as separate signals. subq: Research-market vials can introduce identity, purity, sterility, endotoxin, storage, and concentration uncertainty. subq: Reconstitution math depends on user-confirmed vial amount and diluent volume, not on the compound name alone. subq: Long-term safety for non-trial research-market products is not established. subq: Product-specific stability and storage require label or supplier documentation.",
+      "storage": "No approved US product label defines consumer storage. Verify storage from the exact vial label or supplier documentation. Do not infer approved-product storage instructions for research-market vials. Keep reconstitution date, diluent volume, concentration, active vial state, and discard notes with the inventory item.",
+      "citations": [
+        {
+          "id": "pubmed-retatrutide-obesity-phase-2",
+          "title": "Triple-Hormone-Receptor Agonist Retatrutide for Obesity",
+          "url": "https://www.nejm.org/doi/full/10.1056/NEJMoa2301972",
+          "source": "New England Journal of Medicine",
+          "year": 2023
+        },
+        {
+          "id": "clinicaltrials-retatrutide-triumph-5",
+          "title": "A Study of Retatrutide in Participants With Obesity and Cardiovascular Disease",
+          "url": "https://clinicaltrials.gov/study/NCT06383390",
+          "source": "ClinicalTrials.gov",
+          "year": 2026
+        }
+      ],
+      "referenceProfile": {
+        "evidenceTier": "phase-3-topline",
+        "biohackerBrief": {
+          "headline": "A triple-agonist metabolic peptide people are watching because it may push past the current GLP-1/GIP ceiling.",
+          "whyPeopleCare": [
+            "It hits GLP-1, GIP, and glucagon receptors instead of only one or two incretin pathways.",
+            "Published clinical data and phase 3 trials make it a high-interest GLP-1 category compound.",
+            "It creates practical tracking needs around appetite, weight, HR, HRV, sleep, GI tolerability, inventory, and titration context."
+          ],
+          "verifyBeforeUse": [
+            "Verify vial identity, amount, lot, source, COA, route, and storage from the physical product.",
+            "Whether the label says retatrutide/LY3437943 or a vague blend name; do not treat marketing names as identity proof.",
+            "Confirm concentration from vial amount and BAC water volume before calculating injection volume.",
+            "Review whether any other incretin, appetite-suppressing, glucose-modulating, or stimulant compound is active in the user's stack."
+          ],
+          "trackInApp": [
+            "Weight trend, appetite, GI tolerability, resting heart rate, HRV, sleep, missed entries, and inventory depletion.",
+            "Reconstitution date, concentration, active vial state, and remaining inventory.",
+            "Any user-entered schedule or titration changes over time."
+          ],
+          "realityCheck": "The clinical Retatrutide story is not a gray-market vial. PeptideOS should help the user track what they actually have, what they actually did, and what is still uncertain."
+        },
+        "reviewSummary": "Retatrutide is a research-stage GLP-1, GIP, and glucagon receptor agonist. PeptideOS tracks it through user-confirmed inventory, reconstitution math, schedule previews, tolerability notes, and trend data while keeping trial evidence separate from research-market product assumptions.",
+        "mechanismTargets": [
+          "GLP-1 receptor",
+          "GIP receptor",
+          "glucagon receptor"
+        ],
+        "clinicalEvidence": [
+          {
+            "design": "phase-2-randomized-controlled-trial",
+            "population": "Adults with obesity in published clinical trial literature.",
+            "finding": "Published phase 2 data reported dose-related body-weight reductions with Retatrutide.",
+            "citationIds": [
+              "pubmed-retatrutide-obesity-phase-2"
+            ],
+            "sourceQuality": "source-backed",
+            "limitations": "Trial setting does not validate user-sourced product identity, concentration, sterility, or storage."
+          },
+          {
+            "design": "phase-3-program",
+            "population": "obesity and weight-management clinical trial populations listed in trial registry context.",
+            "finding": "Trial registry context describes active later-stage Retatrutide investigation.",
+            "citationIds": [
+              "clinicaltrials-retatrutide-triumph-5"
+            ],
+            "sourceQuality": "trial-registry",
+            "limitations": "Registry entries are not approved-product labels, include topline program context, and do not establish personal-use instructions."
+          }
+        ],
+        "safetySignals": [
+          "subq: Gastrointestinal adverse events were common in published phase 2 obesity data.",
+          "subq: Review overlap with other incretin, appetite-suppressing, glucose-modulating, or stimulant compounds before saving a stack.",
+          "subq: Track resting heart rate, HRV, sleep, appetite suppression, and gastrointestinal tolerability as separate signals.",
+          "subq: Research-market vials can introduce identity, purity, sterility, endotoxin, storage, and concentration uncertainty.",
+          "subq: Reconstitution math depends on user-confirmed vial amount and diluent volume, not on the compound name alone.",
+          "subq: Long-term safety for non-trial research-market products is not established.",
+          "subq: Product-specific stability and storage require label or supplier documentation."
+        ],
+        "practicalNotes": [
+          "Track Retatrutide as a triple incretin agonist research compound, separate from semaglutide and tirzepatide.",
+          "Keep user-entered vial, schedule, tolerability, appetite, weight, HR, HRV, and sleep context tied to the exact item.",
+          "Separate clinical-trial evidence from unsupported research-market product assumptions.",
+          "Users comparing GLP-1, GIP, and glucagon agonist research logs.",
+          "Users who want a structured GLP-1 workflow with explicit evidence and product-quality limits.",
+          "Users who want Peppi to build a schedule preview from confirmed template or label details.",
+          "Track appetite, weight trend, gastrointestinal tolerability, resting heart rate, HRV, and sleep context.",
+          "Connect active inventory, reconstitution math, and schedule logs.",
+          "Review overlap with other incretin or appetite-suppressing compounds before saving a stack.",
+          "body weight",
+          "appetite",
+          "resting heart rate",
+          "HRV",
+          "sleep",
+          "gastrointestinal tolerability",
+          "missed entries",
+          "inventory depletion",
+          "Inventory field: vial amount",
+          "Inventory field: lot number",
+          "Inventory field: source",
+          "Inventory field: COA",
+          "Inventory field: storage",
+          "Inventory field: reconstitution date",
+          "Inventory field: BAC water volume"
+        ],
+        "evidenceGaps": [
+          "No FDA-approved US prescribing label or consumer storage instructions.",
+          "Some phase 3 results are company-announced/topline or not yet reflected in an FDA-approved label.",
+          "Retatrutide is investigational and not FDA approved.",
+          "Published clinical-trial data do not validate identity, sterility, concentration, stability, or safety of research-market vials.",
+          "Long-term outcomes and user-sourced product quality remain uncertain outside controlled trials."
+        ],
+        "regulatoryStatus": {
+          "status": "investigational",
+          "region": "US",
+          "summary": "Lilly describes Retatrutide as not FDA approved and investigational while phase 3 trials evaluate safety and efficacy.",
+          "citationIds": [
+            "clinicaltrials-retatrutide-triumph-5"
+          ],
+          "sourceQuality": "trial-registry",
+          "limitations": "Trial registry context does not validate legality, sourcing, or product quality of user-entered material."
+        },
+        "peptideOSActions": [
+          "Build a Retatrutide protocol preview from a selected template.",
+          "Log labeled doses and missed entries against the active Retatrutide schedule.",
+          "Track inventory, active vial state, and depletion from user-confirmed entries.",
+          "Summarize user-entered appetite, weight, HR, HRV, sleep, and tolerability patterns."
+        ]
+      },
+      "libraryClassification": {
+        "categoryGroup": "GLP-1",
+        "secondaryCategories": [
+          "fat-loss"
+        ],
+        "protocolCategories": [
+          "weight-loss"
+        ]
+      },
+      "inventoryProfile": {
+        "containerTypes": [
+          "lyophilized-vial"
+        ],
+        "defaultPackageUnit": "vial",
+        "defaultVialCount": 1,
+        "requiredFields": [
+          "vial amount",
+          "lot number",
+          "source"
+        ],
+        "optionalFields": [
+          "COA",
+          "expiration",
+          "storage",
+          "supplier notes"
+        ]
+      },
+      "calculatorProfile": {
+        "reconstitutionCompatible": true,
+        "typicalVialAmounts": [
+          {
+            "value": 5,
+            "unit": "mg"
+          },
+          {
+            "value": 10,
+            "unit": "mg"
+          }
+        ],
+        "typicalBacWaterMl": [
+          1,
+          2
+        ],
+        "syringeTypes": [
+          "u100-1ml"
+        ],
+        "notes": [
+          "Calculator math is for user-confirmed vial amount and diluent only.",
+          "PeptideOS should not infer concentration without vial amount and BAC volume."
+        ]
+      },
+      "protocolTemplates": [
+        {
+          "id": "retatrutide-triple-agonist",
+          "name": "Triple Agonist",
+          "category": "weight-loss",
+          "difficulty": "advanced",
+          "summary": "Retatrutide-focused weekly tracking template for GLP-1, GIP, and glucagon receptor agonist logs.",
+          "compoundIds": [
+            "retatrutide"
+          ],
+          "defaultCompoundId": "retatrutide",
+          "doseChips": [
+            {
+              "value": 1,
+              "unit": "mg",
+              "label": "1"
+            },
+            {
+              "value": 2,
+              "unit": "mg",
+              "label": "2"
+            },
+            {
+              "value": 4,
+              "unit": "mg",
+              "label": "4"
+            },
+            {
+              "value": 8,
+              "unit": "mg",
+              "label": "8"
+            },
+            {
+              "value": 12,
+              "unit": "mg",
+              "label": "12"
+            }
+          ],
+          "defaultDose": {
+            "value": 4,
+            "unit": "mg"
+          },
+          "schedule": {
+            "frequency": "weekly",
+            "timesOfDay": [
+              "08:00"
+            ],
+            "weekdays": [
+              5
+            ]
+          },
+          "titration": [
+            {
+              "doseValue": 0.5,
+              "doseUnit": "mg",
+              "durationWeeks": 4
+            },
+            {
+              "doseValue": 1,
+              "doseUnit": "mg",
+              "durationWeeks": 4
+            },
+            {
+              "doseValue": 2,
+              "doseUnit": "mg",
+              "durationWeeks": 4
+            },
+            {
+              "doseValue": 4,
+              "doseUnit": "mg",
+              "durationWeeks": 4
+            },
+            {
+              "doseValue": 8,
+              "doseUnit": "mg",
+              "durationWeeks": 4
+            }
+          ],
+          "warnings": [
+            "Monitor resting heart rate, HRV, sleep, appetite suppression, and gastrointestinal tolerability as user-entered tracking signals.",
+            "Review overlap with other incretin or appetite-suppressing compounds before saving a stack."
+          ],
+          "importantNotes": [
+            "Use user-confirmed instructions; PeptideOS does not prescribe dose escalation.",
+            "Treat template values as editable tracking defaults with evidence and product-quality limits."
+          ]
+        },
+        {
+          "id": "retatrutide-setup",
+          "name": "Retatrutide Setup",
+          "category": "weight-loss",
+          "difficulty": "standard",
+          "summary": "Simple Retatrutide weekly schedule preview for user-confirmed tracking.",
+          "compoundIds": [
+            "retatrutide"
+          ],
+          "defaultCompoundId": "retatrutide",
+          "doseChips": [
+            {
+              "value": 1,
+              "unit": "mg",
+              "label": "1"
+            },
+            {
+              "value": 2,
+              "unit": "mg",
+              "label": "2"
+            },
+            {
+              "value": 4,
+              "unit": "mg",
+              "label": "4"
+            }
+          ],
+          "defaultDose": {
+            "value": 2,
+            "unit": "mg"
+          },
+          "schedule": {
+            "frequency": "weekly",
+            "timesOfDay": [
+              "08:00"
+            ],
+            "weekdays": [
+              5
+            ]
+          },
+          "titration": [],
+          "warnings": [
+            "Confirm vial identity, source, concentration, and schedule details before saving."
+          ],
+          "importantNotes": [
+            "This template is a schedule scaffold, not a medical instruction."
+          ]
+        }
+      ],
+      "peppiActions": [
+        {
+          "id": "build-retatrutide-protocol",
+          "type": "build_protocol_preview",
+          "label": "Build Retatrutide protocol preview",
+          "requiresConfirmation": true
+        },
+        {
+          "id": "add-retatrutide-inventory",
+          "type": "create_inventory_from_label",
+          "label": "Add Retatrutide vial from label",
+          "requiresConfirmation": true
+        },
+        {
+          "id": "summarize-retatrutide-tracking",
+          "type": "summarize_tracking",
+          "label": "Summarize Retatrutide tracking patterns",
+          "requiresConfirmation": false
+        }
+      ],
+      "source": "bundled",
+      "curationStatus": "reviewed",
+      "updatedAt": "2026-06-19"
     }
   ],
   "citations": [
+    {
+      "id": "clinicaltrials-retatrutide-triumph-5",
+      "title": "A Study of Retatrutide in Participants With Obesity and Cardiovascular Disease",
+      "url": "https://clinicaltrials.gov/study/NCT06383390",
+      "source": "ClinicalTrials.gov",
+      "year": 2026
+    },
+    {
+      "id": "pubmed-retatrutide-obesity-phase-2",
+      "title": "Triple-Hormone-Receptor Agonist Retatrutide for Obesity",
+      "url": "https://www.nejm.org/doi/full/10.1056/NEJMoa2301972",
+      "source": "New England Journal of Medicine",
+      "year": 2023
+    },
     {
       "id": "src-pubchem-ahk-cu",
       "title": "PubChem Compound Summary for AHK-Cu",

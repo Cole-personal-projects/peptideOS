@@ -173,6 +173,34 @@ describe('reference compounds', () => {
       expect.stringContaining('lot'),
       expect.stringContaining('concentration'),
     ]));
+    expect(retatrutide?.libraryClassification).toEqual(expect.objectContaining({
+      categoryGroup: 'GLP-1',
+      protocolCategories: expect.arrayContaining(['weight-loss']),
+    }));
+    expect(retatrutide?.inventoryProfile).toEqual(expect.objectContaining({
+      containerTypes: ['lyophilized-vial'],
+      requiredFields: expect.arrayContaining(['vial amount', 'lot number', 'source']),
+    }));
+    expect(retatrutide?.calculatorProfile).toEqual(expect.objectContaining({
+      reconstitutionCompatible: true,
+      typicalBacWaterMl: [1, 2],
+    }));
+    expect(retatrutide?.protocolTemplates).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'retatrutide-triple-agonist',
+        name: 'Triple Agonist',
+        doseChips: expect.arrayContaining([
+          { value: 4, unit: 'mg', label: '4' },
+        ]),
+      }),
+    ]));
+    expect(retatrutide?.peppiActions).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'build-retatrutide-protocol',
+        type: 'build_protocol_preview',
+        requiresConfirmation: true,
+      }),
+    ]));
   });
 
   test('upgrades the first priority batch to full pro-grade profiles', () => {

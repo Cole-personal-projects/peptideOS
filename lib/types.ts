@@ -183,6 +183,68 @@ export interface CompoundActionableProfile {
   peppiPrompts: string[];
 }
 
+export interface CompoundLibraryClassification {
+  categoryGroup: string;
+  secondaryCategories: string[];
+  protocolCategories: string[];
+}
+
+export interface CompoundInventoryProfile {
+  containerTypes: InventoryContainerType[];
+  defaultPackageUnit: 'vial' | 'kit';
+  defaultVialCount: number;
+  requiredFields: string[];
+  optionalFields: string[];
+}
+
+export interface CompoundCalculatorProfile {
+  reconstitutionCompatible: boolean;
+  typicalVialAmounts: Array<{ value: number; unit: DoseUnit }>;
+  typicalBacWaterMl: number[];
+  syringeTypes: string[];
+  notes: string[];
+}
+
+export interface CompoundProtocolDose {
+  value: number;
+  unit: DoseUnit;
+  label: string;
+}
+
+export interface CompoundProtocolTitrationStep {
+  doseValue: number;
+  doseUnit: DoseUnit;
+  durationWeeks: number;
+}
+
+export interface CompoundProtocolTemplate {
+  id: string;
+  name: string;
+  category: string;
+  difficulty: 'simple' | 'standard' | 'advanced' | 'custom';
+  summary: string;
+  compoundIds: string[];
+  defaultCompoundId: string;
+  doseChips: CompoundProtocolDose[];
+  defaultDose: Omit<CompoundProtocolDose, 'label'>;
+  schedule: ScheduleRecurrence;
+  titration: CompoundProtocolTitrationStep[];
+  warnings: string[];
+  importantNotes: string[];
+}
+
+export interface CompoundPeppiAction {
+  id: string;
+  type:
+    | 'build_protocol_preview'
+    | 'create_inventory_from_label'
+    | 'calculate_reconstitution'
+    | 'summarize_tracking'
+    | 'answer_compound_question';
+  label: string;
+  requiresConfirmation: boolean;
+}
+
 export interface Compound {
   id: string;
   name: string;
@@ -205,6 +267,11 @@ export interface Compound {
   citations: Citation[];
   referenceProfile?: CompoundReferenceProfile;
   actionableProfile?: CompoundActionableProfile;
+  libraryClassification?: CompoundLibraryClassification;
+  inventoryProfile?: CompoundInventoryProfile;
+  calculatorProfile?: CompoundCalculatorProfile;
+  protocolTemplates?: CompoundProtocolTemplate[];
+  peppiActions?: CompoundPeppiAction[];
   source: CompoundSource;
   curationStatus: CurationStatus;
   createdAt?: string;
