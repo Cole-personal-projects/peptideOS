@@ -379,6 +379,17 @@ export default function LibraryPage() {
           </Dialog>
         </div>
 
+        <Link
+          href="/library/categories"
+          className="flex items-center justify-between rounded-lg border bg-secondary/30 px-4 py-3 text-sm transition-colors hover:bg-secondary/50"
+        >
+          <span>
+            <span className="block font-semibold">Browse categories</span>
+            <span className="block text-xs text-muted-foreground">Protocol-ready groups and compound setup flows</span>
+          </span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
+
         {activeFilters.length > 0 ? (
           <div className="flex flex-wrap items-center gap-2" aria-label="Active filters">
             {activeFilters.map((filter) => (
