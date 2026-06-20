@@ -38,6 +38,25 @@ type RecordEvidenceLevel =
 type ClaimType = 'identity' | 'mechanism' | 'evidence' | 'risk' | 'formulation' | 'interaction' | 'regulatory' | 'tracking';
 type SourceType = 'database' | 'publication' | 'review' | 'label' | 'trial' | 'regulatory' | 'other';
 const bannedRecommendationLanguage = /\b(recommended dose|should take|safe dose|dose recommendation|frequency recommendation|duration recommendation|treatment recommendation|personal-use recommendation)\b/i;
+const serializedObjectPlaceholder = /\[object Object\]/;
+const allowedEvidenceTiers = new Set<RecordEvidenceTier>([
+  'identity_only',
+  'preclinical',
+  'human_limited',
+  'human_strong',
+  'phase_3_topline',
+  'phase_3_active',
+  'approved_label',
+]);
+const allowedSourceTypes = new Set<SourceType>([
+  'database',
+  'publication',
+  'review',
+  'label',
+  'trial',
+  'regulatory',
+  'other',
+]);
 
 export interface ReferenceLibraryRecord {
   schema_version: 1 | 2;
@@ -178,6 +197,8 @@ interface RouteRisks {
   unknowns: string[];
 }
 
+type RouteRiskInput = Partial<RouteRisks> | string[] | null | undefined;
+
 interface ReferenceLibrarySource {
   id: string;
   title: string;
@@ -208,6 +229,10 @@ export function validateReferenceLibraryRecord(record: ReferenceLibraryRecord): 
   const supportedRoutes = new Set(record.forms.supported_routes);
   const allowedDoseUnits: DoseUnit[] = ['mcg', 'mg', 'iu'];
 
+  if (!allowedEvidenceTiers.has(record.evidence.tier)) {
+    issues.push(`${record.compound_id}: evidence.tier "${record.evidence.tier}" is invalid`);
+  }
+
   if (!supportedRoutes.has(record.forms.primary_route)) {
     issues.push(`${record.compound_id}: forms.primary_route must be listed in forms.supported_routes`);
   }
@@ -219,10 +244,12 @@ export function validateReferenceLibraryRecord(record: ReferenceLibraryRecord): 
   });
 
   record.claims.forEach((claim) => {
-    const allowsUncitedClaim = claim.evidence_level === 'unknown' || claim.evidence_level === 'theoretical';
+    const allowsUncitedClaim = claim.evidence_level === 'unknown'
+      || claim.evidence_level === 'theoretical'
+      || (claim.confidence === 'low' && claim.limitations.length > 0);
     if (claim.source_ids.length === 0 && !allowsUncitedClaim) {
       issues.push(
-        `${record.compound_id}: claim "${claim.id}" requires source_ids unless evidence_level is unknown or theoretical`,
+        `${record.compound_id}: claim "${claim.id}" requires source_ids unless evidence_level is unknown/theoretical or the claim is low-confidence with limitations`,
       );
     }
 
@@ -237,6 +264,12 @@ export function validateReferenceLibraryRecord(record: ReferenceLibraryRecord): 
         issues.push(`${record.compound_id}: claim "${claim.id}" route_scope "${route}" must be listed in forms.supported_routes`);
       }
     });
+  });
+
+  record.sources.forEach((source) => {
+    if (!allowedSourceTypes.has(source.source_type)) {
+      issues.push(`${record.compound_id}: source "${source.id}" has invalid source_type "${source.source_type}"`);
+    }
   });
 
   record.protocol_templates?.forEach((template) => {
@@ -283,6 +316,10 @@ export function validateReferenceLibraryRecord(record: ReferenceLibraryRecord): 
 
   if (bannedRecommendationLanguage.test(JSON.stringify(record))) {
     issues.push(`${record.compound_id}: contains banned recommendation language`);
+  }
+
+  if (serializedObjectPlaceholder.test(JSON.stringify(record))) {
+    issues.push(`${record.compound_id}: contains serialized object placeholder text`);
   }
 
   return issues;
@@ -512,12 +549,13 @@ function sourceToCitation(source: ReferenceLibrarySource): Citation {
 }
 
 function claimToClinicalEvidence(claim: ReferenceLibraryClaim): ReferenceClinicalEvidence {
+  const hasCitations = claim.source_ids.length > 0;
   return {
     design: claim.claim_type,
     population: claim.route_scope.join(', '),
     finding: claim.text,
     citationIds: claim.source_ids,
-    sourceQuality: mapSourceQuality(claim.evidence_level),
+    sourceQuality: hasCitations ? mapSourceQuality(claim.evidence_level) : 'uncited-emerging',
     limitations: claim.limitations.join(' '),
   };
 }
@@ -558,13 +596,33 @@ function mapSourceQuality(level: RecordEvidenceLevel): ReferenceSourceQuality {
 
 function collectSafetySignals(record: ReferenceLibraryRecord): string[] {
   return Object.entries(record.risks.by_route).flatMap(([route, risks]) => {
-    if (!risks) return [];
+    const normalized = normalizeRouteRisks(risks);
     return [
-      ...risks.known_contraindications,
-      ...risks.caution_populations,
-      ...risks.negative_stack_flags,
-      ...risks.formulation_risks,
-      ...risks.unknowns,
+      ...normalized.known_contraindications,
+      ...normalized.caution_populations,
+      ...normalized.negative_stack_flags,
+      ...normalized.formulation_risks,
+      ...normalized.unknowns,
     ].map((risk) => `${route}: ${risk}`);
   });
+}
+
+function normalizeRouteRisks(risks: RouteRiskInput): RouteRisks {
+  if (Array.isArray(risks)) {
+    return {
+      known_contraindications: [],
+      caution_populations: [],
+      negative_stack_flags: [],
+      formulation_risks: risks,
+      unknowns: [],
+    };
+  }
+
+  return {
+    known_contraindications: risks?.known_contraindications ?? [],
+    caution_populations: risks?.caution_populations ?? [],
+    negative_stack_flags: risks?.negative_stack_flags ?? [],
+    formulation_risks: risks?.formulation_risks ?? [],
+    unknowns: risks?.unknowns ?? [],
+  };
 }

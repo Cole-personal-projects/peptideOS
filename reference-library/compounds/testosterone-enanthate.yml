@@ -1,0 +1,163 @@
+schema_version: 1
+compound_id: testosterone-enanthate
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: "Testosterone Enanthate"
+  aliases:
+    - "Testosterone heptanoate"
+    - "Testosterone enantate"
+  non_aliases:
+    - "This ester should not be merged with cypionate or propionate"
+  compound_type: hormone
+  categories:
+    - hormone-endocrine
+
+forms:
+  primary_route: im
+  supported_routes:
+    - im
+    - subq
+  excluded_routes:
+    - route: oral
+      reason: "No reviewed source in this record establishes an oral testosterone enanthate product."
+    - route: intranasal
+      reason: "No reviewed source in this record establishes an intranasal testosterone enanthate product."
+    - route: topical
+      reason: "No reviewed source in this record establishes a topical testosterone enanthate product."
+  form_factors:
+    - vial
+  verification_fields:
+    - exact label
+    - ester
+    - concentration
+    - vial size
+    - lot
+    - expiration
+    - source
+
+positioning:
+  why_use_this_compound:
+    - "Track an injectable testosterone ester."
+    - "Keep ester-specific records separate from other testosterone forms."
+    - "Preserve route metadata because subcutaneous workflows can still be label-specific."
+  who_is_tracking_this:
+    - "Hormone users"
+    - "People logging vial-based testosterone"
+    - "Users comparing testosterone ester inventories"
+  common_user_goals:
+    - "Preserve exact ester identity"
+    - "Store injection and lab notes"
+    - "Keep route and source explicit"
+
+evidence:
+  tier: approved_label
+  mechanism_targets:
+    - androgen receptor
+    - testosterone ester depot
+  claim_summary:
+    - "Testosterone enanthate is a label-backed testosterone ester."
+    - "Concentration-based vial tracking should use the actual label."
+    - "Ester identity matters for inventory and log quality."
+  evidence_gaps:
+    - "Nonstandard products may not match approved product assumptions."
+    - "Product-specific handling should come from the exact container label."
+
+risks:
+  by_route:
+    im:
+      known_contraindications: []
+      caution_populations: []
+      negative_stack_flags: []
+      formulation_risks:
+        - "Injection-site reactions are possible."
+        - "Source and ester ambiguity should be resolved before inventory is saved."
+      unknowns:
+        - "Storage and handling details vary by manufacturer labeling."
+    subq:
+      known_contraindications: []
+      caution_populations: []
+      negative_stack_flags: []
+      formulation_risks:
+        - "Subcutaneous workflows should still preserve exact label identity and concentration."
+      unknowns:
+        - "The exact product label should guide handling and route details."
+
+tracking:
+  useful_logs:
+    - injection sites
+    - schedule adherence
+    - lab and symptom notes
+    - source-quality notes
+  inventory_fields:
+    - concentration
+    - vial_size
+    - lot_number
+    - expiration_date
+    - source
+  peppi_actions:
+    - "create-inventory-from-label"
+    - "calculate-injection-volume"
+    - "summarize-tracking"
+    - "flag-source-quality"
+
+app_profile:
+  headline: "Label-backed testosterone ester with route-specific tracking."
+  summary: "Testosterone enanthate is an injectable testosterone ester people track for TRT-style hormone logs, injection-site rotation, lab context, symptom notes, vial depletion, and concentration math. PeptideOS should keep ester identity, concentration, route, source, lot, schedule logs, and lab notes explicit so enanthate does not get merged into generic testosterone or another ester."
+  why_people_care:
+    - "Ester-specific tracking"
+    - "Injection logs and vial depletion"
+  what_to_verify:
+    - "Ester name"
+    - "Concentration"
+    - "Source / lot / expiration"
+  what_to_track:
+    - "Injection sites"
+    - "Labs"
+    - "Symptom notes"
+  reality_check: "Keep enanthate separate from other testosterone esters."
+
+sources:
+  - id: dailymed-testosterone-enanthate
+    title: "TESTOSTERONE ENANTHATE injection, solution label"
+    url: "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=82a98132-9d5f-40a5-8c4f-f52f2a5de60e"
+    source_type: label
+    publisher: "DailyMed"
+    year: 2025
+  - id: pubchem-testosterone-enanthate
+    title: "Testosterone enanthate compound summary"
+    url: "https://pubchem.ncbi.nlm.nih.gov/compound/9416"
+    source_type: database
+    publisher: "PubChem"
+    year: 2026
+
+claims:
+  - id: identity
+    text: "Testosterone enanthate is a distinct testosterone ester with label and identity metadata."
+    claim_type: identity
+    evidence_level: identity
+    route_scope: []
+    source_ids:
+      - dailymed-testosterone-enanthate
+      - pubchem-testosterone-enanthate
+    confidence: high
+    limitations: []
+  - id: mechanism
+    text: "After ester cleavage, testosterone enanthate acts through androgen receptor signaling."
+    claim_type: mechanism
+    evidence_level: human_limited
+    route_scope: []
+    source_ids:
+      - dailymed-testosterone-enanthate
+    confidence: high
+    limitations: []
+  - id: regulatory
+    text: "DailyMed provides approved-label context for testosterone enanthate injection."
+    claim_type: regulatory
+    evidence_level: approved_label
+    route_scope: []
+    source_ids:
+      - dailymed-testosterone-enanthate
+    confidence: high
+    limitations: []

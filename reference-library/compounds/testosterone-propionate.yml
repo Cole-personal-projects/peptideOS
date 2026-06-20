@@ -1,0 +1,130 @@
+schema_version: 1
+compound_id: testosterone-propionate
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: "Testosterone Propionate"
+  aliases:
+    - "Testosterone 17-propionate"
+    - "Testosterone propanoate"
+  non_aliases:
+    - "This ester should not be merged with cypionate or enanthate"
+  compound_type: hormone
+  categories:
+    - hormone-endocrine
+
+forms:
+  primary_route: im
+  supported_routes:
+    - im
+  excluded_routes:
+    - route: subq
+      reason: "No reviewed source in this record establishes a subcutaneous testosterone propionate product."
+    - route: oral
+      reason: "No reviewed source in this record establishes an oral testosterone propionate product."
+    - route: intranasal
+      reason: "No reviewed source in this record establishes an intranasal testosterone propionate product."
+    - route: topical
+      reason: "No reviewed source in this record establishes a topical testosterone propionate product."
+  form_factors:
+    - vial
+  verification_fields:
+    - exact container label
+    - ester
+    - concentration
+    - vial size
+    - lot
+    - source
+
+positioning:
+  why_use_this_compound:
+    - "Track a shorter-ester testosterone entry."
+    - "Preserve source quality and ester-specific logs."
+    - "Keep identity separate even when product certainty is incomplete."
+  who_is_tracking_this:
+    - "Hormone users"
+    - "People logging research or compounded vial contexts"
+    - "Users comparing testosterone ester inventories"
+  common_user_goals:
+    - "Preserve exact ester identity"
+    - "Store injection and source notes"
+    - "Keep source confidence explicit"
+
+evidence:
+  tier: identity_only
+  mechanism_targets:
+    - androgen receptor
+    - testosterone ester depot
+  claim_summary:
+    - "Testosterone propionate is an identity-backed testosterone ester record."
+    - "No label-backed source is attached in this bundled entry."
+    - "Source quality should stay explicit."
+  evidence_gaps:
+    - "This bundled entry lacks a label-backed citation."
+    - "Product-specific safety and handling details must come from the user-provided label."
+
+risks:
+  by_route:
+    im:
+      known_contraindications: []
+      caution_populations: []
+      negative_stack_flags: []
+      formulation_risks:
+        - "Injection-site reactions are possible."
+        - "Source, ester, and concentration must be confirmed before inventory is saved."
+      unknowns:
+        - "Storage and handling details depend on the exact product label or source paperwork."
+
+tracking:
+  useful_logs:
+    - injection sites
+    - schedule adherence
+    - source / lot / expiration
+    - source-quality notes
+  inventory_fields:
+    - concentration
+    - vial_size
+    - lot_number
+    - expiration_date
+    - source
+  peppi_actions:
+    - "create-inventory-from-source"
+    - "flag-source-quality"
+    - "calculate-injection-volume"
+    - "summarize-tracking"
+
+app_profile:
+  headline: "Identity-backed testosterone ester with no bundled label source."
+  summary: "Testosterone propionate is the shorter-ester testosterone record people track when they need ester-specific injection logs, lab/symptom notes, source quality, and vial concentration separated from cypionate or enanthate. PeptideOS should preserve the exact ester, source paperwork, concentration, lot, injection sites, and depletion notes while staying conservative when label-backed certainty is incomplete."
+  why_people_care:
+    - "Ester-specific tracking"
+    - "Research-market or compounded vial contexts"
+  what_to_verify:
+    - "Exact container label"
+    - "Source paperwork"
+    - "Concentration"
+  what_to_track:
+    - "Injection sites"
+    - "Vial depletion"
+    - "Source notes"
+  reality_check: "Do not assume label-backed certainty when the bundled entry only has identity metadata."
+
+sources:
+  - id: pubchem-testosterone-propionate
+    title: "Testosterone Propionate compound summary"
+    url: "https://pubchem.ncbi.nlm.nih.gov/compound/5995"
+    source_type: database
+    publisher: "PubChem"
+    year: 2026
+
+claims:
+  - id: identity
+    text: "Testosterone propionate is a distinct testosterone ester with identity metadata suitable for ester-specific search and inventory matching."
+    claim_type: identity
+    evidence_level: identity
+    route_scope: []
+    source_ids:
+      - pubchem-testosterone-propionate
+    confidence: high
+    limitations: []

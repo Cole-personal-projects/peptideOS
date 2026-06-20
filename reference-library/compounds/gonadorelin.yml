@@ -1,0 +1,309 @@
+schema_version: 1
+compound_id: gonadorelin
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: Gonadorelin
+  aliases:
+    - Gonadorelin hydrochloride
+    - Gonadorelin acetate
+    - GnRH
+    - LHRH
+    - LH-RH
+    - Luteinizing hormone-releasing hormone
+    - Follicle-stimulating hormone-releasing hormone
+    - LH/FSH-RH
+  non_aliases:
+    - Leuprolide
+    - Leuprorelin
+    - Nafarelin
+    - Triptorelin
+    - Goserelin
+    - Histrelin
+    - Buserelin
+    - Degarelix
+    - Cetrorelix
+    - Kisspeptin-10
+    - Kisspeptin-54
+  compound_type: peptide
+  categories:
+    - hormone-endocrine
+    - sexual-reproductive
+
+forms:
+  primary_route: subq
+  supported_routes:
+    - subq
+    - im
+    - intranasal
+  excluded_routes:
+    - route: oral
+      reason: Decapeptide; degraded by gastrointestinal proteases; no oral gonadorelin product is established.
+    - route: topical
+      reason: No durable source in this record establishes transdermal gonadorelin delivery.
+  form_factors:
+    - lyophilized-vial
+    - iv-bolus-clinical
+    - pulsatile-pump-delivery
+  verification_fields:
+    - vial amount
+    - concentration
+    - lot number
+    - source
+    - storage
+    - COA
+
+positioning:
+  why_use_this_compound:
+    - Distinguish the native GnRH decapeptide from long-acting GnRH superagonists (leuprolide, triptorelin, goserelin, nafarelin, histrelin, buserelin) in inventory and stack logs.
+    - Track pulsatile HPG-axis stimulation work, where native GnRH produces physiologic LH/FSH pulses, separately from sustained-agonist desensitization use.
+    - Support label-candidate reference for the historical Factrel diagnostic test and for pulsatile-pump therapeutic protocols in hypothalamic hypogonadism.
+  who_is_tracking_this:
+    - Users with a legitimate prescription for gonadorelin diagnostic or pulsatile therapeutic protocols under clinical supervision.
+    - Users comparing native GnRH to GnRH superagonists in reproductive-axis stack logs.
+    - Researchers and clinicians tracking pulsatile pump therapy outcomes in IHH or hypothalamic amenorrhea.
+  common_user_goals:
+    - Separate identity, route, and reconstitution metadata from longer-acting GnRH analogs.
+    - Connect inventory, schedule, and hormone-lab logs to the exact native-GnRH product used.
+    - Review overlap with HCG, FSH, and kisspeptin-10 entries before saving a stack.
+
+evidence:
+  tier: approved_label
+  mechanism_targets:
+    - GnRH receptor (GnRHR) on anterior pituitary gonadotrophs
+    - Downstream LH and FSH release
+    - Hypothalamic-pituitary-gonadal axis
+  claim_summary:
+    - Gonadorelin is the synthetic form of native gonadotropin-releasing hormone (GnRH), a 10-amino-acid hypothalamic decapeptide that stimulates pituitary LH and FSH release.
+    - Approved in the United States as a diagnostic agent (e.g. historical Factrel brand) for evaluating pituitary LH/FSH reserve; the standard test is an IV bolus with timed LH/FSH sampling.
+    - Therapeutic pulsatile administration (IV or SC) restores gonadal function in patients with hypothalamic hypogonadism, including idiopathic hypogonadotropic hypogonadism and hypothalamic amenorrhea.
+    - Pulsatile delivery is required for physiologic LH/FSH response; continuous exposure causes pituitary GnRHR desensitization and downregulation.
+  evidence_gaps:
+    - Pharmacokinetic damping after SC versus IV pulsatile delivery is documented and may require adjusted pump settings; this is a clinical-protocol concern, not guidance.
+    - Historical Factrel brand was discontinued in the US; availability of approved-diagnostic gonadorelin has varied by jurisdiction and over time.
+    - Long-term safety of chronic pulsatile native-GnRH therapy is supported by clinical series but lacks large, modern RCT data.
+
+risks:
+  by_route:
+    subq:
+      - Injection-site reactions, local irritation, and pain have been reported with SC administration.
+      - Plasma GnRH profiles are damped with SC delivery compared with IV pulsatile administration; clinical pulsatile protocols using SC routes may require adjusted dosing intervals to maintain a physiologic pulse.
+      - Hypersensitivity reactions including wheal-and-flare at injection sites have been documented with long-term Factrel pump therapy in at least one case report; discontinue and evaluate if hypersensitivity is suspected.
+      - Sterility risk if reconstitution and aseptic technique are inadequate; compounded gonadorelin is not an FDA-approved end-product in most current US supply.
+    im:
+      - Injection-site pain, induration, or local tissue irritation at the IM injection site.
+      - Same desensitization concern as other routes if exposure is continuous rather than pulsatile.
+    intranasal:
+      - Nasal irritation, congestion, and inconsistent mucosal absorption; no durable source in this record establishes intranasal gonadorelin as a labeled route, and this entry is included only because the schema allows it for category completeness.
+
+tracking:
+  useful_logs:
+    - LH and FSH labs timed to dose or pulse
+    - Sex-steroid labs (testosterone or estradiol) where the user already follows them
+    - Injection-site condition
+    - Reconstitution date and diluent volume
+    - Pump settings, pulse interval, and dose for pulsatile protocols
+  inventory_fields:
+    - vial amount (mcg or mg)
+    - reconstitution volume
+    - concentration (mcg/mL or mg/mL)
+    - lot number
+    - expiration
+    - storage temperature
+    - source / pharmacy / manufacturer
+  peppi_actions:
+    - flag-prescription-required
+    - prompt-source-verification
+    - log-injection
+    - log-lh-lab
+    - log-fsh-lab
+
+app_profile:
+  headline: Native GnRH decapeptide; FDA-approved diagnostic agent and investigational pulsatile therapy.
+  summary: Gonadorelin is the synthetic equivalent of the endogenous hypothalamic decapeptide GnRH (also called LHRH). It binds pituitary GnRH receptors and triggers LH and FSH release. It is approved in the United States as a diagnostic agent for testing pituitary LH/FSH reserve (e.g. historical Factrel). It is also used clinically in pulsatile regimens to treat hypothalamic hypogonadism, including idiopathic hypogonadotropic hypogonadism and hypothalamic amenorrhea, via IV or SC pump delivery. Continuous exposure causes receptor desensitization, so it is not interchangeable with long-acting GnRH superagonists (leuprolide, triptorelin, etc.).
+  why_people_care:
+    - Genuine FDA-approved diagnostic use to evaluate pituitary LH/FSH reserve.
+    - Pulsatile therapeutic use for hypothalamic hypogonadism, supported by clinical case series and small trials.
+    - Distinguishing native GnRH from superagonist analogs matters for stack and lab interpretation.
+  what_to_verify:
+    - Product is native gonadorelin (decapeptide), not a long-acting GnRH superagonist analog.
+    - Prescription status, pharmacy, lot, and storage are recorded.
+    - For pump use: pulse interval, dose per pulse, route (IV vs SC), and reconstitution date.
+    - For diagnostic use: actual labeled product, dose, and sampling timepoints from the prescribing information.
+  what_to_track:
+    - LH, FSH, and relevant sex-steroid labs.
+    - Injection-site condition.
+    - For pulsatile protocols: pump settings, missed pulses, and any symptoms.
+  reality_check: Gonadorelin is one of the few peptides in the PeptideOS library with a real FDA-approved diagnostic label. The historical Factrel brand was discontinued, so current US supply is typically through compounding pharmacies or non-US labeled products, and the exact regulatory status of any specific vial must be verified from the actual product label. PeptideOS structures user-confirmed data; it does not select protocols or interpret reproductive-axis labs.
+
+sources:
+  - id: pubchem-gonadorelin
+    title: Gonadorelin compound summary (CID 638793)
+    url: https://pubchem.ncbi.nlm.nih.gov/compound/638793
+    source_type: database
+    publisher: U.S. National Library of Medicine / NCBI
+    year: 2025
+  - id: conn-1991-gnrh-agonists-review
+    title: "GnRH agonists: gonadorelin, leuprolide and nafarelin"
+    url: https://pubmed.ncbi.nlm.nih.gov/1835275/
+    source_type: review
+    publisher: PubMed
+    year: 1991
+  - id: handelsman-1984-pk
+    title: "Pharmacokinetics of gonadotropin-releasing hormone: comparison of subcutaneous and intravenous routes"
+    url: https://pubmed.ncbi.nlm.nih.gov/6384253/
+    source_type: publication
+    publisher: Journal of Clinical Endocrinology & Metabolism
+    year: 1984
+  - id: jansen-1987-sc-absorption
+    title: "Subcutaneous administration of gonadotropin-releasing hormone: absorption kinetics and gonadotropin responses"
+    url: https://pubmed.ncbi.nlm.nih.gov/3108305/
+    source_type: publication
+    publisher: PubMed
+    year: 1987
+  - id: lu-pulsatile-ihh-2016
+    title: "Effectiveness and safety of pulsatile GnRH pump therapy on female patients with IHH"
+    url: https://pubmed.ncbi.nlm.nih.gov/26813133/
+    source_type: trial
+    publisher: PubMed
+    year: 2016
+  - id: schopohl-pulsatile-ihh-male
+    title: "Pulsatile gonadotropin-releasing hormone treatment of men with idiopathic hypogonadotropic hypogonadism"
+    url: https://pubmed.ncbi.nlm.nih.gov/12006717/
+    source_type: trial
+    publisher: PubMed
+    year: 2002
+  - id: hugues-1981-hypersensitivity
+    title: "Immunoglobulin-mediated hypersensitivity in response to long-term treatment with gonadorelin hydrochloride (Factrel) in a female patient"
+    url: https://pubmed.ncbi.nlm.nih.gov/2653043/
+    source_type: publication
+    publisher: PubMed
+    year: 1989
+  - id: berberoglu-gnrh-stimulation-test
+    title: "Luteinizing hormone and follicle stimulating hormone-releasing hormone test in patients with hypothalamic-pituitary-gonadal dysfunction"
+    url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1587204/
+    source_type: publication
+    publisher: PMC
+    year: 1983
+  - id: triptorelin-vs-gonadorelin-2024
+    title: "Diagnostic accuracy of the triptorelin stimulation test for central precocious puberty in girls"
+    url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12703463/
+    source_type: trial
+    publisher: PMC
+    year: 2024
+
+claims:
+  - id: identity-native-gnrh
+    text: Gonadorelin is the synthetic form of native gonadotropin-releasing hormone, a 10-amino-acid hypothalamic decapeptide.
+    claim_type: identity
+    evidence_level: approved_label
+    route_scope: []
+    source_ids:
+      - pubchem-gonadorelin
+      - conn-1991-gnrh-agonists-review
+    confidence: high
+    limitations: []
+  - id: mechanism-gnrhr
+    text: Gonadorelin binds the pituitary GnRH receptor and stimulates LH and FSH release.
+    claim_type: mechanism
+    evidence_level: approved_label
+    route_scope:
+      - subq
+      - im
+      - intranasal
+    source_ids:
+      - conn-1991-gnrh-agonists-review
+      - berberoglu-gnrh-stimulation-test
+    confidence: high
+    limitations: []
+  - id: mechanism-pulsatility-required
+    text: Pulsatile GnRH exposure drives physiologic LH and FSH secretion; continuous exposure causes pituitary GnRH-receptor desensitization and downregulation.
+    claim_type: mechanism
+    evidence_level: human_strong
+    route_scope:
+      - subq
+      - im
+    source_ids:
+      - conn-1991-gnrh-agonists-review
+    confidence: high
+    limitations:
+      - Continuous vs pulsatile comparison is established in the literature but is a mechanism claim, not a personal-use protocol.
+  - id: evidence-diagnostic-test
+    text: Intravenous gonadorelin is used as a diagnostic test of pituitary LH and FSH reserve, with serial blood sampling after a single bolus.
+    claim_type: evidence
+    evidence_level: approved_label
+    route_scope: []
+    source_ids:
+      - berberoglu-gnrh-stimulation-test
+      - conn-1991-gnrh-agonists-review
+      - triptorelin-vs-gonadorelin-2024
+    confidence: high
+    limitations:
+      - Approved diagnostic use refers to labeled products; available products and labeled routes vary by jurisdiction and over time.
+  - id: evidence-pulsatile-therapeutic
+    text: Pulsatile gonadorelin delivered by programmable pump (IV or SC) has been used to restore LH, FSH, and sex-steroid secretion and to support ovulation or spermatogenesis in patients with hypothalamic hypogonadism.
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope:
+      - subq
+    source_ids:
+      - lu-pulsatile-ihh-2016
+      - schopohl-pulsatile-ihh-male
+    confidence: high
+    limitations:
+      - Evidence base is small clinical series and case reports; no large modern RCT establishes one universal pump protocol.
+  - id: evidence-pk-sc-vs-iv
+    text: Pharmacokinetic studies show that subcutaneous gonadorelin produces delayed and damped plasma GnRH profiles compared with IV bolus, with about one-third of SC dose lost to irreversible clearance during continuous infusion.
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope:
+      - subq
+    source_ids:
+      - handelsman-1984-pk
+      - jansen-1987-sc-absorption
+    confidence: high
+    limitations:
+      - Specific pharmacokinetic numbers reflect the cited 1984 and 1987 studies; modern bioequivalence of generic gonadorelin SC products is not separately verified in this record.
+  - id: regulatory-status
+    text: "Gonadorelin is an FDA-approved diagnostic agent for pituitary LH/FSH reserve testing (historical US brand: Factrel). The historical Factrel brand is no longer marketed; current US supply is typically through compounding pharmacies or non-US labeled products, and the regulatory status of any specific vial must be verified from the actual product label."
+    claim_type: regulatory
+    evidence_level: approved_label
+    route_scope: []
+    source_ids:
+      - conn-1991-gnrh-agonists-review
+      - pubchem-gonadorelin
+    confidence: medium
+    limitations:
+      - Whether any specific user vial is FDA-approved, compounded, or imported must be confirmed from the actual product label; this record does not certify individual products.
+  - id: risk-hypersensitivity
+    text: Long-term gonadorelin pump therapy has been associated with IgE-mediated hypersensitivity, including local wheal-and-flare injection-site reactions.
+    claim_type: risk
+    evidence_level: human_limited
+    route_scope:
+      - subq
+    source_ids:
+      - hugues-1981-hypersensitivity
+    confidence: medium
+    limitations:
+      - Based on a single case report; broader incidence is not quantified in this record.
+  - id: risk-injection-generic
+    text: Subcutaneous or intramuscular injection of gonadorelin carries the generic peptide-injection risks of injection-site reaction, local pain or induration, and sterility risk if reconstitution is poor.
+    claim_type: risk
+    evidence_level: theoretical
+    route_scope:
+      - subq
+      - im
+    source_ids: []
+    confidence: low
+    limitations:
+      - Generic injection-route risk; not a gonadorelin-specific quantified risk in this record.
+  - id: formulation-native-not-superagonist
+    text: Native gonadorelin is not the same molecule as the long-acting GnRH superagonists (leuprolide, nafarelin, triptorelin, goserelin, histrelin, buserelin); the superagonists cause sustained receptor activation followed by desensitization, whereas native gonadorelin's effect is route- and schedule-dependent.
+    claim_type: formulation
+    evidence_level: approved_label
+    route_scope: []
+    source_ids:
+      - conn-1991-gnrh-agonists-review
+    confidence: high
+    limitations: []

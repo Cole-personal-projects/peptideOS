@@ -82,8 +82,8 @@ test.describe('library detail pages', () => {
 
     await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
     await openProfileDrawer(page, 'Field brief');
-    await expect(page.getByText('Why people care')).toBeVisible();
-    await openProfileDrawer(page, 'Why people care');
+    await expect(page.getByText('Why people run this')).toBeVisible();
+    await openProfileDrawer(page, 'Why people run this');
     await expect(page.getByText('push past the current GLP-1/GIP ceiling')).toBeVisible();
     await expect(page.getByText('What to verify')).toBeVisible();
     await openProfileDrawer(page, 'What to verify');
@@ -115,7 +115,7 @@ test.describe('library detail pages', () => {
       await expect(page.getByRole('heading', { name: heading })).toBeVisible();
     }
 
-    await expect(page.getByText('Why people care')).toBeVisible();
+    await expect(page.getByText('Why people run this')).toBeVisible();
     await expect(page.getByText('What to verify')).toBeVisible();
     await expect(page.getByText('What to track')).toBeVisible();
     await expect(page.getByText('Reality check')).toBeVisible();
@@ -217,7 +217,7 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
     await openProfileDrawer(page, 'Field brief');
     await expect(page.getByText('push past the current GLP-1/GIP ceiling')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Why people care' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Why people run this' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Regulatory context' })).toBeVisible();
     await openProfileDrawer(page, 'Regulatory context');
     await expect(page.getByText('not FDA approved and investigational').first()).toBeVisible();

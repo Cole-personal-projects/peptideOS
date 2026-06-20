@@ -1,0 +1,146 @@
+schema_version: 1
+compound_id: semaglutide
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: "Semaglutide"
+  aliases:
+    - "Ozempic"
+    - "Wegovy"
+    - "Rybelsus"
+  compound_type: glp-1
+  categories:
+    - metabolic
+
+forms:
+  primary_route: subq
+  supported_routes:
+    - subq
+    - oral
+  excluded_routes:
+    - route: im
+      reason: "No reviewed source in this pass establishes an intramuscular semaglutide product."
+    - route: intranasal
+      reason: "No reviewed source in this pass establishes an intranasal semaglutide product."
+    - route: topical
+      reason: "No reviewed source in this pass establishes a topical semaglutide product."
+  form_factors:
+    - prefilled pen
+    - oral tablet
+    - labeled container
+  verification_fields:
+    - exact product name
+    - route
+    - strength
+    - container type
+    - lot number
+    - expiration date
+    - source
+
+positioning:
+  why_use_this_compound:
+    - "Semaglutide is the GLP-1 baseline users will compare against newer metabolic compounds."
+    - "Exact route and label capture matter because semaglutide appears in injectable and oral product contexts."
+    - "Users often track adherence, appetite, tolerability, and weight trend notes around the active container."
+  who_is_tracking_this:
+    - "Users entering labeled semaglutide pens, tablets, or pharmacy containers."
+    - "Users comparing branded product labels and source details."
+    - "Users logging adherence and user-entered outcome notes for metabolic tracking."
+  common_user_goals:
+    - "Verify the exact labeled product and route."
+    - "Keep oral and injectable forms separate in inventory."
+    - "Track user-entered adherence and tolerability notes."
+
+evidence:
+  tier: approved_label
+  mechanism_targets:
+    - GLP-1 receptor
+  claim_summary:
+    - "DailyMed labeling identifies semaglutide product contexts and provides product-specific route, prescribing, safety, and handling information."
+    - "PubChem supports identity, naming, and compound-level reference metadata for semaglutide."
+  evidence_gaps:
+    - "Compounded, relabeled, or research-market containers may not map cleanly to branded label assumptions and require explicit user confirmation."
+    - "This record uses product-label context for tracking and does not provide treatment guidance."
+
+risks:
+  by_route:
+    subq:
+      - "Use the exact product label for contraindications, warnings, adverse reactions, and handling details."
+      - "Flag unclear source, missing lot, missing expiration, or mismatched product naming before adding inventory."
+    oral:
+      - "Use the exact product label for contraindications, warnings, adverse reactions, and handling details."
+      - "Keep oral and injectable product records separate."
+
+tracking:
+  useful_logs:
+    - schedule adherence
+    - missed-dose notes
+    - appetite notes
+    - tolerability notes
+    - weight trend notes
+  inventory_fields:
+    - exact product name
+    - route
+    - strength
+    - container type
+    - lot number
+    - expiration date
+    - source
+  peppi_actions:
+    - "Add a labeled Semaglutide pen, tablet, or container to inventory after user confirmation."
+    - "Ask for route, strength, lot, expiration, source, and storage details when they are missing."
+    - "Build a schedule from user-confirmed label details or user-entered instructions."
+    - "Track adherence, missed doses, appetite notes, tolerability notes, and weight trend notes."
+
+app_profile:
+  headline: "Label-backed GLP-1 reference for exact route, adherence, and outcome tracking."
+  summary: "Semaglutide is represented here as a label-backed GLP-1 receptor agonist reference with oral and subcutaneous product contexts. PeptideOS should keep identity, route, and user-entered outcome notes attached to the exact container or product."
+  why_people_care:
+    - "It is a widely recognized GLP-1 receptor agonist across several branded product contexts."
+    - "Users need to keep oral and injectable presentations separate."
+  what_to_verify:
+    - "Exact brand or product name, route, strength, container type, lot, expiration, and source."
+    - "Product-specific storage and handling details from the exact label."
+  what_to_track:
+    - "Adherence and missed-dose notes."
+    - "Appetite and tolerability notes."
+    - "Weight trend notes and route-specific context."
+  reality_check: "Semaglutide has label-backed products, but PeptideOS should not collapse different routes or products into one generic GLP-1 record."
+
+sources:
+  - id: pubchem-semaglutide
+    title: "Semaglutide compound summary"
+    url: "https://pubchem.ncbi.nlm.nih.gov/compound/56843331"
+    source_type: database
+    publisher: "PubChem"
+    year: 2026
+  - id: dailymed-semaglutide
+    title: "DailyMed label candidates for Semaglutide"
+    url: "https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=Semaglutide"
+    source_type: label
+    publisher: "DailyMed"
+    year: 2026
+
+claims:
+  - id: identity-semaglutide-pubchem
+    text: "PubChem supports identity, naming, and compound-level reference metadata for semaglutide."
+    claim_type: identity
+    evidence_level: identity
+    route_scope: []
+    source_ids:
+      - pubchem-semaglutide
+    confidence: high
+    limitations: []
+  - id: label-context-semaglutide
+    text: "DailyMed labeling provides product-specific route, prescribing, safety, and handling context for semaglutide products."
+    claim_type: regulatory
+    evidence_level: approved_label
+    route_scope:
+      - subq
+      - oral
+    source_ids:
+      - dailymed-semaglutide
+    confidence: high
+    limitations:
+      - "A label-search page is a pointer to product labels, not a single universal semaglutide product."

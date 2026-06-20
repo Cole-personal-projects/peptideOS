@@ -1,0 +1,179 @@
+schema_version: 1
+compound_id: tb-500
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: TB-500
+  aliases:
+    - Thymosin Beta-4 fragment (17-23)
+    - TB4 fragment
+  non_aliases:
+    - Thymosin Beta-4 (full-length, TB4 / Tβ4)
+    - BPC-157
+    - Thymosin Alpha-1
+  compound_type: peptide
+  categories:
+    - healing
+    - immune
+
+forms:
+  primary_route: subq
+  supported_routes:
+    - subq
+    - im
+  excluded_routes:
+    - route: oral
+      reason: Peptide is degraded by gastrointestinal proteases; no oral product is established.
+    - route: intranasal
+      reason: No durable source in this record establishes an intranasal TB-500 product.
+    - route: topical
+      reason: No durable source in this record establishes a topical TB-500 product.
+  form_factors:
+    - Lyophilized research vial for reconstitution
+  verification_fields:
+    - vial amount
+    - concentration
+    - lot number
+    - source
+    - storage
+    - COA
+
+positioning:
+  why_use_this_compound:
+    - Distinguish TB-500 (a short synthetic 17-23 fragment of Thymosin Beta-4) from full-length Thymosin Beta-4.
+    - Track a research-market peptide where most human evidence is on full-length TB4, not on the fragment itself.
+    - Keep product-quality fields (vial, lot, source, storage, COA) tied to user logs.
+  who_is_tracking_this:
+    - Users using research-market TB-500 vials.
+    - Users comparing recovery and healing logs across peptides.
+    - Users who want explicit separation from full-length Tβ4 clinical literature.
+  common_user_goals:
+    - Track subjective recovery, soft-tissue symptoms, and tolerability.
+    - Connect inventory and reconstitution math to dosing logs.
+    - Review overlap with other healing/recovery compounds before saving a stack.
+
+evidence:
+  tier: identity_only
+  mechanism_targets:
+    - Actin binding (G-actin sequestration via the actin-binding domain of Thymosin Beta-4)
+  claim_summary:
+    - TB-500 is described in the research/grey market as an N-terminal acetylated 17-23 fragment of human Thymosin Beta-4 that includes the actin-binding domain.
+    - Most peer-reviewed human and animal data refer to full-length Thymosin Beta-4 (e.g., wound healing, corneal injury), not specifically to the TB-500 fragment.
+    - TB-500 is not FDA-approved; it is most commonly seen in PubMed in the context of doping detection in athletes and horses.
+  evidence_gaps:
+    - No FDA-approved product label for TB-500.
+    - Identity, purity, and bioequivalence to full-length Tβ4 are not established and depend entirely on the supplier.
+    - Human efficacy data for the fragment specifically (not full-length TB4) are limited.
+
+risks:
+  by_route:
+    subq:
+      - Research-market vials are not FDA-approved end-products; sterility, identity, concentration, and stability depend on the supplier and are not guaranteed.
+      - General injection risks include local injection-site reactions and (with poor technique or contaminated product) infection.
+      - Long-term safety in humans for the TB-500 fragment is not characterized in peer-reviewed literature.
+    im:
+      - Same supplier-quality, sterility, and identity caveats as subq use.
+      - General intramuscular injection risks (injection-site pain, hematoma, infection, nerve injury with poor technique).
+
+tracking:
+  useful_logs:
+    - Soft-tissue or joint symptoms
+    - Subjective recovery and training tolerance
+    - Injection-site reactions
+    - Any unusual symptoms (cardiac, vascular, neurological)
+  inventory_fields:
+    - vial amount (mg)
+    - reconstitution volume
+    - concentration (mg/mL)
+    - lot number
+    - expiration
+    - storage temperature
+    - source
+    - COA on file
+  peppi_actions:
+    - Flag research-market status and absence of FDA approval on save.
+    - Prompt for COA, lot, and storage on inventory creation.
+    - Surface overlap warnings with other peptides marketed for healing or recovery.
+
+app_profile:
+  headline: Research-market peptide marketed as a 17-23 fragment of Thymosin Beta-4; not FDA-approved.
+  summary: TB-500 is sold as a short synthetic fragment of Thymosin Beta-4 containing the actin-binding domain. Most published human data are on full-length Tβ4, not on the fragment. PubMed coverage of TB-500 specifically is dominated by doping-detection work.
+  why_people_care:
+    - Tβ4 biology has a long preclinical track record in tissue repair and angiogenesis.
+    - Marketed for soft-tissue recovery and healing.
+    - Available as a research-market peptide.
+  what_to_verify:
+    - Whether the product is actually the 17-23 fragment versus relabeled full-length TB4.
+    - Supplier, lot, COA, identity, and storage.
+    - Source country, sterility claims, and any third-party testing.
+  what_to_track:
+    - Soft-tissue symptoms and recovery.
+    - Injection-site reactions.
+    - Any unexpected systemic symptoms.
+  reality_check: Marketing claims for TB-500 typically borrow from full-length Thymosin Beta-4 research. Specific human efficacy and long-term safety data for the TB-500 fragment itself are not established, and the product is not FDA-approved.
+
+sources:
+  - id: tb4-pmc-review
+    title: Utilizing developmentally essential secreted peptides such as Thymosin Beta-4 to remind the adult organs of their embryonic state
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC8228050/
+    source_type: review
+    publisher: PubMed Central
+    year: 2021
+  - id: clinicaltrials-tb500-fragment
+    title: NCT07487363 TB-500 (Thymosin Beta 4 17-23 Fragment) study record
+    url: https://clinicaltrials.gov/study/NCT07487363
+    source_type: trial
+    publisher: ClinicalTrials.gov
+    year: 2025
+
+claims:
+  - id: identity-fragment
+    text: TB-500 is described in research-market materials as an N-terminal acetylated 17-23 fragment of human Thymosin Beta-4 containing the actin-binding domain.
+    claim_type: identity
+    evidence_level: identity
+    route_scope: []
+    source_ids:
+      - clinicaltrials-tb500-fragment
+    confidence: medium
+    limitations:
+      - Vendor product identity is not independently verified by FDA.
+  - id: identity-vs-tb4
+    text: TB-500 is distinct from full-length Thymosin Beta-4, which is the molecule referenced in most peer-reviewed wound-healing and tissue-repair literature.
+    claim_type: identity
+    evidence_level: identity
+    route_scope: []
+    source_ids:
+      - tb4-pmc-review
+    confidence: high
+    limitations: []
+  - id: mechanism-actin-binding
+    text: The 17-23 region of Thymosin Beta-4 corresponds to the actin-binding domain; full-length Tβ4 sequesters G-actin and has been studied for effects on cell migration, angiogenesis, and tissue repair.
+    claim_type: mechanism
+    evidence_level: preclinical
+    route_scope: []
+    source_ids:
+      - tb4-pmc-review
+    confidence: medium
+    limitations:
+      - Most mechanistic data come from full-length Tβ4, not the TB-500 fragment specifically.
+  - id: regulatory-status
+    text: TB-500 is not an FDA-approved drug product; it is sold as a research chemical.
+    claim_type: regulatory
+    evidence_level: identity
+    route_scope: []
+    source_ids:
+      - clinicaltrials-tb500-fragment
+    confidence: high
+    limitations: []
+  - id: risk-research-market
+    text: Research-market peptide vials are not FDA-approved end-products and identity, sterility, concentration, and stability depend entirely on the supplier.
+    claim_type: risk
+    evidence_level: identity
+    route_scope:
+      - subq
+      - im
+    source_ids: []
+    confidence: low
+    limitations:
+      - Statement is a general product-quality caveat for research-market peptides rather than a TB-500-specific finding in a peer-reviewed source.

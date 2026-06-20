@@ -1,0 +1,141 @@
+schema_version: 1
+compound_id: thymosin-alpha-1
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: "Thymosin Alpha-1"
+  aliases:
+    - "Thymalfasin"
+    - "TA1"
+    - "Talpha1"
+  non_aliases:
+    - "Do not merge Thymosin Alpha-1 with Thymosin Beta-4 or TB-500"
+  compound_type: peptide
+  categories:
+    - immune
+
+forms:
+  primary_route: subq
+  supported_routes:
+    - subq
+  excluded_routes:
+    - route: im
+      reason: "No reviewed source in this record establishes an intramuscular Thymosin Alpha-1 product."
+    - route: oral
+      reason: "No reviewed source in this record establishes an oral Thymosin Alpha-1 product."
+    - route: intranasal
+      reason: "No reviewed source in this record establishes an intranasal Thymosin Alpha-1 product."
+    - route: topical
+      reason: "No reviewed source in this record establishes a topical Thymosin Alpha-1 product."
+  form_factors:
+    - lyophilized vial
+  verification_fields:
+    - exact label name
+    - vial amount
+    - lot
+    - expiration
+    - source
+    - storage instructions
+
+positioning:
+  why_use_this_compound:
+    - "Track an immune-related peptide."
+    - "Keep thymosin-family naming explicit."
+    - "Capture vial and source details because the label space is easy to confuse."
+  who_is_tracking_this:
+    - "Immune researchers"
+    - "People logging vial-based peptide workflows"
+    - "Users comparing thymosin-family products"
+  common_user_goals:
+    - "Preserve exact identity"
+    - "Store reconstitution and illness-context notes"
+    - "Separate thymosin alpha-1 from other thymosin-family compounds"
+
+evidence:
+  tier: identity_only
+  mechanism_targets:
+    - T-cell signaling context
+    - cytokine signaling research
+    - immune-modulation research
+  claim_summary:
+    - "Thymosin Alpha-1 is an immune-focused peptide with naming ambiguity risk."
+    - "Vial amount and source should be explicit."
+    - "This entry keeps the evidence level conservative."
+  evidence_gaps:
+    - "No approved US product label is attached here."
+    - "Research-market material may differ from the reference identity record."
+
+risks:
+  by_route:
+    subq:
+      known_contraindications: []
+      caution_populations: []
+      negative_stack_flags: []
+      formulation_risks:
+        - "Injection-site reactions are possible."
+        - "Identity, purity, sterility, and storage uncertainty depend entirely on source."
+      unknowns:
+        - "Product-specific handling depends on the actual container label."
+
+tracking:
+  useful_logs:
+    - illness-context notes
+    - reconstitution date
+    - source / lot / expiration
+    - source-quality notes
+  inventory_fields:
+    - vial_amount
+    - bac_water_ml
+    - source
+    - lot_number
+    - expiration_date
+  peppi_actions:
+    - "calculate-reconstitution"
+    - "flag-name-ambiguity"
+    - "summarize-tracking"
+    - "flag-source-quality"
+
+app_profile:
+  headline: "Immune peptide with thymosin-family naming ambiguity."
+  summary: "Thymosin Alpha-1 is the immune-modulation peptide people track for illness-context notes, immune-stack experiments, reconstitution history, tolerability, and thymosin-family name disambiguation. PeptideOS should keep exact identity, vial amount, source quality, lot, illness context, and user-entered response notes separate from TB-500 or other thymosin-family products."
+  why_people_care:
+    - "Immune-modulation discussions"
+    - "Vial-based peptide tracking"
+  what_to_verify:
+    - "Exact thymosin name"
+    - "Vial amount"
+    - "Source / lot / expiration"
+  what_to_track:
+    - "Reconstitution"
+    - "Illness notes"
+    - "Tolerability notes"
+  reality_check: "Keep it separate from other thymosin-family compounds."
+
+sources:
+  - id: pubchem-thymosin-alpha-1
+    title: "Thymosin alpha 1 compound summary"
+    url: "https://pubchem.ncbi.nlm.nih.gov/compound/16130571"
+    source_type: database
+    publisher: "PubChem"
+    year: 2026
+
+claims:
+  - id: identity
+    text: "Thymosin Alpha-1 is a distinct immune peptide with TA1 / thymalfasin alias pressure."
+    claim_type: identity
+    evidence_level: identity
+    route_scope: []
+    source_ids:
+      - pubchem-thymosin-alpha-1
+    confidence: high
+    limitations: []
+  - id: mechanism
+    text: "Thymosin Alpha-1 is discussed in T-cell and cytokine signaling research contexts."
+    claim_type: mechanism
+    evidence_level: preclinical
+    route_scope: []
+    source_ids:
+      - pubchem-thymosin-alpha-1
+    confidence: high
+    limitations: []

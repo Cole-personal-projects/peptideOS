@@ -1,0 +1,243 @@
+schema_version: 1
+compound_id: "cjc-1295"
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: "CJC-1295"
+  aliases:
+    - "DAC:GRF"
+    - "DAC-GRF(1-29)"
+    - "Modified GRF (1-29) [non-DAC variant, commonly sold in research market; distinct molecule from DAC-conjugated CJC-1295]"
+  non_aliases:
+    - "Sermorelin (GHRH 1-29, no DAC; different pharmacokinetics)"
+    - "Tesamorelin (approved GHRH analog, distinct sequence)"
+    - "Somatropin / exogenous GH (different mechanism entirely)"
+  compound_type: peptide
+  categories:
+    - growth-hormone
+    - hormone-endocrine
+
+forms:
+  primary_route: subq
+  supported_routes:
+    - subq
+  excluded_routes:
+    - route: oral
+      reason: "Peptide of ~30 amino acids; oral bioavailability is not established for systemic GHRH-receptor activation."
+    - route: intranasal
+      reason: "No durable source in this record establishes an intranasal CJC-1295 product; research and historical clinical work used subcutaneous administration."
+    - route: topical
+      reason: "No evidence of transdermal absorption to systemic levels for a peptide of this size."
+    - route: im
+      reason: "No durable source in this record establishes an intramuscular CJC-1295 product; subcutaneous is the only route used in published human pharmacokinetic studies."
+  form_factors:
+    - "Lyophilized research vial (typically 2 mg or 5 mg), reconstituted with bacteriostatic water before subcutaneous injection"
+  verification_fields:
+    - "Exact label text: confirm whether the product is the DAC-conjugated CJC-1295 (sometimes labeled CJC-1295 DAC) or the non-DAC modified GRF (1-29) variant, which is a different molecule"
+    - "Whether the vial contains CJC-1295 alone or a blend with another secretagogue (e.g. ipamorelin)"
+    - "Vial amount, lot number, source/vendor, expiration date"
+    - "Certificate of analysis confirming peptide identity and HPLC purity"
+    - "Storage instructions and handling history"
+
+positioning:
+  why_use_this_compound:
+    - "Track a long-acting GHRH analog research peptide and clearly separate it from sermorelin, tesamorelin, and from the non-DAC modified GRF (1-29) variant"
+    - "Capture variant identity (DAC vs non-DAC) and blend components before any inventory, schedule, or log entry"
+    - "Connect inventory, reconstitution math, and IGF-1 follow-up context to the exact compound used"
+  who_is_tracking_this:
+    - "Users on compounded research-market peptides from grey-market suppliers"
+    - "Users comparing GHRH-class secretagogues across sleep, recovery, and IGF-1 trends"
+    - "Biohacking communities discussing 'CJC-1295 / ipamorelin' stacks as a unit"
+  common_user_goals:
+    - "Track sleep quality, recovery, body composition, and IGF-1 trends over time"
+    - "Distinguish DAC-conjugated CJC-1295 from the non-DAC modified GRF (1-29) variant in inventory and logs"
+    - "Connect reconstitution math, vial state, and dosing logs to a known compound identity"
+
+evidence:
+  tier: human_limited
+  mechanism_targets:
+    - "GHRH receptor (GHRHR) on anterior pituitary somatotrophs"
+    - "Prolonged elevation of endogenous GH and IGF-1 in the published Phase I study of the DAC-conjugated form"
+  claim_summary:
+    - "CJC-1295 (DAC:GRF) is a 30-amino-acid GHRH analog conjugated to a maleimidopropionic acid linker (Drug Affinity Complex / DAC) that binds serum albumin and prolongs half-life"
+    - "A 2006 Phase I single-dose study (Alba et al., J Clin Endocrinol Metab) reported sustained GH and IGF-1 elevation in healthy adults for ~6 days after a single subcutaneous dose of the DAC-conjugated compound"
+    - "The non-DAC variant often marketed as 'CJC-1295 without DAC' is actually modified GRF (1-29), a shorter-acting GHRH fragment, and is a different molecule"
+    - "No FDA or EMA approval for any indication; the original ConjuChem development program did not reach approval"
+  evidence_gaps:
+    - "No published Phase III efficacy or long-term safety data for any indication"
+    - "Limited public clinical development since the early Phase I work; most modern data is preclinical, vendor-derived, or community anecdote"
+    - "Grey-market supply quality (identity, purity, sterility, endotoxin) is not verifiable"
+    - "Variant naming (DAC vs non-DAC) is inconsistent across vendors and is frequently conflated with modified GRF (1-29)"
+
+risks:
+  by_route:
+    subq:
+      - "Injection-site reactions (redness, pain, swelling) are the most commonly reported adverse events for subcutaneous peptide injections in general"
+      - "Sustained GH/IGF-1 elevation carries theoretical risk of insulin resistance, fluid retention, and worsening of pre-existing neoplasia; not established by CJC-1295-specific long-term trials"
+      - "Sterility, identity, purity, endotoxin, and concentration depend entirely on the compounding source for grey-market supply"
+      - "Listed in the WADA Prohibited List (Section S2: peptide hormones, growth hormone releasers); prohibited in- and out-of-competition for athletes"
+
+tracking:
+  useful_logs:
+    - "Sleep quality and duration"
+    - "Recovery and training tolerance"
+    - "Body composition trends"
+    - "IGF-1 labs over time (baseline and follow-up)"
+    - "Fasting glucose and HbA1c if sustained use is logged"
+    - "Injection-site reactions"
+    - "Variant and blend note on each log entry (DAC vs non-DAC; CJC-1295 alone vs blended with ipamorelin, etc.)"
+  inventory_fields:
+    - "vial amount (mg)"
+    - "reconstitution volume (mL)"
+    - "reconstituted concentration (mg/mL)"
+    - "lot number"
+    - "expiration date"
+    - "storage temperature"
+    - "source / vendor"
+    - "DAC status (DAC-conjugated CJC-1295 vs non-DAC modified GRF (1-29))"
+    - "Blend components if applicable"
+  peppi_actions:
+    - "flag-dac-ambiguity"
+    - "flag-blend-components"
+    - "prompt-igf1-lab-cadence"
+    - "log-injection-site"
+
+app_profile:
+  headline: "Long-acting GHRH analog research peptide; naming confusion between the DAC form and modified GRF (1-29) is the main tracking hazard."
+  summary: "CJC-1295 is a synthetic 30-amino-acid analog of growth hormone-releasing hormone (GHRH). In its original Drug Affinity Complex (DAC) form, conjugation to a maleimidopropionic acid linker binds serum albumin and prolongs half-life, producing sustained GH and IGF-1 elevation for roughly a week after a single subcutaneous dose in a small Phase I study. The compound often sold as 'CJC-1295 without DAC' is actually modified GRF (1-29), a shorter-acting and pharmacokinetically distinct GHRH fragment. CJC-1295 has no FDA or EMA approval; modern grey-market supply is the only practical source, and identity, purity, and sterility depend on the vendor."
+  why_people_care:
+    - "Long-acting GHRH analog that preserves endogenous pulsatile GH release rather than supplying exogenous GH"
+    - "Frequently discussed alongside ipamorelin as a 'CJC-1295 / ipamorelin' stack"
+    - "Blurred naming makes it hard to tell DAC from non-DAC, and to separate CJC-1295 from sermorelin or tesamorelin"
+  what_to_verify:
+    - "Exact label text and whether the product is the DAC-conjugated CJC-1295 or the non-DAC modified GRF (1-29) variant"
+    - "Whether the vial contains CJC-1295 alone or is blended with another secretagogue (commonly ipamorelin)"
+    - "Source, lot, vial amount, reconstitution volume, storage, and expiration"
+    - "Certificate of analysis confirming peptide identity and HPLC purity"
+  what_to_track:
+    - "Sleep, recovery, body composition"
+    - "IGF-1 labs at sensible intervals"
+    - "Fasting glucose if use is sustained"
+    - "Injection-site reactions"
+    - "DAC variant and blend status on every log entry"
+  reality_check: "The strongest evidence for CJC-1295 is a single small Phase I pharmacokinetic study (Alba 2006) of the DAC form; no Phase III data and no regulatory approval exist. The naming and identity landscape is messy: 'CJC-1295 with DAC' and the commonly sold 'CJC-1295 without DAC' (modified GRF (1-29)) are different molecules with different pharmacokinetics. Treat compound-level claims as tentative and keep exact label capture at the center of any record."
+
+sources:
+  - id: "pubchem-cjc-1295"
+    title: "PubChem Compound Summary: CJC-1295 (CID 91971820)"
+    url: "https://pubchem.ncbi.nlm.nih.gov/compound/91971820"
+    source_type: database
+    publisher: "NCBI / National Library of Medicine"
+    year: 2024
+  - id: "alba-2006-jcem"
+    title: "Once-daily subcutaneous administration of CJC-1295, a long-acting growth hormone-releasing hormone (GHRH) analog, normalizes growth hormone in adults with GHD"
+    url: "https://pubmed.ncbi.nlm.nih.gov/16822939/"
+    source_type: publication
+    publisher: "Journal of Clinical Endocrinology & Metabolism"
+    year: 2006
+  - id: "wada-prohibited-list-2026"
+    title: "The 2026 Prohibited List: Section S2 Peptide hormones, growth factors, related substances and mimetics (including GHRH and its analogs / GHRPs)"
+    url: "https://www.wada-ama.org/en/resources/world-anti-doping-code-and-international-standards/prohibited-list"
+    source_type: regulatory
+    publisher: "World Anti-Doping Agency (WADA)"
+    year: 2026
+
+claims:
+  - id: "identity-ghrh-analog"
+    text: "CJC-1295 is a synthetic 30-amino-acid analog of human growth hormone-releasing hormone (GHRH), modified to resist enzymatic degradation and, in the DAC form, conjugated to a maleimidopropionic acid linker that binds serum albumin."
+    claim_type: identity
+    evidence_level: identity
+    route_scope:
+      - subq
+    source_ids:
+      - "pubchem-cjc-1295"
+      - "alba-2006-jcem"
+    confidence: high
+    limitations:
+      - "Identity verified from the PubChem record and the published Phase I study; sequence and modification details may vary across grey-market preparations."
+
+  - id: "mechanism-ghrhr-albumin-binding"
+    text: "CJC-1295 binds the pituitary GHRH receptor (GHRHR) on somatotrophs and stimulates endogenous GH synthesis and release; in the DAC-conjugated form, serum albumin binding prolongs circulating half-life and extends the GH/IGF-1 response window."
+    claim_type: mechanism
+    evidence_level: human_limited
+    route_scope:
+      - subq
+    source_ids:
+      - "alba-2006-jcem"
+      - "pubchem-cjc-1295"
+    confidence: high
+    limitations:
+      - "Mechanism for the DAC form is established by the Alba 2006 Phase I study and the conjugate design literature; the non-DAC variant ('modified GRF (1-29)') does not share this pharmacokinetic profile."
+
+  - id: "evidence-single-dose-pharmacokinetics"
+    text: "A single subcutaneous dose of DAC-conjugated CJC-1295 produced sustained elevation of GH and IGF-1 over approximately six days in healthy adults and in adults with GHD in a small Phase I study (Alba 2006, JCEM)."
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope:
+      - subq
+    source_ids:
+      - "alba-2006-jcem"
+    confidence: medium
+    limitations:
+      - "Small Phase I pharmacokinetic study; no Phase III efficacy data and no long-term safety follow-up."
+
+  - id: "regulatory-no-approval"
+    text: "CJC-1295 has no FDA or EMA approval for any indication; the original ConjuChem development program did not result in a marketed product, and modern supply is compounded or research-market."
+    claim_type: regulatory
+    evidence_level: approved_label
+    route_scope:
+      - subq
+    source_ids:
+      - "pubchem-cjc-1295"
+      - "alba-2006-jcem"
+    confidence: medium
+    limitations:
+      - "Regulatory status here is inferred from absence of approval and from the public development record; no specific FDA correspondence is cited for CJC-1295 by name."
+
+  - id: "regulatory-wada-prohibited"
+    text: "CJC-1295 falls under WADA's Section S2 (peptide hormones, growth factors, related substances and mimetics) and is prohibited in- and out-of-competition for athletes subject to the World Anti-Doping Code."
+    claim_type: regulatory
+    evidence_level: approved_label
+    route_scope:
+      - subq
+    source_ids:
+      - "wada-prohibited-list-2026"
+    confidence: high
+    limitations:
+      - "Class-level inclusion under S2; athletes must consult the current year's Prohibited List directly for binding status."
+
+  - id: "formulation-variant-distinction"
+    text: "The product commonly sold as 'CJC-1295 without DAC' is modified GRF (1-29), a different molecule from DAC-conjugated CJC-1295 with different pharmacokinetics; treating them as identical in inventory or schedule logs is a known error."
+    claim_type: formulation
+    evidence_level: theoretical
+    route_scope:
+      - subq
+    source_ids:
+      - "pubchem-cjc-1295"
+    confidence: medium
+    limitations:
+      - "Distinction is widely reported in the published review and pharmacology literature but is not the subject of a single primary comparative trial cited here; users should verify from the product label."
+
+  - id: "risk-injection-site-and-sterility"
+    text: "Subcutaneous injection of CJC-1295 carries the generic peptide-injection risk of injection-site reactions (redness, pain, swelling), and compounded or research-market supply adds sterility, identity, and endotoxin risk that depends entirely on the source."
+    claim_type: risk
+    evidence_level: theoretical
+    route_scope:
+      - subq
+    source_ids: []
+    confidence: low
+    limitations:
+      - "Injection-site reaction is a generic injectable-peptide risk not specific to CJC-1295; compounded sterility and identity risk is a supply-chain observation, not a CJC-1295-specific trial readout."
+
+  - id: "risk-sustained-igf1"
+    text: "Sustained elevation of GH and IGF-1 from long-acting GHRH agonism carries theoretical risk of insulin resistance, fluid retention, and effects on pre-existing neoplasia; this has not been established by a CJC-1295-specific long-term trial."
+    claim_type: risk
+    evidence_level: theoretical
+    route_scope:
+      - subq
+    source_ids:
+      - "alba-2006-jcem"
+    confidence: low
+    limitations:
+      - "Theoretical extrapolation from the observed pharmacodynamic effect in the Alba 2006 study and from general GH/IGF-1 biology; not directly demonstrated in a CJC-1295 long-term safety cohort."

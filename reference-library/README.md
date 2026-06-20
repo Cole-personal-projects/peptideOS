@@ -37,7 +37,9 @@ Only direct `*.yml` and `*.yaml` children of `reference-library/compounds` are c
 
 ## Quality Rules
 
-- Every claim needs `source_ids` unless `evidence_level` is `unknown` or `theoretical`.
+- Claims should include `source_ids` when a durable source supports them.
+- Claims may omit `source_ids` only when `evidence_level` is `unknown`/`theoretical`, or when `confidence` is `low` and `limitations` explicitly explain the uncertainty.
+- `app_profile.summary` should tell a human why the compound is tracked: common biohacker context, useful PeptideOS logs, verification needs, and uncertainty.
 - No dose, frequency, duration, treatment, or personal-use recommendations.
 - Route-specific risks belong under `risks.by_route.<route>`.
 - Unsupported routes belong only under `forms.excluded_routes`.

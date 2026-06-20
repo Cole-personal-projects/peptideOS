@@ -1,0 +1,143 @@
+schema_version: 1
+compound_id: "bpc-157"
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: "BPC-157"
+  aliases:
+    - "Body Protection Compound 157"
+    - "Pentadecapeptide BPC 157"
+    - "PL 14736"
+  non_aliases:
+    - "BPC-157 is a synthetic 15-amino-acid sequence; it is not naturally isolated human gastric protein"
+  compound_type: peptide
+  categories:
+    - healing
+    - immune
+
+forms:
+  primary_route: oral
+  supported_routes: [oral]
+  excluded_routes:
+    - route: subq
+      reason: "FDA placed BPC-157 on the 503A Category 2 bulks list in 2023, citing safety concerns with compounded use; injectable use is outside approved channels"
+    - route: im
+      reason: "No approved injectable indication"
+    - route: intranasal
+      reason: "No approved formulation; very limited published pharmacokinetics"
+    - route: topical
+      reason: "No approved topical formulation; bioavailability not characterized"
+  form_factors: []
+  verification_fields:
+    - "Certificate of analysis confirming peptide sequence and purity"
+
+positioning:
+  why_use_this_compound:
+    - "Investigated in animal models for tendon, ligament, muscle, and gastrointestinal healing"
+    - "Popular in biohacking and recovery-focused protocols despite limited human evidence"
+  who_is_tracking_this:
+    - "Athletes and recovery-focused users"
+    - "Practitioners and patients using compounded peptide protocols"
+  common_user_goals:
+    - "Understand the actual evidence base for BPC-157"
+    - "Track regulatory status in their jurisdiction"
+
+evidence:
+  tier: preclinical
+  mechanism_targets:
+    - "Reported preclinical effects on angiogenesis, VEGFR2 signaling, nitric oxide pathways, and growth-factor-related healing responses"
+    - "Reported preclinical effects on gastrointestinal mucosal protection"
+  claim_summary:
+    - "BPC-157 is a synthetic 15-amino-acid sequence derived from a fragment of a protein found in human gastric juice"
+    - "Evidence base is dominated by preclinical (in vitro and animal) studies; published human clinical trial data is very limited"
+    - "In September 2023, the FDA placed BPC-157 on the 503A Category 2 bulks list, restricting compounded use in the United States"
+  evidence_gaps:
+    - "Few high-quality randomized human trials"
+    - "Long-term human safety data is lacking"
+    - "Pharmacokinetics, oral bioavailability, and tissue distribution are poorly characterized in humans"
+
+risks:
+  by_route:
+    oral:
+      - "Oral bioavailability and systemic exposure are not well characterized in humans"
+      - "Identity and purity of grey-market product is variable; manufacturing impurities are a stated FDA concern"
+
+tracking:
+  useful_logs:
+    - "Source / lot / certificate of analysis"
+    - "Symptom or injury location, severity, and trajectory over time"
+  inventory_fields:
+    - "vendor"
+    - "lot_number"
+    - "coa_url"
+  peppi_actions:
+    - "Flag FDA 503A Category 2 status and the lack of approved human indication before any tracking suggestion"
+
+app_profile:
+  headline: "Popular recovery peptide with strong preclinical buzz and thin human evidence."
+  summary: "BPC-157 is a synthetic pentadecapeptide derived from a fragment of a protein found in human gastric juice. It has an extensive preclinical literature suggesting effects on tissue healing and GI protection, but published human trial data is very limited, and the FDA placed it on the 503A Category 2 bulks list in 2023."
+  why_people_care:
+    - "Anecdotal use for tendon, ligament, and gut healing is widespread"
+    - "Animal model literature is broad across many tissue types"
+  what_to_verify:
+    - "Source identity and purity via certificate of analysis"
+    - "Current regulatory and compounding status (FDA 503A list is being re-reviewed)"
+  what_to_track:
+    - "Symptom or injury trajectory over time"
+    - "Any adverse effects, especially injection-site or immune-mediated"
+  reality_check: "Most positive BPC-157 evidence comes from animal studies. Published human trials are sparse, and the FDA has flagged safety and impurity concerns serious enough to restrict compounded use. Treat reported benefits as hypothesis-generating, not established."
+
+sources:
+  - id: "pmc-bpc157-review-2025"
+    title: "Multifunctionality and Possible Medical Application of the BPC 157 Peptide—Literature and Patent Review"
+    url: "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11859134/"
+    source_type: review
+    publisher: "International Journal of Molecular Sciences (PMC)"
+    year: 2025
+  - id: "fda-pcac-2023-503a"
+    title: "FDA removes certain peptide bulk drug substances from Category 2 of interim 503A bulks list and sets dates for PCAC review"
+    url: "https://www.lexology.com/library/detail.aspx?g=2e55b76a-3173-4e04-beda-bf021202f18d"
+    source_type: regulatory
+    publisher: "Lexology (summary of FDA action)"
+    year: 2024
+
+claims:
+  - id: "identity"
+    text: "BPC-157 is a synthetic 15-amino-acid peptide derived from a sequence within a protein found in human gastric juice."
+    claim_type: identity
+    evidence_level: identity
+    route_scope: []
+    source_ids:
+      - "pmc-bpc157-review-2025"
+    confidence: high
+    limitations: []
+  - id: "preclinical-healing"
+    text: "Preclinical (in vitro and animal) studies report effects on angiogenesis, tendon and ligament healing, and gastrointestinal mucosal protection."
+    claim_type: mechanism
+    evidence_level: preclinical
+    route_scope: []
+    source_ids:
+      - "pmc-bpc157-review-2025"
+    confidence: high
+    limitations:
+      - "Findings have not been confirmed in adequately powered human trials"
+  - id: "fda-category2"
+    text: "In 2023, the FDA placed BPC-157 on the 503A Category 2 bulks list, restricting its use in compounded preparations in the United States while citing safety and impurity concerns."
+    claim_type: regulatory
+    evidence_level: human_limited
+    route_scope: []
+    source_ids:
+      - "fda-pcac-2023-503a"
+    confidence: high
+    limitations:
+      - "Status is under active re-review; the list may change"
+  - id: "limited-human-data"
+    text: "Published human clinical trial data for BPC-157 is very limited and does not establish efficacy or long-term safety for any indication."
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope: []
+    source_ids:
+      - "pmc-bpc157-review-2025"
+    confidence: high
+    limitations: []

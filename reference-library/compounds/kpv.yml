@@ -1,0 +1,209 @@
+schema_version: 1
+compound_id: kpv
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: KPV
+  aliases:
+    - Lys-Pro-Val
+    - alpha-MSH(11-13)
+  non_aliases:
+    - BPC-157
+    - alpha-MSH (full length)
+    - Melanotan II
+  compound_type: peptide
+  categories:
+    - healing
+    - immune
+    - skin-hair
+
+forms:
+  primary_route: oral
+  supported_routes:
+    - oral
+    - topical
+    - subq
+  excluded_routes:
+    - route: im
+      reason: No human evidence; published preclinical work uses oral, IP, or topical routes.
+    - route: intranasal
+      reason: No durable human evidence for intranasal KPV systemic delivery.
+  form_factors:
+    - oral-capsule
+    - topical-cream
+    - lyophilized-vial
+  verification_fields:
+    - vendor
+    - lot
+    - coa
+    - hplc-purity
+    - mass-spec
+
+positioning:
+  why_use_this_compound:
+    - C-terminal tripeptide of alpha-MSH with anti-inflammatory activity but without melanocortin-receptor-driven pigmentation or appetite effects
+    - Suppresses NF-kB and pro-inflammatory cytokines in preclinical models
+    - PepT1-mediated uptake makes oral and intestinal exposure plausible
+  who_is_tracking_this:
+    - Users with gut-inflammation interest (IBD-adjacent)
+    - Users with inflammatory skin condition interest
+    - Researchers studying melanocortin-independent anti-inflammatory pathways
+  common_user_goals:
+    - Reduce inflammatory load (gut or skin)
+    - Trial low-risk anti-inflammatory peptide
+    - Topical adjunct for skin inflammation
+
+evidence:
+  tier: preclinical
+  mechanism_targets:
+    - Direct intracellular inhibition of IkB kinase / NF-kB pathway
+    - MAP kinase inflammatory signaling
+    - PepT1-mediated cellular uptake in intestinal epithelium and immune cells
+    - Antimicrobial activity vs S. aureus and C. albicans (alpha-MSH/KPV)
+  claim_summary:
+    - KPV reduces incidence and severity of DSS- and TNBS-induced colitis in rodent models (Dalmasso 2008)
+    - Anti-inflammatory effect appears melanocortin-receptor independent (Brzoska 2003)
+    - Antimicrobial activity demonstrated in vitro (Cutuli 2000)
+  evidence_gaps:
+    - No published, well-powered human clinical trials for KPV
+    - Optimal route, dose, and formulation in humans unknown
+    - Long-term safety in humans uncharacterized
+
+risks:
+  by_route:
+    oral:
+      - Limited human safety data; theoretical GI tolerance issues
+      - Purity/identity risk if sourced from research-chemical vendors
+    topical:
+      - Possible local irritation
+      - Excipient sensitization risk depending on formulation
+    subq:
+      - Injection site reaction
+      - Sterility risk from improper reconstitution
+      - No human trial-grade safety data for injectable use
+
+tracking:
+  useful_logs:
+    - Subjective gut symptom score (if used for GI inflammation)
+    - Skin lesion photos / severity score (if topical)
+    - Adverse event log
+  inventory_fields:
+    - vendor
+    - lot
+    - coa-on-file
+    - purity-percent
+    - form-factor
+  peppi_actions:
+    - log-ingestion
+    - log-topical-application
+    - log-injection
+    - log-symptom-score
+
+app_profile:
+  headline: Tripeptide derived from alpha-MSH with melanocortin-independent anti-inflammatory activity.
+  summary: KPV (Lys-Pro-Val) is the C-terminal tripeptide of alpha-MSH. Preclinical work shows it retains alpha-MSH's anti-inflammatory effect by directly inhibiting NF-kB and MAP kinase signaling, without engaging melanocortin receptors (so no pigmentation or appetite effects). It is taken up via the PepT1 transporter, making oral and intestinal exposure plausible.
+  why_people_care:
+    - Anti-inflammatory effect without alpha-MSH melanocortin side effects
+    - Plausible oral and topical use, unlike many peptides
+    - Strong preclinical signal in colitis models
+  what_to_verify:
+    - COA confirms KPV sequence and HPLC purity
+    - Vendor lot traceability
+    - Formulation matches stated route (oral capsule vs topical cream vs injectable vial)
+  what_to_track:
+    - Symptom score for whatever inflammation target you are using it for
+    - Any adverse events
+  reality_check: KPV is interesting in animals and in vitro. Human clinical-trial evidence is essentially absent. Treat any personal use as N=1 self-experimentation, not validated therapy.
+
+sources:
+  - id: dalmasso-2008
+    title: "PepT1-mediated tripeptide KPV uptake reduces intestinal inflammation"
+    url: https://pubmed.ncbi.nlm.nih.gov/18061177/
+    source_type: publication
+    publisher: Gastroenterology
+    year: 2008
+  - id: brzoska-2003
+    title: "Dissection of the anti-inflammatory effect of the core and C-terminal (KPV) alpha-melanocyte-stimulating hormone peptides"
+    url: https://pubmed.ncbi.nlm.nih.gov/12750433/
+    source_type: publication
+    publisher: J Leukoc Biol
+    year: 2003
+  - id: cutuli-2000
+    title: "Antimicrobial effects of alpha-MSH peptides"
+    url: https://pubmed.ncbi.nlm.nih.gov/10670585/
+    source_type: publication
+    publisher: J Leukoc Biol
+    year: 2000
+  - id: kannengiesser-2008
+    title: "Melanocortin-derived tripeptide KPV has anti-inflammatory potential in murine models of inflammatory bowel disease"
+    url: https://pubmed.ncbi.nlm.nih.gov/18092346/
+    source_type: publication
+    publisher: PubMed
+    year: 2008
+
+claims:
+  - id: identity-tripeptide
+    text: KPV is the C-terminal tripeptide (Lys-Pro-Val) of alpha-melanocyte-stimulating hormone.
+    claim_type: identity
+    evidence_level: human_strong
+    route_scope: []
+    source_ids:
+      - brzoska-2003
+    confidence: high
+    limitations: []
+  - id: mechanism-nfkb
+    text: KPV exerts anti-inflammatory effects by suppressing NF-kB and MAP kinase signaling, independent of melanocortin receptors.
+    claim_type: mechanism
+    evidence_level: preclinical
+    route_scope:
+      - oral
+      - topical
+      - subq
+    source_ids:
+      - dalmasso-2008
+      - brzoska-2003
+    confidence: high
+    limitations:
+      - Mechanistic data from in vitro and rodent models; not confirmed in human trials
+  - id: mechanism-pept1
+    text: KPV is taken up into intestinal epithelial and immune cells via the PepT1 transporter, supporting oral and intestinal exposure.
+    claim_type: mechanism
+    evidence_level: preclinical
+    route_scope:
+      - oral
+    source_ids:
+      - dalmasso-2008
+    confidence: high
+    limitations: []
+  - id: evidence-colitis
+    text: Oral KPV reduced incidence and severity of DSS- and TNBS-induced colitis in mice.
+    claim_type: evidence
+    evidence_level: preclinical
+    route_scope:
+      - oral
+    source_ids:
+      - dalmasso-2008
+      - kannengiesser-2008
+    confidence: high
+    limitations:
+      - Rodent colitis models; no human IBD trial readout exists
+  - id: evidence-antimicrobial
+    text: KPV exhibits in vitro antimicrobial activity against S. aureus and C. albicans.
+    claim_type: evidence
+    evidence_level: preclinical
+    route_scope: []
+    source_ids:
+      - cutuli-2000
+    confidence: medium
+    limitations:
+      - In vitro only
+  - id: regulatory-status
+    text: KPV is not an FDA-approved drug; use is investigational or compounded.
+    claim_type: regulatory
+    evidence_level: unknown
+    route_scope: []
+    source_ids: []
+    confidence: low
+    limitations:
+      - No regulatory label exists for KPV; status statement reflects absence of approval rather than a positive regulatory record

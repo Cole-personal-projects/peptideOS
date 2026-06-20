@@ -1,0 +1,149 @@
+schema_version: 1
+compound_id: dihexa
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: Dihexa
+  aliases:
+    - PNB-0408
+    - N-hexanoic-Tyr-Ile-(6)-aminohexanoic amide
+    - N-hexanoyl-Tyr-Ile-(6)-aminohexanoic amide
+  non_aliases:
+    - Angiotensin IV
+  compound_type: small-molecule
+  categories:
+    - cognitive
+
+forms:
+  primary_route: oral
+  supported_routes:
+    - oral
+    - topical
+  excluded_routes:
+    - route: subq
+      reason: No published human or preclinical efficacy or safety data for subcutaneous administration in peer-reviewed sources.
+    - route: im
+      reason: No published human or preclinical efficacy or safety data for intramuscular administration in peer-reviewed sources.
+    - route: intranasal
+      reason: No published human pharmacokinetic or safety data for intranasal administration.
+  form_factors:
+    - oral capsule (research)
+    - topical solution (research)
+  verification_fields:
+    - certificate_of_analysis_present
+    - purity_percent
+    - mass_spec_confirmation
+    - third_party_assay
+
+positioning:
+  why_use_this_compound:
+    - Preclinical interest as a brain-penetrant angiotensin IV analog reported to potentiate the hepatocyte growth factor (HGF) / c-Met system in CNS models.
+    - Tracked by users interested in research-grade nootropics and synaptogenesis hypotheses.
+  who_is_tracking_this:
+    - Self-experimenters interested in nootropic research compounds.
+    - Researchers following HGF/c-Met and angiotensin IV analog literature.
+  common_user_goals:
+    - Learn what the published preclinical literature actually shows.
+    - Understand the absence of human data before considering any use.
+
+evidence:
+  tier: preclinical
+  mechanism_targets:
+    - HGF/c-Met signaling potentiation (proposed)
+    - Angiotensin IV-related pathways (parent class)
+  claim_summary:
+    - Dihexa is a synthetic angiotensin IV-derived oligopeptide developed at Washington State University as a brain-penetrant analog.
+    - Preclinical rodent studies report procognitive effects in scopolamine-impaired and aged models.
+    - No published human clinical trials, no established human safety profile, and no regulatory approval.
+  evidence_gaps:
+    - No human pharmacokinetic, efficacy, or safety data published in peer-reviewed sources.
+    - Long-term safety, carcinogenicity, and reproductive toxicity unknown in humans.
+    - Mechanistic claims around HGF/c-Met rest on a limited preclinical literature.
+
+risks:
+  by_route:
+    oral:
+      - No human safety data; adverse event profile in humans is unknown.
+      - Sold only as a research chemical; product identity, purity, and contamination are not regulated.
+    topical:
+      - No human safety data for topical delivery; absorption and systemic exposure not characterized.
+
+tracking:
+  useful_logs:
+    - subjective cognition notes
+    - sleep quality
+    - mood
+    - any adverse symptoms
+  inventory_fields:
+    - vendor
+    - lot_number
+    - certificate_of_analysis
+    - purity_percent
+    - storage_conditions
+  peppi_actions:
+    - flag_no_human_data
+    - require_coa_before_logging
+
+app_profile:
+  headline: Research-grade angiotensin IV analog with preclinical cognition signals and no human data.
+  summary: Dihexa is a synthetic small molecule derived from angiotensin IV, designed to cross the blood-brain barrier and studied in rodent models for synaptogenesis and cognition via the HGF/c-Met system. There are no published human clinical trials and no established human safety profile.
+  why_people_care:
+    - Reported potency in preclinical synaptogenesis assays.
+    - Interest in HGF/c-Met as a cognition target.
+  what_to_verify:
+    - Certificate of analysis and identity confirmation from the vendor.
+    - Purity and absence of common research-chemical contaminants.
+  what_to_track:
+    - Subjective cognitive changes.
+    - Sleep, mood, and any adverse symptoms.
+  reality_check: Human safety and efficacy are not established. All cognition claims come from preclinical rodent studies, and one foundational biochemistry paper from the original lab was retracted. Treat any use as unvalidated self-experimentation.
+
+sources:
+  - id: pubmed-25187433
+    title: The procognitive and synaptogenic effects of angiotensin IV-derived peptides are dependent on activation of the hepatocyte growth factor/c-met system
+    url: https://pubmed.ncbi.nlm.nih.gov/25187433/
+    source_type: publication
+    publisher: PubMed / J Pharmacol Exp Ther
+    year: 2014
+
+claims:
+  - id: identity-class
+    text: Dihexa is a synthetic oligopeptide derivative of angiotensin IV designed for brain penetration.
+    claim_type: identity
+    evidence_level: preclinical
+    route_scope: []
+    source_ids:
+      - pubmed-25187433
+    confidence: high
+    limitations: []
+  - id: mechanism-hgf
+    text: In preclinical models, dihexa-class angiotensin IV-derived peptides produce procognitive and synaptogenic effects that depend on activation of the HGF/c-Met system.
+    claim_type: mechanism
+    evidence_level: preclinical
+    route_scope: []
+    source_ids:
+      - pubmed-25187433
+    confidence: medium
+    limitations:
+      - Evidence is preclinical only; not demonstrated in humans.
+  - id: evidence-no-human-trials
+    text: There are no published peer-reviewed human clinical trials of dihexa and no established human safety profile.
+    claim_type: evidence
+    evidence_level: unknown
+    route_scope: []
+    source_ids: []
+    confidence: low
+    limitations:
+      - Absence-of-evidence claim based on lack of indexed human trials at time of review; not from a single citable source.
+  - id: risk-research-chemical
+    text: Dihexa is distributed only as a research chemical, so identity, purity, and contamination are not regulated.
+    claim_type: risk
+    evidence_level: unknown
+    route_scope:
+      - oral
+      - topical
+    source_ids: []
+    confidence: low
+    limitations:
+      - General research-chemical market observation; not from a regulatory source specific to dihexa.

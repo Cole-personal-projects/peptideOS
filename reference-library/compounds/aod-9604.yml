@@ -1,0 +1,144 @@
+schema_version: 1
+compound_id: "aod-9604"
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: "AOD-9604"
+  aliases:
+    - "Anti-Obesity Drug 9604"
+    - "Tyr-hGH 177-191"
+    - "Modified hGH fragment 176-191 with N-terminal tyrosine"
+  non_aliases:
+    - "Not identical to unmodified hGH fragment 176-191 (AOD-9604 adds an N-terminal tyrosine)"
+    - "Not human growth hormone; lacks the full hGH receptor activity"
+  compound_type: peptide
+  categories:
+    - metabolic
+    - growth-hormone
+
+forms:
+  primary_route: oral
+  supported_routes: [oral]
+  excluded_routes:
+    - route: subq
+      reason: "Subcutaneous formulations exist in research but AOD-9604 is not an FDA-approved drug; injectable use is outside any approved channel"
+    - route: im
+      reason: "No approved injectable indication"
+    - route: intranasal
+      reason: "No published pharmacokinetic data supporting this route"
+    - route: topical
+      reason: "Marketed in some jurisdictions only as a cosmetic ingredient; not a systemic delivery route"
+  form_factors: []
+  verification_fields:
+    - "Certificate of analysis confirming peptide identity, purity, and absence of full-length hGH contamination"
+
+positioning:
+  why_use_this_compound:
+    - "Historically developed as a non-hormonal fat-loss candidate that targets the lipolytic effects of hGH without the growth-promoting effects"
+    - "Studied as a potential body-composition aid"
+  who_is_tracking_this:
+    - "Biohackers interested in body composition"
+    - "Practitioners using compounded peptide protocols"
+  common_user_goals:
+    - "Understand the evidence behind AOD-9604 for fat loss"
+    - "Compare against other body-composition tools"
+
+evidence:
+  tier: human_limited
+  mechanism_targets:
+    - "Proposed stimulation of lipolysis and fat oxidation through pathways linked to beta-3 adrenergic receptor expression in adipocytes (preclinical)"
+    - "Does not appreciably activate the hGH receptor or elevate IGF-1 in published preclinical models"
+  claim_summary:
+    - "AOD-9604 is a modified C-terminal hGH fragment developed by Metabolic Pharmaceuticals in Australia in the 1990s"
+    - "Underwent multiple Phase II human trials for obesity; the largest Phase IIb did not meet its primary endpoint, and development for obesity was discontinued in 2007"
+    - "Not approved by the FDA; marketed in some jurisdictions only as a cosmetic ingredient"
+  evidence_gaps:
+    - "No approved therapeutic indication for fat loss"
+    - "Human direct-lipolysis measurements at clinically relevant doses are limited"
+    - "Long-term safety data is sparse"
+
+risks:
+  by_route:
+    oral:
+      - "Peptide is susceptible to gastrointestinal degradation; oral bioavailability not well characterized"
+
+tracking:
+  useful_logs:
+    - "Source / lot / certificate of analysis"
+    - "Body composition (weight, waist, body fat) over time"
+    - "Subjective appetite and energy notes"
+  inventory_fields:
+    - "vendor"
+    - "lot_number"
+    - "coa_url"
+  peppi_actions:
+    - "Flag that AOD-9604 is not FDA-approved and that the largest human trial did not meet its endpoint"
+
+app_profile:
+  headline: "Modified hGH fragment with mixed human-trial results and no FDA approval."
+  summary: "AOD-9604 is a synthetic peptide based on the C-terminus of human growth hormone, originally developed as an anti-obesity drug candidate. Preclinical data showed lipolytic effects without hGH-like growth signaling, but the largest Phase IIb obesity trial did not reach its primary endpoint and the program was discontinued in 2007."
+  why_people_care:
+    - "Targets fat metabolism without the growth-promoting effects of full hGH in preclinical models"
+    - "Familiar option in compounded peptide and longevity protocols"
+  what_to_verify:
+    - "Source identity and purity via certificate of analysis"
+    - "Regulatory status in your jurisdiction (e.g., FDA, TGA)"
+  what_to_track:
+    - "Body composition trends"
+    - "Any subjective changes in appetite, energy, or recovery"
+  reality_check: "Despite a clean preclinical mechanism story, AOD-9604 did not show a convincing fat-loss effect in its largest human trial and is not approved by the FDA. Treat evidence for body-composition use as thin."
+
+sources:
+  - id: "heffernan-2001-endocrinology"
+    title: "The effects of human GH and its lipolytic fragment (AOD9604) on lipid metabolism following chronic treatment in obese mice and beta3-AR knock-out mice"
+    url: "https://pubmed.ncbi.nlm.nih.gov/11606467/"
+    source_type: publication
+    publisher: "Endocrinology"
+    year: 2001
+  - id: "trimrx-aod9604-evidence-review"
+    title: "AOD-9604: What the Research Actually Says (Evidence Review)"
+    url: "https://trimrx.com/blog/aod-9604-research-review/"
+    source_type: review
+    publisher: "TrimRx"
+    year: 2026
+
+claims:
+  - id: "identity"
+    text: "AOD-9604 is a 16-amino-acid peptide consisting of hGH residues 177-191 with an N-terminal tyrosine added."
+    claim_type: identity
+    evidence_level: identity
+    route_scope: []
+    source_ids:
+      - "heffernan-2001-endocrinology"
+    confidence: high
+    limitations: []
+  - id: "preclinical-lipolysis"
+    text: "In obese mouse models, AOD-9604 reduced body weight and fat mass and was associated with increased beta-3 adrenergic receptor expression in adipose tissue, without elevating IGF-1."
+    claim_type: mechanism
+    evidence_level: preclinical
+    route_scope: []
+    source_ids:
+      - "heffernan-2001-endocrinology"
+    confidence: high
+    limitations:
+      - "Findings have not translated cleanly to human studies"
+  - id: "human-trials-discontinued"
+    text: "AOD-9604 completed multiple Phase II human obesity trials; the largest Phase IIb did not meet its primary endpoint and development was discontinued in 2007."
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope: []
+    source_ids:
+      - "trimrx-aod9604-evidence-review"
+    confidence: medium
+    limitations:
+      - "Primary trial reports are not all openly indexed; this summary relies on a secondary evidence review"
+  - id: "not-fda-approved"
+    text: "AOD-9604 is not approved by the FDA as a therapeutic drug."
+    claim_type: regulatory
+    evidence_level: human_limited
+    route_scope: []
+    source_ids:
+      - "trimrx-aod9604-evidence-review"
+    confidence: high
+    limitations: []

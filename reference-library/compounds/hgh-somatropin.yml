@@ -1,0 +1,137 @@
+schema_version: 1
+compound_id: hgh-somatropin
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: "hGH / Somatropin"
+  aliases:
+    - "Somatropin"
+    - "Recombinant human growth hormone"
+    - "rhGH"
+  compound_type: hormone
+  categories:
+    - hormone-endocrine
+
+forms:
+  primary_route: subq
+  supported_routes:
+    - subq
+  excluded_routes:
+    - route: oral
+      reason: "The bundled label context for this record is subcutaneous somatropin; no oral somatropin product is established here."
+    - route: im
+      reason: "The bundled label context for this record is subcutaneous somatropin; no intramuscular product is established here."
+    - route: intranasal
+      reason: "The bundled label context for this record is subcutaneous somatropin; no intranasal product is established here."
+    - route: topical
+      reason: "The bundled label context for this record is subcutaneous somatropin; no topical product is established here."
+  form_factors:
+    - prefilled-cartridge
+  verification_fields:
+    - exact product label
+    - brand
+    - lot number
+    - expiration date
+    - concentration
+    - container type
+    - storage instructions
+
+positioning:
+  why_use_this_compound:
+    - "Label-backed recombinant human growth hormone product tracking requires exact brand, cartridge, and storage context."
+    - "Users often want IU and mg details separated from generic peptide assumptions."
+    - "Product identity can vary by brand and device, so container-level tracking matters."
+  who_is_tracking_this:
+    - "Users entering labeled somatropin pens, cartridges, or pharmacy containers into inventory."
+    - "Users comparing product labels, container state, and source details before saving a record."
+    - "Users logging schedule adherence and user-entered outcome notes for a labeled growth-hormone product."
+  common_user_goals:
+    - "Verify the exact labeled product and container state."
+    - "Track IU, mg, and concentration using user-confirmed product data."
+    - "Keep storage and lot metadata attached to the active container."
+
+evidence:
+  tier: approved_label
+  mechanism_targets:
+    - growth hormone receptor
+    - IGF-1 axis
+  claim_summary:
+    - "DailyMed labeling provides product identity, route, strength, and handling context for a somatropin product."
+    - "The label supports product-specific tracking of concentration, container presentation, and storage fields rather than generic somatropin assumptions."
+  evidence_gaps:
+    - "This record uses a single product label context and does not cover every somatropin brand or device format."
+    - "IU-to-mg conversions remain product-specific and should come from the actual label or user-confirmed product data."
+
+risks:
+  by_route:
+    subq:
+      - "Injection-site reactions, local irritation, and product-specific warnings should be read from the exact label."
+      - "Missing lot, expiration, source, or concentration should trigger user review before inventory is saved."
+
+tracking:
+  useful_logs:
+    - schedule adherence
+    - user-entered outcome notes
+    - active-container status
+    - lot number
+    - expiration date
+  inventory_fields:
+    - brand
+    - container type
+    - concentration
+    - lot number
+    - expiration date
+    - storage instructions
+  peppi_actions:
+    - "Add a somatropin cartridge, pen, or vial to inventory after user confirmation."
+    - "Ask for missing product name, strength, lot, expiration, source, and storage state before saving."
+    - "Keep IU and mg fields explicit so Peppi can rely on user-confirmed product data."
+    - "Track adherence, container age, and user-entered notes without giving medical recommendations."
+
+app_profile:
+  headline: "Label-backed recombinant human growth hormone where exact brand, cartridge, and storage details matter."
+  summary: "hGH / Somatropin is represented here as a label-backed hormone-endocrine compound for exact container tracking. PeptideOS should keep product identity, unit basis, storage, and user-entered outcome notes attached to the active container."
+  why_people_care:
+    - "Users often log somatropin in IU while the label may also expose mg and cartridge volume."
+    - "Container and device details change the tracking context, so exact label capture is valuable."
+  what_to_verify:
+    - "Exact product label, brand, lot, expiration, source, concentration, and container type."
+    - "User-confirmed unit basis before logging because IU and mg conversions are product-specific."
+    - "Storage instructions from the actual label."
+  what_to_track:
+    - "Schedule adherence and missed entries."
+    - "Active-container status and user-entered outcome notes."
+    - "Lot, expiration, and storage metadata."
+  reality_check: "Somatropin has label-backed products, but PeptideOS should treat each entry as a user-confirmed container record and avoid generic conversion assumptions."
+
+sources:
+  - id: dailymed-norditropin
+    title: "NORDITROPIN- somatropin injection, solution label"
+    url: "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=1058e17c-9261-459c-a3e6-fae38d196c14"
+    source_type: label
+    publisher: "DailyMed"
+    year: 2025
+
+claims:
+  - id: identity-somatropin-label-context
+    text: "DailyMed labeling provides product identity, route, strength, and handling context for a somatropin product."
+    claim_type: identity
+    evidence_level: approved_label
+    route_scope:
+      - subq
+    source_ids:
+      - dailymed-norditropin
+    confidence: high
+    limitations: []
+  - id: container-specific-tracking
+    text: "The label supports product-specific tracking of concentration, container presentation, and storage fields rather than generic somatropin assumptions."
+    claim_type: evidence
+    evidence_level: approved_label
+    route_scope:
+      - subq
+    source_ids:
+      - dailymed-norditropin
+    confidence: high
+    limitations:
+      - "A single branded label does not cover every somatropin product or device format."

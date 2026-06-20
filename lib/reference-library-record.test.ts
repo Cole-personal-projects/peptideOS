@@ -111,7 +111,42 @@ describe('lean reference library records', () => {
     record.claims[0].source_ids = [];
 
     expect(validateReferenceLibraryRecord(record)).toContain(
-      'ahk-cu: claim "claim-identity" requires source_ids unless evidence_level is unknown or theoretical',
+      'ahk-cu: claim "claim-identity" requires source_ids unless evidence_level is unknown/theoretical or the claim is low-confidence with limitations',
+    );
+  });
+
+  test('allows transparent emerging low-confidence claims without hard source IDs', () => {
+    const record = parseReferenceLibraryRecord(validAhkCuYaml('draft'));
+    record.claims[0] = {
+      ...record.claims[0],
+      id: 'claim-emerging-community-use',
+      text: 'AHK-Cu appears in emerging community tracking contexts for skin and hair logs.',
+      claim_type: 'tracking',
+      evidence_level: 'human_limited',
+      source_ids: [],
+      confidence: 'low',
+      limitations: [
+        'Emerging community use is not source-backed clinical evidence and should be displayed as uncertain tracking context.',
+      ],
+    };
+
+    expect(validateReferenceLibraryRecord(record)).not.toEqual(expect.arrayContaining([
+      expect.stringContaining('claim "claim-emerging-community-use" requires source_ids'),
+    ]));
+  });
+
+  test('rejects unsourced low-confidence claims when uncertainty is not documented', () => {
+    const record = parseReferenceLibraryRecord(validAhkCuYaml('draft'));
+    record.claims[0] = {
+      ...record.claims[0],
+      id: 'claim-emerging-without-limitations',
+      source_ids: [],
+      confidence: 'low',
+      limitations: [],
+    };
+
+    expect(validateReferenceLibraryRecord(record)).toContain(
+      'ahk-cu: claim "claim-emerging-without-limitations" requires source_ids unless evidence_level is unknown/theoretical or the claim is low-confidence with limitations',
     );
   });
 
@@ -138,6 +173,67 @@ describe('lean reference library records', () => {
 
     expect(validateReferenceLibraryRecord(record)).toContain(
       'ahk-cu: contains banned recommendation language',
+    );
+  });
+
+  test('rejects serialized object placeholders in user-facing library copy', () => {
+    const record = parseReferenceLibraryRecord(validAhkCuYaml('draft'));
+    record.positioning.common_user_goals = ['[object Object]'];
+
+    expect(validateReferenceLibraryRecord(record)).toContain(
+      'ahk-cu: contains serialized object placeholder text',
+    );
+  });
+
+  test('accepts legacy route-risk shorthand arrays when building an approved record', () => {
+    const record = parseReferenceLibraryRecord(validAhkCuYaml('approved'));
+    (record.risks.by_route as any).topical = [
+      'Irritation potential depends on the finished topical formula.',
+      'Label ambiguity should be resolved before saving inventory.',
+    ];
+
+    const snapshot = buildReferenceLibrarySnapshotFromRecords([record], {
+      exportedAt: '2026-06-19T00:00:00.000Z',
+    });
+
+    expect(validateReferenceSnapshot(snapshot)).toEqual([]);
+    expect(snapshot.compounds[0].referenceProfile?.safetySignals).toEqual([
+      'topical: Irritation potential depends on the finished topical formula.',
+      'topical: Label ambiguity should be resolved before saving inventory.',
+    ]);
+  });
+
+  test('rejects invalid evidence tiers and source types', () => {
+    const record = parseReferenceLibraryRecord(validAhkCuYaml('draft'));
+    (record.evidence as any).tier = 'approved-label';
+    (record.sources[0] as any).source_type = 'label-search';
+
+    expect(validateReferenceLibraryRecord(record)).toEqual(expect.arrayContaining([
+      'ahk-cu: evidence.tier "approved-label" is invalid',
+      'ahk-cu: source "src-pubchem-ahk-cu" has invalid source_type "label-search"',
+    ]));
+  });
+
+  test('maps uncited low-confidence claims to transparent weak evidence in the app snapshot', () => {
+    const record = parseReferenceLibraryRecord(validAhkCuYaml('approved'));
+    record.claims[0] = {
+      ...record.claims[0],
+      id: 'claim-emerging-uncited',
+      text: 'Community discussion exists but source-backed evidence is weak.',
+      source_ids: [],
+      confidence: 'low',
+      limitations: ['This is transparent uncertainty, not source-backed evidence.'],
+    };
+
+    const snapshot = buildReferenceLibrarySnapshotFromRecords([record], {
+      exportedAt: '2026-06-19T00:00:00.000Z',
+    });
+
+    expect(snapshot.compounds[0].referenceProfile?.clinicalEvidence[0]).toEqual(
+      expect.objectContaining({
+        citationIds: [],
+        sourceQuality: 'uncited-emerging',
+      }),
     );
   });
 

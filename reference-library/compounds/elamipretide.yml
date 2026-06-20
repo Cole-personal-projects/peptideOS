@@ -1,0 +1,120 @@
+schema_version: 1
+compound_id: elamipretide
+status: approved
+updated_at: '2026-06-19'
+identity:
+  name: Elamipretide
+  aliases:
+  - SS-31
+  - MTP-131
+  - Bendavia
+  non_aliases:
+  - This reference entry does not treat research-market blends as the same thing as Elamipretide
+  compound_type: peptide
+  categories:
+  - longevity
+forms:
+  primary_route: subq
+  supported_routes:
+  - subq
+  excluded_routes: []
+  form_factors:
+  - lyophilized vial
+  verification_fields:
+  - exact label name
+  - vial amount
+  - lot
+  - expiration
+  - source
+  - container state
+positioning:
+  why_use_this_compound:
+  - Track a mitochondria-targeted research peptide
+  - Keep identity, reconstitution, and source quality explicit
+  who_is_tracking_this:
+  - Longevity researchers
+  - Users logging investigational vials
+  common_user_goals:
+  - Preserve exact vial identity
+  - Record reconstitution and schedule notes
+evidence:
+  tier: identity_only
+  mechanism_targets:
+  - mitochondrial inner-membrane context
+  - cardiolipin-associated pathway research
+  claim_summary:
+  - Elamipretide is a defined mitochondrial research peptide
+  - Vial amount and source quality matter because the compound is usually encountered in research-form vials
+  - Clinical certainty is intentionally kept low in this entry
+  evidence_gaps:
+  - No approved US product label is attached here
+  - The bundled source set does not establish standardized human safety or efficacy claims
+risks:
+  by_route:
+    subq:
+    - Injection-site reactions are possible with peptide vials
+    - Identity, purity, sterility, and endotoxin uncertainty depend entirely on source
+tracking:
+  useful_logs:
+  - Source / lot
+  - Reconstitution date
+  - Fatigue and recovery notes
+  inventory_fields:
+  - vial_amount
+  - bac_water_ml
+  - source
+  - lot_number
+  - expiration_date
+  peppi_actions:
+  - calculate-reconstitution
+  - flag-thin-evidence
+  - require-coa-before-logging
+app_profile:
+  headline: Mitochondrial research peptide with explicit uncertainty.
+  summary: Elamipretide is a mitochondria-targeted research peptide people track for fatigue, recovery, exercise tolerance, mitochondrial-disease interest, and cardiolipin-pathway experimentation. PeptideOS should make the practical record about exact vial identity, source quality, reconstitution state, subjective energy/recovery notes, and uncertainty rather than implying a proven longevity or performance outcome.
+  why_people_care:
+  - Mitochondrial-health interest
+  - Vial-based research tracking
+  what_to_verify:
+  - Alias on the label
+  - Vial amount
+  - COA / source quality
+  what_to_track:
+  - Reconstitution history
+  - User-entered recovery notes
+  reality_check: Treat this as a tracking record, not a proof of benefit.
+sources:
+- id: pubchem-elamipretide
+  title: Elamipretide compound summary
+  url: https://pubchem.ncbi.nlm.nih.gov/compound/11764719
+  source_type: database
+  publisher: NCBI / National Library of Medicine
+  year: 2026
+claims:
+- id: identity
+  text: Elamipretide, SS-31, MTP-131, and Bendavia are alias-linked names for the same research compound record.
+  claim_type: identity
+  evidence_level: identity
+  route_scope: []
+  source_ids:
+  - pubchem-elamipretide
+  confidence: high
+  limitations: []
+- id: mechanism
+  text: Elamipretide is discussed in mitochondrial and cardiolipin-associated research contexts.
+  claim_type: mechanism
+  evidence_level: preclinical
+  route_scope: []
+  source_ids:
+  - pubchem-elamipretide
+  confidence: high
+  limitations: []
+- id: regulatory
+  text: This entry is intentionally conservative and does not attach an approved-label claim.
+  claim_type: regulatory
+  evidence_level: unknown
+  route_scope: []
+  source_ids: []
+  confidence: low
+  limitations:
+  - No approved US product label is attached to this reference entry

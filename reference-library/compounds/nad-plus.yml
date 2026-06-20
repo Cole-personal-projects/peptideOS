@@ -1,0 +1,171 @@
+schema_version: 1
+compound_id: nad-plus
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: NAD+
+  aliases:
+    - Nicotinamide Adenine Dinucleotide
+    - NAD
+  non_aliases:
+    - NMN (Nicotinamide Mononucleotide) - precursor, not NAD+ itself
+    - NR (Nicotinamide Riboside) - precursor, not NAD+ itself
+    - Niacin
+    - Nicotinamide
+  compound_type: supplement
+  categories:
+    - longevity
+    - metabolic
+
+forms:
+  primary_route: oral
+  supported_routes:
+    - oral
+    - subq
+  excluded_routes:
+    - route: topical
+      reason: No human evidence that topical NAD+ meaningfully raises systemic NAD+ levels.
+    - route: intranasal
+      reason: No established intranasal formulation for systemic NAD+ supplementation.
+  form_factors:
+    - iv-infusion-clinical-setting
+    - oral-precursor-capsule-nmn-or-nr
+    - subq-injection-research-grade
+  verification_fields:
+    - molecule-actual (NAD+ vs NMN vs NR)
+    - manufacturer
+    - purity_coa
+    - dose-per-unit
+
+positioning:
+  why_use_this_compound:
+    - Central cofactor in cellular energy and redox metabolism
+    - NAD+ levels decline with age; precursors raise circulating NAD+
+  who_is_tracking_this:
+    - Longevity-focused users supplementing NMN or NR
+    - Clinic patients using IV NAD+
+  common_user_goals:
+    - Raise circulating NAD+
+    - Subjective energy and recovery
+    - Putative healthspan support
+
+evidence:
+  tier: human_limited
+  mechanism_targets:
+    - NAD+ pool (cofactor for sirtuins, PARPs, CD38)
+    - Sirtuin signaling
+    - Mitochondrial redox balance
+  claim_summary:
+    - Oral NMN and NR raise blood NAD+ levels in human trials; NAD+ itself has limited oral bioavailability and is typically delivered via IV or as precursors.
+    - IV NAD+/NR may produce higher systemic NAD+ exposure than oral dosing by bypassing GI degradation and first-pass metabolism.
+    - Clinical benefit on hard endpoints (longevity, disease) is not established.
+  evidence_gaps:
+    - Limited long-term human outcome data
+    - Heterogeneity between NAD+, NMN, and NR makes claim transfer risky
+    - IV NAD+ protocols are largely clinic-driven without RCT support on outcomes
+
+risks:
+  by_route:
+    oral:
+      - GI side effects reported with high-dose precursors
+      - Theoretical interaction concerns with chemotherapy via NAD+ metabolism pathways
+      - Long-term safety of chronic high-dose precursor supplementation not fully characterized
+    subq:
+      - Injection-site reactions
+      - Limited human data on subcutaneous NAD+ pharmacokinetics
+      - Unregulated supply: purity and identity not verifiable without COA
+
+tracking:
+  useful_logs:
+    - Subjective energy and sleep
+    - Exercise capacity
+    - If measured: blood or PBMC NAD+ levels
+    - Side effects (flushing, GI)
+  inventory_fields:
+    - molecule-actual
+    - manufacturer
+    - dose-per-unit
+    - lot_number
+  peppi_actions:
+    - flag-precursor-vs-nad
+    - prompt-coa-upload
+
+app_profile:
+  headline: Central metabolic cofactor whose decline with age fuels supplementation; precursors (NMN, NR) have stronger human data than NAD+ itself.
+  summary: NAD+ is a coenzyme central to redox reactions, sirtuin activity, and mitochondrial function. NAD+ levels decline with age. Oral NAD+ has limited bioavailability, so most human supplementation uses precursors (NMN, NR), which reliably raise blood NAD+ in human trials. IV NAD+ is used in clinics but lacks strong RCT outcome data.
+  why_people_care:
+    - NAD+ decline is a recognized aging hallmark
+    - Precursors reliably raise circulating NAD+ in humans
+  what_to_verify:
+    - Which molecule you actually have (NAD+ vs NMN vs NR)
+    - Manufacturer COA
+    - Whether IV protocol is administered by a qualified clinician
+  what_to_track:
+    - Subjective energy, sleep, recovery
+    - Side effects, especially during titration
+  reality_check: NAD+ biology is real; consumer outcome data are still thin. Most positive human data are on precursors and surrogate biomarkers, not on hard longevity or disease endpoints.
+
+sources:
+  - id: yang-fft-2025
+    title: Updated Review on Mechanisms, Pre-Clinical and Clinical Comparisons of NMN and NR
+    url: https://iadns.onlinelibrary.wiley.com/doi/10.1002/fft2.511
+    source_type: review
+    publisher: Food Frontiers (Wiley)
+    year: 2025
+  - id: nmn-safety-antiaging-2023
+    title: The Safety and Antiaging Effects of Nicotinamide Mononucleotide in Human Clinical Trials
+    url: https://www.sciencedirect.com/science/article/pii/S2161831323013595
+    source_type: review
+    publisher: Advances in Nutrition (ScienceDirect)
+    year: 2023
+  - id: niagen-iv-medrxiv-2024
+    title: Randomized, placebo-controlled pilot evaluating acute Niagen+ IV and NAD+ IV in healthy adults
+    url: https://www.medrxiv.org/content/10.1101/2024.06.06.24308565.full.pdf
+    source_type: trial
+    publisher: medRxiv
+    year: 2024
+  - id: nmn-muscle-pmc-2022
+    title: Chronic NMN supplementation elevates blood NAD+ and alters muscle function in healthy older men
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC9158788/
+    source_type: trial
+    publisher: NCBI PMC
+    year: 2022
+
+claims:
+  - id: nad-precursors-raise-nad
+    text: Oral NMN and NR reliably raise circulating NAD+ in human trials.
+    claim_type: evidence
+    evidence_level: human_strong
+    route_scope:
+      - oral
+    source_ids:
+      - yang-fft-2025
+      - nmn-muscle-pmc-2022
+      - nmn-safety-antiaging-2023
+    confidence: high
+    limitations: []
+  - id: nad-iv-vs-oral
+    text: IV NAD+/NR may yield higher systemic NAD+ exposure than oral dosing by bypassing GI degradation and first-pass metabolism.
+    claim_type: mechanism
+    evidence_level: human_limited
+    route_scope:
+      - subq
+      - oral
+    source_ids:
+      - niagen-iv-medrxiv-2024
+    confidence: medium
+    limitations:
+      - Pilot-level human data; outcome benefit not established.
+  - id: nad-outcome-evidence-thin
+    text: Hard outcome benefits (longevity, disease prevention) for NAD+ or its precursors are not established in humans.
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope:
+      - oral
+      - subq
+    source_ids:
+      - yang-fft-2025
+    confidence: medium
+    limitations:
+      - Most human evidence is biomarker- or surrogate-based, not outcome-based.

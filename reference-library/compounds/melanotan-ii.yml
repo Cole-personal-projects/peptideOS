@@ -1,0 +1,149 @@
+schema_version: 1
+compound_id: melanotan-ii
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: Melanotan II
+  aliases:
+    - MT-II
+    - MT2
+    - Melanotan-2
+  non_aliases:
+    - Melanotan I
+    - Afamelanotide
+    - Bremelanotide
+  compound_type: peptide
+  categories:
+    - skin-hair
+    - sexual-reproductive
+    - hormone-endocrine
+
+forms:
+  primary_route: subq
+  supported_routes:
+    - subq
+  excluded_routes:
+    - route: oral
+      reason: Peptide degraded by gastric proteases; no oral formulation studied.
+    - route: topical
+      reason: No evidence topical application produces systemic melanocortin activation.
+  form_factors:
+    - lyophilized-powder-research-vial
+  verification_fields:
+    - vendor
+    - lot_number
+    - reconstitution_diluent
+    - reconstituted_concentration
+
+positioning:
+  why_use_this_compound:
+    - Non-selective melanocortin receptor agonist (MC1R, MC3R, MC4R, MC5R)
+    - Historically explored for skin pigmentation and sexual arousal effects
+  who_is_tracking_this:
+    - Users self-experimenting with research-grade peptides outside regulated channels
+  common_user_goals:
+    - Increased skin pigmentation
+    - Effects on libido or erectile response
+
+evidence:
+  tier: preclinical
+  mechanism_targets:
+    - MC1R
+    - MC3R
+    - MC4R
+    - MC5R
+  claim_summary:
+    - Non-selective agonism of melanocortin receptors drives pigmentation, appetite, and sexual-arousal effects observed in case reports and animal models.
+    - No regulatory approval anywhere; flagged by FDA and TGA as unapproved.
+  evidence_gaps:
+    - No completed Phase III human trials
+    - Long-term safety unknown
+    - Quality and purity of grey-market supply not verifiable
+
+risks:
+  by_route:
+    subq:
+      - Case reports link use to melanoma and changing/atypical moles
+      - Reports of ischemic priapism
+      - Reports of rhabdomyolysis and renal infarction
+      - Reports of posterior reversible encephalopathy syndrome (PRES)
+      - Common acute effects include nausea, vomiting, facial flushing, prolonged erection, yawning
+      - Unregulated supply chain creates contamination and dosing-accuracy risk
+
+tracking:
+  useful_logs:
+    - Skin changes (new moles, mole changes, pigmentation map)
+    - Acute side effects after injection (nausea, flushing, erection duration)
+    - Blood pressure
+  inventory_fields:
+    - vendor
+    - lot_number
+    - reconstitution_date
+    - reconstituted_concentration
+  peppi_actions:
+    - flag-regulatory-warning
+    - prompt-skin-check-log
+
+app_profile:
+  headline: Non-selective melanocortin agonist with no regulatory approval and serious case-report risks.
+  summary: Melanotan II is a synthetic analog of alpha-MSH that activates multiple melanocortin receptors. It is not approved by FDA, TGA, MHRA, or other major regulators, and is sold as a research chemical. Published case reports tie use to melanoma, priapism, rhabdomyolysis, renal infarction, and PRES.
+  why_people_care:
+    - Pigmentation effects
+    - Reported libido and erection effects
+  what_to_verify:
+    - Source and lot of the vial
+    - Reconstitution math and storage
+    - Skin baseline (mole map) before any use
+  what_to_track:
+    - Mole and skin changes over time
+    - Acute side-effect log
+    - Blood pressure
+  reality_check: Evidence is dominated by adverse-event case reports and animal data. No regulator has approved Melanotan II, and the TGA has specifically warned consumers against it.
+
+sources:
+  - id: unsw-tga-2023
+    title: What is Melanotan-II - the drug that the TGA urges consumers to avoid?
+    url: https://www.unsw.edu.au/newsroom/news/2023/01/what-is-melanotan-ii---the-drug-that-the-tga-urges-consumers-to-
+    source_type: regulatory
+    publisher: UNSW Newsroom / TGA reporting
+    year: 2023
+  - id: ncbi-mtii-feeding-2015
+    title: Inhibitory Effect of the Melanocortin Receptor Agonist Melanotan-II (MTII) on Feeding
+    url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4689860/
+    source_type: publication
+    publisher: NCBI PMC
+    year: 2015
+
+claims:
+  - id: mt2-non-selective-agonist
+    text: Melanotan II is a non-selective agonist at MC1R, MC3R, MC4R, and MC5R.
+    claim_type: mechanism
+    evidence_level: preclinical
+    route_scope:
+      - subq
+    source_ids:
+      - ncbi-mtii-feeding-2015
+    confidence: high
+    limitations: []
+  - id: mt2-no-regulatory-approval
+    text: Melanotan II has no regulatory approval; the TGA has publicly urged consumers to avoid it.
+    claim_type: regulatory
+    evidence_level: approved_label
+    route_scope:
+      - subq
+    source_ids:
+      - unsw-tga-2023
+    confidence: high
+    limitations: []
+  - id: mt2-case-report-risks
+    text: Case reports associate Melanotan II use with melanoma, ischemic priapism, rhabdomyolysis, renal infarction, and PRES.
+    claim_type: risk
+    evidence_level: human_limited
+    route_scope:
+      - subq
+    source_ids:
+      - unsw-tga-2023
+    confidence: medium
+    limitations:
+      - Evidence is case-report level, not controlled trial data.
