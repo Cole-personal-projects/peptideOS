@@ -31,6 +31,25 @@ export interface VialRunoutForecastInput {
   lowStockDays?: number;
 }
 
+export interface InventoryStockHealthSummary {
+  activeCount: number;
+  healthyCount: number;
+  lowStockCount: number;
+  runoutCount: number;
+  expiringSoonCount: number;
+  unscheduledCount: number;
+}
+
+export interface InventoryStockHealthSummaryInput {
+  vials: Vial[];
+  doses: Dose[];
+  schedules: Schedule[];
+  scheduleLogs: ScheduleLog[];
+  now?: Date;
+  lowStockDays?: number;
+  expiringSoonDays?: number;
+}
+
 function roundMg(value: number): number {
   return Number(value.toFixed(3));
 }
@@ -164,5 +183,53 @@ export function getVialRunoutForecast(input: VialRunoutForecastInput): VialRunou
     scheduledDoseMg: roundMg(consumedMg),
     isLowStock: false,
     label: 'Covers scheduled doses',
+  };
+}
+
+export function getInventoryStockHealthSummary(input: InventoryStockHealthSummaryInput): InventoryStockHealthSummary {
+  const now = input.now ?? new Date();
+  const expiringSoonDays = input.expiringSoonDays ?? 7;
+  const activeVials = input.vials.filter((vial) => vial.status === 'active');
+
+  let healthyCount = 0;
+  let lowStockCount = 0;
+  let runoutCount = 0;
+  let expiringSoonCount = 0;
+  let unscheduledCount = 0;
+
+  for (const vial of activeVials) {
+    const forecast = getVialRunoutForecast({
+      vial,
+      doses: input.doses,
+      schedules: input.schedules,
+      scheduleLogs: input.scheduleLogs,
+      now,
+      lowStockDays: input.lowStockDays,
+    });
+    const daysToExpiration = Math.ceil((new Date(vial.expirationDate).getTime() - now.getTime()) / 86_400_000);
+    const isExpiringSoon = daysToExpiration > 0 && daysToExpiration <= expiringSoonDays;
+
+    if (forecast.status === 'runout') {
+      runoutCount += 1;
+    } else if (forecast.isLowStock) {
+      lowStockCount += 1;
+    } else if (forecast.status === 'unscheduled') {
+      unscheduledCount += 1;
+    } else {
+      healthyCount += 1;
+    }
+
+    if (isExpiringSoon || daysToExpiration <= 0) {
+      expiringSoonCount += 1;
+    }
+  }
+
+  return {
+    activeCount: activeVials.length,
+    healthyCount,
+    lowStockCount,
+    runoutCount,
+    expiringSoonCount,
+    unscheduledCount,
   };
 }

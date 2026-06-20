@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/lib/context';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { getEmptyStateContent, type EmptyStateKey } from '@/lib/empty-states';
-import { getVialInventoryMetrics, getVialRunoutForecast } from '@/lib/inventory-metrics';
+import { getInventoryStockHealthSummary, getVialInventoryMetrics, getVialRunoutForecast } from '@/lib/inventory-metrics';
 import { cn } from '@/lib/utils';
 
 export default function InventoryPage() {
@@ -47,6 +47,12 @@ export default function InventoryPage() {
   const activeVials = data.vials.filter(v => v.status === 'active');
   const sealedVials = data.vials.filter(v => v.status === 'sealed');
   const finishedVials = data.vials.filter(v => v.status === 'finished' || v.status === 'expired');
+  const stockHealth = getInventoryStockHealthSummary({
+    vials: data.vials,
+    doses: data.doses,
+    schedules: data.schedules,
+    scheduleLogs: data.scheduleLogs,
+  });
   const batchesById = new Map(data.inventoryBatches.map((batch) => [batch.id, batch]));
 
   const formatDate = (date: string) => new Date(`${date.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', {
@@ -291,6 +297,48 @@ export default function InventoryPage() {
           </TabsList>
 
           <TabsContent value="active" className="mt-4 space-y-3">
+            {activeVials.length > 0 ? (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold">Stock health</p>
+                      <p className="text-xs text-muted-foreground">Active inventory coverage based on remaining quantity, pending schedules, and expiration timing.</p>
+                    </div>
+                    <Badge variant={stockHealth.runoutCount > 0 || stockHealth.lowStockCount > 0 ? 'destructive' : 'secondary'}>
+                      {stockHealth.runoutCount > 0
+                        ? `${stockHealth.runoutCount} runout risk`
+                        : stockHealth.lowStockCount > 0
+                          ? `${stockHealth.lowStockCount} low stock`
+                          : 'Healthy'}
+                    </Badge>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Active</p>
+                      <p className="text-lg font-semibold">{stockHealth.activeCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Runout risk</p>
+                      <p className={cn('text-lg font-semibold', stockHealth.runoutCount > 0 && 'text-destructive')}>{stockHealth.runoutCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Low stock</p>
+                      <p className={cn('text-lg font-semibold', stockHealth.lowStockCount > 0 && 'text-chart-4')}>{stockHealth.lowStockCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Expiring soon</p>
+                      <p className={cn('text-lg font-semibold', stockHealth.expiringSoonCount > 0 && 'text-chart-4')}>{stockHealth.expiringSoonCount}</p>
+                    </div>
+                  </div>
+
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    {stockHealth.healthyCount} healthy · {stockHealth.unscheduledCount} unscheduled
+                  </p>
+                </CardContent>
+              </Card>
+            ) : null}
             {activeVials.length === 0 ? (
               renderInventoryEmpty('inventory-active-empty')
             ) : (

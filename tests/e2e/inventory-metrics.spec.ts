@@ -69,8 +69,32 @@ test.describe('inventory metrics', () => {
           },
         ],
         stacks: [],
-        schedules: [],
-        scheduleLogs: [],
+        schedules: [
+          {
+            id: 'schedule-bpc-metrics',
+            stackId: 'stack-metrics',
+            stackPeptideId: 'stack-metrics-bpc',
+            peptideId: 'bpc-157',
+            doseValue: 1,
+            doseUnit: 'mg',
+            route: 'subq',
+            recurrence: { frequency: 'daily', timesOfDay: ['08:00'] },
+            startDate: '2026-06-14T00:00:00.000Z',
+            endDate: '2026-07-14T00:00:00.000Z',
+            status: 'active',
+          },
+        ],
+        scheduleLogs: [
+          {
+            id: 'schedule-log-bpc-metrics',
+            scheduleId: 'schedule-bpc-metrics',
+            stackId: 'stack-metrics',
+            stackPeptideId: 'stack-metrics-bpc',
+            peptideId: 'bpc-157',
+            dueAt: '2026-06-15T08:00:00.000Z',
+            status: 'pending',
+          },
+        ],
         reconstitutionCalculations: [],
         userCompounds: [],
         settings: {
@@ -91,6 +115,9 @@ test.describe('inventory metrics', () => {
     await page.goto('/more/inventory');
 
     await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible();
+    await expect(page.getByText('Stock health')).toBeVisible();
+    await expect(page.getByText('1 runout risk', { exact: true })).toBeVisible();
+    await expect(page.getByText('0 healthy · 1 unscheduled', { exact: true })).toBeVisible();
 
     const hghCard = page.locator('a[href="/more/inventory/vial-hgh-metrics"]');
     await expect(hghCard).toContainText('hGH (Somatropin)');
@@ -103,6 +130,7 @@ test.describe('inventory metrics', () => {
     await expect(bpcCard).toContainText('Remaining');
     await expect(bpcCard).toContainText('0 mg');
     await expect(bpcCard).toContainText('Source');
+    await expect(bpcCard).toContainText('Runs out Jun 15');
     await expect(bpcCard).not.toContainText('Vendor');
   });
 });

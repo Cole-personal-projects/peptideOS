@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getVialInventoryMetrics, getVialRunoutForecast } from './inventory-metrics';
+import { getInventoryStockHealthSummary, getVialInventoryMetrics, getVialRunoutForecast } from './inventory-metrics';
 import type { Dose, Schedule, ScheduleLog, Vial } from './types';
 
 const baseVial: Vial = {
@@ -203,5 +203,34 @@ describe('inventory metrics', () => {
       isLowStock: false,
       label: 'No scheduled usage',
     }));
+  });
+
+  it('summarizes stock health across active inventory', () => {
+    const summary = getInventoryStockHealthSummary({
+      vials: [
+        { ...baseVial, id: 'healthy', expirationDate: '2026-06-30T00:00:00.000Z' },
+        { ...baseVial, id: 'runout', mg: 1, expirationDate: '2026-06-30T00:00:00.000Z' },
+        { ...baseVial, id: 'unscheduled', peptideId: 'tb-500', expirationDate: '2026-06-30T00:00:00.000Z' },
+        { ...baseVial, id: 'expiring', expirationDate: '2026-05-24T00:00:00.000Z' },
+        { ...baseVial, id: 'sealed', status: 'sealed' },
+      ],
+      doses: [],
+      schedules: [schedule],
+      scheduleLogs: [
+        log({ id: 'healthy-1', dueAt: '2026-05-23T08:00:00.000Z' }),
+        log({ id: 'healthy-2', dueAt: '2026-05-24T08:00:00.000Z' }),
+      ],
+      now: new Date('2026-05-22T07:00:00.000Z'),
+      expiringSoonDays: 7,
+    });
+
+    expect(summary).toEqual({
+      activeCount: 4,
+      healthyCount: 2,
+      lowStockCount: 0,
+      runoutCount: 1,
+      expiringSoonCount: 1,
+      unscheduledCount: 1,
+    });
   });
 });
