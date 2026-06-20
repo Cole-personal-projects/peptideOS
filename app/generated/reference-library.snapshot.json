@@ -1,7 +1,7 @@
 {
   "libraryVersion": "2026.05.0",
   "schemaVersion": 1,
-  "exportedAt": "2026-06-20T00:13:56.849Z",
+  "exportedAt": "2026-06-20T00:46:13.974Z",
   "source": {
     "kind": "bundled",
     "registry": "peptideos-reference-registry"
@@ -295,11 +295,11 @@
           2
         ]
       },
-      "beginnerSummary": "Retatrutide is an investigational GLP-1, GIP, and glucagon receptor agonist. PeptideOS tracks it through user-confirmed inventory, reconstitution math, schedule previews, tolerability notes, and trend data while keeping trial evidence separate from research-market product assumptions.",
-      "researcherDetails": "Retatrutide is an investigational GLP-1, GIP, and glucagon receptor agonist. PeptideOS tracks it through user-confirmed inventory, reconstitution math, schedule previews, tolerability notes, and trend data while keeping trial evidence separate from research-market product assumptions.",
+      "beginnerSummary": "Retatrutide is a research-stage GLP-1, GIP, and glucagon receptor agonist. PeptideOS tracks it through user-confirmed inventory, reconstitution math, schedule previews, tolerability notes, and trend data while keeping trial evidence separate from research-market product assumptions.",
+      "researcherDetails": "Retatrutide is a research-stage GLP-1, GIP, and glucagon receptor agonist. PeptideOS tracks it through user-confirmed inventory, reconstitution math, schedule previews, tolerability notes, and trend data while keeping trial evidence separate from research-market product assumptions.",
       "mechanism": "Triple GLP-1, GIP, and glucagon receptor agonist.",
-      "safety": "subq: Review overlap with other incretin, appetite-suppressing, glucose-modulating, or stimulant compounds before saving a stack. subq: Track resting heart rate, HRV, sleep, appetite suppression, and gastrointestinal tolerability as separate signals. subq: Research-market vials can introduce identity, purity, sterility, endotoxin, storage, and concentration uncertainty. subq: Reconstitution math depends on user-confirmed vial amount and diluent volume, not on the compound name alone. subq: Long-term safety for non-trial research-market products is not established. subq: Product-specific stability and storage require label or supplier documentation.",
-      "storage": "Verify storage from the exact vial label or supplier documentation. Do not infer approved-product storage instructions for research-market vials. Keep reconstitution date, diluent volume, concentration, active vial state, and discard notes with the inventory item.",
+      "safety": "subq: Gastrointestinal adverse events were common in published phase 2 obesity data. subq: Review overlap with other incretin, appetite-suppressing, glucose-modulating, or stimulant compounds before saving a stack. subq: Track resting heart rate, HRV, sleep, appetite suppression, and gastrointestinal tolerability as separate signals. subq: Research-market vials can introduce identity, purity, sterility, endotoxin, storage, and concentration uncertainty. subq: Reconstitution math depends on user-confirmed vial amount and diluent volume, not on the compound name alone. subq: Long-term safety for non-trial research-market products is not established. subq: Product-specific stability and storage require label or supplier documentation.",
+      "storage": "No approved US product label defines consumer storage. Verify storage from the exact vial label or supplier documentation. Do not infer approved-product storage instructions for research-market vials. Keep reconstitution date, diluent volume, concentration, active vial state, and discard notes with the inventory item.",
       "citations": [
         {
           "id": "pubmed-retatrutide-obesity-phase-2",
@@ -327,6 +327,7 @@
           ],
           "verifyBeforeUse": [
             "Verify vial identity, amount, lot, source, COA, route, and storage from the physical product.",
+            "Whether the label says retatrutide/LY3437943 or a vague blend name; do not treat marketing names as identity proof.",
             "Confirm concentration from vial amount and BAC water volume before calculating injection volume.",
             "Review whether any other incretin, appetite-suppressing, glucose-modulating, or stimulant compound is active in the user's stack."
           ],
@@ -337,7 +338,7 @@
           ],
           "realityCheck": "The clinical Retatrutide story is not a gray-market vial. PeptideOS should help the user track what they actually have, what they actually did, and what is still uncertain."
         },
-        "reviewSummary": "Retatrutide is an investigational GLP-1, GIP, and glucagon receptor agonist. PeptideOS tracks it through user-confirmed inventory, reconstitution math, schedule previews, tolerability notes, and trend data while keeping trial evidence separate from research-market product assumptions.",
+        "reviewSummary": "Retatrutide is a research-stage GLP-1, GIP, and glucagon receptor agonist. PeptideOS tracks it through user-confirmed inventory, reconstitution math, schedule previews, tolerability notes, and trend data while keeping trial evidence separate from research-market product assumptions.",
         "mechanismTargets": [
           "GLP-1 receptor",
           "GIP receptor",
@@ -366,6 +367,7 @@
           }
         ],
         "safetySignals": [
+          "subq: Gastrointestinal adverse events were common in published phase 2 obesity data.",
           "subq: Review overlap with other incretin, appetite-suppressing, glucose-modulating, or stimulant compounds before saving a stack.",
           "subq: Track resting heart rate, HRV, sleep, appetite suppression, and gastrointestinal tolerability as separate signals.",
           "subq: Research-market vials can introduce identity, purity, sterility, endotoxin, storage, and concentration uncertainty.",

@@ -109,6 +109,7 @@ risks:
       known_contraindications: []
       caution_populations: []
       negative_stack_flags:
+        - Gastrointestinal adverse events were common in published phase 2 obesity data.
         - Review overlap with other incretin, appetite-suppressing, glucose-modulating, or stimulant compounds before saving a stack.
         - Track resting heart rate, HRV, sleep, appetite suppression, and gastrointestinal tolerability as separate signals.
       formulation_risks:
@@ -120,6 +121,7 @@ risks:
 
 storage:
   handling:
+    - No approved US product label defines consumer storage.
     - Verify storage from the exact vial label or supplier documentation.
     - Do not infer approved-product storage instructions for research-market vials.
     - Keep reconstitution date, diluent volume, concentration, active vial state, and discard notes with the inventory item.
@@ -285,7 +287,7 @@ peppi_actions:
 app_profile:
   headline: A triple-agonist metabolic peptide people are watching because it may push past the current GLP-1/GIP ceiling.
   summary: >-
-    Retatrutide is an investigational GLP-1, GIP, and glucagon receptor agonist.
+    Retatrutide is a research-stage GLP-1, GIP, and glucagon receptor agonist.
     PeptideOS tracks it through user-confirmed inventory, reconstitution math,
     schedule previews, tolerability notes, and trend data while keeping trial
     evidence separate from research-market product assumptions.
@@ -295,6 +297,7 @@ app_profile:
     - It creates practical tracking needs around appetite, weight, HR, HRV, sleep, GI tolerability, inventory, and titration context.
   what_to_verify:
     - Verify vial identity, amount, lot, source, COA, route, and storage from the physical product.
+    - Whether the label says retatrutide/LY3437943 or a vague blend name; do not treat marketing names as identity proof.
     - Confirm concentration from vial amount and BAC water volume before calculating injection volume.
     - Review whether any other incretin, appetite-suppressing, glucose-modulating, or stimulant compound is active in the user's stack.
   what_to_track:
