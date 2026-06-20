@@ -1,0 +1,129 @@
+schema_version: 1
+compound_id: bremelanotide
+status: approved
+updated_at: '2026-06-19'
+identity:
+  name: PT-141 / Bremelanotide
+  aliases:
+  - PT-141
+  - Vyleesi
+  non_aliases:
+  - PT-141 market vials are not automatically the same thing as a labeled bremelanotide product
+  compound_type: peptide
+  categories:
+  - sexual-reproductive
+forms:
+  primary_route: subq
+  supported_routes:
+  - subq
+  excluded_routes: []
+  form_factors:
+  - prefilled injector
+  - labeled container
+  verification_fields:
+  - exact product name
+  - route
+  - strength
+  - lot
+  - expiration
+  - source
+positioning:
+  why_use_this_compound:
+  - Track a melanocortin-pathway peptide with label-backed product identity
+  - Keep PT-141, Vyleesi, and bremelanotide alias matching clean
+  who_is_tracking_this:
+  - People logging labeled product inventory
+  - Users separating label-backed products from market vials
+  common_user_goals:
+  - Preserve exact container identity
+  - Record adherence and user-entered notes
+evidence:
+  tier: approved_label
+  mechanism_targets:
+  - melanocortin receptor signaling
+  claim_summary:
+  - Bremelanotide is a melanocortin-pathway peptide with PT-141/Vyleesi alias pressure
+  - The label record provides product context for route, source, and container tracking
+  - Inventory should follow the exact labeled item rather than a generic market name
+  evidence_gaps:
+  - Market PT-141 containers may not map cleanly to labeled bremelanotide products
+risks:
+  by_route:
+    subq:
+    - Injection-site reactions and label-specific warnings should be checked on the exact product
+    - Source, lot, and container-state uncertainty can blur inventory records
+tracking:
+  useful_logs:
+  - Source / lot / expiration
+  - Container state
+  - Timing and user-entered tolerability notes
+  inventory_fields:
+  - source
+  - lot_number
+  - expiration_date
+  - container_type
+  - strength
+  peppi_actions:
+  - ask-for-label-photo
+  - create-inventory-from-label
+  - flag-alias-mismatch
+app_profile:
+  headline: Label-backed melanocortin peptide with alias handling that matters.
+  summary: Bremelanotide / PT-141 is the melanocortin sexual-function peptide people track for libido, arousal-response notes, timing context, tolerability, and exact product identity. PeptideOS should separate labeled Vyleesi-style records from research-market PT-141 shorthand, preserving route, strength, source, lot, timing, response notes, and adverse-effect notes without implying a protocol.
+  why_people_care:
+  - Users know the compound by multiple names
+  - The same shorthand can refer to different product contexts
+  what_to_verify:
+  - Exact label text
+  - Route
+  - Strength
+  - Source quality
+  what_to_track:
+  - Adherence
+  - Inventory depletion
+  - User-entered notes
+  reality_check: Keep PT-141 shorthand searchable, but save the exact product on the container.
+sources:
+- id: pubchem-bremelanotide
+  title: Bremelanotide compound summary
+  url: https://pubchem.ncbi.nlm.nih.gov/compound/9941379
+  source_type: database
+  publisher: NCBI / National Library of Medicine
+  year: 2026
+- id: dailymed-bremelanotide
+  title: DailyMed label candidates for Bremelanotide
+  url: https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=Bremelanotide
+  source_type: label
+  publisher: DailyMed
+  year: 2026
+claims:
+- id: identity
+  text: PT-141, Vyleesi, and bremelanotide are alias-linked names that PeptideOS should keep distinct from a generic market
+    shorthand.
+  claim_type: identity
+  evidence_level: identity
+  route_scope: []
+  source_ids:
+  - pubchem-bremelanotide
+  - dailymed-bremelanotide
+  confidence: high
+  limitations: []
+- id: mechanism
+  text: Bremelanotide is discussed as a melanocortin-pathway peptide.
+  claim_type: mechanism
+  evidence_level: preclinical
+  route_scope: []
+  source_ids:
+  - pubchem-bremelanotide
+  confidence: high
+  limitations: []
+- id: regulatory
+  text: DailyMed provides label-candidate context for bremelanotide products, so exact product details should come from the
+    labeled container.
+  claim_type: regulatory
+  evidence_level: approved_label
+  route_scope: []
+  source_ids:
+  - dailymed-bremelanotide
+  confidence: high
+  limitations: []

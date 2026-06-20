@@ -10,7 +10,7 @@ Produce a concise, source-backed compound record that can be saved as:
 reference-library/compounds/<compound-id>.yml
 ```
 
-The record should help PeptideOS users verify labels, organize inventory, understand why a compound is being tracked, and know what data is worth logging. It is not a medical protocol and must not recommend use.
+The record should help users verify labels, organize inventory, understand why people run or track a compound, and know what data is worth logging. It is not a medical protocol and must not recommend use.
 
 ## Required YAML Shape
 
@@ -97,10 +97,12 @@ claims:
 ## Rules
 
 - Output only YAML.
-- Every claim must include `source_ids` unless `evidence_level` is `unknown` or `theoretical`.
+- Claims should include `source_ids` when a durable source supports them.
+- Claims may omit `source_ids` only when `evidence_level` is `unknown`/`theoretical`, or when `confidence` is `low` and `limitations` explicitly explain the uncertainty.
 - Do not create dose, frequency, duration, treatment, or personal-use recommendations.
 - Do not add contraindications unless they are source-backed.
 - Risks must be scoped under the route they apply to.
 - Do not discuss unsupported routes except under `forms.excluded_routes`.
 - If evidence is thin, say so directly in `evidence_gaps` and `app_profile.reality_check`.
+- `app_profile.summary` must be human-friendly and biohacker-forward: explain what people commonly run or track the compound for and the key uncertainty. Do not use dry identity-only copy unless identity is the only defensible claim.
 - Prefer short, useful, source-backed fields over filler.

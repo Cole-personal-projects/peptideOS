@@ -22,7 +22,7 @@ describe('library profile view model', () => {
     ]));
     expect(tirzepatide.sections.map((section) => section.title)).toEqual(expect.arrayContaining([
       'Field brief',
-      'Why people care',
+      'Why people run this',
       'Storage',
       'Safety',
       'Evidence and transparency',
@@ -52,7 +52,7 @@ describe('library profile view model', () => {
     expect(retatrutide.sections.find((section) => section.title === 'Field brief')?.items).toEqual(expect.arrayContaining([
       'A triple-agonist metabolic peptide people are watching because it may push past the current GLP-1/GIP ceiling.',
     ]));
-    expect(retatrutide.sections.find((section) => section.title === 'Why people care')?.items).toEqual(expect.arrayContaining([
+    expect(retatrutide.sections.find((section) => section.title === 'Why people run this')?.items).toEqual(expect.arrayContaining([
       'It hits GLP-1, GIP, and glucagon receptors instead of only one or two incretin pathways.',
     ]));
     expect(retatrutide.sections.find((section) => section.title === 'Regulatory context')?.items).toEqual(expect.arrayContaining([

@@ -1,0 +1,168 @@
+schema_version: 1
+compound_id: ptd-dbm
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: PTD-DBM
+  aliases:
+    - Protein Transduction Domain - Dishevelled Binding Motif
+    - CXXC5-Dvl disrupting peptide
+  non_aliases:
+    - minoxidil
+    - finasteride
+  compound_type: peptide
+  categories:
+    - skin-hair
+
+forms:
+  primary_route: topical
+  supported_routes:
+    - topical
+  excluded_routes:
+    - route: subq
+      reason: "Published efficacy work uses topical application to skin; no subcutaneous protocol established."
+    - route: im
+      reason: "No intramuscular research; designed for local cutaneous delivery to hair follicles."
+    - route: intranasal
+      reason: "Not relevant to indication; no intranasal research."
+    - route: oral
+      reason: "Peptide is subject to gastrointestinal proteolysis; no oral formulation studied."
+  form_factors:
+    - topical-solution
+    - lyophilized-powder
+  verification_fields:
+    - sequence
+    - purity
+    - mass-spec-confirmation
+    - vehicle-composition
+
+positioning:
+  why_use_this_compound:
+    - "Targets CXXC5, a negative-feedback regulator of Wnt/beta-catenin signaling implicated in hair follicle dormancy."
+    - "Preclinical alternative pathway distinct from minoxidil and 5-alpha-reductase inhibitors."
+  who_is_tracking_this:
+    - users with androgenetic alopecia exploring Wnt-pathway approaches
+    - users seeking non-hormonal hair-loss research compounds
+  common_user_goals:
+    - increased hair density
+    - extension of anagen phase
+    - regrowth in areas of dormancy
+
+evidence:
+  tier: preclinical
+  mechanism_targets:
+    - CXXC5-Dishevelled interaction disruption
+    - canonical Wnt/beta-catenin pathway activation in dermal papilla
+  claim_summary:
+    - "Choi et al. 2017 (Journal of Investigative Dermatology) demonstrated hair regrowth and wound-induced hair neogenesis in mice with topical PTD-DBM."
+    - "Effect is enhanced in combination with valproic acid (VPA), a GSK3-beta inhibitor and Wnt activator."
+    - "No published human randomized controlled trials located."
+  evidence_gaps:
+    - All efficacy data is in mouse models.
+    - No human RCTs published; durability and long-term safety unknown.
+    - Optimal topical vehicle and stability profile not standardized.
+
+risks:
+  by_route:
+    topical:
+      - "No published human safety or tolerability dataset."
+      - "Local skin irritation, contact dermatitis, and vehicle-related reactions are possible but uncharacterized."
+      - "Wnt-pathway activation has theoretical proliferative concerns; long-term cutaneous Wnt activation is not characterized in humans."
+
+tracking:
+  useful_logs:
+    - photo-density tracking (standardized lighting)
+    - shedding count
+    - application adherence
+    - local skin reactions
+  inventory_fields:
+    - vial-mg
+    - vehicle-volume
+    - concentration
+    - lot-number
+    - supplier
+  peppi_actions:
+    - log-application
+    - log-density-photo
+    - log-skin-reaction
+
+app_profile:
+  headline: "A topical research peptide that disrupts CXXC5-Dishevelled binding to re-activate Wnt signaling in hair follicles."
+  summary: "PTD-DBM was developed by the Choi lab at Yonsei University and reported in a 2017 Journal of Investigative Dermatology paper showing hair regrowth in mouse models, particularly when combined with valproic acid. Evidence in humans is essentially absent."
+  why_people_care:
+    - novel mechanism for androgenetic alopecia distinct from minoxidil and finasteride
+    - preclinical results in wound-induced hair neogenesis are striking
+  what_to_verify:
+    - sequence and purity
+    - topical vehicle and stability
+  what_to_track:
+    - photo-density over months
+    - any skin irritation
+  reality_check: "Mouse data only. No human RCTs. The Wnt-activation mechanism has theoretical proliferative concerns that have not been characterized in long-term human use."
+
+sources:
+  - id: choi-2017-jid
+    title: "Targeting of CXXC5 by a Competing Peptide Stimulates Hair Regrowth and Wound-Induced Hair Neogenesis"
+    url: "https://www.jidonline.org/article/S0022-202X(17)31555-5/fulltext"
+    source_type: publication
+    publisher: Journal of Investigative Dermatology
+    year: 2017
+  - id: wiki-ptd-dbm
+    title: "PTD-DBM"
+    url: "https://en.wikipedia.org/wiki/PTD-DBM"
+    source_type: other
+    publisher: Wikipedia
+    year: 2025
+
+claims:
+  - id: identity-fusion
+    text: "PTD-DBM is a fusion peptide combining a Protein Transduction Domain with the Dishevelled Binding Motif, designed to compete with CXXC5 for binding to Dishevelled."
+    claim_type: identity
+    evidence_level: identity
+    source_ids:
+      - choi-2017-jid
+      - wiki-ptd-dbm
+    confidence: high
+    limitations: []
+    route_scope: []
+  - id: mechanism-cxxc5-dvl
+    text: "CXXC5 binds Dishevelled and acts as a negative-feedback regulator of canonical Wnt/beta-catenin signaling; PTD-DBM disrupts this interaction."
+    claim_type: mechanism
+    evidence_level: preclinical
+    source_ids:
+      - choi-2017-jid
+    confidence: high
+    limitations: []
+    route_scope: []
+  - id: evidence-mouse-regrowth
+    text: "Topical PTD-DBM, particularly when cotreated with valproic acid, induced hair regrowth and wound-induced hair neogenesis in mouse models."
+    claim_type: evidence
+    evidence_level: preclinical
+    route_scope:
+      - topical
+    source_ids:
+      - choi-2017-jid
+    confidence: high
+    limitations:
+      - Mouse models do not guarantee human efficacy or safety.
+  - id: evidence-no-human-rct
+    text: "No published human randomized controlled trials of PTD-DBM were located."
+    claim_type: evidence
+    evidence_level: unknown
+    route_scope:
+      - topical
+    source_ids: []
+    confidence: low
+    limitations:
+      - Absence-of-evidence finding; non-indexed early-phase trials may exist.
+  - id: risk-topical-uncharacterized
+    text: "Human topical safety, irritation, and long-term Wnt-activation effects are not characterized in published literature."
+    claim_type: risk
+    evidence_level: unknown
+    route_scope:
+      - topical
+    source_ids: []
+    confidence: low
+    limitations:
+      - Based on absence of published human safety data.

@@ -1,0 +1,158 @@
+schema_version: 1
+compound_id: pinealon
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: Pinealon
+  aliases:
+    - EDR
+    - Glu-Asp-Arg
+    - Pineal peptide bioregulator
+  non_aliases:
+    - Epitalon
+    - Epithalamin
+  compound_type: peptide
+  categories:
+    - longevity
+    - cognitive
+
+forms:
+  primary_route: subq
+  supported_routes:
+    - subq
+    - intranasal
+  excluded_routes:
+    - route: oral
+      reason: "Peptide is subject to gastrointestinal proteolysis; no oral formulation has been demonstrated in published literature."
+  form_factors:
+    - lyophilized-powder
+  verification_fields:
+    - sequence
+    - purity
+    - mass-spec-confirmation
+
+positioning:
+  why_use_this_compound:
+    - "Khavinson-school short peptide hypothesized to influence gene expression in neural and pineal tissue."
+    - "Preclinical interest in neuroprotection and oxidative-stress models."
+  who_is_tracking_this:
+    - longevity-curious users following Khavinson bioregulator framework
+    - users experimenting with short-peptide neuroprotection
+  common_user_goals:
+    - subjective cognitive maintenance
+    - exploratory anti-aging stack inclusion
+
+evidence:
+  tier: preclinical
+  mechanism_targets:
+    - hypothesized direct DNA-promoter interaction (Khavinson model)
+    - reduction of reactive oxygen species in neuronal culture (preclinical)
+  claim_summary:
+    - "Identity: tripeptide Glu-Asp-Arg (EDR) developed by the Khavinson group at the St Petersburg Institute of Bioregulation and Gerontology."
+    - "Preclinical reports describe neuroprotective effects in rodent and cell-culture models."
+    - "No registered human clinical trials located on ClinicalTrials.gov or WHO ICTRP."
+  evidence_gaps:
+    - No FDA-recognized human clinical trials.
+    - Evidence base dominated by a single research lineage (Khavinson group); independent Western replication is sparse.
+    - Khavinson DNA-binding mechanism is not established in mainstream pharmacology.
+
+risks:
+  by_route:
+    subq:
+      - "No formal human safety database; adverse-event profile is not characterized in peer-reviewed Western literature."
+      - "Sterility and identity depend entirely on supplier QC; unregulated research-chemical market."
+    intranasal:
+      - "No formal human safety database for intranasal route."
+      - "Local nasal mucosa tolerability is uncharacterized in published trials."
+
+tracking:
+  useful_logs:
+    - subjective cognition / clarity rating
+    - sleep quality
+    - mood
+  inventory_fields:
+    - vial-mg
+    - reconstitution-volume
+    - lot-number
+    - supplier
+  peppi_actions:
+    - log-subjective-cognition
+    - log-sleep
+    - flag-source-quality
+
+app_profile:
+  headline: "A Khavinson-group tripeptide (Glu-Asp-Arg) explored in Russian gerontology research for neural and pineal effects."
+  summary: "Pinealon is a short synthetic peptide from the Khavinson bioregulator tradition. Published work centers on preclinical neuroprotection and a contested 'peptide-DNA' mechanism. Human clinical trial data is essentially absent in the Western peer-reviewed literature."
+  why_people_care:
+    - longevity / cognitive maintenance experimentation
+    - interest in short-peptide bioregulator framework
+  what_to_verify:
+    - sequence and purity from the supplier
+    - source quality given the unregulated supply chain
+  what_to_track:
+    - subjective cognition and sleep
+    - any adverse events given the thin safety database
+  reality_check: "Evidence is preclinical and concentrated in one research lineage. Treat human effects as unproven and supply chain as the biggest unknown."
+
+sources:
+  - id: wiki-pinealon
+    title: "Pinealon"
+    url: "https://en.wikipedia.org/wiki/Pinealon"
+    source_type: other
+    publisher: Wikipedia
+    year: 2025
+  - id: khavinson-review
+    title: "Peptide regulation of gene expression and protein synthesis in bronchial epithelium"
+    url: "https://pubmed.ncbi.nlm.nih.gov/22182580/"
+    source_type: publication
+    publisher: PubMed / Lung
+    year: 2012
+  - id: ctgov-search
+    title: "ClinicalTrials.gov search: Pinealon (no registered trials)"
+    url: "https://clinicaltrials.gov/search?term=Pinealon"
+    source_type: regulatory
+    publisher: ClinicalTrials.gov
+    year: 2026
+
+claims:
+  - id: identity-sequence
+    text: "Pinealon is a synthetic tripeptide with the sequence Glu-Asp-Arg (EDR)."
+    claim_type: identity
+    evidence_level: identity
+    route_scope: []
+    source_ids:
+      - wiki-pinealon
+    confidence: high
+    limitations: []
+  - id: mechanism-dna-hypothesis
+    text: "The Khavinson group hypothesizes that short peptides such as EDR interact directly with DNA promoter regions to modulate transcription."
+    claim_type: mechanism
+    evidence_level: theoretical
+    route_scope: []
+    source_ids:
+      - khavinson-review
+    confidence: low
+    limitations:
+      - Hypothesis is not established in mainstream pharmacology and is primarily supported by a single research group.
+  - id: evidence-preclinical-only
+    text: "Published Pinealon evidence is preclinical (rodent and cell-culture models); no registered human clinical trials were located."
+    claim_type: evidence
+    evidence_level: preclinical
+    route_scope: []
+    source_ids:
+      - ctgov-search
+    confidence: medium
+    limitations:
+      - Absence-of-evidence search reflects ClinicalTrials.gov and WHO ICTRP as of 2026; non-indexed Russian trials may exist.
+  - id: risk-uncharacterized
+    text: "There is no formal human safety database for Pinealon in Western peer-reviewed literature."
+    claim_type: risk
+    evidence_level: unknown
+    route_scope:
+      - subq
+      - intranasal
+    source_ids: []
+    confidence: low
+    limitations:
+      - Based on absence of indexed human safety publications; not a positive demonstration of safety or harm.

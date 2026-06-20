@@ -1,0 +1,219 @@
+schema_version: 1
+compound_id: ibutamoren
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: Ibutamoren
+  aliases:
+    - MK-677
+    - MK-0677
+    - L-163,191
+  non_aliases:
+    - Ipamorelin
+    - GHRP-6
+  compound_type: small-molecule
+  categories:
+    - growth-hormone
+    - longevity
+    - metabolic
+
+forms:
+  primary_route: oral
+  supported_routes:
+    - oral
+  excluded_routes:
+    - route: subq
+      reason: Orally bioavailable non-peptide; injectable use not part of human study record.
+    - route: im
+      reason: Orally bioavailable; no human evidence for IM administration.
+    - route: intranasal
+      reason: No human evidence for intranasal route.
+    - route: topical
+      reason: No human evidence for topical absorption.
+  form_factors:
+    - oral-capsule
+    - oral-solution
+  verification_fields:
+    - vendor
+    - lot
+    - coa
+    - mass-spec
+    - hplc-purity
+
+positioning:
+  why_use_this_compound:
+    - Sustained, non-pulsatile elevation of serum IGF-1 and GH via ghrelin receptor agonism
+    - Orally active, removing need for injection
+    - Most clinically characterized oral ghrelin mimetic
+  who_is_tracking_this:
+    - Users interested in GH/IGF-1 axis modulation
+    - Researchers studying frailty, sarcopenia, GH deficiency
+    - Users tracking sleep architecture (slow-wave sleep)
+  common_user_goals:
+    - Increase IGF-1
+    - Improve sleep depth
+    - Body composition shift (lean mass, appetite)
+
+evidence:
+  tier: human_limited
+  mechanism_targets:
+    - GHSR-1a (ghrelin receptor) agonism
+    - Pituitary GH release (pulsatile)
+    - Hepatic IGF-1 induction
+  claim_summary:
+    - Oral 25 mg daily in older adults restored GH/IGF-1 toward young-adult levels (Nass 2008)
+    - Reverses diet-induced nitrogen wasting in short-term human study (Murphy 1998)
+    - Increases SWS and REM duration in some studies
+  evidence_gaps:
+    - No FDA approval; long-term safety beyond 2 years unclear
+    - Insulin sensitivity and fasting glucose may worsen
+    - Edema, CHF signal in frail elderly population (trial halted in one Alzheimer cohort)
+
+risks:
+  by_route:
+    oral:
+      - Increased appetite and weight gain
+      - Fluid retention / peripheral edema
+      - Increased fasting glucose, decreased insulin sensitivity
+      - Lethargy or muscle pain reported in trials
+      - Potential CHF exacerbation in frail elderly (signal from discontinued Alzheimer trial)
+      - Elevated prolactin and cortisol modest but present
+      - Banned by WADA for athletes
+
+tracking:
+  useful_logs:
+    - Morning fasting IGF-1
+    - Fasting glucose / HbA1c
+    - Body weight, waist circumference
+    - Sleep duration and subjective depth
+    - Resting blood pressure
+    - Ankle/lower-leg edema check
+  inventory_fields:
+    - vendor
+    - lot
+    - coa-on-file
+    - purity-percent
+    - expiration
+  peppi_actions:
+    - log-ingestion
+    - log-igf1-lab
+    - log-glucose-lab
+    - log-sleep-quality
+    - log-edema-check
+
+app_profile:
+  headline: Oral ghrelin-receptor agonist that raises GH and IGF-1.
+  summary: Ibutamoren (MK-677) is a non-peptide, orally active growth hormone secretagogue developed by Merck. It mimics ghrelin at GHSR-1a, producing sustained elevation of GH pulse amplitude and serum IGF-1. Studied in humans for GH deficiency, sarcopenia, and frailty but never approved.
+  why_people_care:
+    - Only well-characterized oral GH secretagogue
+    - Durable IGF-1 elevation without injection
+    - Reported sleep depth improvement
+  what_to_verify:
+    - COA confirming identity (MK-677 vs unrelated GHRPs)
+    - HPLC purity
+    - Vendor lot traceability
+  what_to_track:
+    - IGF-1
+    - Fasting glucose / HbA1c
+    - Weight and edema
+    - Sleep quality
+  reality_check: Human data exists but is limited and older; trials have flagged worsening glucose handling and an edema/CHF signal in vulnerable populations. Not FDA approved. No legitimate long-term safety dataset.
+
+sources:
+  - id: nass-2008
+    title: "Effects of an Oral Ghrelin Mimetic on Body Composition and Clinical Outcomes in Healthy Older Adults: A Randomized Trial"
+    url: https://www.acpjournals.org/doi/10.7326/0003-4819-149-9-200811040-00003
+    source_type: publication
+    publisher: Annals of Internal Medicine
+    year: 2008
+  - id: murphy-1998
+    title: "MK-677, an orally active growth hormone secretagogue, reverses diet-induced catabolism"
+    url: https://pubmed.ncbi.nlm.nih.gov/9467534/
+    source_type: publication
+    publisher: J Clin Endocrinol Metab
+    year: 1998
+  - id: adunsky-2011
+    title: "Oral ghrelin receptor agonist MK-0677 in hemodialysis patients"
+    url: https://pubmed.ncbi.nlm.nih.gov/28340044/
+    source_type: trial
+    publisher: PubMed
+    year: 2017
+  - id: ghsr-structure
+    title: "Structural basis of human ghrelin receptor signaling by ghrelin and the synthetic agonist ibutamoren"
+    url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8568970/
+    source_type: publication
+    publisher: PMC
+    year: 2021
+  - id: wikipedia-ibutamoren
+    title: Ibutamoren
+    url: https://en.wikipedia.org/wiki/Ibutamoren
+    source_type: other
+    publisher: Wikipedia
+    year: 2026
+
+claims:
+  - id: identity-ghsr-agonist
+    text: Ibutamoren (MK-677) is a non-peptide agonist of the ghrelin receptor (GHSR-1a).
+    claim_type: identity
+    evidence_level: human_strong
+    route_scope:
+      - oral
+    source_ids:
+      - ghsr-structure
+      - wikipedia-ibutamoren
+    confidence: high
+    limitations: []
+  - id: mechanism-gh-igf1
+    text: Oral MK-677 produces sustained elevation of pulsatile GH secretion and serum IGF-1.
+    claim_type: mechanism
+    evidence_level: human_strong
+    route_scope:
+      - oral
+    source_ids:
+      - nass-2008
+      - murphy-1998
+    confidence: high
+    limitations: []
+  - id: evidence-older-adults
+    text: 25 mg oral MK-677 daily increased GH and IGF-1 in healthy older adults toward young-adult levels.
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope:
+      - oral
+    source_ids:
+      - nass-2008
+    confidence: high
+    limitations:
+      - Single moderate-sized trial; long-term outcomes not assessed
+  - id: risk-glucose
+    text: MK-677 can worsen insulin sensitivity and elevate fasting glucose.
+    claim_type: risk
+    evidence_level: human_limited
+    route_scope:
+      - oral
+    source_ids:
+      - nass-2008
+    confidence: high
+    limitations: []
+  - id: risk-edema
+    text: Fluid retention and lower-extremity edema have been reported, with a CHF signal in frail/elderly subjects.
+    claim_type: risk
+    evidence_level: human_limited
+    route_scope:
+      - oral
+    source_ids:
+      - nass-2008
+    confidence: medium
+    limitations:
+      - CHF signal came from a discontinued Alzheimer trial; magnitude in healthy users unclear
+  - id: regulatory-status
+    text: Ibutamoren is not FDA approved and is prohibited by WADA.
+    claim_type: regulatory
+    evidence_level: approved_label
+    route_scope:
+      - oral
+    source_ids:
+      - wikipedia-ibutamoren
+    confidence: high
+    limitations: []

@@ -1,0 +1,178 @@
+schema_version: 1
+compound_id: selank
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: Selank
+  aliases:
+    - TP-7
+    - Thr-Lys-Pro-Arg-Pro-Gly-Pro
+    - Tuftsin analog
+  non_aliases:
+    - Semax
+    - Selank-amidate
+  compound_type: peptide
+  categories:
+    - cognitive
+
+forms:
+  primary_route: intranasal
+  supported_routes:
+    - intranasal
+    - subq
+  excluded_routes:
+    - route: oral
+      reason: "Peptide is subject to gastrointestinal proteolysis; intranasal is the established clinical route."
+    - route: im
+      reason: "No published intramuscular protocol; clinical use is intranasal."
+    - route: topical
+      reason: "Not relevant to indication."
+  form_factors:
+    - nasal-spray
+    - lyophilized-powder
+  verification_fields:
+    - sequence
+    - purity
+    - mass-spec-confirmation
+    - concentration
+
+positioning:
+  why_use_this_compound:
+    - "Russian-approved anxiolytic heptapeptide used clinically for generalized anxiety disorder and neurasthenia."
+    - "Reported anxiolytic effect without sedation in published Russian clinical work."
+  who_is_tracking_this:
+    - users exploring non-benzodiazepine anxiolytic options
+    - users interested in neuropeptide modulation of GABA and BDNF systems
+  common_user_goals:
+    - reduction in subjective anxiety
+    - cognitive clarity under stress
+    - non-sedating anxiolysis
+
+evidence:
+  tier: human_limited
+  mechanism_targets:
+    - GABA-A receptor system modulation
+    - serotonin, BDNF, and enkephalin system modulation
+    - tuftsin-derived immunomodulatory activity
+  claim_summary:
+    - "Synthetic heptapeptide Thr-Lys-Pro-Arg-Pro-Gly-Pro derived from the immunomodulator tuftsin with a C-terminal Pro-Gly-Pro stabilizer."
+    - "Approved in Russia as a prescription anxiolytic; not FDA-approved."
+    - "Small Russian clinical studies in generalized anxiety disorder report efficacy comparable to medazepam with additional antiasthenic effect."
+  evidence_gaps:
+    - Clinical evidence is predominantly Russian, small-sample, and not Western-replicated.
+    - No large Phase III RCTs indexed on ClinicalTrials.gov.
+    - Long-term safety database is limited.
+
+risks:
+  by_route:
+    intranasal:
+      - "Nasal mucosa irritation possible; not systematically characterized in Western literature."
+      - "Published clinical safety data is limited to small Russian trials."
+    subq:
+      - "No standardized clinical subcutaneous protocol in indexed literature; safety profile uncharacterized via this route."
+
+tracking:
+  useful_logs:
+    - subjective anxiety rating (e.g., 0-10)
+    - sleep quality
+    - cognitive clarity
+    - any nasal irritation
+  inventory_fields:
+    - vial-mg
+    - concentration
+    - reconstitution-volume
+    - lot-number
+    - supplier
+  peppi_actions:
+    - log-anxiety-rating
+    - log-sleep
+    - log-administration
+
+app_profile:
+  headline: "A Russian-developed heptapeptide anxiolytic used intranasally, with small clinical studies reporting non-sedating anxiety reduction."
+  summary: "Selank (TP-7) is a tuftsin-derived heptapeptide developed at the Russian Academy of Sciences Institute of Molecular Genetics. It is approved in Russia for anxiety and neurasthenia and is most commonly administered intranasally. Western RCT evidence is essentially absent."
+  why_people_care:
+    - non-benzodiazepine anxiolytic mechanism
+    - reported absence of sedation and withdrawal
+  what_to_verify:
+    - sequence and concentration from supplier
+    - sterile nasal-spray formulation
+  what_to_track:
+    - anxiety rating over time
+    - sleep
+    - nasal tolerability
+  reality_check: "Clinical evidence is small-sample and primarily Russian. Not FDA-approved. Safety and efficacy are not established to Western regulatory standards."
+
+sources:
+  - id: zozulia-2008
+    title: "Efficacy and possible mechanisms of action of a new peptide anxiolytic selank in the therapy of generalized anxiety disorders and neurasthenia"
+    url: "https://pubmed.ncbi.nlm.nih.gov/18427562/"
+    source_type: publication
+    publisher: PubMed / Zh Nevrol Psikhiatr Im S S Korsakova
+    year: 2008
+  - id: medvedev-2014
+    title: "Selank as a representative of a new class of dipeptide analogues of tuftsin and its psychotropic activity"
+    url: "https://pubmed.ncbi.nlm.nih.gov/28280289/"
+    source_type: publication
+    publisher: PubMed
+    year: 2017
+  - id: cambridge-eps
+    title: "Rapid and slow response during treatment of generalized anxiety disorder with peptide anxiolytic selank"
+    url: "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/7A497218D37084BD079EFE143126F56E/S0924933800083309a.pdf"
+    source_type: publication
+    publisher: European Psychiatry / Cambridge
+    year: 2009
+
+claims:
+  - id: identity-sequence
+    text: "Selank is a synthetic heptapeptide with the sequence Thr-Lys-Pro-Arg-Pro-Gly-Pro, derived from the natural immunomodulator tuftsin."
+    claim_type: identity
+    evidence_level: identity
+    source_ids:
+      - medvedev-2014
+    confidence: high
+    limitations: []
+    route_scope: []
+  - id: mechanism-gaba-bdnf
+    text: "Selank is reported to modulate GABA-A receptor signaling, serotonin, BDNF, and enkephalin systems in preclinical and limited clinical work."
+    claim_type: mechanism
+    evidence_level: preclinical
+    source_ids:
+      - medvedev-2014
+    confidence: medium
+    limitations:
+      - Mechanism descriptions rely largely on Russian preclinical literature with limited Western replication.
+    route_scope: []
+  - id: evidence-gad-trial
+    text: "In a Russian clinical study (n=62), intranasal Selank produced anxiolytic effects comparable to medazepam in generalized anxiety disorder, with additional antiasthenic/psychostimulant effects."
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope:
+      - intranasal
+    source_ids:
+      - zozulia-2008
+      - cambridge-eps
+    confidence: medium
+    limitations:
+      - Small sample, single-country, not Western-replicated, not indexed as RCT.
+  - id: regulatory-russia
+    text: "Selank is approved in Russia as a prescription anxiolytic; it is not FDA-approved."
+    claim_type: regulatory
+    evidence_level: human_limited
+    source_ids:
+      - zozulia-2008
+    confidence: medium
+    limitations:
+      - Russian regulatory status referenced via clinical literature rather than direct regulatory citation.
+    route_scope: []
+  - id: risk-intranasal-uncharacterized
+    text: "Intranasal tolerability and long-term safety are not systematically characterized in Western peer-reviewed literature."
+    claim_type: risk
+    evidence_level: unknown
+    route_scope:
+      - intranasal
+    source_ids: []
+    confidence: low
+    limitations:
+      - Based on absence of published Western safety data.

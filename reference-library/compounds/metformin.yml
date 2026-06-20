@@ -1,0 +1,167 @@
+schema_version: 1
+compound_id: metformin
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: Metformin
+  aliases:
+    - Glucophage
+    - Glumetza
+    - Fortamet
+    - Riomet
+    - Dimethylbiguanide
+  non_aliases:
+    - Phenformin
+    - Buformin
+    - Berberine
+  compound_type: small-molecule
+  categories:
+    - metabolic
+    - longevity
+
+forms:
+  primary_route: oral
+  supported_routes:
+    - oral
+  excluded_routes:
+    - route: subq
+      reason: No clinical formulation; oral bioavailability is sufficient and parenteral biguanide use is not standard.
+    - route: im
+      reason: No clinical formulation.
+    - route: intranasal
+      reason: No clinical formulation.
+    - route: topical
+      reason: No clinical formulation.
+  form_factors:
+    - immediate-release-tablet
+    - extended-release-tablet
+    - oral-solution
+  verification_fields:
+    - manufacturer
+    - ndc_or_equivalent
+    - formulation_ir_or_er
+    - dose-per-tablet
+
+positioning:
+  why_use_this_compound:
+    - FDA-approved first-line therapy for type 2 diabetes
+    - Most-studied candidate geroprotector with an ongoing dedicated aging trial (TAME)
+  who_is_tracking_this:
+    - People managing type 2 diabetes or prediabetes under clinician care
+    - Longevity-focused users tracking glycemic and aging biomarkers
+  common_user_goals:
+    - Glycemic control
+    - Insulin sensitivity
+    - Putative healthspan extension
+
+evidence:
+  tier: approved_label
+  mechanism_targets:
+    - Hepatic gluconeogenesis (reduced)
+    - Mitochondrial complex I (partial inhibition)
+    - AMPK (activated)
+    - mTOR (downstream inhibition, increased autophagy)
+  claim_summary:
+    - Lowers hepatic glucose output and improves peripheral insulin sensitivity.
+    - Activates AMPK via complex I modulation; downstream effects include mTOR inhibition and increased autophagy.
+    - Longevity benefit in humans is hypothesized but unproven; TAME trial is the pivotal test.
+  evidence_gaps:
+    - No completed RCT proving healthspan extension in non-diabetic humans
+    - Effects on exercise-induced adaptations debated
+
+risks:
+  by_route:
+    oral:
+      - GI side effects (nausea, diarrhea, abdominal discomfort) especially during titration
+      - Vitamin B12 deficiency with long-term use
+      - Rare but serious lactic acidosis, especially in renal impairment or acute illness
+      - Contraindicated/cautioned per FDA label in significant renal impairment
+      - May blunt some exercise-induced mitochondrial adaptations (mixed evidence)
+
+tracking:
+  useful_logs:
+    - Fasting glucose, HbA1c
+    - GI tolerability during titration
+    - Vitamin B12 (annual or per clinician)
+    - Renal function (eGFR)
+  inventory_fields:
+    - manufacturer
+    - formulation
+    - dose-per-tablet
+    - expiration
+  peppi_actions:
+    - prompt-b12-check
+    - prompt-egfr-check
+
+app_profile:
+  headline: FDA-approved oral biguanide for type 2 diabetes, the most-studied longevity drug candidate.
+  summary: Metformin has been FDA approved for type 2 diabetes since 1994. It reduces hepatic glucose production and improves insulin sensitivity, with downstream AMPK activation and mTOR inhibition that drive interest as a geroprotector. The TAME trial is testing whether it delays a composite of age-related disease in older adults.
+  why_people_care:
+    - Strong glycemic-control track record
+    - Cheap, generic, decades of safety data
+    - Plausible aging-related benefit being tested in TAME
+  what_to_verify:
+    - That use is supervised by a clinician
+    - Renal function before and during use
+    - Formulation (IR vs ER) and dose
+  what_to_track:
+    - Glycemic markers
+    - GI tolerability
+    - B12 status over time
+  reality_check: Longevity claims are plausible but not yet proven in humans. TAME is the trial that will move the needle.
+
+sources:
+  - id: mdpi-metformin-antiaging-2025
+    title: The Anti-Aging Mechanism of Metformin
+    url: https://www.mdpi.com/1420-3049/30/4/816
+    source_type: review
+    publisher: MDPI Molecules
+    year: 2025
+  - id: pmc-metformin-antiaging-2025
+    title: The Anti-Aging Mechanism of Metformin (PMC mirror)
+    url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11858480/
+    source_type: review
+    publisher: NCBI PMC
+    year: 2025
+  - id: ctgov-metformin-autophagy
+    title: Anti-Aging, Pro-Autophagy Effects of Metformin in Adults With Prediabetes
+    url: https://clinicaltrials.gov/study/NCT03309007
+    source_type: trial
+    publisher: ClinicalTrials.gov
+    year: 2017
+
+claims:
+  - id: metformin-fda-approved-t2d
+    text: Metformin is FDA-approved for type 2 diabetes (Glucophage and other brand/generic forms).
+    claim_type: regulatory
+    evidence_level: approved_label
+    route_scope:
+      - oral
+    source_ids:
+      - mdpi-metformin-antiaging-2025
+    confidence: high
+    limitations: []
+  - id: metformin-ampk-mechanism
+    text: Metformin partially inhibits mitochondrial complex I, raising AMP/ATP and activating AMPK, with downstream mTOR inhibition.
+    claim_type: mechanism
+    evidence_level: human_strong
+    route_scope:
+      - oral
+    source_ids:
+      - mdpi-metformin-antiaging-2025
+      - pmc-metformin-antiaging-2025
+    confidence: high
+    limitations: []
+  - id: metformin-tame-pending
+    text: A dedicated aging-outcome trial (TAME) is underway; longevity benefit in non-diabetic humans is not yet proven.
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope:
+      - oral
+    source_ids:
+      - mdpi-metformin-antiaging-2025
+      - ctgov-metformin-autophagy
+    confidence: medium
+    limitations:
+      - TAME outcomes not yet reported.

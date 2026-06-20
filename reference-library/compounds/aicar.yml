@@ -1,0 +1,151 @@
+schema_version: 1
+compound_id: "aicar"
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: "AICAR"
+  aliases:
+    - "Acadesine"
+    - "AICA riboside"
+    - "5-Aminoimidazole-4-carboxamide ribonucleoside"
+  non_aliases:
+    - "AICAR is not an AMP analog itself; the intracellular metabolite ZMP is the AMP-mimetic"
+  compound_type: small-molecule
+  categories:
+    - metabolic
+    - longevity
+
+forms:
+  primary_route: oral
+  supported_routes: [oral]
+  excluded_routes:
+    - route: subq
+      reason: "No approved formulation; injectable use is investigational only and outside approved channels"
+    - route: im
+      reason: "No approved formulation"
+    - route: intranasal
+      reason: "No published pharmacokinetic data supporting this route"
+    - route: topical
+      reason: "No published pharmacokinetic data supporting this route"
+  form_factors: []
+  verification_fields:
+    - "CAS number (2627-69-2)"
+    - "PubChem CID (17513)"
+    - "Certificate of analysis confirming identity and purity"
+
+positioning:
+  why_use_this_compound:
+    - "Research tool for activating AMPK signaling in cellular and animal models"
+    - "Studied for effects on glucose uptake, fat oxidation, and mitochondrial biogenesis in preclinical work"
+  who_is_tracking_this:
+    - "Researchers studying AMPK pathway biology"
+    - "Biohackers interested in cellular energy and metabolic signaling"
+  common_user_goals:
+    - "Understand AMPK activation as a metabolic and longevity mechanism"
+    - "Track preclinical and clinical literature on AICAR"
+
+evidence:
+  tier: preclinical
+  mechanism_targets:
+    - "AMP-activated protein kinase (AMPK), activated indirectly via the intracellular AICAR metabolite ZMP"
+    - "Downstream effects on glucose uptake, fatty acid oxidation, and mitochondrial biogenesis pathways"
+  claim_summary:
+    - "AICAR is an adenosine analog that is phosphorylated intracellularly to ZMP, an AMP mimetic that activates AMPK"
+    - "Most published data is preclinical (cell and rodent); clinical use has been investigational (e.g., cardiac surgery acadesine trials) and not for metabolic or performance indications"
+    - "Banned by WADA as a metabolic modulator"
+  evidence_gaps:
+    - "No approved therapeutic indication"
+    - "Limited human pharmacokinetic and safety data outside of historical acadesine cardiac trials"
+    - "Many in vitro effects attributed to AICAR are now known to be AMPK-independent"
+
+risks:
+  by_route:
+    oral:
+      - "No approved oral product; quality, purity, and bioavailability of grey-market material is not characterized"
+      - "Banned by WADA; competitive athletes risk sanctions"
+
+tracking:
+  useful_logs:
+    - "Source / lot / certificate of analysis"
+    - "Subjective energy, exercise tolerance, and recovery notes"
+  inventory_fields:
+    - "vendor"
+    - "lot_number"
+    - "coa_url"
+  peppi_actions:
+    - "Surface that AICAR has no approved human indication and is WADA-banned before any tracking suggestion"
+
+app_profile:
+  headline: "Research-only AMPK activator with no approved human use."
+  summary: "AICAR (acadesine) is a small-molecule adenosine analog used in research to activate AMPK via its intracellular metabolite ZMP. Most evidence is preclinical; the historical acadesine cardiac surgery program did not lead to approval, and there is no approved metabolic or performance indication."
+  why_people_care:
+    - "AMPK is a central metabolic sensor implicated in glucose handling, fat oxidation, and longevity pathways"
+    - "Animal studies suggest improved endurance and metabolic markers"
+  what_to_verify:
+    - "Identity and purity via certificate of analysis"
+    - "Regulatory status in your jurisdiction"
+    - "WADA prohibited-list status if you compete"
+  what_to_track:
+    - "Source, lot, and any third-party testing"
+    - "Subjective and objective metabolic markers if used in a research context"
+  reality_check: "AICAR is a preclinical research tool, not an approved therapy. Human safety and efficacy for metabolic or performance use have not been established, and it is prohibited in competitive sport."
+
+sources:
+  - id: "pubchem-aicar"
+    title: "Acadesine (AICAR) - PubChem Compound Summary CID 17513"
+    url: "https://pubchem.ncbi.nlm.nih.gov/compound/17513"
+    source_type: database
+    publisher: "NCBI / National Library of Medicine"
+    year: 2026
+  - id: "nature-emm-ampk-activators"
+    title: "AMPK activators: mechanisms of action and physiological activities"
+    url: "https://www.nature.com/articles/emm201616"
+    source_type: review
+    publisher: "Experimental & Molecular Medicine (Nature)"
+    year: 2016
+  - id: "pmc-aicar-ampk-independent"
+    title: "AICAr, a Widely Used AMPK Activator with Important AMPK-Independent Effects: A Systematic Review"
+    url: "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8147799/"
+    source_type: review
+    publisher: "International Journal of Molecular Sciences (PMC)"
+    year: 2021
+
+claims:
+  - id: "identity"
+    text: "AICAR (acadesine) is a small-molecule adenosine analog, CAS 2627-69-2, PubChem CID 17513."
+    claim_type: identity
+    evidence_level: identity
+    route_scope: []
+    source_ids:
+      - "pubchem-aicar"
+    confidence: high
+    limitations: []
+  - id: "mechanism-ampk"
+    text: "AICAR is taken up by cells and phosphorylated to ZMP, an AMP mimetic that allosterically activates AMPK."
+    claim_type: mechanism
+    evidence_level: preclinical
+    route_scope: []
+    source_ids:
+      - "nature-emm-ampk-activators"
+    confidence: high
+    limitations: []
+  - id: "ampk-independent-effects"
+    text: "Many cellular effects historically attributed to AICAR are AMPK-independent and may reflect ZMP action on other targets."
+    claim_type: mechanism
+    evidence_level: preclinical
+    route_scope: []
+    source_ids:
+      - "pmc-aicar-ampk-independent"
+    confidence: high
+    limitations: []
+  - id: "no-approved-indication"
+    text: "AICAR has no approved human therapeutic indication for metabolic, performance, or longevity use."
+    claim_type: regulatory
+    evidence_level: human_limited
+    route_scope: []
+    source_ids:
+      - "nature-emm-ampk-activators"
+    confidence: high
+    limitations:
+      - "Historical acadesine cardiac surgery trials did not result in approval"

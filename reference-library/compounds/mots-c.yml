@@ -1,0 +1,157 @@
+schema_version: 1
+compound_id: mots-c
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: MOTS-c
+  aliases:
+    - Mitochondrial Open Reading Frame of the 12S rRNA-c
+    - MOTSc
+  non_aliases:
+    - Humanin
+    - SHLP1
+    - SHLP2
+  compound_type: peptide
+  categories:
+    - metabolic
+    - longevity
+
+forms:
+  primary_route: subq
+  supported_routes:
+    - subq
+  excluded_routes:
+    - route: oral
+      reason: Peptide; no oral formulation studied in humans.
+    - route: intranasal
+      reason: No clinical evidence for intranasal MOTS-c.
+    - route: topical
+      reason: No clinical evidence for topical MOTS-c.
+  form_factors:
+    - lyophilized-powder-research-vial
+  verification_fields:
+    - vendor
+    - lot_number
+    - purity_coa
+    - reconstitution_diluent
+
+positioning:
+  why_use_this_compound:
+    - Mitochondrial-derived peptide tied to AMPK activation and metabolic homeostasis
+    - Early-stage interest in metabolic and aging biology
+  who_is_tracking_this:
+    - Users experimenting with research-grade peptides for metabolic biomarkers
+    - Researchers studying mitochondrial-derived peptides
+  common_user_goals:
+    - Insulin sensitivity
+    - Exercise capacity
+    - Metabolic resilience
+
+evidence:
+  tier: preclinical
+  mechanism_targets:
+    - AMPK (activated via folate / de novo purine pathway)
+    - Skeletal muscle glucose handling
+    - Mitochondrial stress response
+  claim_summary:
+    - 16-amino-acid peptide encoded within mitochondrial 12S rRNA; first characterized by Lee et al. 2015.
+    - Preclinical data show improved insulin sensitivity, reduced obesity, and metabolic homeostasis effects.
+    - Human data are limited; clinical translation is early-stage.
+  evidence_gaps:
+    - Very limited published human trial data
+    - Long-term safety unknown
+    - No regulatory approval
+
+risks:
+  by_route:
+    subq:
+      - Unregulated supply: purity and identity not verifiable without independent COA
+      - Long-term safety unknown
+      - Injection-site reactions possible
+      - Unknown interactions with glucose-lowering medications
+
+tracking:
+  useful_logs:
+    - Fasting glucose and insulin
+    - HbA1c
+    - Body composition
+    - Exercise performance
+    - Injection-site reactions
+  inventory_fields:
+    - vendor
+    - lot_number
+    - purity_coa
+    - reconstitution_date
+  peppi_actions:
+    - flag-research-only
+    - prompt-coa-upload
+
+app_profile:
+  headline: Mitochondrial-derived peptide with promising preclinical metabolic data and very thin human evidence.
+  summary: MOTS-c is a 16-amino-acid peptide encoded within mitochondrial 12S rRNA, discovered by Lee and colleagues in 2015. It activates AMPK via the folate / de novo purine pathway and shows metabolic benefits in animal models. Human clinical evidence is early-stage.
+  why_people_care:
+    - Novel mitochondrial-encoded peptide tied to aging biology
+    - Preclinical metabolic and exercise-capacity signals
+  what_to_verify:
+    - Vendor reputation and Certificate of Analysis
+    - Reconstitution math and storage
+  what_to_track:
+    - Glycemic markers
+    - Body composition
+    - Exercise performance
+  reality_check: Almost all evidence is preclinical. Human data exist but are very limited; treat MOTS-c as research-stage, not clinical-grade.
+
+sources:
+  - id: lee-cellmetab-2015
+    title: The Mitochondrial-Derived Peptide MOTS-c Promotes Metabolic Homeostasis and Reduces Obesity and Insulin Resistance
+    url: https://www.sciencedirect.com/science/article/pii/S1550413115000613
+    source_type: publication
+    publisher: Cell Metabolism (Lee et al.)
+    year: 2015
+  - id: pubmed-motsc-review-2016
+    title: MOTS-c, A Novel Mitochondrial-Derived Peptide Regulating Muscle and Fat Metabolism
+    url: https://pubmed.ncbi.nlm.nih.gov/27216708/
+    source_type: review
+    publisher: PubMed
+    year: 2016
+  - id: pmc-motsc-aging-2022
+    title: MOTS-c, the Most Recent Mitochondrial Derived Peptide in Human Aging and Age-Related Diseases
+    url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9570330/
+    source_type: review
+    publisher: NCBI PMC
+    year: 2022
+
+claims:
+  - id: motsc-discovery
+    text: MOTS-c is a 16-amino-acid peptide encoded within mitochondrial 12S rRNA, first characterized by Lee et al. in 2015.
+    claim_type: identity
+    evidence_level: human_strong
+    route_scope: []
+    source_ids:
+      - lee-cellmetab-2015
+    confidence: high
+    limitations: []
+  - id: motsc-ampk-mechanism
+    text: MOTS-c modulates the folate cycle and de novo purine biosynthesis, leading to AMPK activation, with downstream effects on glucose handling in skeletal muscle.
+    claim_type: mechanism
+    evidence_level: preclinical
+    route_scope:
+      - subq
+    source_ids:
+      - lee-cellmetab-2015
+      - pubmed-motsc-review-2016
+    confidence: medium
+    limitations:
+      - Mechanism characterized primarily in cell and animal models.
+  - id: motsc-human-evidence-limited
+    text: Human clinical evidence for MOTS-c is limited; most evidence supporting metabolic and aging benefits is preclinical.
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope:
+      - subq
+    source_ids:
+      - pmc-motsc-aging-2022
+    confidence: medium
+    limitations:
+      - Few published controlled human trials.

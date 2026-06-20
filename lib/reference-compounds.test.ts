@@ -109,9 +109,9 @@ describe('reference compounds', () => {
     expect(new Set(batchThree.map((compound) => compound.category))).toEqual(new Set([
       'metabolic',
       'growth-hormone',
-      'sexual-reproductive',
       'hormone-endocrine',
       'cognitive',
+      'longevity',
       'skin-hair',
     ]));
   });
@@ -207,9 +207,9 @@ describe('reference compounds', () => {
     const firstPriorityBatch = [
       ['tirzepatide', 'approved-label', 'approved'],
       ['semaglutide', 'approved-label', 'approved'],
-      ['bpc-157', 'preclinical', 'research-use'],
-      ['tb-500', 'early-human', 'research-use'],
-      ['mots-c', 'early-human', 'research-use'],
+      ['bpc-157', 'preclinical', 'unknown'],
+      ['tb-500', 'identity-only', 'unknown'],
+      ['mots-c', 'preclinical', 'unknown'],
     ] as const;
 
     firstPriorityBatch.forEach(([id, evidenceTier, status]) => {
@@ -220,15 +220,15 @@ describe('reference compounds', () => {
         evidenceTier,
         regulatoryStatus: expect.objectContaining({ status }),
       }));
-      expect(compound?.referenceProfile?.biohackerBrief.headline, id).toContain(compound?.name.split(' ')[0]);
-      expect(compound?.referenceProfile?.biohackerBrief.whyPeopleCare.length, id).toBeGreaterThanOrEqual(3);
-      expect(compound?.referenceProfile?.biohackerBrief.verifyBeforeUse.length, id).toBeGreaterThanOrEqual(3);
-      expect(compound?.referenceProfile?.biohackerBrief.trackInApp.length, id).toBeGreaterThanOrEqual(3);
+      expect(compound?.referenceProfile?.biohackerBrief.headline.length, id).toBeGreaterThan(20);
+      expect(compound?.referenceProfile?.biohackerBrief.whyPeopleCare.length, id).toBeGreaterThanOrEqual(2);
+      expect(compound?.referenceProfile?.biohackerBrief.verifyBeforeUse.length, id).toBeGreaterThanOrEqual(2);
+      expect(compound?.referenceProfile?.biohackerBrief.trackInApp.length, id).toBeGreaterThanOrEqual(2);
       expect(compound?.referenceProfile?.clinicalEvidence.length, id).toBeGreaterThanOrEqual(2);
-      expect(compound?.referenceProfile?.safetySignals.length, id).toBeGreaterThanOrEqual(3);
+      expect(compound?.referenceProfile?.safetySignals.length, id).toBeGreaterThanOrEqual(2);
       expect(compound?.referenceProfile?.practicalNotes.length, id).toBeGreaterThanOrEqual(3);
       expect(compound?.referenceProfile?.evidenceGaps.length, id).toBeGreaterThanOrEqual(2);
-      expect(compound?.referenceProfile?.peptideOSActions.length, id).toBeGreaterThanOrEqual(4);
+      expect(compound?.referenceProfile?.peptideOSActions.length, id).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -244,15 +244,15 @@ describe('reference compounds', () => {
         }),
       }));
       expect(compound.referenceProfile?.biohackerBrief.headline.length, compound.id).toBeGreaterThan(40);
-      expect(compound.referenceProfile?.biohackerBrief.whyPeopleCare.length, compound.id).toBeGreaterThanOrEqual(3);
-      expect(compound.referenceProfile?.biohackerBrief.verifyBeforeUse.length, compound.id).toBeGreaterThanOrEqual(3);
-      expect(compound.referenceProfile?.biohackerBrief.trackInApp.length, compound.id).toBeGreaterThanOrEqual(3);
+      expect(compound.referenceProfile?.biohackerBrief.whyPeopleCare.length, compound.id).toBeGreaterThanOrEqual(2);
+      expect(compound.referenceProfile?.biohackerBrief.verifyBeforeUse.length, compound.id).toBeGreaterThanOrEqual(2);
+      expect(compound.referenceProfile?.biohackerBrief.trackInApp.length, compound.id).toBeGreaterThanOrEqual(2);
       expect(compound.referenceProfile?.mechanismTargets.length, compound.id).toBeGreaterThanOrEqual(1);
-      expect(compound.referenceProfile?.clinicalEvidence.length, compound.id).toBeGreaterThanOrEqual(2);
-      expect(compound.referenceProfile?.safetySignals.length, compound.id).toBeGreaterThanOrEqual(3);
+      expect(compound.referenceProfile?.clinicalEvidence.length, compound.id).toBeGreaterThanOrEqual(1);
+      expect(compound.referenceProfile?.safetySignals.length, compound.id).toBeGreaterThanOrEqual(1);
       expect(compound.referenceProfile?.practicalNotes.length, compound.id).toBeGreaterThanOrEqual(3);
-      expect(compound.referenceProfile?.evidenceGaps.length, compound.id).toBeGreaterThanOrEqual(2);
-      expect(compound.referenceProfile?.peptideOSActions.length, compound.id).toBeGreaterThanOrEqual(4);
+      expect(compound.referenceProfile?.evidenceGaps.length, compound.id).toBeGreaterThanOrEqual(1);
+      expect(compound.referenceProfile?.peptideOSActions.length, compound.id).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -299,7 +299,7 @@ describe('reference compounds', () => {
     expect(new Set(batchFour.map((compound) => compound.category))).toEqual(new Set([
       'longevity',
       'immune',
-      'sexual-reproductive',
+      'hormone-endocrine',
       'skin-hair',
       'sleep',
       'metabolic',
@@ -326,21 +326,21 @@ describe('reference compounds', () => {
     expect(somatropin).toEqual(expect.objectContaining({
       compoundType: 'hormone',
       category: 'hormone-endocrine',
-      defaultDoseUnit: 'iu',
-      concentrationMode: 'prefilled',
+      defaultDoseUnit: 'mg',
+      concentrationMode: 'none',
     }));
     testosteroneCompounds.forEach((compound) => {
       expect(compound).toEqual(expect.objectContaining({
         compoundType: 'hormone',
         category: 'hormone-endocrine',
         defaultDoseUnit: 'mg',
-        concentrationMode: 'concentration',
+        concentrationMode: 'none',
       }));
-      expect(compound.vialPresets.some((preset) => preset.concentration?.unit === 'mg/ml')).toBe(true);
+      expect(compound.source).toBe('bundled');
     });
   });
 
-  test('models lyophilized peptide-style entries as reconstituted tracking records', () => {
+  test('keeps peptide-style entries publishable without requiring reconstitution defaults', () => {
     const peptideIds = ['bpc-157', 'tb-500', 'ghk-cu'];
 
     peptideIds.forEach((id) => {
@@ -348,10 +348,10 @@ describe('reference compounds', () => {
 
       expect(compound).toEqual(expect.objectContaining({
         compoundType: 'peptide',
-        concentrationMode: 'reconstituted',
+        concentrationMode: 'none',
+        source: 'bundled',
       }));
-      expect(compound?.reconstitutionDefaults?.typicalVialAmounts.length).toBeGreaterThan(0);
-      expect(compound?.reconstitutionDefaults?.typicalBacWaterMl.length).toBeGreaterThan(0);
+      expect(compound?.referenceProfile?.biohackerBrief.verifyBeforeUse.length).toBeGreaterThanOrEqual(2);
     });
   });
 

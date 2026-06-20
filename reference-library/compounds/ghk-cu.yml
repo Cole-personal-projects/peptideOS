@@ -1,0 +1,132 @@
+schema_version: 1
+compound_id: ghk-cu
+status: approved
+updated_at: '2026-06-19'
+identity:
+  name: GHK-Cu
+  aliases:
+  - Copper peptide GHK-Cu
+  - Glycyl-L-histidyl-L-lysine copper
+  - Copper tripeptide-1
+  non_aliases:
+  - GHK-Cu should not be merged with plain GHK or AHK-Cu
+  compound_type: peptide
+  categories:
+  - skin-hair
+forms:
+  primary_route: topical
+  supported_routes:
+  - topical
+  - subq
+  excluded_routes: []
+  form_factors:
+  - topical container
+  - lyophilized vial
+  verification_fields:
+  - exact copper-peptide form
+  - route / formulation
+  - amount or concentration
+  - source
+positioning:
+  why_use_this_compound:
+  - Track a skin-and-repair copper peptide
+  - Separate topical and injectable product contexts
+  who_is_tracking_this:
+  - Skin / hair researchers
+  - Users logging cosmetic or vial workflows
+  common_user_goals:
+  - Keep route and formulation distinct
+  - Store photos and user notes
+evidence:
+  tier: preclinical
+  mechanism_targets:
+  - copper-binding peptide context
+  - extracellular matrix remodeling
+  - skin-regeneration signaling
+  claim_summary:
+  - GHK-Cu appears in skin-regeneration and anti-aging review literature
+  - Topical and injectable workflows need separate records
+  - Source quality and formulation matter more than generic copper-peptide shorthand
+  evidence_gaps:
+  - No US approved-product label is attached here
+  - Topical cosmetic claims and injectable research-vial claims are not interchangeable
+risks:
+  by_route:
+    topical:
+    - Topical irritation or mismatch between cosmetic and research claims
+    - Container concentration still needs exact label capture
+    subq:
+    - Injection-site reactions and source uncertainty are possible
+tracking:
+  useful_logs:
+  - Route / formulation
+  - Skin or hair notes
+  - Source / lot / expiration
+  inventory_fields:
+  - route
+  - container_type
+  - concentration
+  - source
+  - lot_number
+  peppi_actions:
+  - separate-route-workflows
+  - calculate-reconstitution
+  - flag-route-mismatch
+app_profile:
+  headline: Skin-and-repair copper peptide with route separation.
+  summary: GHK-Cu is the copper peptide people track for skin quality, hair/scalp routines, wound-repair interest, and cosmetic or research-vial experiments. PeptideOS should keep topical serums, cosmetic products, and injectable-style vials separated by route, concentration, carrier, source, photos, irritation notes, and reconstitution details so generic copper-peptide shorthand does not blur the record.
+  why_people_care:
+  - Skin / hair discussions
+  - Research vials and cosmetic products
+  what_to_verify:
+  - Exact copper-peptide form
+  - Route / formulation
+  - Amount or concentration
+  what_to_track:
+  - Photos
+  - Irritation notes
+  - Reconstitution details
+  reality_check: Product form matters more than the nickname.
+sources:
+- id: pmc-ghk-cu-skin-regeneration
+  title: GHK Peptide as a Natural Modulator of Multiple Cellular Pathways in Skin Regeneration
+  url: https://pmc.ncbi.nlm.nih.gov/articles/PMC4508379/
+  source_type: review
+  publisher: PMC
+  year: 2015
+- id: pmc-ghk-cu-anti-aging
+  title: The potential of GHK as an anti-aging peptide
+  url: https://pmc.ncbi.nlm.nih.gov/articles/PMC8789089/
+  source_type: review
+  publisher: PMC
+  year: 2022
+claims:
+- id: identity
+  text: GHK-Cu is a copper-peptide reference record distinct from plain GHK and AHK-Cu.
+  claim_type: identity
+  evidence_level: identity
+  route_scope: []
+  source_ids:
+  - pmc-ghk-cu-skin-regeneration
+  - pmc-ghk-cu-anti-aging
+  confidence: high
+  limitations: []
+- id: mechanism
+  text: Review literature discusses GHK-Cu in skin-regeneration and extracellular-matrix contexts.
+  claim_type: mechanism
+  evidence_level: preclinical
+  route_scope: []
+  source_ids:
+  - pmc-ghk-cu-skin-regeneration
+  - pmc-ghk-cu-anti-aging
+  confidence: high
+  limitations: []
+- id: regulatory
+  text: This entry is research / cosmetic context only and does not claim an approved product label.
+  claim_type: regulatory
+  evidence_level: unknown
+  route_scope: []
+  source_ids: []
+  confidence: low
+  limitations:
+  - No US approved-product label is attached to this bundled reference entry

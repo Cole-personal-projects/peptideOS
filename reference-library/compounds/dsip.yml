@@ -1,0 +1,162 @@
+schema_version: 1
+compound_id: dsip
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: Delta Sleep-Inducing Peptide
+  aliases:
+    - DSIP
+  non_aliases: []
+  compound_type: peptide
+  categories:
+    - sleep
+
+forms:
+  primary_route: subq
+  supported_routes:
+    - subq
+    - intranasal
+  excluded_routes:
+    - route: oral
+      reason: Peptide is expected to be degraded by gastrointestinal proteases; no published human oral pharmacokinetic data.
+    - route: topical
+      reason: No published human pharmacokinetic or efficacy data for topical administration.
+    - route: im
+      reason: No durable published human efficacy or safety data specifically supporting intramuscular use.
+  form_factors:
+    - lyophilized powder for reconstitution
+    - intranasal spray (research)
+  verification_fields:
+    - certificate_of_analysis_present
+    - purity_percent
+    - mass_spec_confirmation
+
+positioning:
+  why_use_this_compound:
+    - Historical research interest as a neuropeptide associated with delta-wave sleep.
+    - Small early human studies reported modest sleep-quality changes in insomnia populations.
+  who_is_tracking_this:
+    - Self-experimenters interested in sleep peptides.
+    - Researchers reviewing 1980s-1990s neuropeptide and sleep literature.
+  common_user_goals:
+    - Understand what early human DSIP studies actually showed.
+    - Distinguish anecdotal claims from the limited clinical evidence.
+
+evidence:
+  tier: human_limited
+  mechanism_targets:
+    - Sleep regulation (mechanism in humans not fully characterized)
+    - Neuroendocrine and stress-axis modulation (proposed)
+  claim_summary:
+    - DSIP is a naturally occurring neuropeptide first characterized in the 1970s in the context of delta-wave sleep research.
+    - A small number of human studies in chronic insomnia reported improvements in sleep efficiency and latency vs. placebo with intravenous synthetic DSIP.
+    - Results across human studies are mixed; modern, adequately powered trials are lacking.
+  evidence_gaps:
+    - No large, modern randomized controlled trials.
+    - No standardized long-term human safety data.
+    - Intranasal route is commonly used in self-experimentation but lacks published human pharmacokinetic studies.
+
+risks:
+  by_route:
+    subq:
+      - Human safety data limited to small early-era studies; long-term safety unknown.
+      - Product purity and identity vary in the research-chemical market.
+    intranasal:
+      - No published human pharmacokinetic or safety data specifically for intranasal DSIP.
+      - Local nasal mucosal effects not characterized.
+
+tracking:
+  useful_logs:
+    - sleep onset latency
+    - total sleep time
+    - subjective sleep quality
+    - next-day alertness
+    - any adverse symptoms
+  inventory_fields:
+    - vendor
+    - lot_number
+    - certificate_of_analysis
+    - purity_percent
+    - storage_conditions
+  peppi_actions:
+    - flag_thin_evidence
+    - require_coa_before_logging
+
+app_profile:
+  headline: Early-era sleep neuropeptide with small, mixed human studies and no modern trials.
+  summary: DSIP is a neuropeptide studied in the 1970s-1990s for effects on sleep architecture. A handful of small human studies showed modest improvements in sleep efficiency and latency in insomnia patients with intravenous synthetic DSIP, but modern, well-powered evidence is essentially absent.
+  why_people_care:
+    - Interest in non-GABAergic sleep aids.
+    - Curiosity about peptides influencing sleep architecture.
+  what_to_verify:
+    - Certificate of analysis and identity confirmation from the vendor.
+    - Purity and storage handling.
+  what_to_track:
+    - Sleep latency, total sleep time, and subjective quality.
+    - Next-day cognition and any adverse symptoms.
+  reality_check: The human evidence base is small, old, and mostly intravenous. Self-experimentation via subcutaneous or intranasal routes is not supported by published pharmacokinetic data, and long-term safety is unknown.
+
+sources:
+  - id: pubmed-1299794
+    title: Effects of delta sleep-inducing peptide on sleep of chronic insomniac patients. A double-blind study
+    url: https://pubmed.ncbi.nlm.nih.gov/1299794/
+    source_type: publication
+    publisher: PubMed
+    year: 1992
+  - id: pubmed-7028502
+    title: The influence of synthetic DSIP (delta-sleep-inducing-peptide) on disturbed human sleep
+    url: https://pubmed.ncbi.nlm.nih.gov/7028502/
+    source_type: publication
+    publisher: PubMed
+    year: 1981
+  - id: pubmed-6895513
+    title: Acute and delayed effects of DSIP (delta sleep-inducing peptide) on human sleep behavior
+    url: https://pubmed.ncbi.nlm.nih.gov/6895513/
+    source_type: publication
+    publisher: PubMed
+    year: 1982
+
+claims:
+  - id: identity-class
+    text: DSIP is a naturally occurring neuropeptide identified in the 1970s in connection with delta-wave sleep research.
+    claim_type: identity
+    evidence_level: human_limited
+    route_scope: []
+    source_ids:
+      - pubmed-7028502
+    confidence: high
+    limitations: []
+  - id: evidence-insomnia-rct
+    text: A small double-blind study in chronic insomnia patients reported higher sleep efficiency and shorter sleep latency with DSIP versus placebo.
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope:
+      - subq
+    source_ids:
+      - pubmed-1299794
+    confidence: medium
+    limitations:
+      - Small sample size; older methodology; results have not been reproduced in larger modern trials.
+  - id: evidence-acute-sleep
+    text: Acute administration of synthetic DSIP in humans has been reported to influence sleep onset, sleep efficiency, and subjective sleep behavior in small studies.
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope: []
+    source_ids:
+      - pubmed-6895513
+      - pubmed-7028502
+    confidence: medium
+    limitations:
+      - Studies are small and dated; results across the literature are mixed.
+  - id: risk-no-longterm-safety
+    text: There is no standardized long-term human safety data for DSIP.
+    claim_type: risk
+    evidence_level: unknown
+    route_scope:
+      - subq
+      - intranasal
+    source_ids: []
+    confidence: low
+    limitations:
+      - Absence-of-evidence statement based on lack of indexed long-term safety trials.

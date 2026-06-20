@@ -40,7 +40,7 @@ export function buildLibraryProfileViewModel(
         tone: 'primary' as const,
       },
       {
-        title: 'Why people care',
+        title: 'Why people run this',
         items: referenceProfile.biohackerBrief.whyPeopleCare,
       },
     ] : []),

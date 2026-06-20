@@ -1,0 +1,186 @@
+schema_version: 1
+compound_id: ipamorelin
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: Ipamorelin
+  aliases:
+    - NNC 26-0161
+  non_aliases:
+    - Ibutamoren
+    - MK-677
+    - GHRP-6
+    - GHRP-2
+  compound_type: peptide
+  categories:
+    - growth-hormone
+
+forms:
+  primary_route: subq
+  supported_routes:
+    - subq
+    - im
+  excluded_routes:
+    - route: oral
+      reason: Pentapeptide; oral bioavailability not established for systemic GH effect.
+    - route: intranasal
+      reason: No durable human evidence for intranasal ipamorelin.
+    - route: topical
+      reason: No evidence of transdermal absorption to systemic levels.
+  form_factors:
+    - lyophilized-vial
+  verification_fields:
+    - vendor
+    - lot
+    - coa
+    - hplc-purity
+    - mass-spec
+    - bacteriostatic-water-source
+
+positioning:
+  why_use_this_compound:
+    - Selective GH release (low cortisol/prolactin/ACTH activation vs older GHRPs)
+    - Preserves pulsatile GH pattern
+    - Short half-life allows pulse-style dosing
+  who_is_tracking_this:
+    - Researchers studying selective GHS pharmacology
+    - Users interested in GH pulse augmentation without ghrelin-mimicking appetite spike of higher-affinity GHRPs
+  common_user_goals:
+    - Augment endogenous GH pulses
+    - Avoid prolactin/cortisol bump seen with non-selective GHRPs
+
+evidence:
+  tier: preclinical
+  mechanism_targets:
+    - GHSR-1a (ghrelin receptor) selective agonism
+    - Pituitary GH release without ACTH/prolactin elevation at therapeutic doses
+  claim_summary:
+    - Pentapeptide Aib-His-D-2-Nal-D-Phe-Lys-NH2 (Raun 1998)
+    - Selective GH release in rat and swine models without cortisol/prolactin increase
+    - Induces longitudinal bone growth in rats (Johansen 1999)
+  evidence_gaps:
+    - No FDA approval for any indication
+    - Human trials are small/older; no large-scale efficacy or long-term safety data
+    - Most modern publicly cited data is preclinical or vendor-derived
+
+risks:
+  by_route:
+    subq:
+      - Injection site reaction (erythema, bruising)
+      - Headache, transient flushing reported in early trials
+      - Theoretical risk of GH/IGF-1 elevation effects (water retention, insulin resistance) if sustained
+      - Banned by WADA for athletes
+      - Sterility risk from improper reconstitution
+    im:
+      - Same as subq plus deeper tissue injection risks (hematoma, nerve proximity)
+
+tracking:
+  useful_logs:
+    - IGF-1 baseline and follow-up
+    - Fasting glucose
+    - Injection site condition
+    - Subjective sleep and recovery notes
+  inventory_fields:
+    - vendor
+    - lot
+    - coa-on-file
+    - purity-percent
+    - reconstitution-date
+    - bac-water-lot
+  peppi_actions:
+    - log-injection
+    - log-site-rotation
+    - log-igf1-lab
+    - log-glucose-lab
+
+app_profile:
+  headline: Selective pentapeptide GH secretagogue with a cleaner endocrine profile than older GHRPs.
+  summary: Ipamorelin is a synthetic pentapeptide ghrelin-receptor agonist developed at Novo Nordisk. Its claim to fame is selective stimulation of pituitary GH release without measurable elevation of ACTH, cortisol, or prolactin at therapeutic doses.
+  why_people_care:
+    - Cleaner endocrine side-profile than GHRP-2/GHRP-6
+    - Preserves natural pulsatility
+    - Short half-life for pulse dosing
+  what_to_verify:
+    - COA confirms ipamorelin sequence (not a substituted GHRP)
+    - HPLC purity
+    - Sterile reconstitution practice
+  what_to_track:
+    - IGF-1
+    - Fasting glucose
+    - Injection site health
+  reality_check: Selectivity claims rest largely on a small set of late-1990s studies and preclinical work. There is no FDA-approved indication and no large modern human safety dataset. Compounded only.
+
+sources:
+  - id: raun-1998
+    title: "Ipamorelin, the first selective growth hormone secretagogue"
+    url: https://pubmed.ncbi.nlm.nih.gov/9849822/
+    source_type: publication
+    publisher: Eur J Endocrinol
+    year: 1998
+  - id: johansen-1999
+    title: "Ipamorelin, a new growth-hormone-releasing peptide, induces longitudinal bone growth in rats"
+    url: https://pubmed.ncbi.nlm.nih.gov/10373343/
+    source_type: publication
+    publisher: Growth Horm IGF Res
+    year: 1999
+  - id: ishida-2020
+    title: "Growth hormone secretagogues: history, mechanism of action, and clinical development"
+    url: https://onlinelibrary.wiley.com/doi/full/10.1002/rco2.9
+    source_type: review
+    publisher: JCSM Rapid Communications
+    year: 2020
+
+claims:
+  - id: identity-pentapeptide
+    text: Ipamorelin is a synthetic pentapeptide (Aib-His-D-2-Nal-D-Phe-Lys-NH2).
+    claim_type: identity
+    evidence_level: human_strong
+    route_scope: []
+    source_ids:
+      - raun-1998
+    confidence: high
+    limitations: []
+  - id: mechanism-selective-ghs
+    text: Ipamorelin selectively stimulates pituitary GH release via GHSR-1a without significantly raising ACTH, cortisol, or prolactin at therapeutic doses.
+    claim_type: mechanism
+    evidence_level: preclinical
+    route_scope:
+      - subq
+      - im
+    source_ids:
+      - raun-1998
+      - ishida-2020
+    confidence: high
+    limitations:
+      - Selectivity demonstrated primarily in rat/swine models and small early human studies
+  - id: evidence-bone-growth
+    text: Ipamorelin induced longitudinal bone growth in rat models.
+    claim_type: evidence
+    evidence_level: preclinical
+    route_scope: []
+    source_ids:
+      - johansen-1999
+    confidence: high
+    limitations:
+      - Animal data; no human equivalence demonstrated
+  - id: regulatory-status
+    text: Ipamorelin is not FDA approved for any indication and is on the WADA prohibited list.
+    claim_type: regulatory
+    evidence_level: approved_label
+    route_scope: []
+    source_ids:
+      - ishida-2020
+    confidence: high
+    limitations: []
+  - id: risk-injection-site
+    text: Subcutaneous injection of peptides like ipamorelin can cause injection-site reactions and carries sterility risk if reconstitution is poor.
+    claim_type: risk
+    evidence_level: theoretical
+    route_scope:
+      - subq
+      - im
+    source_ids: []
+    confidence: low
+    limitations:
+      - Generic injection-route risk; not from an ipamorelin-specific trial readout

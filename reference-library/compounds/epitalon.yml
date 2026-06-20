@@ -1,0 +1,167 @@
+schema_version: 1
+compound_id: epitalon
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: Epitalon
+  aliases:
+    - Epithalon
+    - Epithalone
+    - AEDG
+    - Ala-Glu-Asp-Gly
+  non_aliases:
+    - Epithalamin
+  compound_type: peptide
+  categories:
+    - longevity
+
+forms:
+  primary_route: subq
+  supported_routes:
+    - subq
+    - intranasal
+  excluded_routes:
+    - route: oral
+      reason: Peptide is expected to be degraded by gastrointestinal proteases; no published human oral pharmacokinetic data.
+    - route: topical
+      reason: No published human pharmacokinetic or efficacy data for topical administration.
+    - route: im
+      reason: No durable published human efficacy or safety data specifically supporting intramuscular use over subcutaneous.
+  form_factors:
+    - lyophilized powder for reconstitution
+  verification_fields:
+    - certificate_of_analysis_present
+    - purity_percent
+    - mass_spec_confirmation
+
+positioning:
+  why_use_this_compound:
+    - Synthetic tetrapeptide AEDG developed from the bovine pineal extract epithalamin in Russian gerontology research.
+    - Interest in telomerase activation and geroprotective hypotheses.
+  who_is_tracking_this:
+    - Self-experimenters interested in longevity peptides.
+    - Researchers reviewing Khavinson-group geroprotector literature.
+  common_user_goals:
+    - Understand which Epitalon claims are supported by primary literature versus extrapolation.
+    - Track an experimental protocol while logging subjective and biomarker changes.
+
+evidence:
+  tier: human_limited
+  mechanism_targets:
+    - Telomerase (hTERT) expression in human somatic cells (in vitro)
+    - Pineal and neuroendocrine function (proposed)
+  claim_summary:
+    - Epitalon is a synthetic tetrapeptide (Ala-Glu-Asp-Gly, AEDG) derived from the pineal extract epithalamin, developed in Vladimir Khavinson's laboratory.
+    - In vitro studies in human fetal fibroblasts and other cell lines have reported increased telomerase activity and telomere elongation.
+    - Human evidence is largely limited to observational cohort studies using the parent epithalamin extract, not synthetic AEDG; modern, large randomized trials are absent.
+    - Not FDA-approved for any indication.
+  evidence_gaps:
+    - No large, modern, blinded human RCTs of synthetic AEDG with hard endpoints.
+    - Rodent lifespan data is mixed and regimen-dependent.
+    - Long-term human safety not characterized.
+
+risks:
+  by_route:
+    subq:
+      - No standardized human long-term safety data for synthetic AEDG.
+      - Research-chemical market; product identity and purity vary.
+    intranasal:
+      - No published human pharmacokinetic or safety data specifically for intranasal Epitalon.
+      - Local nasal mucosal effects not characterized.
+
+tracking:
+  useful_logs:
+    - sleep quality
+    - subjective energy and mood
+    - any adverse symptoms
+    - optional biomarkers (e.g., epigenetic age, basic labs)
+  inventory_fields:
+    - vendor
+    - lot_number
+    - certificate_of_analysis
+    - purity_percent
+    - storage_conditions
+  peppi_actions:
+    - flag_thin_human_evidence
+    - require_coa_before_logging
+
+app_profile:
+  headline: Russian pineal-derived tetrapeptide with in vitro telomerase signals and thin human evidence.
+  summary: Epitalon (AEDG) is a synthetic tetrapeptide developed from the bovine pineal extract epithalamin by Vladimir Khavinson's group. In vitro work in human cells has reported induction of telomerase activity. Human clinical evidence is mostly limited to older observational cohorts using the parent extract rather than synthetic AEDG, and it has no FDA-approved use.
+  why_people_care:
+    - Telomerase activation hypothesis tied to longevity.
+    - Long history of use in Russian gerontology programs.
+  what_to_verify:
+    - Certificate of analysis and identity confirmation from the vendor.
+    - Storage handling and reconstitution.
+  what_to_track:
+    - Sleep, energy, mood, and any adverse symptoms.
+    - Optional biomarkers such as basic labs or epigenetic age tests.
+  reality_check: Modern, well-designed human trials of synthetic AEDG are essentially absent. Most enthusiasm is driven by in vitro and rodent data plus older Russian observational studies using the parent extract. Treat any use as unvalidated self-experimentation.
+
+sources:
+  - id: pmc-overview-2025
+    title: Overview of Epitalon - Highly Bioactive Pineal Tetrapeptide with Promising Properties
+    url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11943447/
+    source_type: review
+    publisher: PMC
+    year: 2025
+  - id: wiki-epitalon
+    title: Epitalon
+    url: https://en.wikipedia.org/wiki/Epitalon
+    source_type: other
+    publisher: Wikipedia
+    year: 2026
+
+claims:
+  - id: identity-class
+    text: Epitalon is a synthetic tetrapeptide with sequence Ala-Glu-Asp-Gly (AEDG), derived from the bovine pineal extract epithalamin and developed by Vladimir Khavinson's laboratory.
+    claim_type: identity
+    evidence_level: human_limited
+    route_scope: []
+    source_ids:
+      - pmc-overview-2025
+      - wiki-epitalon
+    confidence: high
+    limitations: []
+  - id: mechanism-telomerase
+    text: In vitro studies in human somatic cells have reported that Epitalon induces hTERT expression and telomerase activity and can extend telomere length in those cell systems.
+    claim_type: mechanism
+    evidence_level: preclinical
+    route_scope: []
+    source_ids:
+      - pmc-overview-2025
+    confidence: medium
+    limitations:
+      - In vitro evidence; not demonstrated in human in vivo studies with hard endpoints.
+  - id: evidence-human-thin
+    text: Human clinical evidence is largely limited to older observational cohort studies using the parent epithalamin extract, not synthetic AEDG, with no large modern randomized controlled trials.
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope: []
+    source_ids:
+      - pmc-overview-2025
+    confidence: medium
+    limitations:
+      - Most human cohort data is from a single research program and uses the parent extract, not synthetic AEDG.
+  - id: regulatory-not-approved
+    text: Epitalon is not FDA-approved for any indication in humans.
+    claim_type: regulatory
+    evidence_level: unknown
+    route_scope: []
+    source_ids: []
+    confidence: low
+    limitations:
+      - Absence-of-approval statement; users should confirm current regulatory status directly.
+  - id: risk-research-chemical
+    text: Epitalon is distributed in the West primarily as a research chemical, so product identity, purity, and contamination are not regulated.
+    claim_type: risk
+    evidence_level: unknown
+    route_scope:
+      - subq
+      - intranasal
+    source_ids: []
+    confidence: low
+    limitations:
+      - General research-chemical market observation; not from a regulatory source specific to Epitalon.

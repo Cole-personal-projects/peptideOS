@@ -1,0 +1,210 @@
+schema_version: 1
+compound_id: kisspeptin-10
+status: approved
+updated_at: "2026-06-19"
+
+identity:
+  name: Kisspeptin-10
+  aliases:
+    - KP-10
+    - Metastin 45-54
+  non_aliases:
+    - Kisspeptin-54
+    - GnRH
+  compound_type: peptide
+  categories:
+    - hormone-endocrine
+    - sexual-reproductive
+
+forms:
+  primary_route: subq
+  supported_routes:
+    - subq
+    - im
+  excluded_routes:
+    - route: oral
+      reason: Decapeptide; rapidly degraded in GI tract, oral systemic delivery not established.
+    - route: intranasal
+      reason: No durable human evidence for intranasal kisspeptin-10.
+    - route: topical
+      reason: No evidence of transdermal systemic absorption.
+  form_factors:
+    - lyophilized-vial
+  verification_fields:
+    - vendor
+    - lot
+    - coa
+    - hplc-purity
+    - mass-spec
+
+positioning:
+  why_use_this_compound:
+    - Upstream activator of GnRH via KISS1R, driving LH/FSH and downstream sex steroids
+    - Investigated for reproductive disorders, IVF triggering, and sexual response
+    - Stimulates physiologic LH pulse pattern rather than synthetic GnRH agonist sustained signaling
+  who_is_tracking_this:
+    - Researchers studying HPG axis modulation
+    - Users tracking endogenous LH/testosterone or LH/estradiol responses
+  common_user_goals:
+    - HPG axis activation
+    - Endogenous LH/FSH stimulation
+
+evidence:
+  tier: human_limited
+  mechanism_targets:
+    - KISS1R (GPR54) on hypothalamic GnRH neurons
+    - Downstream LH and FSH release from pituitary
+  claim_summary:
+    - Kisspeptin signaling is required for normal puberty and HPG axis function (loss-of-function = hypogonadotropic hypogonadism)
+    - Kisspeptin-10 administration acutely raises LH and FSH in humans
+    - Kisspeptin-54 has been used to trigger oocyte maturation in IVF with reduced OHSS risk vs hCG
+  evidence_gaps:
+    - Most published IVF/clinical trial work uses kisspeptin-54, not kisspeptin-10
+    - No FDA approval
+    - Long-term safety and chronic-use data minimal
+
+risks:
+  by_route:
+    subq:
+      - Transient hormonal swings (LH/FSH, then sex steroid changes)
+      - Headache and injection-site reaction reported
+      - Theoretical desensitization with overly frequent dosing
+      - Sterility risk from improper reconstitution
+    im:
+      - Same as subq plus deeper tissue injection risks
+
+tracking:
+  useful_logs:
+    - LH and FSH (timed)
+    - Total testosterone or estradiol depending on user
+    - Injection site condition
+    - Menstrual cycle markers (when applicable)
+  inventory_fields:
+    - vendor
+    - lot
+    - coa-on-file
+    - purity-percent
+    - reconstitution-date
+  peppi_actions:
+    - log-injection
+    - log-lh-lab
+    - log-fsh-lab
+    - log-testosterone-lab
+    - log-estradiol-lab
+
+app_profile:
+  headline: Upstream HPG-axis activator that drives endogenous LH and FSH.
+  summary: Kisspeptin-10 is the C-terminal decapeptide of human kisspeptin, the endogenous ligand of KISS1R (GPR54). KISS1R signaling on hypothalamic GnRH neurons is required for puberty and normal reproductive function. Imperial College London has led most of the human clinical work in this area, primarily with kisspeptin-54.
+  why_people_care:
+    - Endogenous, pulsatile path to LH/FSH instead of exogenous gonadotropins
+    - Investigational interest for reproductive disorders, IVF triggering, and psychosexual response
+    - Possible PCT-style use is discussed online but not validated in trials
+  what_to_verify:
+    - COA confirms kisspeptin-10 sequence (vs kisspeptin-54 or unrelated kisspeptins)
+    - HPLC purity
+    - Sterile reconstitution practice
+  what_to_track:
+    - LH, FSH
+    - Sex steroid response
+    - Subjective effects
+  reality_check: Human evidence base is real but concentrated at a single research group, and most clinical-grade trials use kisspeptin-54, not kisspeptin-10. No FDA approval. Self-experimentation is well outside the trial context.
+
+sources:
+  - id: abbara-2020
+    title: "Kisspeptin receptor agonist has therapeutic potential for female reproductive disorders"
+    url: https://www.jci.org/articles/view/139681
+    source_type: publication
+    publisher: Journal of Clinical Investigation
+    year: 2020
+  - id: comninos-2025
+    title: "Kisspeptin Administration Stimulates Reproductive Hormones but Does Not Affect Anxiety in Humans"
+    url: https://pubmed.ncbi.nlm.nih.gov/40036336/
+    source_type: trial
+    publisher: PubMed
+    year: 2025
+  - id: skorupskaite-2015
+    title: "Comprehensive Review on Kisspeptin and Its Role in Reproductive Disorders"
+    url: https://pubmed.ncbi.nlm.nih.gov/26194072/
+    source_type: review
+    publisher: PubMed
+    year: 2015
+  - id: chan-2018
+    title: "Changes in the Responsiveness of the Hypothalamic-Pituitary-Gonadal Axis to Kisspeptin-10 Administration during Pubertal Transition in Boys"
+    url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6038494/
+    source_type: publication
+    publisher: PMC
+    year: 2018
+  - id: ivf-kp54-trial
+    title: "The Use of the Hormone Kisspeptin in In Vitro Fertilisation (IVF) Treatment"
+    url: https://cdn.clinicaltrials.gov/large-docs/06/NCT01667406/SAP_001.pdf
+    source_type: trial
+    publisher: ClinicalTrials.gov
+    year: 2018
+
+claims:
+  - id: identity-decapeptide
+    text: Kisspeptin-10 is the C-terminal decapeptide fragment of kisspeptin, the endogenous ligand of KISS1R.
+    claim_type: identity
+    evidence_level: human_strong
+    route_scope: []
+    source_ids:
+      - skorupskaite-2015
+    confidence: high
+    limitations: []
+  - id: mechanism-kiss1r
+    text: Kisspeptin activates KISS1R on hypothalamic GnRH neurons, driving GnRH pulses and downstream LH/FSH release.
+    claim_type: mechanism
+    evidence_level: human_strong
+    route_scope:
+      - subq
+      - im
+    source_ids:
+      - skorupskaite-2015
+      - abbara-2020
+    confidence: high
+    limitations: []
+  - id: evidence-kp10-lh
+    text: Kisspeptin-10 administration acutely raises LH (and FSH) in humans across pubertal transition.
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope:
+      - subq
+      - im
+    source_ids:
+      - chan-2018
+      - comninos-2025
+    confidence: high
+    limitations:
+      - Trial dosing protocols not transferable to off-label personal use
+  - id: evidence-ivf-kp54
+    text: Kisspeptin (predominantly kisspeptin-54) has been used to trigger oocyte maturation in IVF with reduced OHSS risk vs hCG.
+    claim_type: evidence
+    evidence_level: human_limited
+    route_scope:
+      - subq
+    source_ids:
+      - abbara-2020
+      - ivf-kp54-trial
+    confidence: high
+    limitations:
+      - Most IVF trial data uses kisspeptin-54, not kisspeptin-10
+  - id: regulatory-status
+    text: Kisspeptin-10 is not FDA approved; clinical use is investigational.
+    claim_type: regulatory
+    evidence_level: approved_label
+    route_scope: []
+    source_ids:
+      - skorupskaite-2015
+    confidence: high
+    limitations: []
+  - id: risk-injection-generic
+    text: Subcutaneous peptide injection carries injection-site reaction risk and sterility risk if reconstitution is poor.
+    claim_type: risk
+    evidence_level: theoretical
+    route_scope:
+      - subq
+      - im
+    source_ids: []
+    confidence: low
+    limitations:
+      - Generic injection-route risk; not from a kisspeptin-10 specific trial readout
