@@ -18,11 +18,11 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('heading', { name: 'BPC-157' })).toBeVisible();
     await expect(page.getByText('For research purposes only. This information is not medical advice.')).toBeVisible();
 
-    await expect(page.getByText('synthetic pentadecapeptide derived from a fragment')).toBeVisible();
-    await expect(page.getByText('FDA placed it on the 503A Category 2 bulks list')).toBeVisible();
+    await expect(page.getByText(/stable gastric-derived peptide studied in tissue-repair.*inflammation models/i)).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Calculate BPC-157 reconstitution' })).toBeVisible();
 
     await page.getByRole('switch', { name: 'Researcher mode' }).click();
-    await expect(page.getByText('extensive preclinical literature suggesting effects on tissue healing')).toBeVisible();
+    await expect(page.getByText(/stable gastric-derived peptide studied in tissue-repair.*inflammation models/i)).toBeVisible();
 
     await expect(page.getByRole('heading', { name: 'Safety', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Storage' })).toBeVisible();
@@ -187,8 +187,7 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Inventory and math' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Calculate MOTS-c reconstitution' })).toBeVisible();
-    await openProfileDrawer(page, 'What to track');
-    await expect(page.getByText('Glycemic markers', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open compound guide for MOTS-c' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Peppi prompts' })).toHaveCount(0);
   });
 

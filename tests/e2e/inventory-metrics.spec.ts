@@ -110,7 +110,9 @@ test.describe('inventory metrics', () => {
     await page.goto('/more/settings');
     await page.getByRole('button', { name: 'I Understand' }).click();
     await page.getByLabel('Import Data File').setInputFiles(exportPath);
-    await expect(page.getByRole('status')).toContainText('Data restored from backup.');
+    await expect(page.getByRole('alertdialog', { name: 'Restore this PeptideOS backup?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Restore backup' }).click();
+    await expect(page.getByRole('status')).toContainText('Data restored from backup');
 
     await page.goto('/more/inventory');
 

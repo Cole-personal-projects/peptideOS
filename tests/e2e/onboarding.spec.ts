@@ -28,9 +28,9 @@ test.describe('first-launch onboarding', () => {
 
     await page.getByRole('link', { name: 'Library' }).click();
     await expect(page.getByText('Researcher Mode: Showing detailed information')).toBeVisible();
-    await expect(page.getByText('synthetic pentadecapeptide derived from a fragment')).toBeVisible();
+    await expect(page.getByText(/stable gastric-derived peptide studied in tissue-repair.*inflammation models/i)).toBeVisible();
 
     await page.getByRole('link', { name: /BPC-157 Healing Reference/ }).click();
-    await expect(page.getByText('extensive preclinical literature suggesting effects on tissue healing')).toBeVisible();
+    await expect(page.getByText(/stable gastric-derived peptide studied in tissue-repair.*inflammation models/i)).toBeVisible();
   });
 });

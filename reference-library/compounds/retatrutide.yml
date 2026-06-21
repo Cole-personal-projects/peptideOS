@@ -85,7 +85,7 @@ evidence:
     finding: Published phase 2 data reported dose-related body-weight reductions with Retatrutide.
     citation_ids:
     - pubmed-retatrutide-obesity-phase-2
-    source_quality: Triple GIP/GLP-1/glucagon receptor agonist in clinical development for obesity and metabolic disease, typically tracked around weekly dose step, appetite, weight trend, GI effects, heart-rate changes, glucose data, and dose-escalation tolerance. Concentration and injection volume should be easy to verify before each dose.
+    source_quality: source-backed
     limitations: Trial setting does not validate user-sourced product identity, concentration, sterility, or storage.
   - design: phase-3-program
     population: obesity and weight-management clinical trial populations listed in trial registry context.
