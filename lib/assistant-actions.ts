@@ -1,5 +1,6 @@
 import type { NewVialInput } from './vial-create';
 import { buildProtocolCockpitSummary } from './protocol-timeline';
+import type { ProtocolTimelineEvent } from './protocol-timeline';
 import type { AppData, DoseUnit, InventoryContainerType, Route, ScheduleFrequency, ScheduleRecurrence, SignalCheckIn, Stack } from './types';
 
 export type AssistantAction =
@@ -31,33 +32,106 @@ export function isTodayStatusRequest(message: string) {
 
 export function buildAssistantTodaySummary(data: AppData, now = new Date()): AssistantActionProposal {
   const summary = buildProtocolCockpitSummary(data, now);
-  const parts = [
-    `Today: ${summary.dueCount} due, ${summary.overdueCount} overdue, ${summary.completedTodayCount} completed, ${summary.skippedOrMissedCount} skipped or missed.`,
-    `${summary.activeStackCount} active stack${summary.activeStackCount === 1 ? '' : 's'}.`,
+  const { start, end } = getDayBounds(now);
+  const todayDoseEvents = summary.events.filter((event) => event.kind === 'due-dose' && isWithinDay(event.occurredAt, start, end));
+  const overdueDoseEvents = summary.events.filter(
+    (event) => event.kind === 'due-dose'
+      && event.status === 'overdue'
+      && new Date(event.occurredAt).getTime() < now.getTime(),
+  );
+  const pendingTodayEvents = todayDoseEvents.filter((event) => event.status === 'pending');
+  const completedTodayEvents = todayDoseEvents.filter((event) => event.status === 'taken');
+  const skippedOrMissedTodayEvents = todayDoseEvents.filter((event) => event.status === 'skipped' || event.status === 'missed');
+  const nextDoseAction = [...overdueDoseEvents, ...pendingTodayEvents].sort(sortEventsAscending)[0];
+
+  const lines = [
+    'Today',
+    `- Due later today: ${pendingTodayEvents.length}`,
+    `- Overdue: ${overdueDoseEvents.length}`,
+    `- Completed: ${completedTodayEvents.length}`,
+    `- Skipped or missed: ${skippedOrMissedTodayEvents.length}`,
+    `- Active stacks: ${summary.activeStackCount}`,
+    '',
+    'Next dose action',
+    nextDoseAction ? `- ${formatDoseAction(nextDoseAction, data)}` : '- No dose action due today.',
+    '',
+    'Inventory coverage',
   ];
 
   if (summary.mostUrgentInventoryRisk) {
-    parts.push(`Inventory coverage: ${summary.mostUrgentInventoryRisk.label} - ${summary.mostUrgentInventoryRisk.detail}.`);
+    lines.push(`- ${formatInventoryRisk(summary.mostUrgentInventoryRisk, data)}`);
   } else {
-    parts.push('No inventory coverage warnings right now.');
-  }
-
-  if (summary.nextAction) {
-    parts.push(`Next action: ${summary.nextAction.label} - ${summary.nextAction.detail}.`);
-  } else {
-    parts.push('No pending due-dose action found for today.');
+    lines.push('- No inventory coverage warnings right now.');
   }
 
   if (summary.latestSignal) {
-    parts.push(`Latest Signal: ${summary.latestSignal.detail}.`);
+    lines.push('', 'Latest Signal', `- ${summary.latestSignal.detail}`);
   }
 
-  parts.push('This is a summary of your local PeptideOS records, not dosing or safety advice.');
+  lines.push('', 'Based on your local PeptideOS records. Not dosing or safety advice.');
 
   return {
-    message: parts.join(' '),
+    message: lines.join('\n'),
     action: null,
   };
+}
+
+function getDayBounds(now: Date) {
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+  return { start, end };
+}
+
+function isWithinDay(value: string, start: Date, end: Date) {
+  const timestamp = new Date(value).getTime();
+  return timestamp >= start.getTime() && timestamp < end.getTime();
+}
+
+function sortEventsAscending(a: ProtocolTimelineEvent, b: ProtocolTimelineEvent) {
+  return new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime();
+}
+
+function compoundDisplayName(data: AppData, compoundId: string) {
+  return data.compounds.find((compound) => compound.id === compoundId)?.name
+    ?? data.peptides.find((peptide) => peptide.id === compoundId)?.name
+    ?? formatFallbackName(compoundId);
+}
+
+function stackDisplayName(data: AppData, stackId?: string) {
+  if (!stackId) return null;
+  return data.stacks.find((stack) => stack.id === stackId)?.name ?? null;
+}
+
+function formatFallbackName(id: string) {
+  if (id.toLowerCase() === 'hgh') return 'hGH';
+  return id
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function formatDoseAction(event: ProtocolTimelineEvent, data: AppData) {
+  const name = compoundDisplayName(data, event.compoundId);
+  const detail = stripLeadingStackName(event.detail, data, event.stackId);
+  return `${name}: ${detail}`;
+}
+
+function formatInventoryRisk(event: ProtocolTimelineEvent, data: AppData) {
+  const name = stackDisplayName(data, event.stackId) ?? compoundDisplayName(data, event.compoundId);
+  return `${name}: ${event.detail}`;
+}
+
+function stripLeadingStackName(detail: string, data: AppData, stackId?: string) {
+  const name = stackDisplayName(data, stackId);
+  if (!name) return detail;
+  return detail.replace(new RegExp(`^${escapeRegExp(name)}\\s*·\\s*`), '');
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

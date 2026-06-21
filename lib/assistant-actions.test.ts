@@ -114,11 +114,64 @@ describe('assistant action proposals', () => {
  }, new Date('2026-06-21T12:00:00.000Z'));
 
  expect(proposal.action).toBeNull();
- expect(proposal.message).toContain('Today: 1 due, 0 overdue, 1 completed, 1 skipped or missed.');
- expect(proposal.message).toContain('1 active stack.');
- expect(proposal.message).toContain('Next action: BPC-157');
- expect(proposal.message).toContain('Latest Signal: Energy 7/10');
- expect(proposal.message).toContain('not dosing or safety advice');
+ expect(proposal.message).toContain('Today\n- Due later today: 1\n- Overdue: 0\n- Completed: 1\n- Skipped or missed: 1\n- Active stacks: 1');
+ expect(proposal.message).toContain('Next dose action\n- BPC-157: Due');
+ expect(proposal.message).toContain('Latest Signal\n- Energy 7/10');
+ expect(proposal.message).toContain('Not dosing or safety advice');
+ });
+
+ test('does not count future generated schedule logs as due today', () => {
+ const scheduleLogs = Array.from({ length: 365 }, (_, index) => {
+ const dueAt = new Date('2026-06-22T15:00:00.000Z');
+ dueAt.setDate(dueAt.getDate() + index);
+ return {
+ id: `future-${index}`,
+ scheduleId: 'schedule-1',
+ stackId: 'stack-1',
+ stackPeptideId: 'stack-peptide-1',
+ peptideId: 'hgh',
+ dueAt: dueAt.toISOString(),
+ status: 'pending' as const,
+ };
+ });
+
+ const proposal = buildAssistantTodaySummary({
+ ...baseData,
+ compounds: [{
+ ...baseData.compounds[0],
+ id: 'hgh',
+ name: 'hGH',
+ defaultDoseUnit: 'iu',
+ }],
+ stacks: [{
+ id: 'stack-1',
+ name: 'hGH',
+ description: '',
+ peptides: [],
+ startDate: '2026-06-20T00:00:00.000Z',
+ durationDays: 365,
+ status: 'active',
+ notes: '',
+ }],
+ schedules: [{
+ id: 'schedule-1',
+ stackId: 'stack-1',
+ stackPeptideId: 'stack-peptide-1',
+ peptideId: 'hgh',
+ doseValue: 2,
+ doseUnit: 'iu',
+ route: 'subq',
+ recurrence: { frequency: 'daily', timesOfDay: ['15:00'] },
+ startDate: '2026-06-20T00:00:00.000Z',
+ endDate: '2027-06-20T00:00:00.000Z',
+ status: 'active',
+ }],
+ scheduleLogs,
+ }, new Date('2026-06-21T12:00:00.000Z'));
+
+ expect(proposal.message).toContain('- Due later today: 0');
+ expect(proposal.message).not.toContain('365 due');
+ expect(proposal.message).toContain('Next dose action\n- No dose action due today.');
  });
 
   test('creates a Signal check-in action from a user note', () => {
