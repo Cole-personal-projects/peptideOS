@@ -1,4 +1,5 @@
 import { formatDose } from './dose-helpers';
+import { getInjectionZoneById } from './injection-zones';
 import { buildProtocolInventoryRunway, type ProtocolInventoryRunway } from './inventory-metrics';
 import type { AppData, Compound, Dose, Schedule, ScheduleLog, SignalCheckIn, Stack } from './types';
 
@@ -59,6 +60,10 @@ function scheduleForLog(schedules: Schedule[], log: ScheduleLog) {
   return schedules.find((schedule) => schedule.id === log.scheduleId);
 }
 
+function formatSite(site: string) {
+  return getInjectionZoneById(site)?.label ?? site.replace(/-/g, ' ');
+}
+
 function isSameDay(value: string, start: Date, end: Date) {
   const date = new Date(value);
   return date >= start && date < end;
@@ -94,6 +99,12 @@ function buildScheduleLogEvent(data: AppData, log: ScheduleLog, now: Date): Prot
 
 function buildDoseEvent(data: AppData, dose: Dose): ProtocolTimelineEvent {
   const name = compoundName(data.compounds, dose.peptideId);
+  const vial = data.vials.find((candidate) => candidate.id === dose.vialId);
+  const detailParts = [
+    `${dose.completed ? 'Confirmed' : 'Planned'} ${formatTime(dose.dateTime)}`,
+    vial?.name,
+    dose.site ? formatSite(dose.site) : null,
+  ].filter(Boolean);
 
   return {
     id: `dose:${dose.id}`,
@@ -103,7 +114,7 @@ function buildDoseEvent(data: AppData, dose: Dose): ProtocolTimelineEvent {
     urgency: 'low',
     compoundId: dose.peptideId,
     label: `${name} ${formatDose(dose.doseValue, dose.doseUnit)}`,
-    detail: `${dose.completed ? 'Logged' : 'Planned'} ${formatTime(dose.dateTime)}${dose.site ? ` · ${dose.site.replace(/-/g, ' ')}` : ''}`,
+    detail: detailParts.join(' · '),
     href: '/log',
   };
 }
