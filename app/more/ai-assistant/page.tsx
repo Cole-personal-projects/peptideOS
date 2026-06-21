@@ -188,9 +188,9 @@ export default function AIAssistantPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-md bg-secondary/50 p-3 text-sm">
-              {assistantMessage}
-            </div>
+          <div className="whitespace-pre-line rounded-md bg-secondary/50 p-3 text-sm leading-relaxed">
+            {assistantMessage}
+          </div>
 
             {pendingAction?.type === 'add_signal_check_in' && (
               <div className="space-y-3 rounded-md border bg-background p-3">
