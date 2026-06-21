@@ -18,11 +18,11 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('heading', { name: 'BPC-157' })).toBeVisible();
     await expect(page.getByText('For research purposes only. This information is not medical advice.')).toBeVisible();
 
-    await expect(page.getByText('A synthetic pentadecapeptide commonly tracked')).toBeVisible();
-    await expect(page.getByText('BPC-157 is described in preclinical literature')).toHaveCount(0);
+    await expect(page.getByText('synthetic pentadecapeptide derived from a fragment')).toBeVisible();
+    await expect(page.getByText('FDA placed it on the 503A Category 2 bulks list')).toBeVisible();
 
     await page.getByRole('switch', { name: 'Researcher mode' }).click();
-    await expect(page.getByText('BPC-157 is described in preclinical literature')).toBeVisible();
+    await expect(page.getByText('extensive preclinical literature suggesting effects on tissue healing')).toBeVisible();
 
     await expect(page.getByRole('heading', { name: 'Safety', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Storage' })).toBeVisible();
@@ -154,7 +154,7 @@ test.describe('library detail pages', () => {
     await expect(page.getByText('Prefilled', { exact: true }).first()).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
     await openProfileDrawer(page, 'Field brief');
-    await expect(page.getByText('label-backed hormone entry')).toBeVisible();
+    await expect(page.getByText('Label-backed recombinant human growth hormone')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Evidence and transparency' })).toBeVisible();
     await expect(page.getByText('Full pro profile is not yet attached')).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Regulatory context' })).toBeVisible();
@@ -167,20 +167,20 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('heading', { name: 'Tirzepatide' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Field brief' })).toBeVisible();
     await openProfileDrawer(page, 'Field brief');
-    await expect(page.getByText('dual-incretin benchmark')).toBeVisible();
+    await expect(page.getByText('Dual-incretin baseline with exact pen tracking')).toBeVisible();
     await expect(page.getByText('What you can do')).toHaveCount(0);
     await expect(page.getByText('What to verify')).toBeVisible();
     await openProfileDrawer(page, 'What to verify');
-    await expect(page.getByText('Exact product name, labeled strength, container type, lot, expiration, source, and route from the physical label.')).toBeVisible();
+    await expect(page.getByText('Exact product name', { exact: true })).toBeVisible();
     await expect(page.getByText('What to track')).toBeVisible();
     await openProfileDrawer(page, 'What to track');
-    await expect(page.getByText('Schedule adherence, missed-dose notes, appetite/tolerability notes, weight trend notes, and user-entered dose changes over time.')).toBeVisible();
+    await expect(page.getByText('Appetite notes', { exact: true })).toBeVisible();
     await expect(page.getByText('Tracking domains')).toHaveCount(0);
     await expect(page.getByText('Peppi prompts')).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Open compound guide for Tirzepatide' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Regulatory context' })).toBeVisible();
     await openProfileDrawer(page, 'Regulatory context');
-    await expect(page.getByText('DailyMed provides US label records for tirzepatide products').first()).toBeVisible();
+    await expect(page.getByText('Approved-label status is asserted').first()).toBeVisible();
 
     await page.goto('/library/mots-c');
     await expect(page.getByRole('heading', { name: 'MOTS-c' })).toBeVisible();
@@ -188,7 +188,7 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('heading', { name: 'Inventory and math' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Calculate MOTS-c reconstitution' })).toBeVisible();
     await openProfileDrawer(page, 'What to track');
-    await expect(page.getByText('Metabolic context notes, energy/exercise notes, sleep/recovery notes, appetite notes, and user-entered biomarker context.')).toBeVisible();
+    await expect(page.getByText('Glycemic markers', { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Peppi prompts' })).toHaveCount(0);
   });
 
