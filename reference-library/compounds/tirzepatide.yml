@@ -6,65 +6,65 @@ updated_at: "2026-06-19"
 identity:
   name: "Tirzepatide"
   aliases:
-    - "Mounjaro"
-    - "Zepbound"
+  - "Mounjaro"
+  - "Zepbound"
   non_aliases:
-    - "Do not merge tirzepatide with semaglutide or other incretin compounds"
+  - "Do not merge tirzepatide with semaglutide or other incretin compounds"
   compound_type: glp-1
   categories:
-    - metabolic
+  - metabolic
 
 forms:
   primary_route: subq
   supported_routes:
-    - subq
+  - subq
   excluded_routes:
-    - route: im
-      reason: "No reviewed source in this record establishes an intramuscular tirzepatide product."
-    - route: oral
-      reason: "No reviewed source in this record establishes an oral tirzepatide product."
-    - route: intranasal
-      reason: "No reviewed source in this record establishes an intranasal tirzepatide product."
-    - route: topical
-      reason: "No reviewed source in this record establishes a topical tirzepatide product."
+  - route: im
+    reason: "No reviewed source in this record establishes an intramuscular tirzepatide product."
+  - route: oral
+    reason: "No reviewed source in this record establishes an oral tirzepatide product."
+  - route: intranasal
+    reason: "No reviewed source in this record establishes an intranasal tirzepatide product."
+  - route: topical
+    reason: "No reviewed source in this record establishes a topical tirzepatide product."
   form_factors:
-    - prefilled pen
-    - labeled container
+  - prefilled pen
+  - labeled container
   verification_fields:
-    - exact product name
-    - route
-    - strength
-    - container type
-    - lot number
-    - expiration date
-    - source
+  - exact product name
+  - route
+  - strength
+  - container type
+  - lot number
+  - expiration date
+  - source
 
 positioning:
   why_use_this_compound:
-    - "Track a dual-incretin metabolic compound."
-    - "Keep pen and container details exact."
-    - "Preserve the brand or product label so schedule and inventory notes stay tied to the right item."
+  - "Track a dual-incretin metabolic compound."
+  - "Keep pen and container details exact."
+  - "Preserve the brand or product label so schedule and inventory notes stay tied to the right item."
   who_is_tracking_this:
-    - "Metabolic users"
-    - "People logging brand-specific products"
-    - "Users comparing labeled container details"
+  - "Metabolic users"
+  - "People logging brand-specific products"
+  - "Users comparing labeled container details"
   common_user_goals:
-    - "Preserve exact label identity"
-    - "Record adherence and tolerability notes"
-    - "Keep source, lot, and expiration explicit"
+  - "Preserve exact label identity"
+  - "Record adherence and tolerability notes"
+  - "Keep source, lot, and expiration explicit"
 
 evidence:
   tier: approved_label
   mechanism_targets:
-    - GIP receptor
-    - GLP-1 receptor
+  - GIP receptor
+  - GLP-1 receptor
   claim_summary:
-    - "Tirzepatide is a dual-incretin compound with label-backed product context."
-    - "Exact label capture matters because brand, strength, and container details vary."
-    - "Inventory should follow the exact labeled item rather than shorthand."
+  - "Tirzepatide is a dual-incretin compound with label-backed product context."
+  - "Exact label capture matters because brand, strength, and container details vary."
+  - "Inventory should follow the exact labeled item rather than shorthand."
   evidence_gaps:
-    - "Compounded or relabeled containers may not map cleanly to brand-label assumptions."
-    - "This record is for tracking context and does not provide treatment guidance."
+  - "Compounded or relabeled containers may not map cleanly to brand-label assumptions."
+  - "This record is for tracking context and does not provide treatment guidance."
 
 risks:
   by_route:
@@ -73,85 +73,85 @@ risks:
       caution_populations: []
       negative_stack_flags: []
       formulation_risks:
-        - "Use the exact label for adverse reactions and handling context."
-        - "Source quality should stay explicit when the container is relabeled or compounded."
+      - "Use the exact label for adverse reactions and handling context."
+      - "Source quality should stay explicit when the container is relabeled or compounded."
       unknowns:
-        - "Storage details vary by labeled product and container state."
+      - "Storage details vary by labeled product and container state."
 
 tracking:
   useful_logs:
-    - adherence
-    - appetite / tolerability notes
-    - weight trend notes
-    - source-quality notes
+  - adherence
+  - appetite / tolerability notes
+  - weight trend notes
+  - source-quality notes
   inventory_fields:
-    - brand
-    - route
-    - lot_number
-    - expiration_date
-    - container_type
+  - brand
+  - route
+  - lot_number
+  - expiration_date
+  - container_type
   peppi_actions:
-    - "create-inventory-from-label"
-    - "build-schedule-from-user-confirmed-details"
-    - "summarize-tracking"
-    - "flag-source-quality"
+  - "create-inventory-from-label"
+  - "build-schedule-from-user-confirmed-details"
+  - "summarize-tracking"
+  - "flag-source-quality"
 
 app_profile:
   headline: "Dual-incretin baseline with exact pen tracking."
-  summary: "Tirzepatide is the dual-incretin GLP-1/GIP metabolic compound people track for appetite, weight trend, GI tolerability, adherence, missed entries, pen/container identity, and source quality. PeptideOS should keep brand or product label, route, lot, expiration, active container state, and user-entered response notes tied to the exact item instead of treating every tirzepatide source as interchangeable."
+  summary: "Tirzepatide is a weekly GIP and GLP-1 receptor agonist used for metabolic care and weight management. Useful tracking centers on dose escalation, injection day, appetite, GI effects, weight trend, glucose markers, and missed-dose history."
   why_people_care:
-    - "Dual-incretin mechanism"
-    - "Brand-specific pen tracking"
+  - "Dual-incretin mechanism"
+  - "Brand-specific pen tracking"
   what_to_verify:
-    - "Exact product name"
-    - "Route"
-    - "Source / lot / expiration"
+  - "Exact product name"
+  - "Route"
+  - "Source / lot / expiration"
   what_to_track:
-    - "Adherence"
-    - "Appetite notes"
-    - "Weight trend notes"
-  reality_check: "Do not flatten brand-specific tirzepatide into one generic product record."
+  - "Adherence"
+  - "Appetite notes"
+  - "Weight trend notes"
+  reality_check: "Dual GIP/GLP-1 receptor agonist used for glucose control and weight management, with practical tracking around weekly dose step, appetite, weight trend, GI effects, glucose data, and dose-escalation tolerance. Concentration and injection volume should be easy to verify before each dose."
 
 sources:
-  - id: pubchem-tirzepatide
-    title: "Tirzepatide compound summary"
-    url: "https://pubchem.ncbi.nlm.nih.gov/compound/166567236"
-    source_type: database
-    publisher: "PubChem"
-    year: 2026
-  - id: dailymed-tirzepatide
-    title: "DailyMed label candidates for Tirzepatide"
-    url: "https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=Tirzepatide"
-    source_type: label
-    publisher: "DailyMed"
-    year: 2026
+- id: pubchem-tirzepatide
+  title: "Tirzepatide compound summary"
+  url: "https://pubchem.ncbi.nlm.nih.gov/compound/166567236"
+  source_type: database
+  publisher: "PubChem"
+  year: 2026
+- id: dailymed-tirzepatide
+  title: "DailyMed label candidates for Tirzepatide"
+  url: "https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=Tirzepatide"
+  source_type: label
+  publisher: "DailyMed"
+  year: 2026
 
 claims:
-  - id: identity
-    text: "Tirzepatide is a distinct incretin-family record with brand alias pressure that should stay explicit."
-    claim_type: identity
-    evidence_level: identity
-    route_scope: []
-    source_ids:
-      - pubchem-tirzepatide
-      - dailymed-tirzepatide
-    confidence: high
-    limitations: []
-  - id: mechanism
-    text: "Tirzepatide acts through both GIP receptor and GLP-1 receptor agonism."
-    claim_type: mechanism
-    evidence_level: human_limited
-    route_scope: []
-    source_ids:
-      - pubchem-tirzepatide
-    confidence: high
-    limitations: []
-  - id: regulatory
-    text: "DailyMed provides approved-label context for tirzepatide products."
-    claim_type: regulatory
-    evidence_level: approved_label
-    route_scope: []
-    source_ids:
-      - dailymed-tirzepatide
-    confidence: high
-    limitations: []
+- id: identity
+  text: "Tirzepatide is a distinct incretin-family record with brand alias pressure that should stay explicit."
+  claim_type: identity
+  evidence_level: identity
+  route_scope: []
+  source_ids:
+  - pubchem-tirzepatide
+  - dailymed-tirzepatide
+  confidence: high
+  limitations: []
+- id: mechanism
+  text: "Tirzepatide acts through both GIP receptor and GLP-1 receptor agonism."
+  claim_type: mechanism
+  evidence_level: human_limited
+  route_scope: []
+  source_ids:
+  - pubchem-tirzepatide
+  confidence: high
+  limitations: []
+- id: regulatory
+  text: "DailyMed provides approved-label context for tirzepatide products."
+  claim_type: regulatory
+  evidence_level: approved_label
+  route_scope: []
+  source_ids:
+  - dailymed-tirzepatide
+  confidence: high
+  limitations: []

@@ -98,7 +98,7 @@ tracking:
 
 app_profile:
   headline: Research-market peptide marketed as a 17-23 fragment of Thymosin Beta-4; not FDA-approved.
-  summary: TB-500 is sold as a short synthetic fragment of Thymosin Beta-4 containing the actin-binding domain. Most published human data are on full-length Tβ4, not on the fragment. PubMed coverage of TB-500 specifically is dominated by doping-detection work.
+  summary: "TB-500 is a synthetic thymosin-beta-4 fragment commonly discussed in recovery and soft-tissue research contexts. Useful tracking captures source, preparation, route, target area, mobility, pain, training load, photos when relevant, and tolerability."
   why_people_care:
     - Tβ4 biology has a long preclinical track record in tissue repair and angiogenesis.
     - Marketed for soft-tissue recovery and healing.

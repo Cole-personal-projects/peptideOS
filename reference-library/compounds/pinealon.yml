@@ -34,14 +34,17 @@ forms:
 
 positioning:
   why_use_this_compound:
-    - "Khavinson-school short peptide hypothesized to influence gene expression in neural and pineal tissue."
-    - "Preclinical interest in neuroprotection and oxidative-stress models."
+    - "Short Khavinson-school 'bioregulator' tripeptide hypothesized to influence gene expression in neural and pineal tissue."
+    - "Preclinical interest in neuroprotection and oxidative-stress reduction in cell-culture and rodent models."
+    - "Marketed in Russia within the anti-aging and longevity space."
   who_is_tracking_this:
-    - longevity-curious users following Khavinson bioregulator framework
-    - users experimenting with short-peptide neuroprotection
+    - longevity-curious biohackers exploring Russian bioregulator peptides
+    - users stacking short peptides for cognitive and neuroprotective experimentation
+    - users already running Epitalon who want to layer in a 'daytime' bioregulator
   common_user_goals:
-    - subjective cognitive maintenance
-    - exploratory anti-aging stack inclusion
+    - subjective cognitive maintenance and mental clarity
+    - perceived energy and well-being on long anti-aging protocols
+    - exploratory neuroprotection
 
 evidence:
   tier: preclinical
@@ -49,22 +52,22 @@ evidence:
     - hypothesized direct DNA-promoter interaction (Khavinson model)
     - reduction of reactive oxygen species in neuronal culture (preclinical)
   claim_summary:
-    - "Identity: tripeptide Glu-Asp-Arg (EDR) developed by the Khavinson group at the St Petersburg Institute of Bioregulation and Gerontology."
+    - "Tripeptide Glu-Asp-Arg (EDR) developed by the Khavinson group at the St Petersburg Institute of Bioregulation and Gerontology."
     - "Preclinical reports describe neuroprotective effects in rodent and cell-culture models."
     - "No registered human clinical trials located on ClinicalTrials.gov or WHO ICTRP."
   evidence_gaps:
     - No FDA-recognized human clinical trials.
-    - Evidence base dominated by a single research lineage (Khavinson group); independent Western replication is sparse.
-    - Khavinson DNA-binding mechanism is not established in mainstream pharmacology.
+    - Evidence base is dominated by a single research lineage (Khavinson group) with sparse independent Western replication.
+    - The direct peptide-to-DNA mechanism proposed by Khavinson is not accepted in mainstream pharmacology.
 
 risks:
   by_route:
     subq:
       - "No formal human safety database; adverse-event profile is not characterized in peer-reviewed Western literature."
-      - "Sterility and identity depend entirely on supplier QC; unregulated research-chemical market."
+      - "Sterility and identity depend entirely on supplier QC in an unregulated research-chemical market."
     intranasal:
-      - "No formal human safety database for intranasal route."
-      - "Local nasal mucosa tolerability is uncharacterized in published trials."
+      - "No formal human safety database for the intranasal route."
+      - "Nasal mucosa tolerability is uncharacterized in published trials."
 
 tracking:
   useful_logs:
@@ -82,18 +85,20 @@ tracking:
     - flag-source-quality
 
 app_profile:
-  headline: "A Khavinson-group tripeptide (Glu-Asp-Arg) explored in Russian gerontology research for neural and pineal effects."
-  summary: "Pinealon is a short synthetic peptide from the Khavinson bioregulator tradition. Published work centers on preclinical neuroprotection and a contested 'peptide-DNA' mechanism. Human clinical trial data is essentially absent in the Western peer-reviewed literature."
+  headline: "Russian-developed short peptide (Glu-Asp-Arg) from the Khavinson bioregulator family, explored for neuroprotection and cognitive aging."
+  summary: "Pinealon is a short synthetic peptide marketed and researched around neuroendocrine, sleep, and aging-related signaling. Useful tracking emphasizes source, preparation, timing, sleep, cognition, mood, tolerability, and any objective markers being followed."
   why_people_care:
-    - longevity / cognitive maintenance experimentation
-    - interest in short-peptide bioregulator framework
+    - part of the 'Khavinson short peptide' longevity stack alongside Epitalon
+    - reported subjective cognitive sharpening without stimulant feel
+    - preclinical neuroprotection signal in oxidative-stress and ischemia models
   what_to_verify:
-    - sequence and purity from the supplier
-    - source quality given the unregulated supply chain
+    - sequence (Glu-Asp-Arg) and purity on the vendor COA
+    - mass-spec confirmation, lot, and supplier reputation given the gray market
   what_to_track:
-    - subjective cognition and sleep
-    - any adverse events given the thin safety database
-  reality_check: "Evidence is preclinical and concentrated in one research lineage. Treat human effects as unproven and supply chain as the biggest unknown."
+    - subjective cognition, mental clarity, and mood on a simple daily rating
+    - sleep quality and any subtle shifts in energy
+    - any injection-site or nasal reactions
+  reality_check: "Almost all human-relevant claims trace back to one Russian research lineage; treat clinical effects as unproven and assume the supply chain is the biggest unknown."
 
 sources:
   - id: wiki-pinealon

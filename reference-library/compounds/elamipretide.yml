@@ -8,8 +8,7 @@ identity:
   - SS-31
   - MTP-131
   - Bendavia
-  non_aliases:
-  - This reference entry does not treat research-market blends as the same thing as Elamipretide
+  non_aliases: []
   compound_type: peptide
   categories:
   - longevity
@@ -29,31 +28,34 @@ forms:
   - container state
 positioning:
   why_use_this_compound:
-  - Track a mitochondria-targeted research peptide
-  - Keep identity, reconstitution, and source quality explicit
+  - Mitochondria-targeted tetrapeptide that binds cardiolipin on the inner mitochondrial membrane, studied for restoring mitochondrial function in disease and aging contexts.
+  - Phase 2 and phase 3 trials in primary mitochondrial myopathy and Barth syndrome give it more clinical data than most peptides in this space.
   who_is_tracking_this:
-  - Longevity researchers
-  - Users logging investigational vials
+  - People with diagnosed mitochondrial disease following Stealth BioTherapeutics' trial program.
+  - Longevity-focused self-experimenters interested in cardiolipin and mitochondrial bioenergetics.
+  - Athletes and recovery-focused users exploring fatigue and exercise tolerance angles.
   common_user_goals:
-  - Preserve exact vial identity
-  - Record reconstitution and schedule notes
+  - Improved energy, reduced fatigue, faster recovery from exertion.
+  - Support for declining mitochondrial function with age.
+  - Investigational use for muscle, cardiac, or ophthalmic mitochondrial pathology.
 evidence:
   tier: identity_only
   mechanism_targets:
   - mitochondrial inner-membrane context
   - cardiolipin-associated pathway research
   claim_summary:
-  - Elamipretide is a defined mitochondrial research peptide
-  - Vial amount and source quality matter because the compound is usually encountered in research-form vials
-  - Clinical certainty is intentionally kept low in this entry
+  - Elamipretide is a small tetrapeptide (D-Arg-2',6'-dimethylTyr-Lys-Phe) that accumulates in the inner mitochondrial membrane via cardiolipin binding.
+  - It has been evaluated in phase 2 and phase 3 trials for primary mitochondrial myopathy (MMPOWER series), Barth syndrome, dry AMD, and heart failure with preserved ejection fraction.
+  - Results across trials have been mixed; FDA has not approved elamipretide for any indication as of this writing.
   evidence_gaps:
-  - No approved US product label is attached here
-  - The bundled source set does not establish standardized human safety or efficacy claims
+  - No approved indication; trial readouts have been inconsistent across endpoints.
+  - Long-term safety beyond trial durations is not well characterized.
+  - Effects in healthy users (vs. mitochondrial-disease populations) are essentially uncharacterized.
 risks:
   by_route:
     subq:
-    - Injection-site reactions are possible with peptide vials
-    - Identity, purity, sterility, and endotoxin uncertainty depend entirely on source
+    - Injection-site reactions reported in clinical trials.
+    - Research-market vials carry the usual identity, purity, sterility, and endotoxin uncertainty.
 tracking:
   useful_logs:
   - Source / lot
@@ -70,19 +72,21 @@ tracking:
   - flag-thin-evidence
   - require-coa-before-logging
 app_profile:
-  headline: Mitochondrial research peptide with explicit uncertainty.
-  summary: Elamipretide is a mitochondria-targeted research peptide people track for fatigue, recovery, exercise tolerance, mitochondrial-disease interest, and cardiolipin-pathway experimentation. PeptideOS should make the practical record about exact vial identity, source quality, reconstitution state, subjective energy/recovery notes, and uncertainty rather than implying a proven longevity or performance outcome.
+  headline: Mitochondria-targeted peptide with real trial data but no approved indication yet.
+  summary: "Elamipretide is a mitochondria-targeted tetrapeptide studied for cardiolipin stabilization and mitochondrial function. Practical tracking ties formulation, route, timing, energy, exercise tolerance, fatigue, symptom changes, and objective markers together."
   why_people_care:
-  - Mitochondrial-health interest
-  - Vial-based research tracking
+  - One of the few longevity-adjacent peptides with phase 3 data.
+  - Specific, well-defined mechanism (cardiolipin binding) rather than a vague anti-aging pitch.
+  - Direct mitochondrial angle for fatigue, exercise tolerance, and mitochondrial-disease populations.
   what_to_verify:
-  - Alias on the label
-  - Vial amount
-  - COA / source quality
+  - Label name matches an alias (Elamipretide, SS-31, MTP-131, Bendavia).
+  - Vial amount in mg and reconstitution volume.
+  - COA, lot number, and expiration from the source.
   what_to_track:
-  - Reconstitution history
-  - User-entered recovery notes
-  reality_check: Treat this as a tracking record, not a proof of benefit.
+  - Subjective energy, fatigue, and exercise recovery.
+  - Injection-site reactions.
+  - Any relevant labs or functional tests if working with a clinician.
+  reality_check: Mixed trial results in actual mitochondrial-disease patients should temper expectations in healthy users with intact mitochondria.
 sources:
 - id: pubchem-elamipretide
   title: Elamipretide compound summary
@@ -117,4 +121,4 @@ claims:
   source_ids: []
   confidence: low
   limitations:
-  - No approved US product label is attached to this reference entry
+  - Mitochondria-targeted tetrapeptide studied for cardiolipin stabilization, mitochondrial function, fatigue, and disease-specific clinical contexts. Useful records capture formulation, route, timing, energy or exercise tolerance, symptom notes, and any objective markers being followed.

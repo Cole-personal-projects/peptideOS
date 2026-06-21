@@ -76,14 +76,18 @@ test.describe('dashboard polish', () => {
       },
     }));
 
-    await page.goto('/more/settings');
-    await page.getByRole('button', { name: 'I Understand' }).click();
-    await page.getByLabel('Import Data File').setInputFiles(exportPath);
-    await expect(page.getByRole('status')).toContainText('Data restored from backup.');
+  await page.goto('/more/settings');
+  await page.getByRole('button', { name: 'I Understand' }).click();
+  await page.getByLabel('Import Data File').setInputFiles(exportPath);
+  await expect(page.getByRole('alertdialog', { name: 'Restore this PeptideOS backup?' })).toBeVisible();
+  await expect(page.getByText('0 stacks · 0 schedules · 0 due-dose records')).toBeVisible();
+  await page.getByRole('button', { name: 'Restore backup' }).click();
+  await expect(page.getByRole('status')).toContainText('Data restored from backup');
 
-    await page.goto('/');
+  await page.goto('/');
 
-    await expect(page.getByText('No doses due today')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Build a stack' })).toBeVisible();
+  await expect(page.getByText('No protocol activity yet')).toBeVisible();
+  await expect(page.getByText('No doses due today')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Build a stack' })).toBeVisible();
   });
 });

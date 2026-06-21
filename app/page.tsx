@@ -9,6 +9,7 @@ import { StreakCard } from '@/components/dashboard/streak-card';
 import { RecentActivityCard } from '@/components/dashboard/recent-activity-card';
 import { BriefingCard } from '@/components/dashboard/briefing-card';
 import { AdherenceCard } from '@/components/dashboard/adherence-card';
+import { ProtocolCockpitCard } from '@/components/dashboard/protocol-cockpit-card';
 import { WelcomeScreen } from '@/components/welcome-screen';
 import { useApp } from '@/lib/context';
 
@@ -40,6 +41,10 @@ export default function DashboardPage() {
       <div className="space-y-4">
         <div className="px-4">
           <BriefingCard />
+        </div>
+
+        <div className="px-4">
+          <ProtocolCockpitCard />
         </div>
 
         <div className="px-4">

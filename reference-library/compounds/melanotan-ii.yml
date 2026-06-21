@@ -38,13 +38,16 @@ forms:
 
 positioning:
   why_use_this_compound:
-    - Non-selective melanocortin receptor agonist (MC1R, MC3R, MC4R, MC5R)
-    - Historically explored for skin pigmentation and sexual arousal effects
+    - Non-selective melanocortin receptor agonist (MC1R, MC3R, MC4R, MC5R) that drives melanogenesis without UV exposure
+    - One of the few peptides users self-administer for a visible cosmetic effect (skin pigmentation) alongside reported libido/erection effects
   who_is_tracking_this:
-    - Users self-experimenting with research-grade peptides outside regulated channels
+    - Self-experimenters using grey-market research peptides for tanning
+    - Users chasing the sexual side effects (the same mechanism that led to Bremelanotide/Vyleesi)
+    - People logging mole/skin changes during and after cycles
   common_user_goals:
-    - Increased skin pigmentation
-    - Effects on libido or erectile response
+    - Faster, deeper tan with less sun exposure
+    - Increased libido and erectile response
+    - Appetite suppression (secondary MC4R effect)
 
 evidence:
   tier: preclinical
@@ -54,12 +57,13 @@ evidence:
     - MC4R
     - MC5R
   claim_summary:
-    - Non-selective agonism of melanocortin receptors drives pigmentation, appetite, and sexual-arousal effects observed in case reports and animal models.
-    - No regulatory approval anywhere; flagged by FDA and TGA as unapproved.
+    - Non-selective agonism of melanocortin receptors drives pigmentation, appetite, and sexual-arousal effects.
+    - Predecessor to Bremelanotide (Vyleesi), which was developed by isolating the MC4R-driven sexual effect.
+    - No regulatory approval anywhere; flagged by FDA and TGA as an unapproved product.
   evidence_gaps:
-    - No completed Phase III human trials
-    - Long-term safety unknown
-    - Quality and purity of grey-market supply not verifiable
+    - No completed Phase III human trials in any indication
+    - Long-term safety unknown; nearly all human safety data comes from adverse-event case reports
+    - Grey-market supply means purity, identity, and dose accuracy cannot be assumed
 
 risks:
   by_route:
@@ -86,20 +90,21 @@ tracking:
     - prompt-skin-check-log
 
 app_profile:
-  headline: Non-selective melanocortin agonist with no regulatory approval and serious case-report risks.
-  summary: Melanotan II is a synthetic analog of alpha-MSH that activates multiple melanocortin receptors. It is not approved by FDA, TGA, MHRA, or other major regulators, and is sold as a research chemical. Published case reports tie use to melanoma, priapism, rhabdomyolysis, renal infarction, and PRES.
+  headline: Grey-market melanocortin agonist used for tanning and libido — no regulator has approved it.
+  summary: "Melanotan II is a melanocortin peptide known for tanning-related use and libido effects. Practical tracking captures dose timing, UV exposure, skin response, nausea, flushing, appetite changes, pigmentation changes, and cumulative use."
   why_people_care:
-    - Pigmentation effects
-    - Reported libido and erection effects
+    - Visible, fast cosmetic tan without UV
+    - Strong reported libido and erection effects
+    - Appetite suppression as a secondary effect
   what_to_verify:
-    - Source and lot of the vial
-    - Reconstitution math and storage
-    - Skin baseline (mole map) before any use
+    - Vendor reputation and lot number on the vial
+    - Reconstitution math and storage (bacteriostatic water, refrigerated)
+    - Baseline mole map and any pre-existing atypical nevi before first dose
   what_to_track:
-    - Mole and skin changes over time
-    - Acute side-effect log
+    - Mole and skin changes over time (photo baseline)
+    - Acute side-effect log per injection (nausea, flushing, erection duration)
     - Blood pressure
-  reality_check: Evidence is dominated by adverse-event case reports and animal data. No regulator has approved Melanotan II, and the TGA has specifically warned consumers against it.
+  reality_check: Most of the human evidence is adverse-event case reports, not trials. The TGA has explicitly told consumers to avoid it, and dermatologists have flagged atypical mole changes in users.
 
 sources:
   - id: unsw-tga-2023

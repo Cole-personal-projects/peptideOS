@@ -94,7 +94,7 @@ tracking:
 
 app_profile:
   headline: Upstream HPG-axis activator that drives endogenous LH and FSH.
-  summary: Kisspeptin-10 is the C-terminal decapeptide of human kisspeptin, the endogenous ligand of KISS1R (GPR54). KISS1R signaling on hypothalamic GnRH neurons is required for puberty and normal reproductive function. Imperial College London has led most of the human clinical work in this area, primarily with kisspeptin-54.
+  summary: "Kisspeptin-10 is a short peptide that stimulates GnRH signaling upstream of LH and FSH release. Useful tracking connects route and timing with reproductive-hormone labs, libido, mood, fertility context, and concurrent HPTA or TRT protocols."
   why_people_care:
     - Endogenous, pulsatile path to LH/FSH instead of exogenous gonadotropins
     - Investigational interest for reproductive disorders, IVF triggering, and psychosexual response

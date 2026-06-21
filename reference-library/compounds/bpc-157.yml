@@ -10,7 +10,7 @@ identity:
     - "Pentadecapeptide BPC 157"
     - "PL 14736"
   non_aliases:
-    - "BPC-157 is a synthetic 15-amino-acid sequence; it is not naturally isolated human gastric protein"
+    - "Synthetic 15-amino-acid sequence — not a naturally isolated human gastric protein"
   compound_type: peptide
   categories:
     - healing
@@ -34,14 +34,17 @@ forms:
 
 positioning:
   why_use_this_compound:
-    - "Investigated in animal models for tendon, ligament, muscle, and gastrointestinal healing"
-    - "Popular in biohacking and recovery-focused protocols despite limited human evidence"
+    - "Accelerate soft-tissue healing — tendons, ligaments, muscle — based on extensive rodent data"
+    - "Protect gastric mucosa and reduce NSAID-induced gut damage in animal models"
+    - "Reach for an injury-recovery tool when conservative options have plateaued"
   who_is_tracking_this:
-    - "Athletes and recovery-focused users"
-    - "Practitioners and patients using compounded peptide protocols"
+    - "Athletes recovering from tendon, ligament, or muscle injuries"
+    - "Lifters and biohackers using compounded peptide protocols"
+    - "People with chronic gut issues (IBD, NSAID-related) trying experimental options"
   common_user_goals:
-    - "Understand the actual evidence base for BPC-157"
-    - "Track regulatory status in their jurisdiction"
+    - "Recover faster from joint, tendon, or muscle injuries"
+    - "Reduce gut inflammation or NSAID-related stomach damage"
+    - "Get back to training without surgery when possible"
 
 evidence:
   tier: preclinical
@@ -49,19 +52,21 @@ evidence:
     - "Reported preclinical effects on angiogenesis, VEGFR2 signaling, nitric oxide pathways, and growth-factor-related healing responses"
     - "Reported preclinical effects on gastrointestinal mucosal protection"
   claim_summary:
-    - "BPC-157 is a synthetic 15-amino-acid sequence derived from a fragment of a protein found in human gastric juice"
-    - "Evidence base is dominated by preclinical (in vitro and animal) studies; published human clinical trial data is very limited"
-    - "In September 2023, the FDA placed BPC-157 on the 503A Category 2 bulks list, restricting compounded use in the United States"
+    - "Synthetic 15-amino-acid sequence derived from a fragment of a protein in human gastric juice"
+    - "Hundreds of rodent and in vitro studies, mostly from a small group of Croatian labs, suggest broad healing effects across tissue types"
+    - "Published human trial data is extremely limited — essentially no high-quality RCTs"
+    - "FDA added BPC-157 to the 503A Category 2 bulks list in September 2023, restricting compounded use in the US over safety and impurity concerns"
   evidence_gaps:
-    - "Few high-quality randomized human trials"
-    - "Long-term human safety data is lacking"
-    - "Pharmacokinetics, oral bioavailability, and tissue distribution are poorly characterized in humans"
+    - "Almost no high-quality randomized human trials; the entire popular reputation rests on animal work"
+    - "Most preclinical data comes from a narrow group of researchers, raising independent-replication questions"
+    - "Human pharmacokinetics, oral bioavailability, and tissue distribution are essentially uncharacterized"
+    - "Long-term safety in humans is unknown; theoretical angiogenesis concerns around occult tumors have not been resolved"
 
 risks:
   by_route:
     oral:
       - "Oral bioavailability and systemic exposure are not well characterized in humans"
-      - "Identity and purity of grey-market product is variable; manufacturing impurities are a stated FDA concern"
+      - "Grey-market product purity is variable; the FDA specifically flagged manufacturing impurities as a concern"
 
 tracking:
   useful_logs:
@@ -75,18 +80,21 @@ tracking:
     - "Flag FDA 503A Category 2 status and the lack of approved human indication before any tracking suggestion"
 
 app_profile:
-  headline: "Popular recovery peptide with strong preclinical buzz and thin human evidence."
-  summary: "BPC-157 is a synthetic pentadecapeptide derived from a fragment of a protein found in human gastric juice. It has an extensive preclinical literature suggesting effects on tissue healing and GI protection, but published human trial data is very limited, and the FDA placed it on the 503A Category 2 bulks list in 2023."
+  headline: "The internet's favorite healing peptide — almost entirely on the back of rat studies."
+  summary: "BPC-157 is a stable gastric-derived peptide studied in tissue-repair and inflammation models. Strong user-facing tracking separates route, concentration, target area, timing, injury context, pain or mobility changes, and local reactions."
   why_people_care:
-    - "Anecdotal use for tendon, ligament, and gut healing is widespread"
-    - "Animal model literature is broad across many tissue types"
+    - "Anecdotal track record for tendon, ligament, and gut healing is unusually loud across forums and clinics"
+    - "Animal-model literature spans dozens of tissue types and injury models"
+    - "Few other peptides offer this much rodent data for soft-tissue recovery"
   what_to_verify:
     - "Source identity and purity via certificate of analysis"
-    - "Current regulatory and compounding status (FDA 503A list is being re-reviewed)"
+    - "Current FDA 503A status (under active re-review)"
+    - "Whether it's stable arginate salt vs free acid (arginate has better shelf-life claims)"
   what_to_track:
-    - "Symptom or injury trajectory over time"
-    - "Any adverse effects, especially injection-site or immune-mediated"
-  reality_check: "Most positive BPC-157 evidence comes from animal studies. Published human trials are sparse, and the FDA has flagged safety and impurity concerns serious enough to restrict compounded use. Treat reported benefits as hypothesis-generating, not established."
+    - "Pain, range of motion, and function at the injury site over weeks"
+    - "Injection-site or GI tolerability"
+    - "Any unexpected systemic effects (it does cross tissues)"
+  reality_check: "The gap between the rodent literature and the human evidence is enormous. Most BPC-157 enthusiasm extrapolates from animal models published by a handful of labs, the FDA has restricted compounded use over real safety concerns, and you're effectively running an N=1 experiment with unknown long-term risk."
 
 sources:
   - id: "pmc-bpc157-review-2025"

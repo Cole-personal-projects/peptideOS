@@ -121,7 +121,7 @@ tracking:
 
 app_profile:
   headline: Native GnRH decapeptide; FDA-approved diagnostic agent and investigational pulsatile therapy.
-  summary: Gonadorelin is the synthetic equivalent of the endogenous hypothalamic decapeptide GnRH (also called LHRH). It binds pituitary GnRH receptors and triggers LH and FSH release. It is approved in the United States as a diagnostic agent for testing pituitary LH/FSH reserve (e.g. historical Factrel). It is also used clinically in pulsatile regimens to treat hypothalamic hypogonadism, including idiopathic hypogonadotropic hypogonadism and hypothalamic amenorrhea, via IV or SC pump delivery. Continuous exposure causes receptor desensitization, so it is not interchangeable with long-acting GnRH superagonists (leuprolide, triptorelin, etc.).
+  summary: "Gonadorelin is a synthetic GnRH analog used to stimulate pituitary LH and FSH release. Useful tracking captures pulse timing, route, concurrent hormone therapy, LH, FSH, testosterone labs, and symptom changes across the protocol."
   why_people_care:
     - Genuine FDA-approved diagnostic use to evaluate pituitary LH/FSH reserve.
     - Pulsatile therapeutic use for hypothalamic hypogonadism, supported by clinical case series and small trials.
@@ -135,7 +135,7 @@ app_profile:
     - LH, FSH, and relevant sex-steroid labs.
     - Injection-site condition.
     - For pulsatile protocols: pump settings, missed pulses, and any symptoms.
-  reality_check: Gonadorelin is one of the few peptides in the PeptideOS library with a real FDA-approved diagnostic label. The historical Factrel brand was discontinued, so current US supply is typically through compounding pharmacies or non-US labeled products, and the exact regulatory status of any specific vial must be verified from the actual product label. PeptideOS structures user-confirmed data; it does not select protocols or interpret reproductive-axis labs.
+  reality_check: Gonadorelin is one of the few peptides in the the tracking record library with a real FDA-approved diagnostic label. The historical Factrel brand was discontinued, so current US supply is typically through compounding pharmacies or non-US labeled products, and the exact regulatory status of any specific vial must be verified from the actual product label. the tracking record structures user-confirmed data; it does not select protocols or interpret reproductive-axis labs.
 
 sources:
   - id: pubchem-gonadorelin

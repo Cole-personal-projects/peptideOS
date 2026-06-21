@@ -59,7 +59,7 @@ describe('library profile view model', () => {
       'Lilly describes Retatrutide as not FDA approved and investigational while phase 3 trials evaluate safety and efficacy.',
     ]));
     expect(retatrutide.sections.find((section) => section.title === 'Reality check')?.items).toEqual(expect.arrayContaining([
-      'The clinical Retatrutide story is not a gray-market vial. PeptideOS should help the user track what they actually have, what they actually did, and what is still uncertain.',
+      'The clinical Retatrutide story is not a gray-market vial. Track what you actually have, what you actually did, and what remains uncertain.',
     ]));
     expect(retatrutide.sections.find((section) => section.title === 'Evidence details')?.items.join(' ')).toContain('phase-2-randomized-controlled-trial');
   });

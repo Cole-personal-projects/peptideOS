@@ -98,7 +98,7 @@ tracking:
 
 app_profile:
   headline: "Immune peptide with thymosin-family naming ambiguity."
-  summary: "Thymosin Alpha-1 is the immune-modulation peptide people track for illness-context notes, immune-stack experiments, reconstitution history, tolerability, and thymosin-family name disambiguation. PeptideOS should keep exact identity, vial amount, source quality, lot, illness context, and user-entered response notes separate from TB-500 or other thymosin-family products."
+  summary: "Thymosin alpha-1 is an immune-modulating peptide used clinically in some regions and studied in infection, immune, and recovery contexts. Useful tracking captures cycle timing, route, illness context, labs when available, tolerability, and clinician-directed markers."
   why_people_care:
     - "Immune-modulation discussions"
     - "Vial-based peptide tracking"

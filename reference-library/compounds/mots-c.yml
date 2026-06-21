@@ -38,15 +38,17 @@ forms:
 
 positioning:
   why_use_this_compound:
-    - Mitochondrial-derived peptide tied to AMPK activation and metabolic homeostasis
-    - Early-stage interest in metabolic and aging biology
+    - One of the first mitochondrial-derived peptides identified — encoded inside the mitochondrial genome itself, not the nucleus
+    - Preclinical data tie it to AMPK activation, improved insulin sensitivity, and exercise capacity
+    - The peptide your body produces more of in response to exercise, which is why endurance-focused users care
   who_is_tracking_this:
-    - Users experimenting with research-grade peptides for metabolic biomarkers
-    - Researchers studying mitochondrial-derived peptides
+    - Longevity self-experimenters running research-grade mitochondrial peptides
+    - Endurance athletes chasing exercise-capacity and metabolic-resilience signals
+    - Users with metabolic syndrome or prediabetes trying it for insulin sensitivity
   common_user_goals:
-    - Insulin sensitivity
-    - Exercise capacity
-    - Metabolic resilience
+    - Better insulin sensitivity and glycemic control
+    - More exercise capacity / VO2 max preservation
+    - Metabolic resilience as a hedge against age-related decline
 
 evidence:
   tier: preclinical
@@ -55,28 +57,29 @@ evidence:
     - Skeletal muscle glucose handling
     - Mitochondrial stress response
   claim_summary:
-    - 16-amino-acid peptide encoded within mitochondrial 12S rRNA; first characterized by Lee et al. 2015.
-    - Preclinical data show improved insulin sensitivity, reduced obesity, and metabolic homeostasis effects.
-    - Human data are limited; clinical translation is early-stage.
+    - 16-amino-acid peptide encoded within mitochondrial 12S rRNA; first characterized by Lee et al., Cell Metabolism 2015.
+    - In animal models, restores insulin sensitivity, reduces diet-induced obesity, and improves metabolic homeostasis.
+    - Circulating MOTS-c rises with exercise in humans, suggesting an endogenous exercise-mimetic role.
+    - Human interventional data are very limited; clinical translation is early-stage (CohBar program ended).
   evidence_gaps:
-    - Very limited published human trial data
+    - Almost no published human interventional trial data
     - Long-term safety unknown
-    - No regulatory approval
+    - No approved indication anywhere; all current use is grey-market research peptide
 
 risks:
   by_route:
     subq:
-      - Unregulated supply: purity and identity not verifiable without independent COA
+      - Unregulated supply — purity and identity not verifiable without an independent COA
       - Long-term safety unknown
       - Injection-site reactions possible
-      - Unknown interactions with glucose-lowering medications
+      - Theoretical interaction with glucose-lowering medications (additive hypoglycemia)
 
 tracking:
   useful_logs:
-    - Fasting glucose and insulin
+    - Fasting glucose and insulin (HOMA-IR)
     - HbA1c
-    - Body composition
-    - Exercise performance
+    - Body composition (DEXA or BIA)
+    - Exercise performance (VO2 max, time-to-exhaustion, recovery)
     - Injection-site reactions
   inventory_fields:
     - vendor
@@ -88,19 +91,21 @@ tracking:
     - prompt-coa-upload
 
 app_profile:
-  headline: Mitochondrial-derived peptide with promising preclinical metabolic data and very thin human evidence.
-  summary: MOTS-c is a 16-amino-acid peptide encoded within mitochondrial 12S rRNA, discovered by Lee and colleagues in 2015. It activates AMPK via the folate / de novo purine pathway and shows metabolic benefits in animal models. Human clinical evidence is early-stage.
+  headline: Mitochondrial-encoded exercise-mimetic peptide with strong preclinical metabolic data and very thin human evidence.
+  summary: "MOTS-c is a mitochondrial-derived peptide studied in metabolic stress, exercise, and insulin-sensitivity contexts. Useful tracking ties preparation and timing to training, energy, glucose, sleep, recovery, and tolerability rather than vague wellness notes."
   why_people_care:
-    - Novel mitochondrial-encoded peptide tied to aging biology
-    - Preclinical metabolic and exercise-capacity signals
+    - Novel mitochondrial-encoded peptide tied directly to aging biology
+    - Exercise-mimetic preclinical signal (insulin sensitivity, VO2 max, fat loss)
+    - Mechanistically distinct from AMPK activators like metformin
   what_to_verify:
-    - Vendor reputation and Certificate of Analysis
-    - Reconstitution math and storage
+    - Vendor reputation and an independent third-party Certificate of Analysis
+    - Reconstitution math, diluent, and storage
+    - Lot consistency between vials
   what_to_track:
-    - Glycemic markers
-    - Body composition
-    - Exercise performance
-  reality_check: Almost all evidence is preclinical. Human data exist but are very limited; treat MOTS-c as research-stage, not clinical-grade.
+    - Glycemic markers (fasting glucose, insulin, HbA1c)
+    - Body composition over months, not weeks
+    - Exercise performance and recovery
+  reality_check: The exciting data are almost entirely in mice. Human interventional evidence is thin enough that anyone using MOTS-c is effectively part of an n=1 experiment.
 
 sources:
   - id: lee-cellmetab-2015

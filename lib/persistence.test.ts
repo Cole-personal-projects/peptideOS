@@ -13,6 +13,7 @@ import {
   loadPersistedAppData,
   resetPersistedAppData,
   savePersistedAppData,
+  validateUserDataExport,
 } from './persistence';
 import { initialAppData, mockDoses, mockStacks, mockVials } from './mock-data';
 import { referenceCompounds } from './reference-compounds';
@@ -756,6 +757,47 @@ describe('Dexie persistence', () => {
 
     expect(loaded.vials).toHaveLength(initialAppData.vials.length);
     expect(loaded.vials.some((vial) => vial.id === 'vial-bad-metadata')).toBe(false);
+  });
+
+  test('validates import preview metadata and entity counts before restore', () => {
+    const preview = validateUserDataExport(JSON.stringify({
+      schemaVersion: 6,
+      exportedAt: '2026-06-21T12:00:00.000Z',
+      data: {
+        vials: [mockVials[0]],
+        inventoryBatches: [],
+        doses: [mockDoses[0]],
+        stacks: [mockStacks[0]],
+        schedules: [],
+        scheduleLogs: [],
+        reconstitutionCalculations: [],
+        signalCheckIns: [],
+        userCompounds: [customCompound],
+        settings: {
+          hasSeenDisclaimer: true,
+          hasCompletedOnboarding: true,
+          userMode: 'researcher',
+          biometricLock: false,
+          darkMode: true,
+        },
+      },
+    }));
+
+    expect(preview).toEqual({
+      schemaVersion: 6,
+      exportedAt: '2026-06-21T12:00:00.000Z',
+      counts: {
+        vials: 1,
+        inventoryBatches: 0,
+        doses: 1,
+        stacks: 1,
+        schedules: 0,
+        scheduleLogs: 0,
+        reconstitutionCalculations: 0,
+        signalCheckIns: 0,
+        userCompounds: 1,
+      },
+    });
   });
 
   test('imports older v2 exports with no user compounds', async () => {

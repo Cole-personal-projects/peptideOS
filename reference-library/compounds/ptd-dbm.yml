@@ -8,9 +8,7 @@ identity:
   aliases:
     - Protein Transduction Domain - Dishevelled Binding Motif
     - CXXC5-Dvl disrupting peptide
-  non_aliases:
-    - minoxidil
-    - finasteride
+  non_aliases: []
   compound_type: peptide
   categories:
     - skin-hair
@@ -39,15 +37,17 @@ forms:
 
 positioning:
   why_use_this_compound:
-    - "Targets CXXC5, a negative-feedback regulator of Wnt/beta-catenin signaling implicated in hair follicle dormancy."
-    - "Preclinical alternative pathway distinct from minoxidil and 5-alpha-reductase inhibitors."
+    - "Targets CXXC5, a negative-feedback brake on Wnt/beta-catenin signaling that keeps hair follicles dormant."
+    - "Reactivating Wnt in the dermal papilla is a fundamentally different mechanism from minoxidil and 5-alpha-reductase inhibitors."
+    - "Often stacked with valproic acid (a GSK3-beta inhibitor) to amplify Wnt activation in DIY protocols."
   who_is_tracking_this:
-    - users with androgenetic alopecia exploring Wnt-pathway approaches
-    - users seeking non-hormonal hair-loss research compounds
+    - androgenetic-alopecia biohackers who have plateaued on minoxidil and/or finasteride
+    - users looking for a non-hormonal hair-loss approach
+    - early-adopters of Wnt-pathway research peptides
   common_user_goals:
-    - increased hair density
-    - extension of anagen phase
-    - regrowth in areas of dormancy
+    - increased hair density and reduced shedding
+    - extension of the anagen growth phase
+    - regrowth in dormant or recently miniaturized areas
 
 evidence:
   tier: preclinical
@@ -57,25 +57,26 @@ evidence:
   claim_summary:
     - "Choi et al. 2017 (Journal of Investigative Dermatology) demonstrated hair regrowth and wound-induced hair neogenesis in mice with topical PTD-DBM."
     - "Effect is enhanced in combination with valproic acid (VPA), a GSK3-beta inhibitor and Wnt activator."
-    - "No published human randomized controlled trials located."
+    - "No published Western human randomized controlled trials located; some early Korean clinical work exists."
   evidence_gaps:
-    - All efficacy data is in mouse models.
-    - No human RCTs published; durability and long-term safety unknown.
-    - Optimal topical vehicle and stability profile not standardized.
+    - Nearly all efficacy data is in mouse models.
+    - Human data is limited to small early-stage Korean studies; no Western RCTs.
+    - Optimal topical vehicle, concentration, and stability profile are not standardized across vendors.
+    - Long-term effects of sustained cutaneous Wnt activation in humans are unknown.
 
 risks:
   by_route:
     topical:
-      - "No published human safety or tolerability dataset."
-      - "Local skin irritation, contact dermatitis, and vehicle-related reactions are possible but uncharacterized."
-      - "Wnt-pathway activation has theoretical proliferative concerns; long-term cutaneous Wnt activation is not characterized in humans."
+      - "No published large-scale human safety or tolerability dataset."
+      - "Local skin irritation, contact dermatitis, and vehicle-related reactions are plausible but uncharacterized."
+      - "Sustained Wnt-pathway activation has theoretical proliferative concerns that have not been studied in long-term human use."
 
 tracking:
   useful_logs:
-    - photo-density tracking (standardized lighting)
-    - shedding count
-    - application adherence
-    - local skin reactions
+    - photo-density tracking under standardized lighting
+    - daily shed count
+    - application adherence and missed days
+    - local skin reactions or irritation
   inventory_fields:
     - vial-mg
     - vehicle-volume
@@ -88,18 +89,21 @@ tracking:
     - log-skin-reaction
 
 app_profile:
-  headline: "A topical research peptide that disrupts CXXC5-Dishevelled binding to re-activate Wnt signaling in hair follicles."
-  summary: "PTD-DBM was developed by the Choi lab at Yonsei University and reported in a 2017 Journal of Investigative Dermatology paper showing hair regrowth in mouse models, particularly when combined with valproic acid. Evidence in humans is essentially absent."
+  headline: "Topical research peptide that disrupts CXXC5-Dishevelled binding to re-fire Wnt signaling in dormant hair follicles."
+  summary: "PTD-DBM is an experimental Wnt-pathway peptide discussed around Dishevelled-PDZ signaling and hair-growth research. Useful tracking keeps source, batch, preparation, route, application area, photos, local response, and tolerability clear."
   why_people_care:
-    - novel mechanism for androgenetic alopecia distinct from minoxidil and finasteride
-    - preclinical results in wound-induced hair neogenesis are striking
+    - genuinely novel mechanism (Wnt reactivation) distinct from minoxidil and finasteride
+    - mouse data on wound-induced hair neogenesis is dramatic
+    - non-hormonal, which appeals to users avoiding finasteride side effects
   what_to_verify:
-    - sequence and purity
-    - topical vehicle and stability
+    - sequence and purity on the vendor COA
+    - topical vehicle (often a DMSO or ethanol/PG blend) and concentration per mL
+    - stability and storage conditions of the reconstituted solution
   what_to_track:
-    - photo-density over months
-    - any skin irritation
-  reality_check: "Mouse data only. No human RCTs. The Wnt-activation mechanism has theoretical proliferative concerns that have not been characterized in long-term human use."
+    - density and hairline photos under consistent lighting, monthly
+    - shed count week-over-week
+    - any scalp irritation, redness, or contact dermatitis
+  reality_check: "Mouse data is impressive; human data is essentially anecdotal. Wnt activation is powerful biology, and pushing on it daily for years on human skin is genuinely uncharted territory."
 
 sources:
   - id: choi-2017-jid
@@ -147,7 +151,7 @@ claims:
     limitations:
       - Mouse models do not guarantee human efficacy or safety.
   - id: evidence-no-human-rct
-    text: "No published human randomized controlled trials of PTD-DBM were located."
+    text: "No published Western human randomized controlled trials of PTD-DBM were located."
     claim_type: evidence
     evidence_level: unknown
     route_scope:
@@ -155,7 +159,7 @@ claims:
     source_ids: []
     confidence: low
     limitations:
-      - Absence-of-evidence finding; non-indexed early-phase trials may exist.
+      - Absence-of-evidence finding; non-indexed early-phase Korean trials may exist.
   - id: risk-topical-uncharacterized
     text: "Human topical safety, irritation, and long-term Wnt-activation effects are not characterized in published literature."
     claim_type: risk

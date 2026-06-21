@@ -6,119 +6,119 @@ updated_at: "2026-06-19"
 identity:
   name: "LL-37"
   aliases:
-    - "Cathelicidin LL-37"
-    - "hCAP-18 peptide fragment"
+  - "Cathelicidin LL-37"
+  - "hCAP-18 peptide fragment"
   compound_type: peptide
   categories:
-    - immune
+  - immune
 
 forms:
   primary_route: topical
   supported_routes:
-    - topical
+  - topical
   excluded_routes:
-    - route: subq
-      reason: "No reviewed source in this pass establishes subcutaneous LL-37 product use."
-    - route: im
-      reason: "No reviewed source in this pass establishes intramuscular LL-37 product use."
-    - route: oral
-      reason: "No reviewed source in this pass establishes oral LL-37 product use."
-    - route: intranasal
-      reason: "No reviewed source in this pass establishes intranasal LL-37 product use."
+  - route: subq
+    reason: "No reviewed source in this pass establishes subcutaneous LL-37 product use."
+  - route: im
+    reason: "No reviewed source in this pass establishes intramuscular LL-37 product use."
+  - route: oral
+    reason: "No reviewed source in this pass establishes oral LL-37 product use."
+  - route: intranasal
+    reason: "No reviewed source in this pass establishes intranasal LL-37 product use."
   form_factors:
-    - topical product
-    - lyophilized vial
+  - topical product
+  - lyophilized vial
   verification_fields:
-    - exact label name
-    - route
-    - formulation
-    - lot number
-    - source
-    - expiration date
-    - storage language
+  - exact label name
+  - route
+  - formulation
+  - lot number
+  - source
+  - expiration date
+  - storage language
 
 positioning:
   why_use_this_compound:
-    - "LL-37 is a named cathelicidin peptide identity that users may encounter in immune and skin-barrier tracking contexts."
-    - "PeptideOS should keep route and formulation records precise because source quality can vary widely."
-    - "Exact label and vial details matter more than generic peptide assumptions."
+  - "LL-37 is a named cathelicidin peptide identity that users may encounter in immune and skin-barrier tracking contexts."
+  - "Keep route and formulation records precise because source quality can vary widely."
+  - "Exact label and vial details matter more than generic peptide assumptions."
   who_is_tracking_this:
-    - "Users comparing topical peptide products or research vials."
-    - "Users who want exact identity matching before adding a container to inventory."
-    - "Users documenting site, skin, or tolerability notes over time."
+  - "Users comparing topical peptide products or research vials."
+  - "Users who want exact identity matching before adding a container to inventory."
+  - "Users documenting site, skin, or tolerability notes over time."
   common_user_goals:
-    - "Verify whether the item is LL-37 and not a different cathelicidin or peptide blend."
-    - "Track route, formulation, and source details separately."
-    - "Capture user-entered notes without implying clinical certainty."
+  - "Verify whether the item is LL-37 and not a different cathelicidin or peptide blend."
+  - "Track route, formulation, and source details separately."
+  - "Capture user-entered notes without implying clinical certainty."
 
 evidence:
   tier: identity_only
   mechanism_targets:
-    - cathelicidin peptide identity context
-    - innate immune signaling context
-    - epithelial-barrier research context
+  - cathelicidin peptide identity context
+  - innate immune signaling context
+  - epithelial-barrier research context
   claim_summary:
-    - "PubChem supports LL-37 identity and naming metadata used by PeptideOS for reference-library records."
+  - "Antimicrobial host-defense peptide researched in innate immunity, biofilm, and wound-healing contexts. Practical records should make its experimental status clear while capturing source, preparation, route, target context, timing, and local or systemic tolerability."
   evidence_gaps:
-    - "This bundled source set does not establish approved-product status or protocol guidance."
-    - "Product-specific tolerability and performance depend on the exact finished formulation."
+  - "This bundled source set does not establish approved-product status or protocol guidance."
+  - "Product-specific tolerability and performance depend on the exact finished formulation."
 
 risks:
   by_route:
     topical:
-      - "Irritation potential depends on the finished formulation, carrier, and individual sensitivity."
-      - "Label confusion or incomplete source data can corrupt inventory and response tracking."
+    - "Irritation potential depends on the finished formulation, carrier, and individual sensitivity."
+    - "Label confusion or incomplete source data can corrupt inventory and response tracking."
 
 tracking:
   useful_logs:
-    - application site
-    - skin or site photos
-    - irritation notes
-    - source and lot information
-    - formulation changes
+  - application site
+  - skin or site photos
+  - irritation notes
+  - source and lot information
+  - formulation changes
   inventory_fields:
-    - exact label name
-    - formulation
-    - lot number
-    - source
-    - expiration date
+  - exact label name
+  - formulation
+  - lot number
+  - source
+  - expiration date
   peppi_actions:
-    - "Ask whether the product is topical, injectable, lyophilized, or blended before saving inventory."
-    - "Capture exact label and source details before creating a record."
-    - "Keep user-entered site and tolerability notes as logs rather than app conclusions."
-    - "Flag missing identity, source, or formulation details for review."
+  - "Ask whether the product is topical, injectable, lyophilized, or blended before saving inventory."
+  - "Capture exact label and source details before creating a record."
+  - "Keep user-entered site and tolerability notes as logs rather than app conclusions."
+  - "Flag missing identity, source, or formulation details for review."
 
 app_profile:
   headline: "Identity-first LL-37 tracking for immune and skin-barrier contexts."
-  summary: "LL-37 is represented as a peptide reference compound with identity metadata only. PeptideOS should keep route, formulation, source, and user-entered notes precise without implying clinical certainty."
+  summary: "LL-37 is an experimental antimicrobial peptide tied to innate-immune and biofilm research. Useful tracking keeps source, preparation, route, target context, site reactions, symptom notes, and conservative safety observations easy to review."
   why_people_care:
-    - "It is a named cathelicidin peptide that appears in immune and barrier discussions."
-    - "The practical app value is exact label capture and uncertainty management."
+  - "It is a named cathelicidin peptide that appears in immune and barrier discussions."
+  - "The practical app value is exact label capture and uncertainty management."
   what_to_verify:
-    - "Exact label name and route/formulation."
-    - "Lot, source, expiration, and storage language."
-    - "Whether the item is LL-37 alone or part of a blend."
+  - "Exact label name and route/formulation."
+  - "Lot, source, expiration, and storage language."
+  - "Whether the item is LL-37 alone or part of a blend."
   what_to_track:
-    - "Application site and tolerability notes."
-    - "Skin or site photos at user-chosen checkpoints."
-    - "Source and batch changes."
-  reality_check: "LL-37 is biologically interesting, but PeptideOS should treat this record as identity-first and high-uncertainty unless the exact product label says otherwise."
+  - "Application site and tolerability notes."
+  - "Skin or site photos at user-chosen checkpoints."
+  - "Source and batch changes."
+  reality_check: "LL-37 is biologically interesting, but this record should stay identity-first and high-uncertainty unless the exact product label says otherwise."
 
 sources:
-  - id: pubchem-ll-37
-    title: "LL-37 compound summary"
-    url: "https://pubchem.ncbi.nlm.nih.gov/compound/16198951"
-    source_type: database
-    publisher: "PubChem"
-    year: 2026
+- id: pubchem-ll-37
+  title: "LL-37 compound summary"
+  url: "https://pubchem.ncbi.nlm.nih.gov/compound/16198951"
+  source_type: database
+  publisher: "PubChem"
+  year: 2026
 
 claims:
-  - id: identity-ll37-pubchem
-    text: "PubChem supports LL-37 identity and naming metadata used by PeptideOS for reference-library records."
-    claim_type: identity
-    evidence_level: identity
-    route_scope: []
-    source_ids:
-      - pubchem-ll-37
-    confidence: high
-    limitations: []
+- id: identity-ll37-pubchem
+  text: "Antimicrobial host-defense peptide researched in innate immunity, biofilm, and wound-healing contexts. Practical records should make its experimental status clear while capturing source, preparation, route, target context, timing, and local or systemic tolerability."
+  claim_type: identity
+  evidence_level: identity
+  route_scope: []
+  source_ids:
+  - pubchem-ll-37
+  confidence: high
+  limitations: []

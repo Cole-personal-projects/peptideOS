@@ -92,7 +92,7 @@ tracking:
 
 app_profile:
   headline: Oral SERM with phase II evidence for raising testosterone in secondary hypogonadism while preserving fertility; not FDA-approved.
-  summary: Enclomiphene citrate is the trans-isomer of clomiphene. Phase II trials in men with secondary hypogonadism reported normalized morning testosterone with increased LH and FSH and preserved sperm production, in contrast to exogenous testosterone. It is not FDA-approved for hypogonadism or any other indication.
+  summary: "Enclomiphene is the trans-isomer SERM used to stimulate endogenous LH and FSH signaling in male hormone contexts. Useful tracking connects dose schedule, fertility goals, testosterone and gonadotropin labs, mood, libido, vision symptoms, and side effects."
   why_people_care:
     - Possibility of raising endogenous testosterone without suppressing spermatogenesis.
     - Oral administration vs. injectable testosterone.

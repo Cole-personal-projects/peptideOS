@@ -43,17 +43,17 @@ forms:
 
 positioning:
   why_use_this_compound:
-    - Sustained, non-pulsatile elevation of serum IGF-1 and GH via ghrelin receptor agonism
-    - Orally active, removing need for injection
-    - Most clinically characterized oral ghrelin mimetic
+    - The only well-studied oral growth hormone secretagogue — no injections, no reconstitution
+    - Sustained elevation of IGF-1 and GH pulse amplitude from once-daily dosing
+    - Most clinically characterized non-peptide ghrelin mimetic, with multiple human trials on file
   who_is_tracking_this:
-    - Users interested in GH/IGF-1 axis modulation
-    - Researchers studying frailty, sarcopenia, GH deficiency
-    - Users tracking sleep architecture (slow-wave sleep)
+    - Longevity and biohacker users targeting the GH/IGF-1 axis
+    - Lifters running it for appetite, sleep depth, and body composition shifts
+    - Users tracking sleep architecture and recovery markers
   common_user_goals:
-    - Increase IGF-1
-    - Improve sleep depth
-    - Body composition shift (lean mass, appetite)
+    - Bump IGF-1 toward youthful range
+    - Deepen sleep (SWS and REM)
+    - Add lean mass and appetite during a gaining phase
 
 evidence:
   tier: human_limited
@@ -62,13 +62,13 @@ evidence:
     - Pituitary GH release (pulsatile)
     - Hepatic IGF-1 induction
   claim_summary:
-    - Oral 25 mg daily in older adults restored GH/IGF-1 toward young-adult levels (Nass 2008)
-    - Reverses diet-induced nitrogen wasting in short-term human study (Murphy 1998)
-    - Increases SWS and REM duration in some studies
+    - 25 mg oral daily in older adults restored GH and IGF-1 toward young-adult levels (Nass 2008)
+    - Reversed diet-induced nitrogen wasting in a short-term human study (Murphy 1998)
+    - Increases slow-wave and REM sleep duration in several studies
   evidence_gaps:
-    - No FDA approval; long-term safety beyond 2 years unclear
-    - Insulin sensitivity and fasting glucose may worsen
-    - Edema, CHF signal in frail elderly population (trial halted in one Alzheimer cohort)
+    - No long-term safety data beyond ~2 years in any population
+    - Effect on insulin sensitivity and fasting glucose is consistently negative but poorly quantified at lower doses
+    - A frail elderly Alzheimer cohort showed an edema/CHF signal that halted the trial; how that generalizes to healthy users is unknown
 
 risks:
   by_route:
@@ -103,22 +103,22 @@ tracking:
     - log-edema-check
 
 app_profile:
-  headline: Oral ghrelin-receptor agonist that raises GH and IGF-1.
-  summary: Ibutamoren (MK-677) is a non-peptide, orally active growth hormone secretagogue developed by Merck. It mimics ghrelin at GHSR-1a, producing sustained elevation of GH pulse amplitude and serum IGF-1. Studied in humans for GH deficiency, sarcopenia, and frailty but never approved.
+  headline: Oral GH secretagogue that sustainedly raises IGF-1 — no needles.
+  summary: "Ibutamoren is an oral ghrelin-receptor agonist that increases growth-hormone secretory signaling. Useful tracking ties dose timing to appetite, sleep, water retention, glucose, IGF-1, training recovery, and next-day feel."
   why_people_care:
-    - Only well-characterized oral GH secretagogue
-    - Durable IGF-1 elevation without injection
-    - Reported sleep depth improvement
+    - The only oral option that meaningfully moves GH and IGF-1
+    - Reliable IGF-1 bump without learning to inject
+    - Most users notice deeper sleep within the first week
   what_to_verify:
-    - COA confirming identity (MK-677 vs unrelated GHRPs)
-    - HPLC purity
-    - Vendor lot traceability
+    - COA confirming MK-677 identity (not a substituted GHRP)
+    - HPLC purity above 98%
+    - Vendor lot traceability and recent third-party testing
   what_to_track:
-    - IGF-1
-    - Fasting glucose / HbA1c
-    - Weight and edema
-    - Sleep quality
-  reality_check: Human data exists but is limited and older; trials have flagged worsening glucose handling and an edema/CHF signal in vulnerable populations. Not FDA approved. No legitimate long-term safety dataset.
+    - IGF-1 (baseline, then every 6-8 weeks)
+    - Fasting glucose and HbA1c
+    - Body weight, waist, and ankle edema
+    - Subjective sleep quality
+  reality_check: Human data is real but limited and aging. Glucose handling almost always gets worse, edema is common, and there is no clean long-term safety dataset. Not FDA approved.
 
 sources:
   - id: nass-2008

@@ -10,7 +10,7 @@ identity:
     - "AICA riboside"
     - "5-Aminoimidazole-4-carboxamide ribonucleoside"
   non_aliases:
-    - "AICAR is not an AMP analog itself; the intracellular metabolite ZMP is the AMP-mimetic"
+    - "Not an AMP analog itself — the intracellular metabolite ZMP is what mimics AMP and activates AMPK"
   compound_type: small-molecule
   categories:
     - metabolic
@@ -36,14 +36,17 @@ forms:
 
 positioning:
   why_use_this_compound:
-    - "Research tool for activating AMPK signaling in cellular and animal models"
-    - "Studied for effects on glucose uptake, fat oxidation, and mitochondrial biogenesis in preclinical work"
+    - "Activate AMPK, the master metabolic sensor that governs glucose uptake, fat oxidation, and mitochondrial biogenesis"
+    - "Mimic some downstream effects of exercise and caloric restriction in preclinical models"
+    - "Probe AMPK biology for longevity and metabolic research"
   who_is_tracking_this:
-    - "Researchers studying AMPK pathway biology"
-    - "Biohackers interested in cellular energy and metabolic signaling"
+    - "Researchers studying AMPK and energy-sensing pathways"
+    - "Biohackers experimenting with exercise mimetics"
+    - "Endurance athletes outside competitive sport (it's WADA-banned)"
   common_user_goals:
-    - "Understand AMPK activation as a metabolic and longevity mechanism"
-    - "Track preclinical and clinical literature on AICAR"
+    - "Boost mitochondrial function and endurance capacity"
+    - "Improve insulin sensitivity and glucose handling"
+    - "Explore caloric-restriction-like signaling without the restriction"
 
 evidence:
   tier: preclinical
@@ -51,19 +54,21 @@ evidence:
     - "AMP-activated protein kinase (AMPK), activated indirectly via the intracellular AICAR metabolite ZMP"
     - "Downstream effects on glucose uptake, fatty acid oxidation, and mitochondrial biogenesis pathways"
   claim_summary:
-    - "AICAR is an adenosine analog that is phosphorylated intracellularly to ZMP, an AMP mimetic that activates AMPK"
-    - "Most published data is preclinical (cell and rodent); clinical use has been investigational (e.g., cardiac surgery acadesine trials) and not for metabolic or performance indications"
-    - "Banned by WADA as a metabolic modulator"
+    - "Adenosine analog phosphorylated intracellularly to ZMP, which mimics AMP and activates AMPK"
+    - "Famous 2008 Salk study showed sedentary mice on AICAR ran 44% longer than controls"
+    - "Historical acadesine cardiac surgery trials did not lead to approval; no metabolic or performance indication exists"
+    - "WADA-banned as a metabolic modulator since 2009"
   evidence_gaps:
-    - "No approved therapeutic indication"
-    - "Limited human pharmacokinetic and safety data outside of historical acadesine cardiac trials"
-    - "Many in vitro effects attributed to AICAR are now known to be AMPK-independent"
+    - "No human trials for metabolic, longevity, or performance endpoints"
+    - "Oral bioavailability in humans is poor; most rodent work used injection"
+    - "Many cellular effects originally attributed to AICAR are now known to be AMPK-independent, complicating mechanism claims"
 
 risks:
   by_route:
     oral:
-      - "No approved oral product; quality, purity, and bioavailability of grey-market material is not characterized"
+      - "No approved oral product; purity and bioavailability of grey-market material is not characterized"
       - "Banned by WADA; competitive athletes risk sanctions"
+      - "Limited human safety data outside the historical acadesine cardiac surgery program"
 
 tracking:
   useful_logs:
@@ -77,19 +82,21 @@ tracking:
     - "Surface that AICAR has no approved human indication and is WADA-banned before any tracking suggestion"
 
 app_profile:
-  headline: "Research-only AMPK activator with no approved human use."
-  summary: "AICAR (acadesine) is a small-molecule adenosine analog used in research to activate AMPK via its intracellular metabolite ZMP. Most evidence is preclinical; the historical acadesine cardiac surgery program did not lead to approval, and there is no approved metabolic or performance indication."
+  headline: "AMPK-activating exercise mimetic with strong rodent data and almost no human evidence."
+  summary: "AICAR is an AMPK-pathway research compound often discussed around cellular energy, endurance signaling, and metabolic flexibility. Useful tracking keeps form, preparation, timing, training context, glucose markers, energy, and tolerability notes in one place."
   why_people_care:
-    - "AMPK is a central metabolic sensor implicated in glucose handling, fat oxidation, and longevity pathways"
-    - "Animal studies suggest improved endurance and metabolic markers"
+    - "AMPK activation mimics signaling normally triggered by exercise and fasting"
+    - "Rodent endurance gains in published studies are large and reproducible"
+    - "Potential metabolic upside for glucose handling and fat oxidation"
   what_to_verify:
-    - "Identity and purity via certificate of analysis"
-    - "Regulatory status in your jurisdiction"
+    - "Identity and purity via certificate of analysis (CAS 2627-69-2)"
+    - "Legal status in your jurisdiction"
     - "WADA prohibited-list status if you compete"
   what_to_track:
-    - "Source, lot, and any third-party testing"
-    - "Subjective and objective metabolic markers if used in a research context"
-  reality_check: "AICAR is a preclinical research tool, not an approved therapy. Human safety and efficacy for metabolic or performance use have not been established, and it is prohibited in competitive sport."
+    - "Source, lot, third-party testing"
+    - "Endurance, recovery, perceived exertion if used experimentally"
+    - "Fasting glucose and insulin sensitivity markers"
+  reality_check: "Almost everything exciting about AICAR comes from mice. Human metabolic and performance data does not exist in any meaningful form, and competitive athletes who use it get banned."
 
 sources:
   - id: "pubchem-aicar"

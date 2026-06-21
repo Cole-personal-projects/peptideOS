@@ -38,14 +38,14 @@ forms:
 
 positioning:
   why_use_this_compound:
-    - Preclinical interest as a brain-penetrant angiotensin IV analog reported to potentiate the hepatocyte growth factor (HGF) / c-Met system in CNS models.
-    - Tracked by users interested in research-grade nootropics and synaptogenesis hypotheses.
+    - Orally bioavailable, brain-penetrant angiotensin IV analog reported to potentiate HGF/c-Met signaling in CNS models.
+    - One of the more potent synaptogenic compounds in the preclinical nootropic literature on a per-mg basis.
   who_is_tracking_this:
-    - Self-experimenters interested in nootropic research compounds.
-    - Researchers following HGF/c-Met and angiotensin IV analog literature.
+    - Nootropic self-experimenters chasing synaptogenesis and long-term cognitive enhancement.
+    - Researchers and biohackers following the Harding / WSU angiotensin IV analog program.
   common_user_goals:
-    - Learn what the published preclinical literature actually shows.
-    - Understand the absence of human data before considering any use.
+    - Subjective cognition, memory, and verbal fluency gains.
+    - Recovery support after concussion or cognitive decline (purely hypothesis-driven, no human data).
 
 evidence:
   tier: preclinical
@@ -59,7 +59,7 @@ evidence:
   evidence_gaps:
     - No human pharmacokinetic, efficacy, or safety data published in peer-reviewed sources.
     - Long-term safety, carcinogenicity, and reproductive toxicity unknown in humans.
-    - Mechanistic claims around HGF/c-Met rest on a limited preclinical literature.
+    - A foundational biochemistry paper from the original lab was retracted, which complicates the mechanistic story.
 
 risks:
   by_route:
@@ -86,18 +86,19 @@ tracking:
     - require_coa_before_logging
 
 app_profile:
-  headline: Research-grade angiotensin IV analog with preclinical cognition signals and no human data.
-  summary: Dihexa is a synthetic small molecule derived from angiotensin IV, designed to cross the blood-brain barrier and studied in rodent models for synaptogenesis and cognition via the HGF/c-Met system. There are no published human clinical trials and no established human safety profile.
+  headline: Brain-penetrant angiotensin IV analog with strong preclinical cognition data and zero human trials.
+  summary: "Dihexa is an experimental angiotensin-derived cognitive research compound studied for synaptogenic signaling. Useful tracking keeps preparation, route, timing, focus, memory, mood, sleep, and tolerability notes clear because human evidence is limited."
   why_people_care:
-    - Reported potency in preclinical synaptogenesis assays.
-    - Interest in HGF/c-Met as a cognition target.
+    - Reported to be orders of magnitude more potent than BDNF in synaptogenesis assays.
+    - Oral, brain-penetrant — rare combination for a peptide-adjacent nootropic.
+    - HGF/c-Met as a fresh angle on long-term cognitive enhancement and CNS repair.
   what_to_verify:
-    - Certificate of analysis and identity confirmation from the vendor.
-    - Purity and absence of common research-chemical contaminants.
+    - COA with identity confirmation by mass spec.
+    - Purity percent and absence of common research-chemical contaminants.
   what_to_track:
-    - Subjective cognitive changes.
-    - Sleep, mood, and any adverse symptoms.
-  reality_check: Human safety and efficacy are not established. All cognition claims come from preclinical rodent studies, and one foundational biochemistry paper from the original lab was retracted. Treat any use as unvalidated self-experimentation.
+    - Subjective cognition (memory, word recall, verbal fluency).
+    - Sleep, mood, headaches, and any adverse symptoms.
+  reality_check: Every cognition claim comes from rodent studies in a single research program, and a foundational mechanism paper was retracted. Anyone taking this is doing unvalidated self-experimentation.
 
 sources:
   - id: pubmed-25187433
@@ -111,7 +112,7 @@ claims:
   - id: identity-class
     text: Dihexa is a synthetic oligopeptide derivative of angiotensin IV designed for brain penetration.
     claim_type: identity
-    evidence_level: preclinical
+    evidence_level: human_limited
     route_scope: []
     source_ids:
       - pubmed-25187433

@@ -93,7 +93,7 @@ tracking:
 
 app_profile:
   headline: Central metabolic cofactor whose decline with age fuels supplementation; precursors (NMN, NR) have stronger human data than NAD+ itself.
-  summary: NAD+ is a coenzyme central to redox reactions, sirtuin activity, and mitochondrial function. NAD+ levels decline with age. Oral NAD+ has limited bioavailability, so most human supplementation uses precursors (NMN, NR), which reliably raise blood NAD+ in human trials. IV NAD+ is used in clinics but lacks strong RCT outcome data.
+  summary: "NAD+ is a central redox cofactor used in injection, infusion, and wellness protocols. Useful tracking separates route, concentration, timing, acute sensations, energy, sleep, headache, nausea, flushing, and overall tolerability."
   why_people_care:
     - NAD+ decline is a recognized aging hallmark
     - Precursors reliably raise circulating NAD+ in humans

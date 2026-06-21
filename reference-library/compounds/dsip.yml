@@ -34,14 +34,16 @@ forms:
 
 positioning:
   why_use_this_compound:
-    - Historical research interest as a neuropeptide associated with delta-wave sleep.
-    - Small early human studies reported modest sleep-quality changes in insomnia populations.
+    - Endogenous neuropeptide first isolated in the 1970s in the context of delta-wave sleep research.
+    - Non-GABAergic angle for users who don't tolerate or don't want benzodiazepine-class or Z-drug sleep aids.
   who_is_tracking_this:
-    - Self-experimenters interested in sleep peptides.
-    - Researchers reviewing 1980s-1990s neuropeptide and sleep literature.
+    - Self-experimenters with insomnia or fragmented sleep looking for non-sedating options.
+    - Users interested in 1970s-1990s European and Soviet neuropeptide literature.
+    - Stack builders pairing it with other recovery, stress, or longevity peptides.
   common_user_goals:
-    - Understand what early human DSIP studies actually showed.
-    - Distinguish anecdotal claims from the limited clinical evidence.
+    - Falling asleep faster or staying asleep longer.
+    - More restorative deep sleep without next-day grogginess.
+    - Stress-axis modulation alongside sleep effects.
 
 evidence:
   tier: human_limited
@@ -49,13 +51,13 @@ evidence:
     - Sleep regulation (mechanism in humans not fully characterized)
     - Neuroendocrine and stress-axis modulation (proposed)
   claim_summary:
-    - DSIP is a naturally occurring neuropeptide first characterized in the 1970s in the context of delta-wave sleep research.
+    - DSIP is a naturally occurring nonapeptide isolated by Schoenenberger and Monnier in the 1970s from rabbit cerebral venous blood during delta-wave sleep.
     - A small number of human studies in chronic insomnia reported improvements in sleep efficiency and latency vs. placebo with intravenous synthetic DSIP.
-    - Results across human studies are mixed; modern, adequately powered trials are lacking.
+    - Results across human studies are mixed and most of the clinical literature is 30-50 years old.
   evidence_gaps:
     - No large, modern randomized controlled trials.
-    - No standardized long-term human safety data.
-    - Intranasal route is commonly used in self-experimentation but lacks published human pharmacokinetic studies.
+    - Mechanism of action in humans is still not well characterized.
+    - Subcutaneous and intranasal routes used in self-experimentation have no published human pharmacokinetic data.
 
 risks:
   by_route:
@@ -84,18 +86,19 @@ tracking:
     - require_coa_before_logging
 
 app_profile:
-  headline: Early-era sleep neuropeptide with small, mixed human studies and no modern trials.
-  summary: DSIP is a neuropeptide studied in the 1970s-1990s for effects on sleep architecture. A handful of small human studies showed modest improvements in sleep efficiency and latency in insomnia patients with intravenous synthetic DSIP, but modern, well-powered evidence is essentially absent.
+  headline: Old-school sleep neuropeptide with a thin, mostly-Soviet-era evidence base.
+  summary: "DSIP is a sleep- and stress-axis research peptide with variable reports and mixed evidence. Useful tracking focuses on bedtime timing, sleep latency, awakenings, dream intensity, next-day alertness, and interactions with other sleep aids."
   why_people_care:
-    - Interest in non-GABAergic sleep aids.
-    - Curiosity about peptides influencing sleep architecture.
+    - Non-GABAergic mechanism — different lane from benzos and Z-drugs.
+    - Reputation for working on stress-driven insomnia and improving deep-sleep feel.
+    - Cheap, well-characterized peptide on the research-chemical market.
   what_to_verify:
-    - Certificate of analysis and identity confirmation from the vendor.
-    - Purity and storage handling.
+    - COA with identity confirmation by mass spec.
+    - Purity percent and storage handling from the vendor.
   what_to_track:
-    - Sleep latency, total sleep time, and subjective quality.
-    - Next-day cognition and any adverse symptoms.
-  reality_check: The human evidence base is small, old, and mostly intravenous. Self-experimentation via subcutaneous or intranasal routes is not supported by published pharmacokinetic data, and long-term safety is unknown.
+    - Sleep latency, total sleep time, subjective sleep quality.
+    - Next-day cognition, mood, and any adverse symptoms.
+  reality_check: The human evidence base is small, old, and mostly intravenous. Subcutaneous and intranasal self-experimentation has no published PK data, and long-term safety is unknown.
 
 sources:
   - id: pubmed-1299794

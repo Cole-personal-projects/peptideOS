@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Database, Moon, Sun, Fingerprint, Download, Shield, Trash2, Upload, UserRound } from 'lucide-react';
+import { Database, Download, Fingerprint, Moon, Shield, Sun, Trash2, Upload, UserRound } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import {
@@ -15,19 +15,45 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/lib/auth-context';
 import { useApp } from '@/lib/context';
+import { validateUserDataExport, type UserDataImportPreview } from '@/lib/persistence';
 import { formatReferenceLibraryStatus } from '@/lib/reference-library-status';
+
+function formatDateTime(value: string | null) {
+  return value ? new Date(value).toLocaleString() : 'No successful save yet';
+}
+
+function formatImportCounts(preview: UserDataImportPreview) {
+  return [
+    `${preview.counts.stacks} stacks`,
+    `${preview.counts.schedules} schedules`,
+    `${preview.counts.scheduleLogs} due-dose records`,
+    `${preview.counts.doses} logged doses`,
+    `${preview.counts.vials} containers`,
+    `${preview.counts.signalCheckIns} signals`,
+    `${preview.counts.userCompounds} custom compounds`,
+  ].join(' · ');
+}
 
 export default function SettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data, referenceLibraryStatus, toggleDarkMode, toggleBiometricLock, exportAllData, importAllData, clearAllData } = useApp();
+  const {
+    data,
+    referenceLibraryStatus,
+    persistenceStatus,
+    toggleDarkMode,
+    toggleBiometricLock,
+    exportAllData,
+    importAllData,
+    clearAllData,
+  } = useApp();
   const { config: authConfig, status: authStatus, user, signInWithEmail, verifyEmailCode, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [email, setEmail] = useState('');
@@ -36,6 +62,7 @@ export default function SettingsPage() {
   const [authAction, setAuthAction] = useState<'email' | 'code' | 'sign-out' | null>(null);
   const [importStatus, setImportStatus] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [pendingImport, setPendingImport] = useState<{ file: File; preview: UserDataImportPreview } | null>(null);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const formattedReferenceLibraryStatus = formatReferenceLibraryStatus(referenceLibraryStatus);
@@ -46,15 +73,29 @@ export default function SettingsPage() {
     setImportStatus('');
 
     try {
-      await importAllData(file);
-      setImportStatus('Data restored from backup.');
+      const preview = validateUserDataExport(await file.text());
+      setPendingImport({ file, preview });
     } catch (error) {
-      setImportStatus(error instanceof Error ? error.message : 'Could not restore this backup.');
+      setImportStatus(error instanceof Error ? error.message : 'Could not restore backup.');
     } finally {
       setIsImporting(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleConfirmImport = async () => {
+    if (!pendingImport) return;
+    setIsImporting(true);
+    setImportStatus('');
+
+    try {
+      await importAllData(pendingImport.file);
+      setImportStatus(`Data restored from backup exported ${new Date(pendingImport.preview.exportedAt).toLocaleString()}.`);
+      setPendingImport(null);
+    } catch (error) {
+      setImportStatus(error instanceof Error ? error.message : 'Could not restore backup.');
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -88,9 +129,7 @@ export default function SettingsPage() {
     try {
       const result = await verifyEmailCode(email, verificationCode);
       setAuthMessage(result.message);
-      if (result.ok) {
-        setVerificationCode('');
-      }
+      if (result.ok) setVerificationCode('');
     } finally {
       setAuthAction(null);
     }
@@ -113,7 +152,6 @@ export default function SettingsPage() {
       <PageHeader title="Settings" backHref="/more" />
 
       <div data-testid="settings-content" className="mx-auto w-full max-w-3xl p-4 space-y-4">
-        {/* Account */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Account</CardTitle>
@@ -122,29 +160,20 @@ export default function SettingsPage() {
             <div className="flex items-start gap-3">
               <UserRound className="mt-0.5 h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="font-medium text-sm">
-                  {authStatus === 'signed-in' ? user?.email : 'Local-only mode'}
-                </p>
+                <p className="font-medium text-sm">{authStatus === 'signed-in' ? user?.email : 'Local-only mode'}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {authStatus === 'signed-in'
                     ? 'Signed in. Cloud sync will be added in a future slice.'
                     : 'Your data remains on this device until you sign in and cloud sync is available.'}
                 </p>
                 {!authConfig.enabled && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Sign-in is ready for Supabase public config.
-                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">Sign-in is ready for Supabase public config.</p>
                 )}
               </div>
             </div>
 
             {authStatus === 'signed-in' ? (
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                disabled={authAction !== null}
-                onClick={() => void handleSignOut()}
-              >
+              <Button variant="outline" className="w-full justify-start" disabled={authAction !== null} onClick={() => void handleSignOut()}>
                 Sign out
               </Button>
             ) : (
@@ -162,12 +191,7 @@ export default function SettingsPage() {
                     onChange={(event) => setEmail(event.target.value)}
                   />
                 </div>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  disabled={authAction !== null}
-                  onClick={() => void handleEmailSignIn()}
-                >
+                <Button variant="outline" className="w-full justify-start" disabled={authAction !== null} onClick={() => void handleEmailSignIn()}>
                   {authAction === 'email' ? 'Sending sign-in link...' : 'Send sign-in link'}
                 </Button>
                 <div className="space-y-2">
@@ -182,12 +206,7 @@ export default function SettingsPage() {
                     onChange={(event) => setVerificationCode(event.target.value)}
                   />
                 </div>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  disabled={authAction !== null}
-                  onClick={() => void handleVerifyCode()}
-                >
+                <Button variant="outline" className="w-full justify-start" disabled={authAction !== null} onClick={() => void handleVerifyCode()}>
                   {authAction === 'code' ? 'Verifying code...' : 'Verify sign-in code'}
                 </Button>
               </div>
@@ -201,82 +220,42 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Reference Library */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Reference library</CardTitle>
+            <CardTitle className="text-base">Data ownership</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex items-start gap-3">
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-md border bg-secondary/20 p-3">
+                <p className="text-xs text-muted-foreground">Storage mode</p>
+                <p className="mt-1 text-sm font-medium">
+                  {persistenceStatus.mode === 'signed-in' ? 'Signed-in local store' : 'Local-only store'}
+                </p>
+              </div>
+              <div className="rounded-md border bg-secondary/20 p-3">
+                <p className="text-xs text-muted-foreground">Last successful save</p>
+                <p className="mt-1 text-sm font-medium">{formatDateTime(persistenceStatus.lastSavedAt)}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-md border bg-secondary/20 p-3">
               <Database className="mt-0.5 h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="font-medium text-sm">{formattedReferenceLibraryStatus.label}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {formattedReferenceLibraryStatus.detail}
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">{formattedReferenceLibraryStatus.detail}</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Appearance */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Appearance</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {data.darkMode ? (
-                  <Moon className="w-5 h-5 text-muted-foreground" />
-                ) : (
-                  <Sun className="w-5 h-5 text-muted-foreground" />
-                )}
-                <div>
-                  <p className="font-medium text-sm">Dark Mode</p>
-                  <p className="text-xs text-muted-foreground">Toggle dark/light theme</p>
-                </div>
-              </div>
-              <Switch checked={data.darkMode} onCheckedChange={toggleDarkMode} />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Security */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Security</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Fingerprint className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium text-sm">Biometric Lock</p>
-                  <p className="text-xs text-muted-foreground">Require Face ID / fingerprint</p>
-                </div>
-              </div>
-              <Switch checked={data.biometricLock} onCheckedChange={toggleBiometricLock} />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Data */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Data</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">
-              Exports include your saved vials, doses, stacks, schedules, reconstitution calculations, signals, custom compounds, and settings. Bundled reference compounds stay in the app and are not duplicated in backups.
+              Exports include saved containers, doses, stacks, schedules, reconstitution calculations, signals, custom compounds, and settings.
+              Bundled reference compounds stay app-owned.
             </p>
+
             <Button variant="outline" className="w-full justify-start" onClick={() => void exportAllData()}>
               <Download className="w-4 h-4 mr-3" />
-              Export All Data
+              Export full backup
             </Button>
-            <p className="text-xs text-muted-foreground">
-              Imports replace local user data from a PeptideOS JSON backup. Bundled reference compounds remain app-owned.
-            </p>
+
             <input
               ref={fileInputRef}
               type="file"
@@ -285,30 +264,51 @@ export default function SettingsPage() {
               aria-label="Import Data File"
               onChange={(event) => void handleImportFile(event.target.files?.[0])}
             />
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              disabled={isImporting}
-              onClick={() => fileInputRef.current?.click()}
-            >
+            <Button variant="outline" className="w-full justify-start" disabled={isImporting} onClick={() => fileInputRef.current?.click()}>
               <Upload className="w-4 h-4 mr-3" />
-              {isImporting ? 'Importing Data...' : 'Import Data'}
+              {isImporting ? 'Checking backup...' : 'Restore from backup'}
             </Button>
+
             {importStatus && (
               <p className="rounded-md bg-secondary p-3 text-sm text-muted-foreground" role="status" aria-live="polite">
                 {importStatus}
               </p>
             )}
+
+            <AlertDialog open={Boolean(pendingImport)} onOpenChange={(open) => !open && setPendingImport(null)}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Restore this PeptideOS backup?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {pendingImport && (
+                      <span className="space-y-2 block">
+                        <span className="block">Schema version {pendingImport.preview.schemaVersion} · Exported {new Date(pendingImport.preview.exportedAt).toLocaleString()}</span>
+                        <span className="block">{formatImportCounts(pendingImport.preview)}</span>
+                        <span className="block">Restoring replaces local user data on this device. Bundled reference compounds stay available.</span>
+                      </span>
+                    )}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isImporting}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction disabled={isImporting} onClick={(event) => { event.preventDefault(); void handleConfirmImport(); }}>
+                    {isImporting ? 'Restoring...' : 'Restore backup'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
             <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
               <Button variant="outline" className="w-full justify-start text-destructive hover:text-destructive" onClick={() => setClearDialogOpen(true)}>
                 <Trash2 className="w-4 h-4 mr-3" />
-                Clear All Data
+                Clear local data
               </Button>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Clear all local data?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This removes your saved vials, doses, stacks, schedules, reconstitution calculations, signals, custom compounds, and settings from this device. Bundled reference compounds stay available after reset.
+                    This removes saved containers, doses, stacks, schedules, reconstitution calculations, signals, custom compounds, and settings from this device.
+                    Bundled reference compounds stay available after reset.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -329,7 +329,42 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Privacy */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Appearance</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {data.darkMode ? <Moon className="w-5 h-5 text-muted-foreground" /> : <Sun className="w-5 h-5 text-muted-foreground" />}
+                <div>
+                  <p className="font-medium text-sm">Dark Mode</p>
+                  <p className="text-xs text-muted-foreground">Toggle dark/light theme</p>
+                </div>
+              </div>
+              <Switch checked={data.darkMode} onCheckedChange={toggleDarkMode} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Security</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Fingerprint className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <p className="font-medium text-sm">Biometric Lock</p>
+                  <p className="text-xs text-muted-foreground">Require Face ID / fingerprint</p>
+                </div>
+              </div>
+              <Switch checked={data.biometricLock} onCheckedChange={toggleBiometricLock} />
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Privacy</CardTitle>
@@ -338,10 +373,9 @@ export default function SettingsPage() {
             <div className="flex items-start gap-3">
               <Shield className="w-5 h-5 text-muted-foreground mt-0.5" />
               <div>
-                <p className="font-medium text-sm">Your Data Stays Local</p>
+                <p className="font-medium text-sm">Your data stays local</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  All data is stored locally on your device. No data is sent to external servers. 
-                  Export your data anytime for backup.
+                  PeptideOS stores protocol data in this browser. Sign-in and cloud sync are optional future layers, not required for local use.
                 </p>
               </div>
             </div>

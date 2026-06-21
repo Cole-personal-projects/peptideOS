@@ -92,7 +92,7 @@ tracking:
 
 app_profile:
   headline: "A Russian-developed ACTH(4-10) analog used intranasally for stroke recovery and cognitive support, with preclinical evidence of BDNF upregulation."
-  summary: "Semax is a synthetic heptapeptide derived from ACTH(4-7) with a stabilizing Pro-Gly-Pro tail. It is approved in Russia as a prescription medication for ischemic stroke and cognitive disorders. Preclinical and small clinical studies report nootropic and neuroprotective activity. Western RCT evidence is essentially absent."
+  summary: "Semax is a synthetic ACTH-fragment peptide used in nootropic and neuroprotection-oriented research contexts. Useful tracking captures nasal or injectable route, timing, focus, mood, stimulation, headache, sleep, and stack interactions."
   why_people_care:
     - reported nootropic and neuroprotective effects
     - BDNF and neurotrophin pathway activation

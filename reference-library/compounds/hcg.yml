@@ -6,320 +6,320 @@ updated_at: "2026-06-19"
 identity:
   name: Human chorionic gonadotropin
   aliases:
-    - hCG
-    - Chorionic gonadotropin
-    - β-hCG
+  - hCG
+  - Chorionic gonadotropin
+  - β-hCG
   non_aliases:
-    - Luteinizing hormone (LH)
-    - Follicle-stimulating hormone (FSH)
-    - Recombinant LH
-    - Kisspeptin
+  - Luteinizing hormone (LH)
+  - Follicle-stimulating hormone (FSH)
+  - Recombinant LH
+  - Kisspeptin
   compound_type: biologic
   categories:
-    - hormone-endocrine
-    - sexual-reproductive
+  - hormone-endocrine
+  - sexual-reproductive
 
 forms:
   primary_route: subq
   supported_routes:
-    - subq
-    - im
+  - subq
+  - im
   excluded_routes:
-    - route: oral
-      reason: hCG is a 237-residue glycoprotein not absorbed orally; all approved products are injectable (subcutaneous or intramuscular).
-    - route: intranasal
-      reason: No approved intranasal hCG product; no durable human evidence for intranasal delivery.
-    - route: topical
-      reason: No approved topical hCG product and no evidence of transdermal systemic absorption.
+  - route: oral
+    reason: hCG is a 237-residue glycoprotein not absorbed orally; all approved products are injectable (subcutaneous or intramuscular).
+  - route: intranasal
+    reason: No approved intranasal hCG product; no durable human evidence for intranasal delivery.
+  - route: topical
+    reason: No approved topical hCG product and no evidence of transdermal systemic absorption.
   form_factors:
-    - lyophilized-vial
-    - prefilled-syringe
-    - multi-dose-vial
+  - lyophilized-vial
+  - prefilled-syringe
+  - multi-dose-vial
   verification_fields:
-    - product-name
-    - lot
-    - expiration
-    - source-or-prescription
-    - stated-iU-per-vial
-    - diluent-volume
-    - reconstitution-date
-    - route-on-label
+  - product-name
+  - lot
+  - expiration
+  - source-or-prescription
+  - stated-iU-per-vial
+  - diluent-volume
+  - reconstitution-date
+  - route-on-label
 
 positioning:
   why_use_this_compound:
-    - FDA-approved indication for ovulation induction in anovulatory or oligo-ovulatory women and for oocyte maturation trigger in assisted reproductive technology (ART) cycles.
-    - FDA-approved indication for the treatment of hypogonadotropic hypogonadism in adult males, where it acts as an LH analog to stimulate intratesticular testosterone and support spermatogenesis.
-    - "Cryptorchidism indication: pre-treatment of cryptorchidism not caused by anatomic obstruction (typically pediatric)."
-    - In male fertility/ART, used to mimic the mid-cycle LH surge and to maintain Leydig-cell steroidogenesis when gonadotropins are deficient.
+  - FDA-approved indication for ovulation induction in anovulatory or oligo-ovulatory women and for oocyte maturation trigger in assisted reproductive technology (ART) cycles.
+  - FDA-approved indication for the treatment of hypogonadotropic hypogonadism in adult males, where it acts as an LH analog to stimulate intratesticular testosterone and support spermatogenesis.
+  - "Cryptorchidism indication: pre-treatment of cryptorchidism not caused by anatomic obstruction (typically pediatric)."
+  - In male fertility/ART, used to mimic the mid-cycle LH surge and to maintain Leydig-cell steroidogenesis when gonadotropins are deficient.
   who_is_tracking_this:
-    - Patients and clinicians managing ART cycles (IVF/ICSI) where hCG is the established oocyte-maturation trigger.
-    - Men with hypogonadotropic hypogonadism on combined gonadotropin therapy (hCG plus FSH) for fertility.
-    - Biohackers and self-experimenters using compounded or research-market hCG alongside or after exogenous testosterone, outside approved indications.
-    - Pharmacists and inventory users verifying IU-labeled vials.
+  - Patients and clinicians managing ART cycles (IVF/ICSI) where hCG is the established oocyte-maturation trigger.
+  - Men with hypogonadotropic hypogonadism on combined gonadotropin therapy (hCG plus FSH) for fertility.
+  - Biohackers and self-experimenters using compounded or research-market hCG alongside or after exogenous testosterone, outside approved indications.
+  - Pharmacists and inventory users verifying IU-labeled vials.
   common_user_goals:
-    - Verify label, IU amount, route, and source before logging inventory.
-    - Distinguish approved hCG products from compounded or research-market versions in tracking and inventory.
-    - Record lab, schedule, and tolerability context (without dosing or protocol guidance).
+  - Verify label, IU amount, route, and source before logging inventory.
+  - Distinguish approved hCG products from compounded or research-market versions in tracking and inventory.
+  - Record lab, schedule, and tolerability context (without dosing or protocol guidance).
 
 evidence:
   tier: approved_label
   mechanism_targets:
-    - Luteinizing hormone / chorionic gonadotropin receptor (LHCGR) on ovarian theca and granulosa cells and on testicular Leydig cells
-    - Corpus luteum maintenance and progesterone production
-    - Intratesticular testosterone production via Leydig-cell LHCGR activation
+  - Luteinizing hormone / chorionic gonadotropin receptor (LHCGR) on ovarian theca and granulosa cells and on testicular Leydig cells
+  - Corpus luteum maintenance and progesterone production
+  - Intratesticular testosterone production via Leydig-cell LHCGR activation
   claim_summary:
-    - hCG is a 237-amino-acid placental glycoprotein heterodimer (α-subunit shared with LH/FSH/TSH; β-subunit distinct) that signals through LHCGR.
-    - Approved injectable products include Novarel, Pregnyl, and Ovidrel (choriogonadotropin alfa, recombinant) for ovulation induction and ART trigger; various hCG products are approved for male hypogonadotropic hypogonadism.
-    - In men with hypogonadotropic hypogonadism, hCG alone or with FSH can increase testicular volume and initiate or restore spermatogenesis.
-    - In IVF/ICSI cycles, a single hCG bolus (~5,000–10,000 IU or 250 µg recombinant) is the standard oocyte-maturation trigger administered ~34–36 hours before retrieval.
+  - hCG is a 237-amino-acid placental glycoprotein heterodimer (α-subunit shared with LH/FSH/TSH; β-subunit distinct) that signals through LHCGR.
+  - Approved injectable products include Novarel, Pregnyl, and Ovidrel (choriogonadotropin alfa, recombinant) for ovulation induction and ART trigger; various hCG products are approved for male hypogonadotropic hypogonadism.
+  - In men with hypogonadotropic hypogonadism, hCG alone or with FSH can increase testicular volume and initiate or restore spermatogenesis.
+  - In IVF/ICSI cycles, a single hCG bolus (~5,000–10,000 IU or 250 µg recombinant) is the standard oocyte-maturation trigger administered ~34–36 hours before retrieval.
   evidence_gaps:
-    - Web-research tools were unavailable during this record build, so URL-level claims rely on FDA-approved labeling, DailyMed, and PubChem/PMC stable identifiers rather than freshly verified pulls; reviewers should confirm URLs resolve and content matches.
-    - Off-label male use of hCG alongside or after exogenous testosterone (commonly discussed in TRT/PCT communities) is not an FDA-approved indication; long-term outcome data in that context are limited.
-    - "'hCG diet' weight-loss protocols (500 IU/day for 6 weeks) were the subject of an FDA/ FTC warning letter for unapproved claims and lack of evidence; PeptideOS does not endorse this use."
-    - Sources of compounded hCG may differ in identity, purity, and potency from approved products; product-specific verification is required.
+  - Web-research tools were unavailable during this record build, so URL-level claims rely on FDA-approved labeling, DailyMed, and PubChem/PMC stable identifiers rather than freshly verified pulls; reviewers should confirm URLs resolve and content matches.
+  - Off-label male use of hCG alongside or after exogenous testosterone (commonly discussed in TRT/PCT communities) is not an FDA-approved indication; long-term outcome data in that context are limited.
+  - "'hCG diet' weight-loss protocols (500 IU/day for 6 weeks) were the subject of an FDA/FTC warning letter for unapproved claims and lack of evidence; this reference does not endorse that use."
+  - Sources of compounded hCG may differ in identity, purity, and potency from approved products; product-specific verification is required.
   regulatory_status:
     status: approved
     region: US
     summary: Multiple hCG products (urinary-derived and recombinant) are FDA-approved for ovulation induction, ART oocyte-maturation trigger, and male hypogonadotropic hypogonadism.
     citation_ids:
-      - dailymed-hcg
-      - pubchem-hcg
+    - dailymed-hcg
+    - pubchem-hcg
     source_quality: label-backed
-    limitations: Specific product approvals, indications, and routes should be verified against the current DailyMed label for the exact vial in hand.
+    limitations: Human chorionic gonadotropin acts like LH at the testicular LH receptor and is commonly tracked in fertility and testosterone-support contexts. Useful records include vial concentration, reconstitution, injection timing, concurrent TRT or fertility medications, labs, and subjective effects such as libido, mood, or testicular volume.
 
 risks:
   by_route:
     subq:
       known_contraindications:
-        - Primary ovarian failure (per approved labeling for fertility indications).
-        - Uncontrolled thyroid or adrenal dysfunction.
-        - Prior hypersensitivity to hCG or to a product-specific excipient.
-        - Pregnancy (hCG is not indicated in pregnancy; ART trigger protocols are pre-pregnancy).
-        - For the cryptorchidism indication, prostatic carcinoma or other androgen-dependent neoplasia.
-        - Precocious puberty (pediatric cryptorchidism context).
+      - Primary ovarian failure (per approved labeling for fertility indications).
+      - Uncontrolled thyroid or adrenal dysfunction.
+      - Prior hypersensitivity to hCG or to a product-specific excipient.
+      - Pregnancy (hCG is not indicated in pregnancy; ART trigger protocols are pre-pregnancy).
+      - For the cryptorchidism indication, prostatic carcinoma or other androgen-dependent neoplasia.
+      - Precocious puberty (pediatric cryptorchidism context).
       caution_populations:
-        - Women with ovarian cysts or enlarged ovaries not due to PCOS.
-        - Patients at risk of ovarian hyperstimulation syndrome (OHSS).
-        - Men with prior or current androgen-dependent tumors.
+      - Women with ovarian cysts or enlarged ovaries not due to PCOS.
+      - Patients at risk of ovarian hyperstimulation syndrome (OHSS).
+      - Men with prior or current androgen-dependent tumors.
       negative_stack_flags:
-        - Concomitant GnRH agonist/antagonist use alters expected response in ART.
+      - Concomitant GnRH agonist/antagonist use alters expected response in ART.
       formulation_risks:
-        - Lyophilized hCG must be reconstituted with the labeled diluent; incorrect diluent volume breaks concentration math and inventory tracking.
-        - Improperly reconstituted or stored product can lose potency and sterility.
+      - Lyophilized hCG must be reconstituted with the labeled diluent; incorrect diluent volume breaks concentration math and inventory tracking.
+      - Improperly reconstituted or stored product can lose potency and sterility.
       unknowns:
-        - Long-term safety of repeated hCG exposure in off-label, non-ART male-use contexts.
+      - Long-term safety of repeated hCG exposure in off-label, non-ART male-use contexts.
     im:
       known_contraindications:
-        - Same as subq per approved labeling.
+      - Same as subq per approved labeling.
       caution_populations:
-        - Same as subq per approved labeling.
+      - Same as subq per approved labeling.
       negative_stack_flags:
-        - Same as subq per approved labeling.
+      - Same as subq per approved labeling.
       formulation_risks:
-        - Same as subq plus deeper-tissue injection considerations; product is the same IU-labeled biologic.
+      - Same as subq plus deeper-tissue injection considerations; product is the same IU-labeled biologic.
       unknowns:
-        - Same as subq.
+      - Same as subq.
 
 tracking:
   useful_logs:
-    - product name and lot
-    - stated IU per vial and diluent volume
-    - reconstitution date and remaining IU estimate
-    - storage notes (refrigerated vs room-temperature per label)
-    - scheduled vs administered entries with timestamps
-    - any reported tolerability or adverse-event note
-    - relevant labs (testosterone, LH, FSH, estradiol, hCG trigger day for ART) without interpretation
+  - product name and lot
+  - stated IU per vial and diluent volume
+  - reconstitution date and remaining IU estimate
+  - storage notes (refrigerated vs room-temperature per label)
+  - scheduled vs administered entries with timestamps
+  - any reported tolerability or adverse-event note
+  - relevant labs (testosterone, LH, FSH, estradiol, hCG trigger day for ART) without interpretation
   inventory_fields:
-    - product-name
-    - lot
-    - expiration
-    - source-or-prescription
-    - stated-iU-per-vial
-    - diluent-volume
-    - reconstitution-date
-    - route-on-label
-    - vial-state (sealed / reconstituted / active / finished / expired)
+  - product-name
+  - lot
+  - expiration
+  - source-or-prescription
+  - stated-iU-per-vial
+  - diluent-volume
+  - reconstitution-date
+  - route-on-label
+  - vial-state (sealed / reconstituted / active / finished / expired)
   peppi_actions:
-    - log-injection
-    - log-reconstitution
-    - flag-non-approved-source
-    - prompt-route-confirmation
-    - prompt-vial-state-confirmation
+  - log-injection
+  - log-reconstitution
+  - flag-non-approved-source
+  - prompt-route-confirmation
+  - prompt-vial-state-confirmation
 
 app_profile:
   headline: "FDA-approved placental glycoprotein hormone that signals through LHCGR; used for ART oocyte trigger, ovulation induction, and male hypogonadotropic hypogonadism."
-  summary: "hCG is the IU-labeled fertility and endocrine hormone people track for ovulation induction, ART trigger timing, male hypogonadotropic hypogonadism, and off-label TRT/PCT-adjacent experiments. In PeptideOS the practical job is exact product identity, IU math, reconstitution state, source quality, labs, and schedule logs without turning fertility or hormone context into protocol advice."
+  summary: "hCG is an LH-mimicking hormone commonly tracked around fertility, testicular function, and testosterone-support protocols. Useful tracking keeps concentration, reconstitution, dosing cadence, concurrent TRT or fertility medications, labs, and subjective response together."
   why_people_care:
-    - Standard oocyte-maturation trigger in IVF/ICSI cycles.
-    - Approved option for fertility-preserving treatment of male hypogonadotropic hypogonadism.
-    - Off-label use in men on exogenous testosterone to maintain testicular function is heavily discussed in TRT/PCT communities despite limited evidence.
+  - Standard oocyte-maturation trigger in IVF/ICSI cycles.
+  - Approved option for fertility-preserving treatment of male hypogonadotropic hypogonadism.
+  - Off-label use in men on exogenous testosterone to maintain testicular function is heavily discussed in TRT/PCT communities despite limited evidence.
   what_to_verify:
-    - Exact product name, lot, expiration, and source or prescription.
-    - IU per vial and diluent volume against the label.
-    - Reconstitution date and current vial state.
-    - Route as written on the label (subcutaneous vs intramuscular).
-    - Whether the product is an approved FDA-labeled biologic or a compounded/research-market version.
+  - Exact product name, lot, expiration, and source or prescription.
+  - IU per vial and diluent volume against the label.
+  - Reconstitution date and current vial state.
+  - Route as written on the label (subcutaneous vs intramuscular).
+  - Whether the product is an approved FDA-labeled biologic or a compounded/research-market version.
   what_to_track:
-    - Product, lot, IU, diluent volume, reconstitution date, storage notes.
-    - Schedule adherence and missed entries.
-    - User-entered tolerability or adverse-event notes.
-    - Relevant labs (testosterone, LH, FSH, estradiol, ART trigger day) without interpretation.
-  reality_check: "This record was assembled without live web access during this run. URL-level claims point to DailyMed, PubChem, and PubMed/PMC stable identifiers and should be re-verified by a reviewer. Off-label male use of hCG (TRT/PCT) is not an FDA-approved indication, and the FTC has warned against marketing hCG for weight loss. PeptideOS does not interpret labs or design protocols."
+  - Product, lot, IU, diluent volume, reconstitution date, storage notes.
+  - Schedule adherence and missed entries.
+  - User-entered tolerability or adverse-event notes.
+  - Relevant labs (testosterone, LH, FSH, estradiol, ART trigger day) without interpretation.
+  reality_check: "This record was assembled without live web access during this run. URL-level claims point to DailyMed, PubChem, and PubMed/PMC stable identifiers and should be re-verified by a reviewer. Off-label male use of hCG (TRT/PCT) is not an FDA-approved indication, and the FTC has warned against marketing hCG for weight loss. the tracking record does not interpret labs or design protocols."
 
 sources:
-  - id: dailymed-hcg
-    title: "DailyMed — Human chorionic gonadotropin (and choriogonadotropin alfa) product labels"
-    url: "https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=Human+chorionic+gonadotropin"
-    source_type: label
-    publisher: DailyMed / NIH NLM
-    year: 2024
-  - id: pubchem-hcg
-    title: "PubChem — Human chorionic gonadotropin (hCG) compound summary"
-    url: "https://pubchem.ncbi.nlm.nih.gov/compound/Human-chorionic-gonadotropin"
-    source_type: database
-    publisher: NCBI / NLM PubChem
-    year: 2024
-  - id: pubmed-hcg-mechanism
-    title: "Human chorionic gonadotropin: a review of its receptor and clinical applications"
-    url: "https://pubmed.ncbi.nlm.nih.gov/20308920/"
-    source_type: review
-    publisher: PubMed
-    year: 2010
-  - id: pmc-male-fertility
-    title: "Use of gonadotropins for male infertility — clinical and research context"
-    url: "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4174607/"
-    source_type: publication
-    publisher: PMC
-    year: 2014
-  - id: ftc-hcg-warning
-    title: "FTC Consumer Information — 'hCG Diet' Products Are Illegal"
-    url: "https://consumer.ftc.gov/articles/0243-hcg-diet-products-are-illegal"
-    source_type: regulatory
-    publisher: US Federal Trade Commission
-    year: 2018
-  - id: nih-medlineplus-hcg
-    title: "MedlinePlus — Human chorionic gonadotropin (hCG)"
-    url: "https://medlineplus.gov/druginfo/meds/a601157.html"
-    source_type: database
-    publisher: NIH MedlinePlus
-    year: 2023
+- id: dailymed-hcg
+  title: "DailyMed — Human chorionic gonadotropin (and choriogonadotropin alfa) product labels"
+  url: "https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=Human+chorionic+gonadotropin"
+  source_type: label
+  publisher: DailyMed / NIH NLM
+  year: 2024
+- id: pubchem-hcg
+  title: "PubChem — Human chorionic gonadotropin (hCG) compound summary"
+  url: "https://pubchem.ncbi.nlm.nih.gov/compound/Human-chorionic-gonadotropin"
+  source_type: database
+  publisher: NCBI / NLM PubChem
+  year: 2024
+- id: pubmed-hcg-mechanism
+  title: "Human chorionic gonadotropin: a review of its receptor and clinical applications"
+  url: "https://pubmed.ncbi.nlm.nih.gov/20308920/"
+  source_type: review
+  publisher: PubMed
+  year: 2010
+- id: pmc-male-fertility
+  title: "Use of gonadotropins for male infertility — clinical and research context"
+  url: "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4174607/"
+  source_type: publication
+  publisher: PMC
+  year: 2014
+- id: ftc-hcg-warning
+  title: "FTC Consumer Information — 'hCG Diet' Products Are Illegal"
+  url: "https://consumer.ftc.gov/articles/0243-hcg-diet-products-are-illegal"
+  source_type: regulatory
+  publisher: US Federal Trade Commission
+  year: 2018
+- id: nih-medlineplus-hcg
+  title: "MedlinePlus — Human chorionic gonadotropin (hCG)"
+  url: "https://medlineplus.gov/druginfo/meds/a601157.html"
+  source_type: database
+  publisher: NIH MedlinePlus
+  year: 2023
 
 claims:
-  - id: identity-glycoprotein-heterodimer
-    text: "hCG is a 237-amino-acid placental glycoprotein heterodimer composed of an α-subunit shared with LH, FSH, and TSH and a distinct β-subunit that confers biological specificity."
-    claim_type: identity
-    evidence_level: approved_label
-    route_scope: []
-    source_ids:
-      - pubchem-hcg
-      - pubmed-hcg-mechanism
-    confidence: high
-    limitations: []
-  - id: mechanism-lhcgr
-    text: "hCG binds and activates the luteinizing hormone / chorionic gonadotropin receptor (LHCGR) on ovarian theca and granulosa cells and on testicular Leydig cells, mimicking LH activity."
-    claim_type: mechanism
-    evidence_level: approved_label
-    route_scope:
-      - subq
-      - im
-    source_ids:
-      - pubmed-hcg-mechanism
-      - pmc-male-fertility
-    confidence: high
-    limitations: []
-  - id: evidence-art-trigger
-    text: "A single bolus of hCG (urinary ~5,000–10,000 IU or recombinant 250 µg) administered approximately 34–36 hours before oocyte retrieval is the standard oocyte-maturation trigger in ART cycles."
-    claim_type: evidence
-    evidence_level: approved_label
-    route_scope:
-      - subq
-      - im
-    source_ids:
-      - dailymed-hcg
-      - pmc-male-fertility
-    confidence: high
-    limitations:
-      - Specific dosing is not asserted by this record; users should consult the current product label and their clinician.
-  - id: evidence-male-hypogonadotropic
-    text: "hCG, alone or in combination with FSH, is an FDA-approved treatment for hypogonadotropic hypogonadism in men and can increase testicular volume and stimulate spermatogenesis."
-    claim_type: evidence
-    evidence_level: approved_label
-    route_scope:
-      - subq
-      - im
-    source_ids:
-      - dailymed-hcg
-      - pmc-male-fertility
-    confidence: high
-    limitations:
-      - Specific dosing schedules are not asserted by this record; users should consult the current product label and their clinician.
-  - id: regulatory-us-approved
-    text: "Multiple hCG products (urinary-derived and recombinant choriogonadotropin alfa) are FDA-approved in the United States for ovulation induction, ART oocyte-maturation trigger, male hypogonadotropic hypogonadism, and pre-treatment of cryptorchidism."
-    claim_type: regulatory
-    evidence_level: approved_label
-    route_scope:
-      - subq
-      - im
-    source_ids:
-      - dailymed-hcg
-    confidence: high
-    limitations:
-      - Approvals differ by product; verify the exact indication and route on the specific product label.
-  - id: risk-ohss
-    text: "hCG administration in women undergoing ART can precipitate ovarian hyperstimulation syndrome (OHSS); labeling restricts use and triggers clinical monitoring."
-    claim_type: risk
-    evidence_level: approved_label
-    route_scope:
-      - subq
-      - im
-    source_ids:
-      - dailymed-hcg
-      - pmc-male-fertility
-    confidence: high
-    limitations:
-      - Specific monitoring and prevention strategies are not asserted by this record.
-  - id: regulatory-htc-diet-warning
-    text: "The US FTC and FDA have warned against marketing hCG as a weight-loss / 'hCG diet' product; those products are illegal for over-the-counter sale."
-    claim_type: regulatory
-    evidence_level: approved_label
-    route_scope: []
-    source_ids:
-      - ftc-hcg-warning
-      - nih-medlineplus-hcg
-    confidence: high
-    limitations: []
-  - id: formulation-iu-vial
-    text: "hCG is supplied as an International Unit (IU)-labeled lyophilized or liquid injectable product; final concentration depends on the user-confirmed total IU and diluent volume."
-    claim_type: formulation
-    evidence_level: approved_label
-    route_scope:
-      - subq
-      - im
-    source_ids:
-      - dailymed-hcg
-    confidence: high
-    limitations:
-      - Vial presentations and concentrations vary by product; verify against the label.
-  - id: interaction-gnrh-modulators
-    text: "Concomitant GnRH agonist or antagonist use modulates pituitary response and alters the timing and adequacy of hCG-triggered events in ART and male-fertility protocols."
-    claim_type: interaction
-    evidence_level: human_limited
-    route_scope:
-      - subq
-      - im
-    source_ids:
-      - pmc-male-fertility
-    confidence: medium
-    limitations:
-      - Review-grade context; specific protocol implications are not asserted by this record.
-  - id: tracking-vial-state
-    text: "For accurate inventory and reconstitution math, each hCG vial needs user-confirmed total IU, diluent volume, reconstitution date, route, lot, expiration, and vial state (sealed / reconstituted / active / finished / expired)."
-    claim_type: tracking
-    evidence_level: identity
-    route_scope:
-      - subq
-      - im
-    source_ids:
-      - dailymed-hcg
-    confidence: high
-    limitations: []
+- id: identity-glycoprotein-heterodimer
+  text: "hCG is a 237-amino-acid placental glycoprotein heterodimer composed of an α-subunit shared with LH, FSH, and TSH and a distinct β-subunit that confers biological specificity."
+  claim_type: identity
+  evidence_level: approved_label
+  route_scope: []
+  source_ids:
+  - pubchem-hcg
+  - pubmed-hcg-mechanism
+  confidence: high
+  limitations: []
+- id: mechanism-lhcgr
+  text: "hCG binds and activates the luteinizing hormone / chorionic gonadotropin receptor (LHCGR) on ovarian theca and granulosa cells and on testicular Leydig cells, mimicking LH activity."
+  claim_type: mechanism
+  evidence_level: approved_label
+  route_scope:
+  - subq
+  - im
+  source_ids:
+  - pubmed-hcg-mechanism
+  - pmc-male-fertility
+  confidence: high
+  limitations: []
+- id: evidence-art-trigger
+  text: "A single bolus of hCG (urinary ~5,000–10,000 IU or recombinant 250 µg) administered approximately 34–36 hours before oocyte retrieval is the standard oocyte-maturation trigger in ART cycles."
+  claim_type: evidence
+  evidence_level: approved_label
+  route_scope:
+  - subq
+  - im
+  source_ids:
+  - dailymed-hcg
+  - pmc-male-fertility
+  confidence: high
+  limitations:
+  - Specific dosing is not asserted by this record; users should consult the current product label and their clinician.
+- id: evidence-male-hypogonadotropic
+  text: "hCG, alone or in combination with FSH, is an FDA-approved treatment for hypogonadotropic hypogonadism in men and can increase testicular volume and stimulate spermatogenesis."
+  claim_type: evidence
+  evidence_level: approved_label
+  route_scope:
+  - subq
+  - im
+  source_ids:
+  - dailymed-hcg
+  - pmc-male-fertility
+  confidence: high
+  limitations:
+  - Specific dosing schedules are not asserted by this record; users should consult the current product label and their clinician.
+- id: regulatory-us-approved
+  text: "Multiple hCG products (urinary-derived and recombinant choriogonadotropin alfa) are FDA-approved in the United States for ovulation induction, ART oocyte-maturation trigger, male hypogonadotropic hypogonadism, and pre-treatment of cryptorchidism."
+  claim_type: regulatory
+  evidence_level: approved_label
+  route_scope:
+  - subq
+  - im
+  source_ids:
+  - dailymed-hcg
+  confidence: high
+  limitations:
+  - Approvals differ by product; verify the exact indication and route on the specific product label.
+- id: risk-ohss
+  text: "hCG administration in women undergoing ART can precipitate ovarian hyperstimulation syndrome (OHSS); labeling restricts use and triggers clinical monitoring."
+  claim_type: risk
+  evidence_level: approved_label
+  route_scope:
+  - subq
+  - im
+  source_ids:
+  - dailymed-hcg
+  - pmc-male-fertility
+  confidence: high
+  limitations:
+  - Specific monitoring and prevention strategies are not asserted by this record.
+- id: regulatory-htc-diet-warning
+  text: "The US FTC and FDA have warned against marketing hCG as a weight-loss / 'hCG diet' product; those products are illegal for over-the-counter sale."
+  claim_type: regulatory
+  evidence_level: approved_label
+  route_scope: []
+  source_ids:
+  - ftc-hcg-warning
+  - nih-medlineplus-hcg
+  confidence: high
+  limitations: []
+- id: formulation-iu-vial
+  text: "hCG is supplied as an International Unit (IU)-labeled lyophilized or liquid injectable product; final concentration depends on the user-confirmed total IU and diluent volume."
+  claim_type: formulation
+  evidence_level: approved_label
+  route_scope:
+  - subq
+  - im
+  source_ids:
+  - dailymed-hcg
+  confidence: high
+  limitations:
+  - Vial presentations and concentrations vary by product; verify against the label.
+- id: interaction-gnrh-modulators
+  text: "Concomitant GnRH agonist or antagonist use modulates pituitary response and alters the timing and adequacy of hCG-triggered events in ART and male-fertility protocols."
+  claim_type: interaction
+  evidence_level: human_limited
+  route_scope:
+  - subq
+  - im
+  source_ids:
+  - pmc-male-fertility
+  confidence: medium
+  limitations:
+  - Review-grade context; specific protocol implications are not asserted by this record.
+- id: tracking-vial-state
+  text: "For accurate inventory and reconstitution math, each hCG vial needs user-confirmed total IU, diluent volume, reconstitution date, route, lot, expiration, and vial state (sealed / reconstituted / active / finished / expired)."
+  claim_type: tracking
+  evidence_level: identity
+  route_scope:
+  - subq
+  - im
+  source_ids:
+  - dailymed-hcg
+  confidence: high
+  limitations: []

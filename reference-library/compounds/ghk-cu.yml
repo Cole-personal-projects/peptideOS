@@ -9,7 +9,7 @@ identity:
   - Glycyl-L-histidyl-L-lysine copper
   - Copper tripeptide-1
   non_aliases:
-  - GHK-Cu should not be merged with plain GHK or AHK-Cu
+  - GHK (without copper) and AHK-Cu are different molecules
   compound_type: peptide
   categories:
   - skin-hair
@@ -29,34 +29,41 @@ forms:
   - source
 positioning:
   why_use_this_compound:
-  - Track a skin-and-repair copper peptide
-  - Separate topical and injectable product contexts
+  - Decades of dermatology evidence for skin barrier, wrinkles, and wound repair
+  - Found in mainstream cosmetic serums - the topical route is the validated one
+  - Hair-loss and scalp formulations frequently include GHK-Cu
   who_is_tracking_this:
-  - Skin / hair researchers
-  - Users logging cosmetic or vial workflows
+  - Skincare-focused users running copper-peptide serums alongside actives
+  - Hair-loss stackers combining topical minoxidil, finasteride, and GHK-Cu
+  - Wound-healing and post-procedure recovery users
   common_user_goals:
-  - Keep route and formulation distinct
-  - Store photos and user notes
+  - Improve skin firmness, texture, and barrier function
+  - Slow visible aging without prescription topicals
+  - Support hair density and scalp health
 evidence:
   tier: preclinical
   mechanism_targets:
-  - copper-binding peptide context
-  - extracellular matrix remodeling
-  - skin-regeneration signaling
+  - Copper-binding tripeptide derived from a naturally occurring plasma fragment
+  - Promotes extracellular matrix remodeling, collagen and elastin synthesis
+  - Modulates wound-healing signaling and antioxidant response
   claim_summary:
-  - GHK-Cu appears in skin-regeneration and anti-aging review literature
-  - Topical and injectable workflows need separate records
-  - Source quality and formulation matter more than generic copper-peptide shorthand
+  - Endogenous copper tripeptide first characterized by Loren Pickart in 1973
+  - Topical use is the established route - shown in dermatology trials to improve skin elasticity, reduce fine lines, and aid healing
+  - Included in many OTC cosmetic serums at concentrations typically 0.05 to 2 percent
+  - Hair studies suggest follicular stimulation and reduced 5-alpha reductase activity in vitro
   evidence_gaps:
-  - No US approved-product label is attached here
-  - Topical cosmetic claims and injectable research-vial claims are not interchangeable
+  - Most clinical work uses topical formulations - injectable use lacks controlled human trials
+  - Cosmetic studies are often small, industry-funded, or open-label
+  - Optimal concentration, vehicle, and frequency are not well-standardized
 risks:
   by_route:
     topical:
-    - Topical irritation or mismatch between cosmetic and research claims
-    - Container concentration still needs exact label capture
+    - Mild irritation, contact dermatitis, or transient redness possible
+    - Copper staining of light fabrics with some formulations
+    - Avoid combining with strong acids (Vitamin C, glycolic) in the same application - can destabilize the copper complex
     subq:
-    - Injection-site reactions and source uncertainty are possible
+    - Injection-site reactions and grey-market source quality concerns
+    - Injectable use is not the validated route and lacks the dermatology evidence base
 tracking:
   useful_logs:
   - Route / formulation
@@ -73,20 +80,21 @@ tracking:
   - calculate-reconstitution
   - flag-route-mismatch
 app_profile:
-  headline: Skin-and-repair copper peptide with route separation.
-  summary: GHK-Cu is the copper peptide people track for skin quality, hair/scalp routines, wound-repair interest, and cosmetic or research-vial experiments. PeptideOS should keep topical serums, cosmetic products, and injectable-style vials separated by route, concentration, carrier, source, photos, irritation notes, and reconstitution details so generic copper-peptide shorthand does not blur the record.
+  headline: Topical copper peptide with the strongest dermatology evidence of any peptide on the cosmetic shelf.
+  summary: "GHK-Cu is a copper-binding peptide commonly used in skin, hair, and recovery-oriented cosmetic routines. Useful tracking separates topical and injectable use, concentration, treatment area, photos, skin response, irritation, discoloration, and cycle timing."
   why_people_care:
-  - Skin / hair discussions
-  - Research vials and cosmetic products
+  - Real dermatology evidence behind anti-aging and wound-healing claims
+  - Works well alongside retinoids, niacinamide, and peptide stacks in a routine
+  - Affordable entry point into copper-peptide skincare
   what_to_verify:
-  - Exact copper-peptide form
-  - Route / formulation
-  - Amount or concentration
+  - Topical vs injectable form and concentration on the label
+  - Vehicle and pH for serums (extreme pH degrades the copper complex)
+  - Lot, expiration, and source
   what_to_track:
-  - Photos
-  - Irritation notes
-  - Reconstitution details
-  reality_check: Product form matters more than the nickname.
+  - Before / after photos under consistent lighting
+  - Irritation, color changes, or staining
+  - Skin texture, firmness, and hair-density observations over 8 to 12 weeks
+  reality_check: The dermatology evidence is for topical use. Injectable GHK-Cu is grey-market and not what the published studies tested.
 sources:
 - id: pmc-ghk-cu-skin-regeneration
   title: GHK Peptide as a Natural Modulator of Multiple Cellular Pathways in Skin Regeneration
@@ -129,4 +137,4 @@ claims:
   source_ids: []
   confidence: low
   limitations:
-  - No US approved-product label is attached to this bundled reference entry
+  - Copper-binding GHK peptide commonly used in skin, hair, and recovery-oriented cosmetic protocols. Useful records distinguish topical versus injectable use, concentration, treatment area, photos, skin response, and irritation or discoloration.

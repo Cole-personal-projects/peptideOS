@@ -43,37 +43,38 @@ forms:
 
 positioning:
   why_use_this_compound:
-    - Track a GHRH (1-29) analog that historically had an FDA-approved label (Geref) and is now used as a compounded preparation.
-    - Separate sermorelin from longer-acting GHRH analogs (CJC-1295, modified GRF 1-29) and from tesamorelin in stack logs.
-    - Keep user-entered vial, reconstitution, and IGF-1 follow-up context tied to the exact compound used.
+    - Short, pulsatile GHRH stimulus that works with the body's own GH rhythm rather than overriding it with exogenous HGH.
+    - Long clinical pedigree as the original FDA-approved GHRH(1-29) agent (Geref) before the commercial product was pulled in 2008.
+    - Cleaner pharmacology than longer-acting GHRH analogs (CJC-1295, modified GRF 1-29) for users who want a short half-life and night-time pulse.
   who_is_tracking_this:
-    - Users on compounded sermorelin from a licensed compounding pharmacy.
-    - Users comparing GHRH-class secretagogues across sleep, recovery, and IGF-1 trends.
-    - Users who want explicit separation between the historical approved label and current compounded use.
+    - Anti-aging and longevity users on compounded sermorelin from a licensed US pharmacy.
+    - Sleep, recovery, and body-composition optimizers experimenting with GH-axis support.
+    - Users running it solo or comparing it against CJC-1295, tesamorelin, or ipamorelin stacks.
   common_user_goals:
-    - Track sleep quality, recovery, body composition, and labs (IGF-1) over time.
-    - Connect inventory, reconstitution math, and dosing logs.
-    - Review overlap with other GH-axis compounds before saving a stack.
+    - Deeper sleep and better next-day recovery.
+    - Modest body-composition shifts (fat loss, lean mass preservation) over months, not weeks.
+    - Bumping IGF-1 into a higher youthful range without supraphysiologic HGH levels.
 
 evidence:
   tier: approved_label
   mechanism_targets:
     - GHRH receptor (GHRHR) on anterior pituitary somatotrophs
   claim_summary:
-    - Sermorelin is the synthetic 1-29 N-terminal fragment of human GHRH and binds the pituitary GHRH receptor to stimulate endogenous GH release.
-    - Historically FDA-approved as Geref / Geref Diagnostic for pediatric GH deficiency and GH-stimulation testing in adults; commercial product was discontinued around 2008.
-    - Currently supplied in the US as a compounded preparation through licensed compounding pharmacies; compounded sermorelin does not carry an active FDA-approved product label.
+    - Synthetic 1-29 N-terminal fragment of human GHRH — the minimum sequence needed to bind the pituitary GHRH receptor and trigger endogenous GH release.
+    - Originally FDA-approved as Geref (Serono) for pediatric GH deficiency and as Geref Diagnostic for GH-stimulation testing in adults; commercial product discontinued around 2008.
+    - Currently available in the US only as a compounded preparation from licensed compounding pharmacies; compounded versions do not carry an FDA-approved end-product label.
+    - Very short plasma half-life (roughly 10-20 minutes), which is why bedtime dosing is the common pattern in user protocols.
   evidence_gaps:
-    - No current FDA-approved consumer label; prescribing details vary by compounding pharmacy.
-    - Long-term safety and efficacy data for off-label "anti-aging" or wellness use are limited.
-    - Comparative data versus other GHRH analogs (tesamorelin, CJC-1295) are limited.
+    - No active FDA-approved consumer product means no current label to anchor wellness or anti-aging dosing.
+    - Long-term safety and efficacy data for chronic off-label adult use are sparse.
+    - Head-to-head comparisons against tesamorelin, CJC-1295, and ipamorelin in healthy adults are limited.
 
 risks:
   by_route:
     subq:
-      - Per historical Geref labeling, injection-site reactions (redness, pain, swelling) were the most commonly reported adverse events.
-      - Headache, flushing, dysgeusia, and transient hyperglycemia have been reported with GHRH-class agents.
-      - Compounded products are not FDA-approved end-products; sterility, identity, and potency depend on the compounding pharmacy.
+      - Injection-site reactions (redness, pain, swelling) were the most common adverse events on the original Geref label.
+      - Headache, flushing, dysgeusia (metallic taste), and transient post-injection hyperglycemia are reported across the GHRH class.
+      - Compounded products are not FDA-approved end products — sterility, identity, and potency depend on the compounding pharmacy.
 
 tracking:
   useful_logs:
@@ -96,21 +97,21 @@ tracking:
     - Prompt for IGF-1 lab cadence based on user-entered baseline.
 
 app_profile:
-  headline: GHRH (1-29) secretagogue; historically FDA-approved, now compounded.
-  summary: Sermorelin is the 1-29 fragment of endogenous GHRH. It stimulates the pituitary to release its own GH in a pulsatile pattern rather than supplying exogenous GH. The original product (Geref) is no longer commercially marketed; current US use is via compounded prescriptions.
+  headline: GHRH(1-29) — the original short-acting GH secretagogue.
+  summary: "Sermorelin is a GHRH analog used to stimulate endogenous growth-hormone pulses. Useful tracking ties bedtime or fasting timing to sleep, recovery, body-composition goals, injection reactions, stack pairing, and IGF-1 response."
   why_people_care:
-    - GH-axis stimulation that preserves endogenous pulsatile release.
-    - Long clinical history as a diagnostic and pediatric GHD agent.
-    - Compounded availability through licensed pharmacies.
+    - Preserves natural pulsatile GH release instead of replacing it.
+    - Decades of clinical history compared to newer grey-market GHRH analogs.
+    - Short half-life means a clean bedtime pulse with no daytime spillover.
   what_to_verify:
     - Source is a licensed US compounding pharmacy with a real prescriber relationship.
-    - Vial identity, concentration, lot, and storage are recorded.
-    - Whether the product is plain sermorelin or a modified/longer-acting GHRH analog.
+    - Vial identity, concentration, lot, and storage match what was prescribed.
+    - Whether the vial is plain sermorelin or a modified/longer-acting GHRH analog (easy to confuse).
   what_to_track:
-    - Sleep, recovery, body composition.
-    - IGF-1 labs at sensible intervals.
-    - Injection-site reactions and any GI or vasomotor symptoms.
-  reality_check: The historical Geref label is the strongest evidence base. Long-term wellness and anti-aging claims for compounded sermorelin go beyond what the original approval supported, and compounded products do not carry an FDA-approved end-product label.
+    - Sleep depth, morning energy, and training recovery.
+    - IGF-1 at baseline and 8-12 weeks in.
+    - Injection-site reactions and any GI or flushing symptoms after dosing.
+  reality_check: Sermorelin raises GH and IGF-1 modestly — it is not exogenous HGH and won't produce HGH-level body recomposition. The original Geref label is the strongest evidence base; broader anti-aging claims outrun that data.
 
 sources:
   - id: fda-geref-review
