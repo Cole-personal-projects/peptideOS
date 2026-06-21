@@ -98,9 +98,10 @@ function appData(overrides: Partial<AppData> = {}): AppData {
 describe('buildProtocolCockpitSummary', () => {
   it('keeps twice-daily same-compound schedule logs distinct by due time', () => {
     const summary = buildProtocolCockpitSummary(
-      appData({
-        scheduleLogs: [
-          log('morning', '2026-06-21T08:00:00.000Z'),
+    appData({
+      vials: [{ ...vial, mg: 5 }],
+      scheduleLogs: [
+        log('morning', '2026-06-21T08:00:00.000Z'),
           log('evening', '2026-06-21T20:00:00.000Z'),
         ],
       }),
@@ -147,7 +148,7 @@ describe('buildProtocolCockpitSummary', () => {
   it('surfaces protocol-linked inventory runway risk', () => {
     const summary = buildProtocolCockpitSummary(
       appData({
-        vials: [vial],
+      vials: [{ ...vial, mg: 0 }],
         scheduleLogs: [
           log('dose-1', '2026-06-22T08:00:00.000Z'),
           log('dose-2', '2026-06-23T08:00:00.000Z'),
@@ -160,19 +161,24 @@ describe('buildProtocolCockpitSummary', () => {
     );
 
     expect(summary.inventoryRiskCount).toBeGreaterThan(0);
-    expect(summary.events.some((event) => event.kind === 'inventory' && event.status === 'runout')).toBe(true);
-    expect(summary.events[0]).toMatchObject({
-      kind: 'inventory',
-      status: 'runout',
-      urgency: 'critical',
-      href: '/more/inventory/vial-1',
-    });
+  expect(summary.events.some((event) => event.kind === 'inventory' && event.status === 'runout')).toBe(true);
+  expect(summary.mostUrgentInventoryRisk).toMatchObject({
+    kind: 'inventory',
+    status: 'runout',
+    href: '/stacks/stack-1',
+  });
+  expect(summary.events[0]).toMatchObject({
+    kind: 'inventory',
+    status: 'runout',
+    urgency: 'critical',
+    href: '/stacks/stack-1',
+  });
   });
 
   it('ranks critical inventory and overdue events ahead of low-urgency recent activity', () => {
     const summary = buildProtocolCockpitSummary(
       appData({
-        vials: [vial],
+      vials: [{ ...vial, mg: 0 }],
         doses: [{
           id: 'recent-dose',
           peptideId: 'bpc-157',

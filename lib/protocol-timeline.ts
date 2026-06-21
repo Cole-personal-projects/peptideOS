@@ -1,6 +1,6 @@
 import { formatDose } from './dose-helpers';
-import { getVialRunoutForecast } from './inventory-metrics';
-import type { AppData, Compound, Dose, Schedule, ScheduleLog, SignalCheckIn, Stack, Vial } from './types';
+import { buildProtocolInventoryRunway, type ProtocolInventoryRunway } from './inventory-metrics';
+import type { AppData, Compound, Dose, Schedule, ScheduleLog, SignalCheckIn, Stack } from './types';
 
 export type ProtocolTimelineEventKind = 'due-dose' | 'dose-log' | 'inventory' | 'signal';
 
@@ -24,12 +24,11 @@ export interface ProtocolCockpitSummary {
   skippedOrMissedCount: number;
   activeStackCount: number;
   inventoryRiskCount: number;
+  mostUrgentInventoryRisk?: ProtocolTimelineEvent;
   nextAction?: ProtocolTimelineEvent;
   latestSignal?: ProtocolTimelineEvent;
   events: ProtocolTimelineEvent[];
 }
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 function getDayBounds(now: Date) {
   const start = new Date(now);
@@ -109,40 +108,24 @@ function buildDoseEvent(data: AppData, dose: Dose): ProtocolTimelineEvent {
   };
 }
 
-function buildInventoryEvent(data: AppData, vial: Vial, now: Date): ProtocolTimelineEvent | null {
-  const forecast = getVialRunoutForecast({
-    vial,
-    doses: data.doses,
-    schedules: data.schedules,
-    scheduleLogs: data.scheduleLogs,
-    now,
-  });
-  const expiresAt = new Date(vial.expirationDate);
-  const expiresInDays = Math.ceil((expiresAt.getTime() - now.getTime()) / DAY_MS);
-  const isExpiring = expiresInDays <= 14;
-  const isRisk = forecast.status === 'runout' || forecast.isLowStock || isExpiring;
+function buildInventoryEvent(data: AppData, runway: ProtocolInventoryRunway, now: Date): ProtocolTimelineEvent | null {
+  if (runway.status === 'covered') return null;
 
-  if (!isRisk) return null;
-
-  const name = compoundName(data.compounds, vial.peptideId);
-  const status = forecast.status === 'runout' ? 'runout'
-    : forecast.isLowStock ? 'low-stock'
-      : expiresInDays <= 0 ? 'expired'
-        : 'expiring';
-  const detail = forecast.status === 'runout' || forecast.isLowStock
-    ? forecast.label
-    : expiresInDays <= 0 ? 'Container expired' : `Expires in ${expiresInDays} days`;
+  const name = compoundName(data.compounds, runway.compoundId);
+  const parentStackName = stackName(data.stacks, runway.stackId);
+  const label = runway.scope === 'stack' && parentStackName ? `${name} · ${parentStackName}` : name;
 
   return {
-    id: `inventory:${vial.id}`,
+    id: `inventory-runway:${runway.id}`,
     kind: 'inventory',
-    occurredAt: forecast.runoutAt ?? vial.expirationDate,
-    status,
-    urgency: status === 'runout' || status === 'expired' ? 'critical' : 'warning',
-    compoundId: vial.peptideId,
-    label: name,
-    detail,
-    href: `/more/inventory/${vial.id}`,
+    occurredAt: runway.runoutAt ?? runway.expiringAt ?? now.toISOString(),
+    status: runway.status,
+    urgency: runway.status === 'runout' ? 'critical' : runway.status === 'unscheduled' ? 'normal' : 'warning',
+    compoundId: runway.compoundId,
+    stackId: runway.stackId,
+    label,
+    detail: runway.detail,
+    href: runway.stackId ? `/stacks/${runway.stackId}` : '/more/inventory',
   };
 }
 
@@ -168,9 +151,17 @@ export function buildProtocolCockpitSummary(data: AppData, now = new Date()): Pr
   const todaysDoseEvents = data.doses
     .filter((dose) => isSameDay(dose.dateTime, start, end))
     .map((dose) => buildDoseEvent(data, dose));
-  const inventoryEvents = data.vials
-    .filter((vial) => vial.status === 'active')
-    .map((vial) => buildInventoryEvent(data, vial, now))
+  const inventoryRunway = buildProtocolInventoryRunway({
+    vials: data.vials,
+    doses: data.doses,
+    stacks: data.stacks,
+    schedules: data.schedules,
+    scheduleLogs: data.scheduleLogs,
+    now,
+  });
+  const inventoryEvents = inventoryRunway
+    .filter((runway) => runway.scope === 'stack' || runway.status === 'unscheduled')
+    .map((runway) => buildInventoryEvent(data, runway, now))
     .filter((event): event is ProtocolTimelineEvent => Boolean(event));
   const signalEvents = data.signalCheckIns
     .slice()
@@ -200,6 +191,7 @@ export function buildProtocolCockpitSummary(data: AppData, now = new Date()): Pr
     skippedOrMissedCount: relevantLogs.filter((event) => event.status === 'skipped' || event.status === 'missed').length,
     activeStackCount: data.stacks.filter((stack) => stack.status === 'active').length,
     inventoryRiskCount: inventoryEvents.length,
+    mostUrgentInventoryRisk: inventoryEvents[0],
     nextAction,
     latestSignal: signalEvents[0],
     events,

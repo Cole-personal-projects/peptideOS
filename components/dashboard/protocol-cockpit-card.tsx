@@ -24,6 +24,7 @@ const statusClassName: Record<string, string> = {
   'low-stock': 'border-chart-4/40 bg-chart-4/10 text-chart-4',
   expiring: 'border-chart-4/40 bg-chart-4/10 text-chart-4',
   expired: 'border-destructive/40 bg-destructive/10 text-destructive',
+  unscheduled: 'border-muted bg-secondary text-muted-foreground',
   logged: 'border-border bg-secondary text-muted-foreground',
 };
 
@@ -117,6 +118,20 @@ export function ProtocolCockpitCard() {
               {summary.inventoryRiskCount > 0 ? `${summary.inventoryRiskCount} inventory runway warning${summary.inventoryRiskCount === 1 ? '' : 's'}.` : ''}
             </p>
           </div>
+        )}
+
+        {summary.mostUrgentInventoryRisk && (
+          <Link href={summary.mostUrgentInventoryRisk.href ?? '/more/inventory'} className="block rounded-md border border-chart-4/40 bg-chart-4/10 p-3 transition-colors hover:bg-chart-4/15">
+            <div className="flex items-start gap-3">
+              <FlaskConical className="mt-0.5 h-4 w-4 text-chart-4" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium uppercase tracking-wide text-chart-4">Inventory runway</p>
+                <p className="mt-0.5 truncate text-sm font-semibold">{summary.mostUrgentInventoryRisk.label}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{summary.mostUrgentInventoryRisk.detail}</p>
+              </div>
+              <ChevronRight className="mt-1 h-4 w-4 text-muted-foreground" />
+            </div>
+          </Link>
         )}
 
         {summary.nextAction && (
