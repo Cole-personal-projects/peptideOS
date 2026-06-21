@@ -9,6 +9,7 @@ export interface ProtocolTimelineEvent {
   kind: ProtocolTimelineEventKind;
   occurredAt: string;
   status: string;
+  urgency: 'critical' | 'warning' | 'normal' | 'low';
   compoundId: string;
   stackId?: string;
   label: string;
@@ -23,6 +24,7 @@ export interface ProtocolCockpitSummary {
   skippedOrMissedCount: number;
   activeStackCount: number;
   inventoryRiskCount: number;
+  nextAction?: ProtocolTimelineEvent;
   latestSignal?: ProtocolTimelineEvent;
   events: ProtocolTimelineEvent[];
 }
@@ -71,17 +73,23 @@ function buildScheduleLogEvent(data: AppData, log: ScheduleLog, now: Date): Prot
   const dueTime = formatTime(log.dueAt);
   const isOverdue = log.status === 'pending' && new Date(log.dueAt).getTime() < now.getTime();
   const status = isOverdue ? 'overdue' : log.status;
+  const urgency = status === 'overdue' || status === 'missed'
+    ? 'critical'
+    : status === 'pending'
+      ? 'normal'
+      : 'low';
 
   return {
     id: `schedule-log:${log.id}`,
     kind: 'due-dose',
     occurredAt: log.takenAt ?? log.skippedAt ?? log.missedAt ?? log.dueAt,
     status,
+    urgency,
     compoundId: log.peptideId,
     stackId: log.stackId,
     label: `${name} ${doseLabel}`,
     detail: `${parentStackName ? `${parentStackName} · ` : ''}Due ${dueTime}`,
-    href: '/log',
+    href: log.stackId ? `/stacks/${log.stackId}` : '/log',
   };
 }
 
@@ -93,6 +101,7 @@ function buildDoseEvent(data: AppData, dose: Dose): ProtocolTimelineEvent {
     kind: 'dose-log',
     occurredAt: dose.dateTime,
     status: dose.completed ? 'completed' : 'planned',
+    urgency: 'low',
     compoundId: dose.peptideId,
     label: `${name} ${formatDose(dose.doseValue, dose.doseUnit)}`,
     detail: `${dose.completed ? 'Logged' : 'Planned'} ${formatTime(dose.dateTime)}${dose.site ? ` · ${dose.site.replace(/-/g, ' ')}` : ''}`,
@@ -129,10 +138,11 @@ function buildInventoryEvent(data: AppData, vial: Vial, now: Date): ProtocolTime
     kind: 'inventory',
     occurredAt: forecast.runoutAt ?? vial.expirationDate,
     status,
+    urgency: status === 'runout' || status === 'expired' ? 'critical' : 'warning',
     compoundId: vial.peptideId,
     label: name,
     detail,
-    href: '/more/inventory',
+    href: `/more/inventory/${vial.id}`,
   };
 }
 
@@ -142,6 +152,7 @@ function buildSignalEvent(signal: SignalCheckIn): ProtocolTimelineEvent {
     kind: 'signal',
     occurredAt: signal.checkedAt,
     status: 'logged',
+    urgency: 'low',
     compoundId: 'signals',
     label: 'Signal check-in',
     detail: `Energy ${signal.energy}/10 · Sleep ${signal.sleepHours}h${signal.notes ? ` · ${signal.notes}` : ''}`,
@@ -166,8 +177,20 @@ export function buildProtocolCockpitSummary(data: AppData, now = new Date()): Pr
     .sort((a, b) => new Date(b.checkedAt).getTime() - new Date(a.checkedAt).getTime())
     .slice(0, 3)
     .map(buildSignalEvent);
+  const urgencyRank: Record<ProtocolTimelineEvent['urgency'], number> = {
+    critical: 0,
+    warning: 1,
+    normal: 2,
+    low: 3,
+  };
   const events = [...relevantLogs, ...todaysDoseEvents, ...inventoryEvents, ...signalEvents]
-    .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime());
+    .sort((a, b) => {
+      const urgencyDelta = urgencyRank[a.urgency] - urgencyRank[b.urgency];
+      if (urgencyDelta !== 0) return urgencyDelta;
+      return new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime();
+    });
+  const actionableStatuses = new Set(['overdue', 'pending', 'runout', 'expired', 'low-stock', 'expiring']);
+  const nextAction = events.find((event) => actionableStatuses.has(event.status));
 
   return {
     dueCount: relevantLogs.filter((event) => event.status === 'pending' || event.status === 'overdue').length,
@@ -177,6 +200,7 @@ export function buildProtocolCockpitSummary(data: AppData, now = new Date()): Pr
     skippedOrMissedCount: relevantLogs.filter((event) => event.status === 'skipped' || event.status === 'missed').length,
     activeStackCount: data.stacks.filter((stack) => stack.status === 'active').length,
     inventoryRiskCount: inventoryEvents.length,
+    nextAction,
     latestSignal: signalEvents[0],
     events,
   };

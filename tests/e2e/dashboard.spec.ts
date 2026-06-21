@@ -41,10 +41,17 @@ test.describe('dashboard polish', () => {
     await page.getByRole('button', { name: 'Start' }).click();
     await page.getByRole('link', { name: 'Dashboard' }).click();
 
-    await expect(page.getByText('Due today')).toBeVisible();
-    await expect(page.getByText('Pending action', { exact: true }).first()).toBeVisible();
+await expect(page.getByText('Due today')).toBeVisible();
+await expect(page.getByText('Pending action', { exact: true }).first()).toBeVisible();
+await expect(page.getByText('Next action')).toBeVisible();
+await expect(page.getByRole('button', { name: 'All' })).toBeVisible();
+await page.getByRole('button', { name: 'Due' }).click();
+await expect(page.getByRole('link', { name: /BPC-157 250 mcg.*Dashboard Actionability Stack/ }).first()).toBeVisible();
+await page.getByRole('button', { name: 'Runway' }).click();
+await expect(page.getByText('No inventory runway events right now')).toBeVisible();
+await page.getByRole('button', { name: 'All' }).click();
 
-    await page.getByRole('button', { name: 'Complete' }).first().click();
+await page.getByRole('button', { name: 'Complete' }).first().click();
     await page.getByRole('combobox').filter({ hasText: 'Select active vial' }).click();
     await page.getByRole('option', { name: /BPC-157 active vial/ }).click();
     await page.getByRole('button', { name: 'Upper Left Abdomen' }).click();
