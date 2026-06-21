@@ -114,10 +114,29 @@ describe('assistant action proposals', () => {
  }, new Date('2026-06-21T12:00:00.000Z'));
 
  expect(proposal.action).toBeNull();
- expect(proposal.message).toContain('Today\n- Due later today: 1\n- Overdue: 0\n- Completed: 1\n- Skipped or missed: 1\n- Active stacks: 1');
- expect(proposal.message).toContain('Next dose action\n- BPC-157: Due');
- expect(proposal.message).toContain('Latest Signal\n- Energy 7/10');
+ expect(proposal.message).toContain('local PeptideOS records');
  expect(proposal.message).toContain('Not dosing or safety advice');
+ expect(proposal.summaryCards).toEqual(expect.arrayContaining([
+ expect.objectContaining({
+ id: 'today',
+ title: 'Today',
+ eyebrow: '1 active stack',
+ body: '1 due later today · 0 overdue · 1 completed · 1 skipped or missed',
+ href: '/log',
+ }),
+ expect.objectContaining({
+ id: 'next-dose-action',
+ title: 'Next dose action',
+ body: expect.stringContaining('BPC-157: Due'),
+ href: '/stacks/stack-1',
+ }),
+ expect.objectContaining({
+ id: 'latest-signal',
+ title: 'Latest Signal',
+ body: expect.stringContaining('Energy 7/10'),
+ href: '/more/signals',
+ }),
+ ]));
  });
 
  test('does not count future generated schedule logs as due today', () => {
@@ -169,9 +188,9 @@ describe('assistant action proposals', () => {
  scheduleLogs,
  }, new Date('2026-06-21T12:00:00.000Z'));
 
- expect(proposal.message).toContain('- Due later today: 0');
+ expect(proposal.summaryCards?.find((card) => card.id === 'today')?.body).toContain('0 due later today');
  expect(proposal.message).not.toContain('365 due');
- expect(proposal.message).toContain('Next dose action\n- No dose action due today.');
+ expect(proposal.summaryCards?.find((card) => card.id === 'next-dose-action')?.body).toBe('No dose action due today.');
  });
 
   test('creates a Signal check-in action from a user note', () => {

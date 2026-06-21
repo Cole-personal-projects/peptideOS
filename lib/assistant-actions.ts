@@ -23,6 +23,16 @@ export type AssistantAction =
 export interface AssistantActionProposal {
   message: string;
   action: AssistantAction | null;
+  summaryCards?: AssistantSummaryCard[];
+}
+
+export interface AssistantSummaryCard {
+  id: string;
+  title: string;
+  eyebrow?: string;
+  body: string;
+  href?: string;
+  actionLabel?: string;
 }
 
 export function isTodayStatusRequest(message: string) {
@@ -44,35 +54,52 @@ export function buildAssistantTodaySummary(data: AppData, now = new Date()): Ass
   const skippedOrMissedTodayEvents = todayDoseEvents.filter((event) => event.status === 'skipped' || event.status === 'missed');
   const nextDoseAction = [...overdueDoseEvents, ...pendingTodayEvents].sort(sortEventsAscending)[0];
 
-  const lines = [
-    'Today',
-    `- Due later today: ${pendingTodayEvents.length}`,
-    `- Overdue: ${overdueDoseEvents.length}`,
-    `- Completed: ${completedTodayEvents.length}`,
-    `- Skipped or missed: ${skippedOrMissedTodayEvents.length}`,
-    `- Active stacks: ${summary.activeStackCount}`,
-    '',
-    'Next dose action',
-    nextDoseAction ? `- ${formatDoseAction(nextDoseAction, data)}` : '- No dose action due today.',
-    '',
-    'Inventory coverage',
+  const cards: AssistantSummaryCard[] = [
+    {
+      id: 'today',
+      title: 'Today',
+      eyebrow: `${summary.activeStackCount} active stack${summary.activeStackCount === 1 ? '' : 's'}`,
+      body: [
+        `${pendingTodayEvents.length} due later today`,
+        `${overdueDoseEvents.length} overdue`,
+        `${completedTodayEvents.length} completed`,
+        `${skippedOrMissedTodayEvents.length} skipped or missed`,
+      ].join(' · '),
+      href: '/log',
+      actionLabel: 'Open log',
+    },
+    {
+      id: 'next-dose-action',
+      title: 'Next dose action',
+      body: nextDoseAction ? formatDoseAction(nextDoseAction, data) : 'No dose action due today.',
+      href: nextDoseAction?.href,
+      actionLabel: nextDoseAction?.href ? 'Open dose' : undefined,
+    },
+    {
+      id: 'inventory-coverage',
+      title: 'Inventory coverage',
+      body: summary.mostUrgentInventoryRisk
+        ? formatInventoryRisk(summary.mostUrgentInventoryRisk, data)
+        : 'No inventory coverage warnings right now.',
+      href: summary.mostUrgentInventoryRisk?.href,
+      actionLabel: summary.mostUrgentInventoryRisk?.href ? 'Open inventory' : undefined,
+    },
   ];
 
-  if (summary.mostUrgentInventoryRisk) {
-    lines.push(`- ${formatInventoryRisk(summary.mostUrgentInventoryRisk, data)}`);
-  } else {
-    lines.push('- No inventory coverage warnings right now.');
-  }
-
   if (summary.latestSignal) {
-    lines.push('', 'Latest Signal', `- ${summary.latestSignal.detail}`);
+    cards.push({
+      id: 'latest-signal',
+      title: 'Latest Signal',
+      body: summary.latestSignal.detail,
+      href: summary.latestSignal.href,
+      actionLabel: 'Open Signals',
+    });
   }
-
-  lines.push('', 'Based on your local PeptideOS records. Not dosing or safety advice.');
 
   return {
-    message: lines.join('\n'),
+    message: 'Today’s operating summary, based on your local PeptideOS records. Not dosing or safety advice.',
     action: null,
+    summaryCards: cards,
   };
 }
 

@@ -13,10 +13,12 @@ test.describe('Peppi action approvals', () => {
     await page.getByRole('textbox', { name: 'Message Peppi' }).fill('Summarize today');
     await page.getByRole('button', { name: 'Send message' }).click();
 
-    await expect(page.getByText('Today')).toBeVisible();
-    await expect(page.getByText('- Due later today: 0')).toBeVisible();
+    await expect(page.getByText('Today’s operating summary')).toBeVisible();
+    await expect(page.getByLabel('Peppi today summary cards')).toBeVisible();
+    await expect(page.getByText('0 due later today · 0 overdue · 0 completed · 0 skipped or missed')).toBeVisible();
     await expect(page.getByText('Next dose action')).toBeVisible();
-    await expect(page.getByText('- No dose action due today.')).toBeVisible();
+    await expect(page.getByText('No dose action due today.')).toBeVisible();
+    await expect(page.getByText('Inventory coverage', { exact: true })).toBeVisible();
     await expect(page.getByText('Not dosing or safety advice')).toBeVisible();
     expect(aiRequested).toBe(false);
   });
