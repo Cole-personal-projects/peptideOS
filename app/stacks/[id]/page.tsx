@@ -24,11 +24,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { ScheduleTimeFields } from '@/components/stacks/schedule-time-fields';
 import { useApp } from '@/lib/context';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose } from '@/lib/dose-helpers';
 import { buildEstimatedRemainingPreview } from '@/lib/estimated-remaining-preview';
-import { getSchedulePreset, getScheduleSummary } from '@/lib/schedules';
+import { getSchedulePreset } from '@/lib/schedules';
 import { cn } from '@/lib/utils';
 import type { ScheduleLogStatus, StackStatus } from '@/lib/types';
 import type { SchedulePreset } from '@/lib/schedules';
@@ -62,7 +63,16 @@ const scheduleStatusConfig: Record<ScheduleLogStatus, { label: string; className
 
 export default function StackDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data, getStack, updateStack, deleteStack, activateStack, updateStackItemSchedule, getScheduleLogsForStack } = useApp();
+  const {
+    data,
+    getStack,
+    updateStack,
+    deleteStack,
+    activateStack,
+    updateStackItemSchedule,
+    updateStackItemScheduleTimes,
+    getScheduleLogsForStack,
+  } = useApp();
   const [calendarFilter, setCalendarFilter] = useState<CalendarFilter>('all');
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -329,19 +339,21 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="daily">Daily · 8:00 AM</SelectItem>
-                          <SelectItem value="twice-daily">2x daily · 8:00 AM, 8:00 PM</SelectItem>
-                          <SelectItem value="weekdays">Weekdays · 8:00 AM</SelectItem>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="twice-daily">2x daily</SelectItem>
+                          <SelectItem value="weekdays">Weekdays</SelectItem>
                           <SelectItem value="weekly">Weekly · Monday</SelectItem>
                           <SelectItem value="twice-weekly">2x weekly · Monday, Thursday</SelectItem>
-                          <SelectItem value="every-other-day">Every other day · 8:00 AM</SelectItem>
-                          <SelectItem value="five-on-two-off">5 days on / 2 days off · 8:00 AM</SelectItem>
-                          <SelectItem value="custom" disabled>Custom AI schedule</SelectItem>
+                          <SelectItem value="every-other-day">Every other day</SelectItem>
+                          <SelectItem value="five-on-two-off">5 days on / 2 days off</SelectItem>
+                          <SelectItem value="custom" disabled>Custom cadence</SelectItem>
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-muted-foreground">
-                        {getScheduleSummary(sp.schedule ?? { frequency: 'daily', timesOfDay: ['08:00'] })}
-                      </p>
+                      <ScheduleTimeFields
+                        stackPeptide={sp}
+                        idPrefix={`stack-${sp.id ?? sp.peptideId}`}
+                        onTimesChange={(timesOfDay) => sp.id && updateStackItemScheduleTimes(stack.id, sp.id, timesOfDay)}
+                      />
                     </div>
                   </CardContent>
                 </Card>

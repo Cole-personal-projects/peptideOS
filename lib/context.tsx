@@ -8,7 +8,7 @@ import { createSupabaseAuthClient } from './auth';
 import { createScopedPeptideOSDatabase, getPersistenceOwnerId } from './db';
 import { createInventoryBatchForVials } from './inventory-batches';
 import { completeOnboarding as completeOnboardingState } from './onboarding';
-import { activateStackSchedules, normalizeStack, updateStackPeptideSchedule } from './schedules';
+import { activateStackSchedules, normalizeStack, updateStackPeptideSchedule, updateStackPeptideScheduleTimes } from './schedules';
 import type { SchedulePreset } from './schedules';
 import {
   downloadUserData,
@@ -77,6 +77,7 @@ interface AppContextType {
   deleteStack: (id: string) => Promise<void>;
   activateStack: (id: string) => void;
   updateStackItemSchedule: (stackId: string, stackPeptideId: string, preset: SchedulePreset) => void;
+  updateStackItemScheduleTimes: (stackId: string, stackPeptideId: string, timesOfDay: string[]) => void;
   getScheduleLogsForStack: (stackId: string) => ScheduleLog[];
   completeScheduleLog: (logId: string, completion: { vialId: string; site: SiteCode | ''; notes: string }) => Promise<void>;
   skipScheduleLog: (logId: string) => Promise<void>;
@@ -573,6 +574,28 @@ console.error('Failed to persist PeptideOS data', error);
     });
   }, [setAndPersistData]);
 
+  const updateStackItemScheduleTimes = useCallback((stackId: string, stackPeptideId: string, timesOfDay: string[]) => {
+    void setAndPersistData(prev => {
+      const stack = prev.stacks.find((candidate) => candidate.id === stackId);
+      if (!stack) return prev;
+
+      const updated = updateStackPeptideScheduleTimes({
+        stack,
+        stackPeptideId,
+        timesOfDay,
+        existingSchedules: prev.schedules,
+        existingScheduleLogs: prev.scheduleLogs,
+      });
+
+      return {
+        ...prev,
+        stacks: prev.stacks.map((candidate) => candidate.id === stackId ? updated.stack : candidate),
+        schedules: updated.schedules,
+        scheduleLogs: updated.scheduleLogs,
+      };
+    });
+  }, [setAndPersistData]);
+
   const getScheduleLogsForStack = useCallback((stackId: string) => {
     return data.scheduleLogs
       .filter((log) => log.stackId === stackId)
@@ -692,6 +715,7 @@ setLastSavedAt(null);
       deleteStack,
       activateStack,
       updateStackItemSchedule,
+      updateStackItemScheduleTimes,
       getScheduleLogsForStack,
       completeScheduleLog,
       skipScheduleLog,

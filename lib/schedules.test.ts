@@ -2,12 +2,14 @@ import { describe, expect, test } from 'vitest';
 import {
   activateStackSchedules,
   applySchedulePreset,
+  applyScheduleTimes,
   generateScheduleLogs,
   getSchedulePreset,
   getScheduleSummary,
   normalizeStack,
   normalizeStacks,
   updateStackPeptideSchedule,
+  updateStackPeptideScheduleTimes,
 } from './schedules';
 import type { Schedule, ScheduleLog, Stack, StackPeptide } from './types';
 
@@ -273,6 +275,24 @@ describe('schedule presets', () => {
 
     expect(updated.schedule).toEqual({ frequency: 'daily', timesOfDay: ['08:00'] });
   });
+  test('preserves custom dose times when changing cadence presets', () => {
+    const customTimedDaily = applyScheduleTimes(legacyStack.peptides[0], ['10:30']);
+    const weekly = applySchedulePreset(customTimedDaily, 'weekly');
+    const twiceDaily = applySchedulePreset(customTimedDaily, 'twice-daily');
+
+    expect(getScheduleSummary(weekly.schedule!)).toBe('Weekly · Monday · 10:30 AM');
+    expect(getScheduleSummary(twiceDaily.schedule!)).toBe('2x daily · 10:30 AM, 8:00 PM');
+  });
+
+  test('updates once-daily and twice-daily custom times', () => {
+    const daily = applyScheduleTimes(applySchedulePreset(legacyStack.peptides[0], 'daily'), ['10:30']);
+    const twiceDaily = applyScheduleTimes(applySchedulePreset(legacyStack.peptides[0], 'twice-daily'), ['07:15', '21:45']);
+
+    expect(daily.schedule?.timesOfDay).toEqual(['10:30']);
+    expect(getScheduleSummary(daily.schedule!)).toBe('Daily · 10:30 AM');
+    expect(twiceDaily.schedule?.timesOfDay).toEqual(['07:15', '21:45']);
+    expect(getScheduleSummary(twiceDaily.schedule!)).toBe('2x daily · 7:15 AM, 9:45 PM');
+  });
 });
 
 describe('schedule editing', () => {
@@ -319,6 +339,40 @@ describe('schedule editing', () => {
     expect(result.scheduleLogs.filter((log) => log.status === 'pending').map((log) => log.dueAt)).toEqual([
       '2026-05-25T08:00:00.000Z',
       '2026-06-01T08:00:00.000Z',
+    ]);
+  });
+
+  test('updates active stack item dose times and preserves completed logs', () => {
+    const stack = normalizeStack({
+      ...legacyStack,
+      startDate: '2026-05-23T00:00:00.000Z',
+      durationDays: 2,
+      peptides: [legacyStack.peptides[0]],
+      status: 'active',
+    });
+    const activated = activateStackSchedules({ stack, existingSchedules: [], existingScheduleLogs: [] });
+    const firstLog = activated.scheduleLogs[0];
+    const preservedTakenLog: ScheduleLog = {
+      ...firstLog,
+      status: 'taken',
+      doseId: 'dose-1',
+      takenAt: '2026-05-23T08:10:00.000Z',
+    };
+
+    const result = updateStackPeptideScheduleTimes({
+      stack: activated.stack,
+      stackPeptideId: activated.stack.peptides[0].id!,
+      timesOfDay: ['10:30', '21:45'],
+      existingSchedules: activated.schedules,
+      existingScheduleLogs: [preservedTakenLog, ...activated.scheduleLogs.slice(1)],
+    });
+
+    expect(result.scheduleLogs).toContainEqual(preservedTakenLog);
+    expect(result.scheduleLogs.filter((log) => log.status === 'pending').map((log) => log.dueAt)).toEqual([
+      '2026-05-23T10:30:00.000Z',
+      '2026-05-23T21:45:00.000Z',
+      '2026-05-24T10:30:00.000Z',
+      '2026-05-24T21:45:00.000Z',
     ]);
   });
 });
