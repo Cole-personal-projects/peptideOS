@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { addTestVial } from './helpers/inventory';
 
 test.describe('Peppi action approvals', () => {
   test('renders Peppi markdown guidance instead of literal markers', async ({ page }) => {
@@ -51,6 +52,55 @@ test.describe('Peppi action approvals', () => {
     await expect(page.getByText('Inventory coverage', { exact: true })).toBeVisible();
     await expect(page.getByText('Not dosing or safety advice')).toBeVisible();
     expect(aiRequested).toBe(false);
+  });
+
+  test('proposes scheduled dose confirmation locally without calling AI', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-06-21T12:00:00-07:00'));
+    let aiRequested = false;
+    await page.route('**/api/ai/propose-action', async (route) => {
+      aiRequested = true;
+      await route.abort();
+    });
+
+    await addTestVial(page, {
+      name: 'Peppi BPC active vial',
+      compound: 'BPC-157',
+      status: 'active',
+      dateAdded: '2026-06-21',
+    });
+    await page.goto('/stacks');
+    await page.getByRole('button', { name: 'New stack' }).click();
+    await page.getByLabel('Stack Name').fill('Peppi Confirmation Stack');
+    await page.getByLabel('Duration (days)').fill('2');
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('checkbox', { name: 'BPC-157' }).check();
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('button', { name: 'Create Stack' }).click();
+    await page.getByRole('link', { name: /Peppi Confirmation Stack/ }).click();
+    await page.getByRole('button', { name: 'Start' }).click();
+
+    await page.goto('/more/ai-assistant');
+    await page.getByRole('button', { name: 'I Understand' }).click({ timeout: 5_000 }).catch(() => {});
+    await page.getByRole('textbox', { name: 'Message Peppi' }).fill('I took my BPC dose');
+    await page.getByRole('button', { name: 'Send message' }).click();
+
+    await expect(page.getByText('I found one pending scheduled dose. Review it before confirming.')).toBeVisible();
+    await expect(page.getByLabel('Peppi scheduled dose review')).toBeVisible();
+    await expect(page.getByText('Peppi Confirmation Stack')).toBeVisible();
+    await expect(page.getByText('250 mcg · SUBQ')).toBeVisible();
+    expect(aiRequested).toBe(false);
+
+    await page.getByRole('button', { name: 'Review confirmation' }).click();
+    const reviewDialog = page.getByRole('dialog', { name: 'Review scheduled dose' });
+    await expect(reviewDialog).toBeVisible();
+    await expect(reviewDialog.getByText(/No lot · 5 mg left/)).toBeVisible();
+    await reviewDialog.getByRole('button', { name: /Suggested site Upper Left Abdomen/ }).click();
+    await reviewDialog.getByRole('button', { name: 'Confirm dose' }).click();
+
+    await expect(page.getByText('Dose confirmed from your reviewed scheduled log.')).toBeVisible();
+    await page.goto('/');
+    await expect(page.getByText('Taken today', { exact: true }).first()).toBeVisible();
   });
 
   test('proposes and confirms sealed kit inventory from chat', async ({ page }) => {

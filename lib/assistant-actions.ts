@@ -3,6 +3,16 @@ import { buildProtocolCockpitSummary } from './protocol-timeline';
 import type { ProtocolTimelineEvent } from './protocol-timeline';
 import type { AppData, DoseUnit, InventoryContainerType, Route, ScheduleFrequency, ScheduleRecurrence, SignalCheckIn, Stack } from './types';
 
+export interface ScheduledDoseConfirmationCandidate {
+  logId: string;
+  compoundId: string;
+  compoundName: string;
+  stackName: string;
+  scheduledAt: string;
+  doseLabel: string;
+  route: Route;
+}
+
 export type AssistantAction =
   | {
       id: string;
@@ -14,11 +24,18 @@ export type AssistantAction =
       type: 'create_stack_from_protocol';
       payload: Omit<Stack, 'id'>;
     }
-  | {
-      id: string;
-      type: 'create_inventory_vials';
-      payload: NewVialInput;
-    };
+| {
+  id: string;
+  type: 'create_inventory_vials';
+  payload: NewVialInput;
+}
+| {
+  id: string;
+  type: 'confirm_scheduled_dose';
+  payload: {
+    candidates: ScheduledDoseConfirmationCandidate[];
+  };
+};
 
 export interface AssistantActionProposal {
   message: string;
@@ -40,6 +57,41 @@ export interface AssistantSummaryCard {
 export function isTodayStatusRequest(message: string) {
   return /\b(today|due|overdue|completed|missed|skipped|what did i do|what do i need)\b/i.test(message)
     && /\b(summary|summarize|status|brief|briefing|due|completed|missed|skipped|need|do)\b/i.test(message);
+}
+
+export function isScheduledDoseConfirmationRequest(message: string) {
+  return /\b(took|taken|did|completed|finished|logged|log|confirm)\b/i.test(message)
+    && /\b(dose|shot|injection|pin)\b/i.test(message);
+}
+
+export function buildScheduledDoseConfirmationProposal(data: AppData, message: string, now = new Date()): AssistantActionProposal | null {
+  if (!isScheduledDoseConfirmationRequest(message)) return null;
+
+  const candidates = findScheduledDoseConfirmationCandidates(data, message, now);
+  if (candidates.length === 0) {
+    return {
+      message: 'I could not find a pending scheduled dose matching that message. You can still add it from the full log.',
+      action: null,
+      summaryCards: [{
+        id: 'open-log',
+        title: 'No pending match',
+        body: 'Open the log to add a manual record or review scheduled doses.',
+        href: '/log',
+        actionLabel: 'Open log',
+      }],
+    };
+  }
+
+  return {
+    message: candidates.length === 1
+      ? 'I found one pending scheduled dose. Review it before confirming.'
+      : 'I found multiple pending scheduled doses. Choose the one you want to review.',
+    action: {
+      id: `assistant-action-${now.getTime()}`,
+      type: 'confirm_scheduled_dose',
+      payload: { candidates },
+    },
+  };
 }
 
 export function buildAssistantTodaySummary(data: AppData, now = new Date()): AssistantActionProposal {
@@ -128,6 +180,83 @@ function compoundDisplayName(data: AppData, compoundId: string) {
     ?? formatFallbackName(compoundId);
 }
 
+function normalizeText(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function messageMentionsCompound(message: string, compoundId: string, compoundName: string) {
+  const normalizedMessage = normalizeText(message);
+  const normalizedName = normalizeText(compoundName);
+  const normalizedId = normalizeText(compoundId);
+  return normalizedMessage.includes(normalizedName) || normalizedMessage.includes(normalizedId);
+}
+
+function extractMentionedMinutes(message: string) {
+  const match = message.match(/\b(\d{1,2})(?::(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)(?![a-z])/i);
+  if (!match) return null;
+  let hours = Number(match[1]);
+  const minutes = match[2] ? Number(match[2]) : 0;
+  const meridiem = match[3].toLowerCase();
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+  if (meridiem.startsWith('p') && hours !== 12) hours += 12;
+  if (meridiem.startsWith('a') && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+}
+
+function minutesFromTimeOfDay(value: string) {
+  const [hours, minutes] = value.split(':').map(Number);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+  return hours * 60 + minutes;
+}
+
+function formatDoseLabel(data: AppData, logId: string) {
+  const log = data.scheduleLogs.find((candidate) => candidate.id === logId);
+  const schedule = log ? data.schedules.find((candidate) => candidate.id === log.scheduleId) : undefined;
+  return schedule ? `${schedule.doseValue.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${schedule.doseUnit}` : 'Scheduled dose';
+}
+
+function findScheduledDoseConfirmationCandidates(data: AppData, message: string, now: Date): ScheduledDoseConfirmationCandidate[] {
+  const { start, end } = getDayBounds(now);
+  const mentionedMinutes = extractMentionedMinutes(message);
+  const pendingLogs = data.scheduleLogs.filter((log) => {
+    if (log.status !== 'pending') return false;
+    const dueAt = new Date(log.dueAt);
+    return dueAt < end && (dueAt < start || dueAt >= start);
+  });
+  const enriched = pendingLogs
+    .map((log) => {
+      const schedule = data.schedules.find((candidate) => candidate.id === log.scheduleId);
+      if (!schedule) return null;
+      const compoundName = compoundDisplayName(data, log.peptideId);
+      return {
+        log,
+        schedule,
+        compoundName,
+        stackName: stackDisplayName(data, log.stackId) ?? 'Active stack',
+      };
+    })
+    .filter((candidate): candidate is NonNullable<typeof candidate> => Boolean(candidate));
+  const compoundMatches = enriched.filter((candidate) => messageMentionsCompound(message, candidate.log.peptideId, candidate.compoundName));
+  const candidatePool = compoundMatches.length > 0 ? compoundMatches : enriched;
+  const timeMatches = mentionedMinutes === null
+    ? candidatePool
+    : candidatePool.filter((candidate) => candidate.schedule.recurrence.timesOfDay.some((timeOfDay) => {
+      const scheduledMinutes = minutesFromTimeOfDay(timeOfDay);
+      return scheduledMinutes !== null && Math.abs(scheduledMinutes - mentionedMinutes) <= 30;
+    }));
+  return timeMatches
+    .sort((a, b) => new Date(a.log.dueAt).getTime() - new Date(b.log.dueAt).getTime())
+    .map((candidate) => ({
+      logId: candidate.log.id,
+      compoundId: candidate.log.peptideId,
+      compoundName: candidate.compoundName,
+      stackName: candidate.stackName,
+      scheduledAt: candidate.log.dueAt,
+      doseLabel: formatDoseLabel(data, candidate.log.id),
+      route: candidate.schedule.route,
+    }));
+}
+
 function stackDisplayName(data: AppData, stackId?: string) {
   if (!stackId) return null;
   return data.stacks.find((stack) => stack.id === stackId)?.name ?? null;
@@ -178,6 +307,21 @@ export function isAssistantAction(value: unknown): value is AssistantAction {
 
   if (value.type === 'create_inventory_vials') {
     return isInventoryVialDraft(value.payload);
+  }
+
+  if (value.type === 'confirm_scheduled_dose') {
+    return isRecord(value.payload)
+      && Array.isArray(value.payload.candidates)
+      && value.payload.candidates.every((candidate) => (
+        isRecord(candidate)
+        && typeof candidate.logId === 'string'
+        && typeof candidate.compoundId === 'string'
+        && typeof candidate.compoundName === 'string'
+        && typeof candidate.stackName === 'string'
+        && typeof candidate.scheduledAt === 'string'
+        && typeof candidate.doseLabel === 'string'
+        && routes.includes(candidate.route as Route)
+      ));
   }
 
   if (value.type !== 'add_signal_check_in') {
