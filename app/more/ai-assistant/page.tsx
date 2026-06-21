@@ -240,39 +240,14 @@ export default function AIAssistantPage() {
               </div>
             )}
 
-            {pendingAction?.type === 'create_stack_from_protocol' && (
-              <div className="space-y-3 rounded-md border bg-background p-3">
-                <div>
-                  <p className="font-medium">{pendingAction.payload.name}</p>
-                  {pendingAction.payload.description && (
-                    <p className="text-sm text-muted-foreground">{pendingAction.payload.description}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  {pendingAction.payload.peptides.map((stackPeptide) => (
-                    <div key={`${stackPeptide.peptideId}-${stackPeptide.timing}`} className="rounded-md bg-secondary px-3 py-2 text-sm">
-                      <p className="font-medium">{getCompoundName(stackPeptide.peptideId)}</p>
-                      <p className="text-muted-foreground">
-                        {formatDose(stackPeptide.doseValue, stackPeptide.doseUnit)} · {stackPeptide.frequency} · {stackPeptide.route.toUpperCase()} · {stackPeptide.timing}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {pendingAction.payload.durationDays} days. Review before activating.
-                </p>
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={confirmAction}>
-                    <Check className="w-4 h-4" />
-                    Confirm Schedule
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => setPendingAction(null)}>
-                    <X className="w-4 h-4" />
-                    Dismiss
-                  </Button>
-                </div>
-              </div>
-            )}
+{pendingAction?.type === 'create_stack_from_protocol' && (
+<ProtocolDraftCard
+action={pendingAction}
+getCompoundName={getCompoundName}
+onConfirm={confirmAction}
+onDismiss={() => setPendingAction(null)}
+/>
+)}
 
             {pendingAction?.type === 'create_inventory_vials' && (
               <div className="space-y-3 rounded-md border bg-background p-3">
@@ -355,6 +330,82 @@ export default function AIAssistantPage() {
       </div>
 
     </AppShell>
+  );
+}
+
+function ProtocolDraftCard({
+  action,
+  getCompoundName,
+  onConfirm,
+  onDismiss,
+}: {
+  action: Extract<AssistantAction, { type: 'create_stack_from_protocol' }>;
+  getCompoundName: (compoundId: string) => string;
+  onConfirm: () => void;
+  onDismiss: () => void;
+}) {
+  const firstCompoundId = action.payload.peptides[0]?.peptideId;
+  const editHref = firstCompoundId ? `/stacks?compound=${encodeURIComponent(firstCompoundId)}&add=protocol` : '/stacks?add=protocol';
+
+  return (
+    <div className="space-y-3 rounded-md border bg-background p-3" aria-label="Peppi protocol draft">
+      <div className="space-y-1">
+        <p className="text-xs font-medium uppercase text-muted-foreground">Protocol draft</p>
+        <p className="font-medium">{action.payload.name}</p>
+        {action.payload.description && (
+          <p className="text-sm text-muted-foreground">{action.payload.description}</p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="rounded-md bg-secondary px-3 py-2">
+          <p className="text-xs text-muted-foreground">Duration</p>
+          <p className="font-medium">{action.payload.durationDays} days</p>
+        </div>
+        <div className="rounded-md bg-secondary px-3 py-2">
+          <p className="text-xs text-muted-foreground">Status</p>
+          <p className="font-medium">Draft for review</p>
+        </div>
+      </div>
+
+      <div className="space-y-2" aria-label="Protocol draft compounds">
+        {action.payload.peptides.map((stackPeptide) => (
+          <div key={`${stackPeptide.peptideId}-${stackPeptide.timing}`} className="rounded-md border px-3 py-2 text-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-medium">{getCompoundName(stackPeptide.peptideId)}</p>
+                <p className="text-muted-foreground">
+                  {formatDose(stackPeptide.doseValue, stackPeptide.doseUnit)}
+                </p>
+              </div>
+              <div className="text-right text-xs text-muted-foreground">
+                <p>{stackPeptide.route.toUpperCase()}</p>
+                <p>{stackPeptide.timing}</p>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">{stackPeptide.frequency}</p>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        Review before saving. Nothing changes until you confirm.
+      </p>
+
+      <div className="grid gap-2 sm:grid-cols-3">
+        <Button size="sm" onClick={onConfirm}>
+          <Check className="w-4 h-4" />
+          Confirm Schedule
+        </Button>
+        <Button asChild size="sm" variant="outline">
+          <Link href={editHref}>Edit in builder</Link>
+        </Button>
+        <Button size="sm" variant="outline" onClick={onDismiss}>
+          <X className="w-4 h-4" />
+          Dismiss
+        </Button>
+      </div>
+    </div>
   );
 }
 
