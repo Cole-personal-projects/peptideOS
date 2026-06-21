@@ -5,11 +5,15 @@ test.describe('compound intelligence library', () => {
     await page.goto('/library');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await page.getByRole('link', { name: /Browse categories/ }).click();
-    await expect(page.getByRole('heading', { name: 'Select Category' })).toBeVisible();
+    await page.getByRole('link', { name: /Browse collections/ }).click();
+    await expect(page.getByRole('heading', { name: 'Select Collection' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /GLP-1/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Metabolic/ })).toBeVisible();
     await page.getByRole('link', { name: /GLP-1/ }).click();
 
     await expect(page.getByRole('heading', { name: 'GLP-1' })).toBeVisible();
+    await expect(page.getByText('Semaglutide')).toBeVisible();
+    await expect(page.getByText('Tirzepatide')).toBeVisible();
     await expect(page.getByText('Retatrutide')).toBeVisible();
     await expect(page.getByText('Protocol')).toBeVisible();
     await page.getByRole('link', { name: 'Setup Retatrutide protocol' }).click();
@@ -29,5 +33,17 @@ test.describe('compound intelligence library', () => {
     await expect(savedStack).toBeVisible();
     await expect(savedStack.getByText('Planned')).toBeVisible();
     await expect(savedStack.getByText('Retatrutide', { exact: true })).toBeVisible();
+  });
+
+  test('opens custom setup for GLP-1 compounds without protocol templates', async ({ page }) => {
+    await page.goto('/library/categories/glp-1');
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await expect(page.getByRole('heading', { name: 'GLP-1' })).toBeVisible();
+    await page.getByRole('link', { name: 'Setup Semaglutide protocol' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Semaglutide' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Protocol Setup' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Custom Setup/ })).toBeVisible();
   });
 });
