@@ -2,6 +2,12 @@
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
 
+## Project Repository
+
+- GitHub: [Cole-personal-projects/peptideOS](https://github.com/Cole-personal-projects/peptideOS)
+- Local WSL checkout: `/home/colebienek/projects/peptideOS`
+- Windows UNC path: `\\wsl$\Ubuntu\home\colebienek\projects\peptideOS`
+
 ## AI Protocol Assistant
 
 Describe a protocol in plain English (e.g. "BPC-157 250mcg twice daily and TB-500 2.5mg twice weekly for 8 weeks") and the assistant builds the stack and dosing schedules for you. Open it from **Stacks → AI** or **More → AI Assistant**.
