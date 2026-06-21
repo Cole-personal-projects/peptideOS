@@ -42,7 +42,7 @@ test.describe('protocol loop', () => {
     await page.reload();
     await expect(page.getByText('Taken today', { exact: true }).first()).toBeVisible();
 
-    await page.getByRole('link', { name: 'Log' }).click();
+    await page.getByRole('navigation').getByRole('link', { name: 'Log' }).click();
     await expect(page.getByRole('heading', { name: 'Dose Log' })).toBeVisible();
     await expect(page.getByText('BPC-157').first()).toBeVisible();
     await expect(page.getByText('250 mcg').first()).toBeVisible();

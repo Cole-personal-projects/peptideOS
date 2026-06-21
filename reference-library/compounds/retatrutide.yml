@@ -150,6 +150,13 @@ tracking:
   - Track inventory, active vial state, and depletion from user-confirmed entries.
   - Summarize user-entered appetite, weight, HR, HRV, sleep, and tolerability patterns.
 
+pharmacokinetics:
+  half_life_hours: 144
+  half_life_source: "Published phase 2 retatrutide trial context describes a half-life of approximately 6 days."
+  source_ids:
+  - pubmed-retatrutide-obesity-phase-2
+  evidence_tier: human_strong
+  model_notes: "First-order estimated remaining amount only; investigational compound context does not represent measured concentration, clinical response, or dose guidance."
 calculator_profile:
   reconstitution_compatible: true
   typical_vial_amounts:

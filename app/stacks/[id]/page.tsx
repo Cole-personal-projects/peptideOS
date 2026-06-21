@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import { notFound } from 'next/navigation';
-import { Calendar, AlertTriangle, Clock, Play, Pause, CheckCircle2, Syringe, Edit3, Trash2 } from 'lucide-react';
+import { Calendar, AlertTriangle, Clock, Play, Pause, CheckCircle2, Syringe, Edit3, Trash2, Activity } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/lib/context';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose } from '@/lib/dose-helpers';
+import { buildEstimatedRemainingPreview } from '@/lib/estimated-remaining-preview';
 import { getSchedulePreset, getScheduleSummary } from '@/lib/schedules';
 import { cn } from '@/lib/utils';
 import type { ScheduleLogStatus, StackStatus } from '@/lib/types';
@@ -41,6 +42,16 @@ const statusConfig = {
 
 const calendarFilters = ['all', 'pending', 'taken', 'skipped', 'missed'] as const;
 type CalendarFilter = typeof calendarFilters[number];
+
+function formatEstimatedRemainingMg(value: number): string {
+  if (value < 0.01) return '<0.01 mg';
+  return `${value.toLocaleString('en-US', { maximumFractionDigits: 2 })} mg`;
+}
+
+function formatHalfLife(hours: number): string {
+  if (hours % 24 === 0) return `${hours / 24} day${hours === 24 ? '' : 's'}`;
+  return `${hours} hours`;
+}
 
 const scheduleStatusConfig: Record<ScheduleLogStatus, { label: string; className: string }> = {
   pending: { label: 'Pending', className: 'bg-chart-4' },
@@ -138,6 +149,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
     counts[log.status] += 1;
     return counts;
   }, { pending: 0, taken: 0, skipped: 0, missed: 0 });
+  const estimatedRemainingRows = buildEstimatedRemainingPreview(stack, data);
 
   return (
     <AppShell>
@@ -217,6 +229,55 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             </div>
           </CardContent>
         </Card>
+
+        {estimatedRemainingRows.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Activity className="w-4 h-4" />
+                Estimated remaining amount
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {estimatedRemainingRows.map((row) => (
+                <div key={row.compoundId} className="rounded-md border p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium">{row.compoundName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Half-life assumption: {formatHalfLife(row.halfLifeHours)}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="shrink-0 text-xs">
+                      {row.evidenceTier}
+                    </Badge>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs">Actual estimate</p>
+                      <p className="font-medium">{formatEstimatedRemainingMg(row.actualEstimatedRemainingMg)}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {row.actualEventCount} completed event{row.actualEventCount === 1 ? '' : 's'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Pending estimate</p>
+                      <p className="font-medium">{formatEstimatedRemainingMg(row.plannedEstimatedRemainingMg)}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {row.plannedEventCount} pending event{row.plannedEventCount === 1 ? '' : 's'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    {row.halfLifeSource} {row.modelNotes}
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         <Tabs defaultValue="protocol" className="w-full">
           <TabsList className="w-full">

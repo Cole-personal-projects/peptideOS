@@ -108,6 +108,14 @@ tracking:
     - log-appetite-rating
     - log-side-effects
 
+pharmacokinetics:
+  half_life_hours: 168
+  half_life_source: "DailyMed semaglutide labeling describes an elimination half-life of approximately 1 week."
+  source_ids:
+  - dailymed-semaglutide
+  evidence_tier: approved_label
+  model_notes: "First-order estimated remaining amount only; does not represent measured concentration, clinical response, or dose guidance."
+
 app_profile:
   headline: "FDA-approved weekly GLP-1 agonist (Ozempic / Wegovy / Rybelsus) with the strongest weight-loss and cardiometabolic evidence in the class."
   summary: "Semaglutide is a long-acting GLP-1 receptor agonist used for glucose control and weight management. Useful tracking focuses on weekly dose step, injection day, appetite, weight trend, GI effects, glucose data, and missed-dose history."

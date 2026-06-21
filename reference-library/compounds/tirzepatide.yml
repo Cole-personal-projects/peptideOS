@@ -96,6 +96,14 @@ tracking:
   - "summarize-tracking"
   - "flag-source-quality"
 
+pharmacokinetics:
+  half_life_hours: 120
+  half_life_source: "DailyMed tirzepatide labeling describes an elimination half-life of approximately 5 days."
+  source_ids:
+  - dailymed-tirzepatide
+  evidence_tier: approved_label
+  model_notes: "First-order estimated remaining amount only; does not represent measured concentration, clinical response, or dose guidance."
+
 app_profile:
   headline: "Dual-incretin baseline with exact pen tracking."
   summary: "Tirzepatide is a weekly GIP and GLP-1 receptor agonist used for metabolic care and weight management. Useful tracking centers on dose escalation, injection day, appetite, GI effects, weight trend, glucose markers, and missed-dose history."
