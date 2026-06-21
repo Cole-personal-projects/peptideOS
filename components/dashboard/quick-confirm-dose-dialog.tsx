@@ -17,13 +17,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/lib/context';
 import { formatDose } from '@/lib/dose-helpers';
+import { getCompatibleInjectionZones, getInjectionZoneById, getSuggestedZone } from '@/lib/injection-zones';
 import { getVialInventoryMetrics } from '@/lib/inventory-metrics';
 import type { SiteCode } from '@/lib/types';
+
+export interface QuickConfirmDoseResult {
+  logId: string;
+  label: string;
+  scheduledTime: string;
+  vialName: string;
+  siteLabel?: string;
+}
 
 interface QuickConfirmDoseDialogProps {
   logId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onConfirmed?: (result: QuickConfirmDoseResult) => void;
 }
 
 const injectableRoutes = new Set(['subq', 'im']);
@@ -38,7 +48,19 @@ function formatScheduledTime(value: string): string {
   });
 }
 
-export function QuickConfirmDoseDialog({ logId, open, onOpenChange }: QuickConfirmDoseDialogProps) {
+function formatShortTime(value: string): string {
+  return new Date(value).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function formatSiteLabel(siteCode: SiteCode | ''): string {
+  if (!siteCode) return '';
+  return getInjectionZoneById(siteCode)?.label ?? siteCode.replace(/-/g, ' ');
+}
+
+export function QuickConfirmDoseDialog({ logId, open, onOpenChange, onConfirmed }: QuickConfirmDoseDialogProps) {
   const { data, getPeptide, completeScheduleLog } = useApp();
   const [vialId, setVialId] = useState('');
   const [site, setSite] = useState<SiteCode | ''>('');
@@ -61,9 +83,30 @@ export function QuickConfirmDoseDialog({ logId, open, onOpenChange }: QuickConfi
     () => data.vials.filter((vial) => vial.peptideId === activeLog?.peptideId && vial.status === 'active'),
     [activeLog?.peptideId, data.vials],
   );
-
   const requiresSite = Boolean(activeSchedule && injectableRoutes.has(activeSchedule.route));
-  const canConfirm = Boolean(activeLog && activeSchedule && vialId && (!requiresSite || site));
+  const autoSelectedVialId = open && activeVials.length === 1 ? activeVials[0].id : '';
+  const selectedVialId = vialId || autoSelectedVialId;
+  const selectedVial = activeVials.find((vial) => vial.id === selectedVialId) ?? null;
+  const selectedVialMetrics = selectedVial ? getVialInventoryMetrics(selectedVial, data.doses) : null;
+  const suggestedSite = useMemo(
+    () => {
+      if (!activeSchedule || !requiresSite) return null;
+      return getSuggestedZone(data.doses, activeSchedule.route) ?? getCompatibleInjectionZones(activeSchedule.route)[0]?.id ?? null;
+    },
+    [activeSchedule, data.doses, requiresSite],
+  );
+  const lastUsedSite = useMemo(() => {
+    if (!activeSchedule || !requiresSite) return null;
+    const lastDose = data.doses
+      .filter((dose) => {
+        const zone = dose.site ? getInjectionZoneById(dose.site) : undefined;
+        return dose.completed && zone?.routes.includes(activeSchedule.route);
+      })
+      .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())[0];
+    return lastDose?.site || null;
+  }, [activeSchedule, data.doses, requiresSite]);
+
+  const canConfirm = Boolean(activeLog && activeSchedule && selectedVialId && (!requiresSite || site));
 
   const resetForm = () => {
     setVialId('');
@@ -81,7 +124,14 @@ export function QuickConfirmDoseDialog({ logId, open, onOpenChange }: QuickConfi
     if (!activeLog || !canConfirm) return;
     setSaving(true);
     try {
-      await completeScheduleLog(activeLog.id, { vialId, site, notes });
+      await completeScheduleLog(activeLog.id, { vialId: selectedVialId, site, notes });
+      onConfirmed?.({
+        logId: activeLog.id,
+        label: `${peptide?.name ?? activeLog.peptideId} · ${formatDose(activeSchedule?.doseValue ?? 0, activeSchedule?.doseUnit ?? 'mcg')}`,
+        scheduledTime: formatShortTime(activeLog.dueAt),
+        vialName: selectedVial?.name ?? 'selected vial',
+        siteLabel: site ? formatSiteLabel(site) : undefined,
+      });
       resetForm();
       onOpenChange(false);
     } finally {
@@ -126,7 +176,7 @@ export function QuickConfirmDoseDialog({ logId, open, onOpenChange }: QuickConfi
             <div className="space-y-2">
               <Label>Vial</Label>
               {activeVials.length > 0 ? (
-                <Select value={vialId} onValueChange={setVialId}>
+                <Select value={selectedVialId} onValueChange={setVialId}>
                   <SelectTrigger aria-label="Vial">
                     <SelectValue placeholder="Select active vial" />
                   </SelectTrigger>
@@ -152,11 +202,52 @@ export function QuickConfirmDoseDialog({ logId, open, onOpenChange }: QuickConfi
                   </Button>
                 </div>
               )}
+              {selectedVialId && (
+                <div className="rounded-md border bg-secondary/40 p-3 text-sm">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Inventory source</p>
+                  <p className="mt-1 font-medium">{selectedVial?.name ?? 'Selected active vial'}</p>
+                  {selectedVial && selectedVialMetrics && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {selectedVial.lotNumber || 'No lot'} · {selectedVialMetrics.remainingLabel} left
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {requiresSite && (
               <div className="space-y-2">
                 <Label>Injection site</Label>
+                {(suggestedSite || lastUsedSite) && (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {suggestedSite && (
+                      <Button
+                        type="button"
+                        variant={site === suggestedSite ? 'secondary' : 'outline'}
+                        className="h-auto justify-start py-2 text-left"
+                        onClick={() => setSite(suggestedSite)}
+                      >
+                        <span>
+                          <span className="block text-xs text-muted-foreground">Suggested site</span>
+                          <span className="block text-sm">{formatSiteLabel(suggestedSite)}</span>
+                        </span>
+                      </Button>
+                    )}
+                    {lastUsedSite && lastUsedSite !== suggestedSite && (
+                      <Button
+                        type="button"
+                        variant={site === lastUsedSite ? 'secondary' : 'outline'}
+                        className="h-auto justify-start py-2 text-left"
+                        onClick={() => setSite(lastUsedSite)}
+                      >
+                        <span>
+                          <span className="block text-xs text-muted-foreground">Last used site</span>
+                          <span className="block text-sm">{formatSiteLabel(lastUsedSite)}</span>
+                        </span>
+                      </Button>
+                    )}
+                  </div>
+                )}
                 <BodyMannequin
                   compact
                   doses={data.doses}

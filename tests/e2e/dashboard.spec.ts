@@ -62,9 +62,12 @@ await expect(page.getByText('Pending action', { exact: true }).first()).toBeVisi
   await expect(quickConfirm.getByText('Dashboard Actionability Stack')).toBeVisible();
   await quickConfirm.getByRole('combobox', { name: 'Vial' }).click();
   await page.getByRole('option', { name: /BPC-157 active vial/ }).click();
-  await quickConfirm.getByRole('button', { name: 'Upper Left Abdomen' }).click();
+  await expect(quickConfirm.getByText('Inventory source', { exact: true })).toBeVisible();
+  await expect(quickConfirm.getByText(/No lot · 5 mg left/)).toBeVisible();
+  await quickConfirm.getByRole('button', { name: /Suggested site Upper Left Abdomen/ }).click();
   await quickConfirm.getByRole('button', { name: 'Confirm dose' }).click();
 
+  await expect(page.getByText(/Confirmed · 8:00 AM · BPC-157 active vial · Upper Left Abdomen/)).toBeVisible();
   await expect(page.getByText('Taken today', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('Completed scheduled dose')).toBeVisible();
   });

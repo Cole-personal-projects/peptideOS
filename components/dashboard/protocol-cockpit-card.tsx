@@ -7,7 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { QuickConfirmDoseDialog } from '@/components/dashboard/quick-confirm-dose-dialog';
+import { QuickConfirmDoseDialog, type QuickConfirmDoseResult } from '@/components/dashboard/quick-confirm-dose-dialog';
 import { useApp } from '@/lib/context';
 import { buildDashboardEstimatedRemainingPreview } from '@/lib/estimated-remaining-preview';
 import { buildProtocolCockpitSummary, type ProtocolTimelineEvent } from '@/lib/protocol-timeline';
@@ -120,6 +120,7 @@ export function ProtocolCockpitCard() {
   const { data } = useApp();
   const [filter, setFilter] = useState<CockpitFilter>('all');
   const [quickConfirmLogId, setQuickConfirmLogId] = useState<string | null>(null);
+  const [recentQuickConfirm, setRecentQuickConfirm] = useState<QuickConfirmDoseResult | null>(null);
   const summary = buildProtocolCockpitSummary(data);
   const estimatedRemainingRows = buildDashboardEstimatedRemainingPreview(data);
   const filteredEvents = summary.events.filter((event) => {
@@ -206,6 +207,17 @@ export function ProtocolCockpitCard() {
               <ChevronRight className="mt-1 h-4 w-4 text-muted-foreground" />
             </div>
             </Link>
+          )}
+
+          {recentQuickConfirm && (
+            <div className="rounded-md border border-chart-3/40 bg-chart-3/10 p-3 text-sm">
+              <p className="text-xs font-medium uppercase tracking-wide text-chart-3">Confirmed</p>
+              <p className="mt-1 font-medium">{recentQuickConfirm.label}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Confirmed · {recentQuickConfirm.scheduledTime} · {recentQuickConfirm.vialName}
+                {recentQuickConfirm.siteLabel ? ` · ${recentQuickConfirm.siteLabel}` : ''}
+              </p>
+            </div>
           )}
 
           {estimatedRemainingRows.length > 0 && (
@@ -309,6 +321,7 @@ export function ProtocolCockpitCard() {
           logId={quickConfirmLogId}
           open={Boolean(quickConfirmLogId)}
           onOpenChange={(open) => !open && setQuickConfirmLogId(null)}
+          onConfirmed={setRecentQuickConfirm}
         />
       </CardContent>
     </Card>
