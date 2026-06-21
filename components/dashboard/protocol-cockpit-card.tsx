@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, CalendarClock, ChevronRight, ClipboardList, FlaskConical, MessageSquareText } from 'lucide-react';
+import { Activity, AlertTriangle, CalendarClock, ChevronRight, ClipboardList, FlaskConical, MessageSquareText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApp } from '@/lib/context';
+import { buildDashboardEstimatedRemainingPreview } from '@/lib/estimated-remaining-preview';
 import { buildProtocolCockpitSummary, type ProtocolTimelineEvent } from '@/lib/protocol-timeline';
 import { cn } from '@/lib/utils';
 
@@ -47,10 +48,21 @@ function statusLabel(value: string) {
   return value.replace(/-/g, ' ');
 }
 
+function formatEstimatedRemainingMg(value: number): string {
+  if (value < 0.01) return '<0.01 mg';
+  return `${value.toLocaleString('en-US', { maximumFractionDigits: 2 })} mg`;
+}
+
+function formatHalfLife(hours: number): string {
+  if (hours % 24 === 0) return `${hours / 24} day${hours === 24 ? '' : 's'}`;
+  return `${hours} hours`;
+}
+
 export function ProtocolCockpitCard() {
   const { data } = useApp();
   const [filter, setFilter] = useState<CockpitFilter>('all');
   const summary = buildProtocolCockpitSummary(data);
+  const estimatedRemainingRows = buildDashboardEstimatedRemainingPreview(data);
   const filteredEvents = summary.events.filter((event) => {
     if (filter === 'due') return event.kind === 'due-dose';
     if (filter === 'runway') return event.kind === 'inventory';
@@ -118,10 +130,36 @@ export function ProtocolCockpitCard() {
               </div>
               <ChevronRight className="mt-1 h-4 w-4 text-muted-foreground" />
             </div>
-          </Link>
-        )}
+            </Link>
+          )}
 
-        {!hasNoProtocolState && (
+          {estimatedRemainingRows.length > 0 && (
+            <div className="space-y-2 rounded-md border p-3">
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-primary" />
+                <p className="text-sm font-medium">Estimated remaining amount</p>
+              </div>
+              <div className="space-y-2">
+                {estimatedRemainingRows.map((row) => (
+                  <Link key={`${row.stackId}:${row.compoundId}`} href={row.href} className="block rounded-md bg-secondary/50 p-2 transition-colors hover:bg-secondary">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{row.compoundName}</p>
+                        <p className="truncate text-xs text-muted-foreground">{row.stackName} · half-life assumption {formatHalfLife(row.halfLifeHours)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold">{formatEstimatedRemainingMg(row.actualEstimatedRemainingMg)}</p>
+                        <p className="text-[11px] text-muted-foreground">{row.actualEventCount} completed</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground">First-order estimate from logged completed doses. Not measured concentration or dose guidance.</p>
+            </div>
+          )}
+
+          {!hasNoProtocolState && (
           <div className="grid grid-cols-4 gap-1 rounded-md bg-secondary p-1">
             {([
               ['all', 'All'],

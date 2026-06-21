@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildEstimatedRemainingPreview } from './estimated-remaining-preview';
+import { buildDashboardEstimatedRemainingPreview, buildEstimatedRemainingPreview } from './estimated-remaining-preview';
 import type { Compound, Dose, Schedule, ScheduleLog, Stack } from './types';
 
 const semaglutide: Compound = {
@@ -148,5 +148,57 @@ describe('estimated remaining preview', () => {
 
     expect(rows[0].modelNotes).toContain('estimated remaining amount');
     expect(rows[0].modelNotes).not.toMatch(/blood level|optimal|safe stack/i);
+  });
+
+  it('builds dashboard preview rows for active stacks only', () => {
+    const pausedStack = { ...stack, id: 'stack-paused', name: 'Paused stack', status: 'paused' as const };
+    const rows = buildDashboardEstimatedRemainingPreview({
+      compounds: [semaglutide, customCompound],
+      doses: [dose('dose-taken', '2026-06-01T08:00:00.000Z', 'log-taken')],
+      schedules: [schedule],
+      scheduleLogs: [
+        scheduleLog('log-taken', 'taken', '2026-06-01T08:00:00.000Z'),
+        scheduleLog('log-pending', 'pending', '2026-06-08T08:00:00.000Z'),
+      ],
+      stacks: [pausedStack, stack],
+    }, '2026-06-08T08:00:00.000Z');
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      compoundId: 'semaglutide',
+      stackId: 'stack-1',
+      stackName: 'Metabolic stack',
+      href: '/stacks/stack-1',
+      actualEventCount: 1,
+      plannedEventCount: 1,
+    });
+  });
+
+  it('limits dashboard preview rows by most recent actual event', () => {
+    const secondStack: Stack = {
+      ...stack,
+      id: 'stack-2',
+      name: 'Second stack',
+      peptides: [{ id: 'item-3', peptideId: 'semaglutide', doseValue: 1, doseUnit: 'mg', frequency: 'weekly', route: 'subq', timing: 'morning' }],
+    };
+    const secondSchedule: Schedule = { ...schedule, id: 'schedule-2', stackId: 'stack-2', stackPeptideId: 'item-3' };
+
+    const rows = buildDashboardEstimatedRemainingPreview({
+      compounds: [semaglutide],
+      doses: [
+        dose('dose-old', '2026-06-01T08:00:00.000Z', 'log-old'),
+        dose('dose-new', '2026-06-07T08:00:00.000Z', 'log-new'),
+      ],
+      schedules: [schedule, secondSchedule],
+      scheduleLogs: [
+        scheduleLog('log-old', 'taken', '2026-06-01T08:00:00.000Z'),
+        { ...scheduleLog('log-new', 'taken', '2026-06-07T08:00:00.000Z', 'stack-2'), scheduleId: 'schedule-2', stackPeptideId: 'item-3' },
+      ],
+      stacks: [stack, secondStack],
+    }, '2026-06-08T08:00:00.000Z', 1);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].stackId).toBe('stack-2');
+    expect(rows[0].latestActualEvent?.id).toBe('dose-new');
   });
 });
