@@ -9,7 +9,9 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { QuickConfirmDoseDialog } from '@/components/dashboard/quick-confirm-dose-dialog';
 import {
+  buildScheduledDoseConfirmationProposal,
   buildAssistantTodaySummary,
   isAssistantAction,
   isTodayStatusRequest,
@@ -18,6 +20,7 @@ import {
   type AssistantAction,
   type AssistantActionProposal,
   type AssistantSummaryCard,
+  type ScheduledDoseConfirmationCandidate,
 } from '@/lib/assistant-actions';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose } from '@/lib/dose-helpers';
@@ -85,6 +88,7 @@ export default function AIAssistantPage() {
   );
   const [isSending, setIsSending] = useState(false);
   const [pendingAction, setPendingAction] = useState<AssistantAction | null>(null);
+  const [confirmLogId, setConfirmLogId] = useState<string | null>(null);
   const [summaryCards, setSummaryCards] = useState<AssistantSummaryCard[]>([]);
   const [assistantMessage, setAssistantMessage] = useState('Tell Peppi what you want to capture or change.');
   const proposalCompounds = trackableCompounds.map((compound) => ({
@@ -104,6 +108,15 @@ export default function AIAssistantPage() {
       setPendingAction(null);
       setSummaryCards(localSummary.summaryCards ?? []);
       setAssistantMessage(localSummary.message);
+      setMessage('');
+      return;
+    }
+
+    const scheduledDoseProposal = buildScheduledDoseConfirmationProposal(data, trimmedMessage);
+    if (scheduledDoseProposal) {
+      setPendingAction(scheduledDoseProposal.action);
+      setSummaryCards(scheduledDoseProposal.summaryCards ?? []);
+      setAssistantMessage(scheduledDoseProposal.message);
       setMessage('');
       return;
     }
@@ -250,8 +263,8 @@ onDismiss={() => setPendingAction(null)}
 />
 )}
 
-            {pendingAction?.type === 'create_inventory_vials' && (
-              <div className="space-y-3 rounded-md border bg-background p-3">
+          {pendingAction?.type === 'create_inventory_vials' && (
+            <div className="space-y-3 rounded-md border bg-background p-3">
                 <div>
                   <p className="font-medium">{pendingAction.payload.name}</p>
                   <p className="text-sm text-muted-foreground">{getCompoundName(pendingAction.payload.peptideId)}</p>
@@ -278,11 +291,19 @@ onDismiss={() => setPendingAction(null)}
                     <X className="w-4 h-4" />
                     Dismiss
                   </Button>
-                </div>
               </div>
-            )}
+            </div>
+          )}
 
-            <div className="space-y-2">
+          {pendingAction?.type === 'confirm_scheduled_dose' && (
+            <ScheduledDoseConfirmationCard
+              candidates={pendingAction.payload.candidates}
+              onReview={(logId) => setConfirmLogId(logId)}
+              onDismiss={() => setPendingAction(null)}
+            />
+          )}
+
+          <div className="space-y-2">
               <Textarea
                 aria-label="Message Peppi"
                 value={message}
@@ -327,11 +348,80 @@ onDismiss={() => setPendingAction(null)}
         <p className="text-xs text-muted-foreground px-1">
           The assistant only structures what you write — it never gives dosing advice or recommendations. Review every
           schedule before activating it.
-        </p>
-      </div>
+ </p>
+ </div>
+ <QuickConfirmDoseDialog
+ logId={confirmLogId}
+ open={Boolean(confirmLogId)}
+ onOpenChange={(open) => !open && setConfirmLogId(null)}
+ title="Review scheduled dose"
+ description="Choose vial, site, and notes before confirming this scheduled dose."
+ confirmLabel="Confirm dose"
+ onConfirmed={() => {
+ setConfirmLogId(null);
+ setPendingAction(null);
+ setAssistantMessage('Dose confirmed from your reviewed scheduled log.');
+ }}
+ />
+ </AppShell>
+ );
+}
 
-    </AppShell>
-  );
+function formatCandidateTime(value: string) {
+ return new Date(value).toLocaleString(undefined, {
+ weekday: 'short',
+ hour: 'numeric',
+ minute: '2-digit',
+ });
+}
+
+function ScheduledDoseConfirmationCard({
+ candidates,
+ onReview,
+ onDismiss,
+}: {
+ candidates: ScheduledDoseConfirmationCandidate[];
+ onReview: (logId: string) => void;
+ onDismiss: () => void;
+}) {
+ return (
+ <div className="space-y-3 rounded-md border bg-background p-3" aria-label="Peppi scheduled dose review">
+ <div className="space-y-1">
+ <p className="text-xs font-medium uppercase text-muted-foreground">Scheduled dose review</p>
+ <p className="font-medium">
+ {candidates.length === 1 ? 'Review pending scheduled dose' : 'Choose scheduled dose'}
+ </p>
+ <p className="text-sm text-muted-foreground">
+ Peppi will open the app confirmation flow. It will not log anything until you confirm.
+ </p>
+ </div>
+ <div className="space-y-2">
+ {candidates.map((candidate) => (
+ <div key={candidate.logId} className="rounded-md border px-3 py-2 text-sm">
+ <div className="flex items-start justify-between gap-3">
+ <div className="min-w-0">
+ <p className="font-medium">{candidate.compoundName}</p>
+ <p className="text-muted-foreground">{candidate.doseLabel} · {candidate.route.toUpperCase()}</p>
+ <p className="text-xs text-muted-foreground">{candidate.stackName} · {formatCandidateTime(candidate.scheduledAt)}</p>
+ </div>
+ <Button size="sm" onClick={() => onReview(candidate.logId)}>
+ Review confirmation
+ </Button>
+ </div>
+ </div>
+ ))}
+ </div>
+ <div className="flex gap-2">
+ <Button size="sm" variant="outline" asChild>
+ <Link href="/log">Full log</Link>
+ </Button>
+ <Button size="sm" variant="outline" onClick={onDismiss}>
+ <X className="w-4 h-4" />
+ Dismiss
+ </Button>
+ </div>
+ </div>
+ );
 }
 
 function ProtocolDraftCard({

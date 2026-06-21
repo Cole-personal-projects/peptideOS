@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { buildAssistantTodaySummary, isAssistantAction, isTodayStatusRequest, proposeAssistantActionFromMessage } from './assistant-actions';
+import { buildAssistantTodaySummary, buildScheduledDoseConfirmationProposal, isAssistantAction, isTodayStatusRequest, proposeAssistantActionFromMessage } from './assistant-actions';
 import type { AppData } from './types';
 
 const baseData: AppData = {
@@ -332,5 +332,135 @@ describe('assistant action proposals', () => {
         packageQuantity: 1,
       },
     })).toBe(false);
+  });
+
+  test('proposes scheduled dose confirmation for one matching pending log', () => {
+    const proposal = buildScheduledDoseConfirmationProposal({
+      ...baseData,
+      stacks: [{
+        id: 'stack-1',
+        name: 'Recovery stack',
+        description: '',
+        peptides: [],
+        startDate: '2026-06-21T00:00:00.000Z',
+        durationDays: 14,
+        status: 'active',
+        notes: '',
+      }],
+      schedules: [{
+        id: 'schedule-1',
+        stackId: 'stack-1',
+        stackPeptideId: 'stack-peptide-1',
+        peptideId: 'bpc-157',
+        doseValue: 250,
+        doseUnit: 'mcg',
+        route: 'subq',
+        recurrence: { frequency: 'daily', timesOfDay: ['08:00'] },
+        startDate: '2026-06-21T00:00:00.000Z',
+        endDate: '2026-07-05T00:00:00.000Z',
+        status: 'active',
+      }],
+      scheduleLogs: [{
+        id: 'log-8am',
+        scheduleId: 'schedule-1',
+        stackId: 'stack-1',
+        stackPeptideId: 'stack-peptide-1',
+        peptideId: 'bpc-157',
+        dueAt: '2026-06-21T08:00:00.000Z',
+        status: 'pending',
+      }],
+    }, 'I took my BPC dose', new Date('2026-06-21T12:00:00.000Z'));
+
+    expect(proposal?.message).toContain('one pending scheduled dose');
+    expect(proposal?.action).toEqual(expect.objectContaining({
+      type: 'confirm_scheduled_dose',
+      payload: {
+        candidates: [expect.objectContaining({
+          logId: 'log-8am',
+          compoundName: 'BPC-157',
+          stackName: 'Recovery stack',
+          doseLabel: '250 mcg',
+          route: 'subq',
+        })],
+      },
+    }));
+    expect(isAssistantAction(proposal?.action)).toBe(true);
+  });
+
+  test('keeps twice-daily same-compound confirmation candidates distinct', () => {
+    const data: AppData = {
+      ...baseData,
+      stacks: [{
+        id: 'stack-1',
+        name: 'Twice daily stack',
+        description: '',
+        peptides: [],
+        startDate: '2026-06-21T00:00:00.000Z',
+        durationDays: 14,
+        status: 'active',
+        notes: '',
+      }],
+      schedules: [
+        {
+          id: 'schedule-8',
+          stackId: 'stack-1',
+          stackPeptideId: 'stack-peptide-1',
+          peptideId: 'bpc-157',
+          doseValue: 250,
+          doseUnit: 'mcg',
+          route: 'subq',
+          recurrence: { frequency: 'daily', timesOfDay: ['08:00'] },
+          startDate: '2026-06-21T00:00:00.000Z',
+          endDate: '2026-07-05T00:00:00.000Z',
+          status: 'active',
+        },
+        {
+          id: 'schedule-22',
+          stackId: 'stack-1',
+          stackPeptideId: 'stack-peptide-1',
+          peptideId: 'bpc-157',
+          doseValue: 250,
+          doseUnit: 'mcg',
+          route: 'subq',
+          recurrence: { frequency: 'daily', timesOfDay: ['22:00'] },
+          startDate: '2026-06-21T00:00:00.000Z',
+          endDate: '2026-07-05T00:00:00.000Z',
+          status: 'active',
+        },
+      ],
+      scheduleLogs: [
+        {
+          id: 'log-8am',
+          scheduleId: 'schedule-8',
+          stackId: 'stack-1',
+          stackPeptideId: 'stack-peptide-1',
+          peptideId: 'bpc-157',
+          dueAt: '2026-06-21T08:00:00.000Z',
+          status: 'pending',
+        },
+        {
+          id: 'log-10pm',
+          scheduleId: 'schedule-22',
+          stackId: 'stack-1',
+          stackPeptideId: 'stack-peptide-1',
+          peptideId: 'bpc-157',
+          dueAt: '2026-06-21T22:00:00.000Z',
+          status: 'pending',
+        },
+      ],
+    };
+
+    const ambiguous = buildScheduledDoseConfirmationProposal(data, 'I took my BPC dose', new Date('2026-06-21T12:00:00.000Z'));
+    expect(ambiguous?.message).toContain('multiple pending scheduled doses');
+    expect(ambiguous?.action?.type).toBe('confirm_scheduled_dose');
+    if (ambiguous?.action?.type === 'confirm_scheduled_dose') {
+      expect(ambiguous.action.payload.candidates.map((candidate) => candidate.logId)).toEqual(['log-8am', 'log-10pm']);
+    }
+
+    const timed = buildScheduledDoseConfirmationProposal(data, 'I took my BPC dose at 10pm', new Date('2026-06-21T12:00:00.000Z'));
+    expect(timed?.action?.type).toBe('confirm_scheduled_dose');
+    if (timed?.action?.type === 'confirm_scheduled_dose') {
+      expect(timed.action.payload.candidates.map((candidate) => candidate.logId)).toEqual(['log-10pm']);
+    }
   });
 });
