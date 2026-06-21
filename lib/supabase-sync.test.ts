@@ -3,6 +3,7 @@ import {
   buildSupabaseSyncRows,
   createSupabaseUserDataSyncAdapter,
   supabaseSyncRowsToPersistedUserData,
+  type SupabaseSyncRow,
 } from './supabase-sync';
 import type { PersistedUserData } from './persistence';
 
@@ -14,9 +15,23 @@ const settings = {
   darkMode: true,
 };
 
+const emptyData: PersistedUserData = {
+  vials: [],
+  inventoryBatches: [],
+  doses: [],
+  stacks: [],
+  schedules: [],
+  scheduleLogs: [],
+  reconstitutionCalculations: [],
+  signalCheckIns: [],
+  userCompounds: [],
+  settings,
+};
+
 describe('Supabase user-data sync contracts', () => {
   test('serializes user-owned app data into deterministic owner-scoped sync rows', () => {
     const data: PersistedUserData = {
+      ...emptyData,
       vials: [
         {
           id: 'vial-cloud',
@@ -34,15 +49,6 @@ describe('Supabase user-data sync contracts', () => {
           status: 'sealed',
         },
       ],
-      inventoryBatches: [],
-      doses: [],
-      stacks: [],
-      schedules: [],
-      scheduleLogs: [],
-      reconstitutionCalculations: [],
-      signalCheckIns: [],
-      userCompounds: [],
-      settings,
     };
 
     const rows = buildSupabaseSyncRows({
@@ -68,65 +74,55 @@ describe('Supabase user-data sync contracts', () => {
       user_id: 'user-amy',
       collection: 'vials',
       record_id: 'vial-cloud',
-      payload: expect.objectContaining({ id: 'vial-cloud', peptideId: 'kpv' }),
+      payload: data.vials[0],
+      updated_at: '2026-06-16T12:00:00.000Z',
+      deleted_at: null,
+      schema_version: 6,
     }));
   });
 
-  test('hydrates persisted user data from active owner-scoped sync rows', () => {
+  test('hydrates persisted data from active Supabase sync rows', () => {
     const rows = buildSupabaseSyncRows({
       userId: 'user-amy',
-      syncedAt: new Date('2026-06-16T12:00:00.000Z'),
       data: {
+        ...emptyData,
         vials: [
           {
-            id: 'vial-cloud',
-            name: 'Cloud KPV vial',
-            peptideId: 'kpv',
+            id: 'vial-active',
+            name: 'Active cloud vial',
+            peptideId: 'bpc-157',
+            containerType: 'lyophilized-vial',
             dateAdded: '2026-06-16',
-            source: 'Source A',
-            lotNumber: 'KPV-001',
-            mg: 10,
-            bacWaterMl: 0,
-            reconstitutedDate: null,
+            source: 'Cloud',
+            lotNumber: '',
+            mg: 5,
+            totalAmount: { value: 5, unit: 'mg' },
+            bacWaterMl: 1,
+            reconstitutedDate: '2026-06-16',
             expirationDate: '2027-06-16',
-            status: 'sealed',
+            status: 'active',
           },
         ],
-        inventoryBatches: [],
-        doses: [],
-        stacks: [],
-        schedules: [],
-        scheduleLogs: [],
-        reconstitutionCalculations: [],
-        signalCheckIns: [],
-        userCompounds: [],
-        settings,
       },
+      syncedAt: new Date('2026-06-16T12:00:00.000Z'),
     });
 
-    const deletedRow = {
-      ...rows[1]!,
+    rows.push({
+      ...rows[1],
       record_id: 'vial-deleted',
       payload: { id: 'vial-deleted' },
-      deleted_at: '2026-06-16T13:00:00.000Z',
-    };
-
-    expect(supabaseSyncRowsToPersistedUserData([...rows, deletedRow])).toEqual({
-      vials: [expect.objectContaining({ id: 'vial-cloud', name: 'Cloud KPV vial' })],
-      inventoryBatches: [],
-      doses: [],
-      stacks: [],
-      schedules: [],
-      scheduleLogs: [],
-      reconstitutionCalculations: [],
-      signalCheckIns: [],
-      userCompounds: [],
-      settings,
+      deleted_at: '2026-06-16T12:05:00.000Z',
     });
+
+    const data = supabaseSyncRowsToPersistedUserData(rows);
+
+    expect(data.settings).toEqual(settings);
+    expect(data.vials).toHaveLength(1);
+    expect(data.vials[0].id).toBe('vial-active');
   });
 
-  test('pushes serialized user data through the Supabase app sync table', async () => {
-    const upsertCalls: Array<{ table: string; rows: unknown[]; options: unknown }> = [];
+  test('pushes rows through Supabase upsert with owner conflict key', async () => {
+    const upsertCalls: unknown[] = [];
     const client = {
       from(table: string) {
         return {
@@ -137,22 +133,12 @@ describe('Supabase user-data sync contracts', () => {
         };
       },
     };
+
     const adapter = createSupabaseUserDataSyncAdapter(client);
 
     await expect(adapter.pushUserData({
       userId: 'user-amy',
-      data: {
-        vials: [],
-        inventoryBatches: [],
-        doses: [],
-        stacks: [],
-        schedules: [],
-        scheduleLogs: [],
-        reconstitutionCalculations: [],
-        signalCheckIns: [],
-        userCompounds: [],
-        settings,
-      },
+      data: emptyData,
       syncedAt: new Date('2026-06-16T12:00:00.000Z'),
     })).resolves.toEqual({ pushedRows: 1 });
 
@@ -170,24 +156,68 @@ describe('Supabase user-data sync contracts', () => {
     });
   });
 
-  test('rejects unsigned sync pushes and surfaces Supabase write failures', async () => {
-    const emptyData: PersistedUserData = {
-      vials: [],
-      inventoryBatches: [],
-      doses: [],
-      stacks: [],
-      schedules: [],
-      scheduleLogs: [],
-      reconstitutionCalculations: [],
-      signalCheckIns: [],
-      userCompounds: [],
-      settings,
+  test('pulls signed-in rows from Supabase and reports latest cloud timestamp', async () => {
+    const rows: SupabaseSyncRow[] = buildSupabaseSyncRows({
+      userId: 'user-amy',
+      data: emptyData,
+      syncedAt: new Date('2026-06-16T12:00:00.000Z'),
+    });
+    const filters: Array<[string, string | number]> = [];
+
+    const client = {
+      from(table: string) {
+        expect(table).toBe('app_user_sync_records');
+        return {
+          select(columns: string) {
+            expect(columns).toContain('payload');
+            return {
+              eq(column: string, value: string | number) {
+                filters.push([column, value]);
+                return this;
+              },
+              order(column: string) {
+                expect(column).toBe('collection');
+                return Promise.resolve({ data: rows, error: null });
+              },
+            };
+          },
+          upsert() {
+            return Promise.resolve({ error: null });
+          },
+        };
+      },
     };
+
+    const adapter = createSupabaseUserDataSyncAdapter(client);
+    const result = await adapter.pullUserData({ userId: 'user-amy' });
+
+    expect(filters).toEqual([
+      ['user_id', 'user-amy'],
+      ['schema_version', 6],
+    ]);
+    expect(result).toEqual({
+      data: emptyData,
+      pulledRows: 1,
+      pulledAt: '2026-06-16T12:00:00.000Z',
+    });
+  });
+
+  test('rejects unsigned sync and surfaces Supabase failures', async () => {
     const client = {
       from() {
         return {
           upsert() {
             return Promise.resolve({ error: { message: 'RLS denied write' } });
+          },
+          select() {
+            return {
+              eq() {
+                return this;
+              },
+              order() {
+                return Promise.resolve({ data: null, error: { message: 'RLS denied read' } });
+              },
+            };
           },
         };
       },
@@ -196,5 +226,6 @@ describe('Supabase user-data sync contracts', () => {
 
     expect(() => buildSupabaseSyncRows({ userId: ' ', data: emptyData })).toThrow(/signed-in user id/i);
     await expect(adapter.pushUserData({ userId: 'user-amy', data: emptyData })).rejects.toThrow('RLS denied write');
+    await expect(adapter.pullUserData({ userId: 'user-amy' })).rejects.toThrow('RLS denied read');
   });
 });

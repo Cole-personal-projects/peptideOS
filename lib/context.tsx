@@ -13,10 +13,11 @@ import type { SchedulePreset } from './schedules';
 import {
   downloadUserData,
   exportUserData,
-  importUserData,
-  loadPersistedAppData,
-  resetPersistedAppData,
-  savePersistedAppData,
+importUserData,
+loadPersistedAppData,
+resetPersistedAppData,
+restorePersistedUserData,
+savePersistedAppData,
 } from './persistence';
 import { createUserCompound, softDeleteUserCompound, updateUserCompound, type UserCompoundDraft } from './user-compounds';
 import { completeDueDose, skipDueDose } from './due-doses';
@@ -25,6 +26,7 @@ import { buildBundledReferenceSnapshot } from './reference-library-snapshot';
 import { createSupabaseReferenceLibraryReader, getReleasedReferenceLibrary, type SupabaseReferenceLibraryClient } from './reference-library-source';
 import { applyReleasedReferenceLibrarySnapshot } from './reference-library-state';
 import { buildReferenceLibraryStatus, type ReferenceLibraryStatus } from './reference-library-status';
+import { createSupabaseUserDataSyncAdapter, type SupabaseSyncClient } from './supabase-sync';
 
 const bundledReferenceLibrarySnapshot = buildBundledReferenceSnapshot(referenceCompounds);
 const bundledReferenceLibraryStatus: ReferenceLibraryStatus = {
@@ -37,11 +39,15 @@ const bundledReferenceLibraryStatus: ReferenceLibraryStatus = {
 interface AppContextType {
   data: AppData;
   referenceLibraryStatus: ReferenceLibraryStatus;
-  persistenceStatus: {
-    mode: 'local-only' | 'signed-in';
-    ownerId: string;
-    lastSavedAt: string | null;
-  };
+persistenceStatus: {
+mode: 'local-only' | 'signed-in';
+ownerId: string;
+lastSavedAt: string | null;
+cloudLastSavedAt: string | null;
+cloudLastRetrievedAt: string | null;
+cloudStatus: 'unavailable' | 'ready' | 'saving' | 'retrieving' | 'error';
+cloudMessage: string | null;
+};
   // Peptides
   getPeptide: (id: string) => Peptide | undefined;
   // Compounds
@@ -87,9 +93,11 @@ interface AppContextType {
   completeOnboarding: (userMode?: UserMode) => Promise<void>;
   toggleDarkMode: () => void;
   toggleBiometricLock: () => void;
-  exportAllData: () => Promise<void>;
-  importAllData: (file: File) => Promise<void>;
-  clearAllData: () => Promise<void>;
+exportAllData: () => Promise<void>;
+importAllData: (file: File) => Promise<void>;
+clearAllData: () => Promise<void>;
+saveToCloud: () => Promise<void>;
+retrieveFromCloud: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -111,16 +119,24 @@ interface InventoryBatchUpdate {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const { config: authConfig, status: authStatus, user: authUser } = useAuth();
-  const persistenceOwnerId = getPersistenceOwnerId(authStatus === 'signed-in' ? authUser : null);
-  const persistenceDb = useMemo(() => createScopedPeptideOSDatabase(persistenceOwnerId), [persistenceOwnerId]);
-  const referenceLibraryReader = useMemo(() => {
+const { config: authConfig, status: authStatus, user: authUser } = useAuth();
+const persistenceOwnerId = getPersistenceOwnerId(authStatus === 'signed-in' ? authUser : null);
+const persistenceDb = useMemo(() => createScopedPeptideOSDatabase(persistenceOwnerId), [persistenceOwnerId]);
+const cloudSyncAdapter = useMemo(() => {
+const client = createSupabaseAuthClient(authConfig);
+return client ? createSupabaseUserDataSyncAdapter(client as unknown as SupabaseSyncClient) : null;
+}, [authConfig]);
+const referenceLibraryReader = useMemo(() => {
     const client = createSupabaseAuthClient(authConfig);
     return client ? createSupabaseReferenceLibraryReader(client as unknown as SupabaseReferenceLibraryClient) : null;
   }, [authConfig]);
 const [data, setData] = useState<AppData>(initialAppData);
 const [referenceLibraryStatus, setReferenceLibraryStatus] = useState<ReferenceLibraryStatus>(bundledReferenceLibraryStatus);
 const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+const [cloudLastSavedAt, setCloudLastSavedAt] = useState<string | null>(null);
+const [cloudLastRetrievedAt, setCloudLastRetrievedAt] = useState<string | null>(null);
+const [cloudStatus, setCloudStatus] = useState<'unavailable' | 'ready' | 'saving' | 'retrieving' | 'error'>('unavailable');
+const [cloudMessage, setCloudMessage] = useState<string | null>(null);
 const [hydratedOwnerId, setHydratedOwnerId] = useState<string | null>(null);
   const hydrated = authStatus !== 'loading' && hydratedOwnerId === persistenceOwnerId;
   const saveSequence = useRef(0);
@@ -132,13 +148,13 @@ const [hydratedOwnerId, setHydratedOwnerId] = useState<string | null>(null);
     dataRef.current = data;
   }, [data]);
 
-  useEffect(() => {
-    return () => {
-      persistenceDb.close();
-    };
-  }, [persistenceDb]);
+useEffect(() => {
+return () => {
+persistenceDb.close();
+};
+}, [persistenceDb]);
 
-  useEffect(() => {
+useEffect(() => {
     if (authStatus === 'loading') return;
 
     let active = true;
@@ -666,27 +682,103 @@ const metadata = await persistenceDb.metadata.get('lastSavedAt');
 setLastSavedAt(typeof metadata?.value === 'string' ? metadata.value : new Date().toISOString());
 }, [enqueuePersistenceOperation, persistenceDb, persistenceOwnerId]);
 
-  const clearAllData = useCallback(async () => {
-    saveSequence.current++;
+const clearAllData = useCallback(async () => {
+saveSequence.current++;
 const resetData = await enqueuePersistenceOperation(() => resetPersistedAppData(persistenceDb, initialAppData));
 dataRef.current = resetData;
 setData(resetData);
 setLastSavedAt(null);
 }, [enqueuePersistenceOperation, persistenceDb]);
 
-  if (!hydrated) {
-    return null;
-  }
+const saveToCloud = useCallback(async () => {
+if (authStatus !== 'signed-in' || !authUser || !cloudSyncAdapter) {
+setCloudStatus('unavailable');
+setCloudMessage('Sign in with cloud sync configured before saving to cloud.');
+return;
+}
 
-  return (
+setCloudStatus('saving');
+setCloudMessage(null);
+try {
+await persistenceQueue.current;
+const exported = await exportUserData(persistenceDb);
+const syncedAt = new Date();
+const result = await cloudSyncAdapter.pushUserData({
+userId: authUser.id,
+data: exported.data,
+syncedAt,
+});
+setCloudLastSavedAt(syncedAt.toISOString());
+setCloudStatus('ready');
+setCloudMessage(`Saved ${result.pushedRows} records to cloud.`);
+} catch (error) {
+setCloudStatus('error');
+setCloudMessage(error instanceof Error ? error.message : 'Cloud save failed.');
+}
+}, [authStatus, authUser, cloudSyncAdapter, persistenceDb]);
+
+const retrieveFromCloud = useCallback(async () => {
+if (authStatus !== 'signed-in' || !authUser || !cloudSyncAdapter) {
+setCloudStatus('unavailable');
+setCloudMessage('Sign in with cloud sync configured before retrieving cloud data.');
+return;
+}
+
+setCloudStatus('retrieving');
+setCloudMessage(null);
+try {
+const result = await cloudSyncAdapter.pullUserData({ userId: authUser.id });
+if (result.pulledRows === 0) {
+setCloudStatus('ready');
+setCloudMessage('No cloud records found for this account. Local data was not changed.');
+return;
+}
+
+const restoredAt = new Date();
+saveSequence.current++;
+const restoredData = await enqueuePersistenceOperation(() => restorePersistedUserData(
+persistenceDb,
+initialAppData,
+result.data,
+restoredAt,
+{ ownerId: persistenceOwnerId },
+));
+dataRef.current = restoredData;
+setData(restoredData);
+setLastSavedAt(restoredAt.toISOString());
+setCloudLastRetrievedAt(restoredAt.toISOString());
+setCloudStatus('ready');
+setCloudMessage(`Retrieved ${result.pulledRows} records from cloud.`);
+} catch (error) {
+setCloudStatus('error');
+setCloudMessage(error instanceof Error ? error.message : 'Cloud retrieve failed.');
+}
+}, [authStatus, authUser, cloudSyncAdapter, enqueuePersistenceOperation, persistenceDb, persistenceOwnerId]);
+
+if (!hydrated) {
+return null;
+}
+
+const effectiveCloudStatus = authStatus === 'signed-in' && cloudSyncAdapter
+? (cloudStatus === 'unavailable' ? 'ready' : cloudStatus)
+: 'unavailable';
+const effectiveCloudMessage = authStatus === 'signed-in' && !cloudSyncAdapter
+? 'Cloud sync is not configured for this build.'
+: authStatus === 'signed-in' ? cloudMessage : null;
+
+return (
     <AppContext.Provider value={{
       data,
       referenceLibraryStatus,
-      persistenceStatus: {
-        mode: authStatus === 'signed-in' ? 'signed-in' : 'local-only',
-        ownerId: persistenceOwnerId,
-        lastSavedAt,
-      },
+persistenceStatus: {
+mode: authStatus === 'signed-in' ? 'signed-in' : 'local-only',
+ownerId: persistenceOwnerId,
+lastSavedAt,
+cloudLastSavedAt,
+cloudLastRetrievedAt,
+cloudStatus: effectiveCloudStatus,
+cloudMessage: effectiveCloudMessage,
+},
       getPeptide,
       getCompound,
       addUserCompound,
@@ -724,10 +816,12 @@ setLastSavedAt(null);
       completeOnboarding,
       toggleDarkMode,
       toggleBiometricLock,
-      exportAllData,
-      importAllData,
-      clearAllData
-    }}>
+exportAllData,
+importAllData,
+clearAllData,
+saveToCloud,
+retrieveFromCloud
+}}>
       {children}
     </AppContext.Provider>
   );

@@ -473,10 +473,10 @@ export function validateUserDataExport(input: string): UserDataImportPreview {
 }
 
 export async function importUserData(
-  database: PeptideOSDatabase = defaultDb,
-  defaults: AppData,
-  input: string,
-  importedAt = new Date(),
+database: PeptideOSDatabase = defaultDb,
+defaults: AppData,
+input: string,
+importedAt = new Date(),
   options?: PersistenceOptions,
 ): Promise<AppData> {
   const imported = parseUserDataExport(input);
@@ -484,7 +484,21 @@ export async function importUserData(
 
   await savePersistedAppData(database, nextData, importedAt, options);
 
-  return nextData;
+return nextData;
+}
+
+export async function restorePersistedUserData(
+database: PeptideOSDatabase = defaultDb,
+defaults: AppData,
+persisted: PersistedUserData,
+restoredAt = new Date(),
+options?: PersistenceOptions,
+): Promise<AppData> {
+const nextData = applyUserData(defaults, persisted);
+
+await savePersistedAppData(database, nextData, restoredAt, options);
+
+return nextData;
 }
 
 export function downloadUserData(exported: UserDataExport) {

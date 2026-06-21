@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Database, Download, Fingerprint, Moon, Shield, Sun, Trash2, Upload, UserRound } from 'lucide-react';
+import { Cloud, Database, Download, Fingerprint, Moon, RefreshCw, Shield, Sun, Trash2, Upload, UserRound } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import {
@@ -50,10 +50,12 @@ export default function SettingsPage() {
     persistenceStatus,
     toggleDarkMode,
     toggleBiometricLock,
-    exportAllData,
-    importAllData,
-    clearAllData,
-  } = useApp();
+exportAllData,
+importAllData,
+clearAllData,
+saveToCloud,
+retrieveFromCloud,
+} = useApp();
   const { config: authConfig, status: authStatus, user, signInWithEmail, verifyEmailCode, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [email, setEmail] = useState('');
@@ -62,10 +64,13 @@ export default function SettingsPage() {
   const [authAction, setAuthAction] = useState<'email' | 'code' | 'sign-out' | null>(null);
   const [importStatus, setImportStatus] = useState('');
   const [isImporting, setIsImporting] = useState(false);
-  const [pendingImport, setPendingImport] = useState<{ file: File; preview: UserDataImportPreview } | null>(null);
-  const [clearDialogOpen, setClearDialogOpen] = useState(false);
-  const [isClearing, setIsClearing] = useState(false);
-  const formattedReferenceLibraryStatus = formatReferenceLibraryStatus(referenceLibraryStatus);
+const [pendingImport, setPendingImport] = useState<{ file: File; preview: UserDataImportPreview } | null>(null);
+const [clearDialogOpen, setClearDialogOpen] = useState(false);
+const [retrieveDialogOpen, setRetrieveDialogOpen] = useState(false);
+const [isClearing, setIsClearing] = useState(false);
+const formattedReferenceLibraryStatus = formatReferenceLibraryStatus(referenceLibraryStatus);
+const isCloudBusy = persistenceStatus.cloudStatus === 'saving' || persistenceStatus.cloudStatus === 'retrieving';
+const canUseCloud = persistenceStatus.mode === 'signed-in' && persistenceStatus.cloudStatus !== 'unavailable';
 
   const handleImportFile = async (file: File | undefined) => {
     if (!file) return;
@@ -232,11 +237,23 @@ export default function SettingsPage() {
                   {persistenceStatus.mode === 'signed-in' ? 'Signed-in local store' : 'Local-only store'}
                 </p>
               </div>
-              <div className="rounded-md border bg-secondary/20 p-3">
-                <p className="text-xs text-muted-foreground">Last successful save</p>
-                <p className="mt-1 text-sm font-medium">{formatDateTime(persistenceStatus.lastSavedAt)}</p>
-              </div>
-            </div>
+<div className="rounded-md border bg-secondary/20 p-3">
+<p className="text-xs text-muted-foreground">Last successful save</p>
+<p className="mt-1 text-sm font-medium">{formatDateTime(persistenceStatus.lastSavedAt)}</p>
+</div>
+<div className="rounded-md border bg-secondary/20 p-3">
+<p className="text-xs text-muted-foreground">Cloud save</p>
+<p className="mt-1 text-sm font-medium">
+{persistenceStatus.mode === 'signed-in' ? formatDateTime(persistenceStatus.cloudLastSavedAt) : 'Sign in to enable'}
+</p>
+</div>
+<div className="rounded-md border bg-secondary/20 p-3">
+<p className="text-xs text-muted-foreground">Cloud retrieve</p>
+<p className="mt-1 text-sm font-medium">
+{persistenceStatus.mode === 'signed-in' ? formatDateTime(persistenceStatus.cloudLastRetrievedAt) : 'Sign in to enable'}
+</p>
+</div>
+</div>
 
             <div className="flex items-start gap-3 rounded-md border bg-secondary/20 p-3">
               <Database className="mt-0.5 h-5 w-5 text-muted-foreground" />
@@ -252,12 +269,63 @@ export default function SettingsPage() {
               Bundled reference compounds stay app-owned.
             </p>
 
-            <Button variant="outline" className="w-full justify-start" onClick={() => void exportAllData()}>
-              <Download className="w-4 h-4 mr-3" />
-              Export full backup
-            </Button>
+<Button variant="outline" className="w-full justify-start" onClick={() => void exportAllData()}>
+<Download className="w-4 h-4 mr-3" />
+Export full backup
+</Button>
 
-            <input
+<div className="grid gap-2 sm:grid-cols-2">
+<Button
+variant="outline"
+className="w-full justify-start"
+disabled={!canUseCloud || isCloudBusy}
+onClick={() => void saveToCloud()}
+>
+<Cloud className="w-4 h-4 mr-3" />
+{persistenceStatus.cloudStatus === 'saving' ? 'Saving to cloud...' : 'Save to cloud'}
+</Button>
+<Button
+variant="outline"
+className="w-full justify-start"
+disabled={!canUseCloud || isCloudBusy}
+onClick={() => setRetrieveDialogOpen(true)}
+>
+<RefreshCw className="w-4 h-4 mr-3" />
+{persistenceStatus.cloudStatus === 'retrieving' ? 'Retrieving...' : 'Retrieve from cloud'}
+</Button>
+</div>
+
+{persistenceStatus.cloudMessage && (
+<p className="rounded-md bg-secondary p-3 text-sm text-muted-foreground" role="status" aria-live="polite">
+{persistenceStatus.cloudMessage}
+</p>
+)}
+
+<AlertDialog open={retrieveDialogOpen} onOpenChange={setRetrieveDialogOpen}>
+<AlertDialogContent>
+<AlertDialogHeader>
+<AlertDialogTitle>Retrieve cloud data?</AlertDialogTitle>
+<AlertDialogDescription>
+This replaces the signed-in data on this device with the current cloud copy for your account. Export a backup first if you want a local checkpoint.
+</AlertDialogDescription>
+</AlertDialogHeader>
+<AlertDialogFooter>
+<AlertDialogCancel disabled={isCloudBusy}>Cancel</AlertDialogCancel>
+<AlertDialogAction
+disabled={isCloudBusy}
+onClick={(event) => {
+event.preventDefault();
+setRetrieveDialogOpen(false);
+void retrieveFromCloud();
+}}
+>
+{persistenceStatus.cloudStatus === 'retrieving' ? 'Retrieving...' : 'Retrieve cloud data'}
+</AlertDialogAction>
+</AlertDialogFooter>
+</AlertDialogContent>
+</AlertDialog>
+
+<input
               ref={fileInputRef}
               type="file"
               accept="application/json,.json"
@@ -375,8 +443,8 @@ export default function SettingsPage() {
               <Shield className="w-5 h-5 text-muted-foreground mt-0.5" />
               <div>
                 <p className="font-medium text-sm">Your data stays local</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  PeptideOS stores protocol data in this browser. Sign-in and cloud sync are optional future layers, not required for local use.
+<p className="text-xs text-muted-foreground mt-1">
+                  PeptideOS stores protocol data in this browser by default. Signed-in users can manually save or retrieve cloud copies from Data ownership.
                 </p>
               </div>
             </div>

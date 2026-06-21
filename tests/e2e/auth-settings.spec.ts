@@ -15,6 +15,10 @@ test.describe('account settings', () => {
     await expect(page.getByRole('button', { name: 'Verify sign-in code' })).toBeVisible();
     await expect(page.getByText('Reference library', { exact: true })).toBeVisible();
     await expect(page.getByText(/Bundled fallback \d{4}\.\d{2}\.\d+/)).toBeVisible();
+    await expect(page.getByText('Cloud save')).toBeVisible();
+    await expect(page.getByText('Cloud retrieve')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Save to cloud' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Retrieve from cloud' })).toBeDisabled();
     await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
   });
 
