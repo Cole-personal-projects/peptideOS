@@ -1,6 +1,36 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('Peppi action approvals', () => {
+  test('renders Peppi markdown guidance instead of literal markers', async ({ page }) => {
+    await page.route('**/api/ai/propose-action', async (route) => {
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: [
+            'Hi! I can help you log a few things:',
+            '',
+            '1. **Signal check-in** — Tell me your energy level and observations.',
+            '2. **Create a protocol** — Describe compounds, doses, frequency, and timing.',
+            '3. **Add inventory** — Record vials, kits, pens, or bottles.',
+            '',
+            'What would you like to do?',
+          ].join('\n'),
+          action: null,
+        }),
+      });
+    });
+
+    await page.goto('/more/ai-assistant');
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('textbox', { name: 'Message Peppi' }).fill('What can you help me log?');
+    await page.getByRole('button', { name: 'Send message' }).click();
+
+    await expect(page.getByText('**Signal check-in**')).toHaveCount(0);
+    await expect(page.locator('strong').filter({ hasText: 'Signal check-in' })).toBeVisible();
+    await expect(page.getByText('Create a protocol')).toBeVisible();
+    await expect(page.getByText('What would you like to do?')).toBeVisible();
+  });
+
   test('summarizes today locally without calling AI', async ({ page }) => {
     let aiRequested = false;
     await page.route('**/api/ai/propose-action', async (route) => {
