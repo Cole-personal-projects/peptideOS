@@ -156,15 +156,20 @@ test.describe('Peppi action approvals', () => {
   await expect(page.getByText('SUBQ', { exact: true })).toBeVisible();
   await expect(page.getByText('Morning', { exact: true })).toBeVisible();
   await expect(page.getByText('28 days')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Edit in builder' })).toHaveAttribute('href', '/stacks?compound=bpc-157&add=protocol');
-
-    await page.getByRole('button', { name: 'Confirm Schedule' }).click();
-    await expect(page.getByText('Schedule saved.')).toBeVisible();
-
-    await page.getByRole('link', { name: 'Stacks' }).click();
-    await expect(page.getByText('AI BPC Schedule')).toBeVisible();
-    await page.reload();
-    await expect(page.getByText('AI BPC Schedule')).toBeVisible();
+ await expect(page.getByRole('link', { name: 'Edit in builder' })).toHaveAttribute('href', '/stacks?compound=bpc-157&add=protocol&draft=peppi');
+ await page.getByRole('link', { name: 'Edit in builder' }).click();
+ await expect(page.getByRole('heading', { name: 'Basics' })).toBeVisible();
+ await expect(page.getByLabel('Stack Name')).toHaveValue('AI BPC Schedule');
+ await expect(page.getByLabel('Duration (days)')).toHaveValue('28');
+ await page.getByRole('button', { name: 'Next' }).click();
+ await expect(page.getByRole('checkbox', { name: 'BPC-157' })).toBeChecked();
+ await page.getByRole('button', { name: 'Next' }).click();
+ await expect(page.getByText('250 mcg')).toBeVisible();
+ await page.getByRole('button', { name: 'Next' }).click();
+ await page.getByRole('button', { name: 'Create Stack' }).click();
+ await expect(page.getByText('AI BPC Schedule')).toBeVisible();
+ await page.reload();
+ await expect(page.getByText('AI BPC Schedule')).toBeVisible();
   });
 
   test('uses the Peppi action proposal response when available', async ({ page }) => {

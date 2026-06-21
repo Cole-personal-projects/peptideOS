@@ -26,6 +26,8 @@ export interface AssistantActionProposal {
   summaryCards?: AssistantSummaryCard[];
 }
 
+export const PEPPI_PROTOCOL_DRAFT_STORAGE_KEY = 'peptideos.peppi.protocolDraft';
+
 export interface AssistantSummaryCard {
   id: string;
   title: string;
