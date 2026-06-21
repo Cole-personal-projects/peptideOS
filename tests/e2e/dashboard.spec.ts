@@ -40,6 +40,10 @@ test.describe('dashboard polish', () => {
     await page.getByRole('link', { name: /Dashboard Actionability Stack/ }).click();
     await page.getByRole('button', { name: 'Start' }).click();
     await page.getByRole('link', { name: 'Dashboard' }).click();
+    await page.getByRole('link', { name: /Dashboard Actionability Stack/ }).first().click();
+    await expect(page).toHaveURL(/\/stacks\/.+/);
+    await page.getByRole('link', { name: 'Back' }).click();
+    await expect(page).toHaveURL(/\/$/);
 
 await expect(page.getByText('Due today')).toBeVisible();
 await expect(page.getByText('Pending action', { exact: true }).first()).toBeVisible();
