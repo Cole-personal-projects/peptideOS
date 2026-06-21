@@ -108,6 +108,7 @@ describe('buildProtocolCockpitSummary', () => {
     );
 
     expect(summary.dueCount).toBe(2);
+    expect(summary.nextAction?.id).toBe('schedule-log:evening');
     expect(summary.events.filter((event) => event.kind === 'due-dose').map((event) => event.id)).toEqual([
       'schedule-log:evening',
       'schedule-log:morning',
@@ -136,6 +137,11 @@ describe('buildProtocolCockpitSummary', () => {
     expect(summary.completedTodayCount).toBe(1);
     expect(summary.skippedOrMissedCount).toBe(2);
     expect(summary.activeStackCount).toBe(1);
+    expect(summary.nextAction).toMatchObject({
+      id: 'schedule-log:overdue',
+      urgency: 'critical',
+      href: '/stacks/stack-1',
+    });
   });
 
   it('surfaces protocol-linked inventory runway risk', () => {
@@ -155,6 +161,44 @@ describe('buildProtocolCockpitSummary', () => {
 
     expect(summary.inventoryRiskCount).toBeGreaterThan(0);
     expect(summary.events.some((event) => event.kind === 'inventory' && event.status === 'runout')).toBe(true);
+    expect(summary.events[0]).toMatchObject({
+      kind: 'inventory',
+      status: 'runout',
+      urgency: 'critical',
+      href: '/more/inventory/vial-1',
+    });
+  });
+
+  it('ranks critical inventory and overdue events ahead of low-urgency recent activity', () => {
+    const summary = buildProtocolCockpitSummary(
+      appData({
+        vials: [vial],
+        doses: [{
+          id: 'recent-dose',
+          peptideId: 'bpc-157',
+          vialId: 'vial-1',
+          dateTime: '2026-06-21T07:00:00.000Z',
+          doseValue: 250,
+          doseUnit: 'mcg',
+          route: 'subq',
+          site: 'abdomen-upper-left',
+          notes: '',
+          completed: true,
+        }],
+        scheduleLogs: [
+          log('overdue', '2026-06-21T06:00:00.000Z'),
+          log('dose-1', '2026-06-22T08:00:00.000Z'),
+          log('dose-2', '2026-06-23T08:00:00.000Z'),
+          log('dose-3', '2026-06-24T08:00:00.000Z'),
+          log('dose-4', '2026-06-25T08:00:00.000Z'),
+          log('dose-5', '2026-06-26T08:00:00.000Z'),
+        ],
+      }),
+      new Date('2026-06-21T08:00:00.000Z'),
+    );
+
+    expect(summary.events.slice(0, 2).every((event) => event.urgency === 'critical')).toBe(true);
+    expect(summary.events.findIndex((event) => event.id === 'dose:recent-dose')).toBeGreaterThan(1);
   });
 
   it('includes the latest signal check-in as recent protocol context', () => {

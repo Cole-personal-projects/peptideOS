@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, CalendarClock, ChevronRight, ClipboardList, FlaskConical, MessageSquareText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApp } from '@/lib/context';
 import { buildProtocolCockpitSummary, type ProtocolTimelineEvent } from '@/lib/protocol-timeline';
 import { cn } from '@/lib/utils';
+
+type CockpitFilter = 'all' | 'due' | 'runway' | 'signals';
 
 const statusClassName: Record<string, string> = {
   overdue: 'border-destructive/40 bg-destructive/10 text-destructive',
@@ -46,10 +49,18 @@ function statusLabel(value: string) {
 
 export function ProtocolCockpitCard() {
   const { data } = useApp();
+  const [filter, setFilter] = useState<CockpitFilter>('all');
   const summary = buildProtocolCockpitSummary(data);
-  const visibleEvents = summary.events.slice(0, 6);
+  const filteredEvents = summary.events.filter((event) => {
+    if (filter === 'due') return event.kind === 'due-dose';
+    if (filter === 'runway') return event.kind === 'inventory';
+    if (filter === 'signals') return event.kind === 'signal';
+    return true;
+  });
+  const visibleEvents = filteredEvents.slice(0, 6);
 
   const hasNoProtocolState = summary.events.length === 0 && summary.activeStackCount === 0;
+  const hasNoFilteredEvents = !hasNoProtocolState && visibleEvents.length === 0;
 
   return (
     <Card className="border-primary/20">
@@ -96,6 +107,43 @@ export function ProtocolCockpitCard() {
           </div>
         )}
 
+        {summary.nextAction && (
+          <Link href={summary.nextAction.href ?? '/'} className="block rounded-md border border-primary/30 bg-primary/10 p-3 transition-colors hover:bg-primary/15">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 text-primary">{eventIcon(summary.nextAction)}</div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium uppercase tracking-wide text-primary">Next action</p>
+                <p className="mt-0.5 truncate text-sm font-semibold">{summary.nextAction.label}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{summary.nextAction.detail}</p>
+              </div>
+              <ChevronRight className="mt-1 h-4 w-4 text-muted-foreground" />
+            </div>
+          </Link>
+        )}
+
+        {!hasNoProtocolState && (
+          <div className="grid grid-cols-4 gap-1 rounded-md bg-secondary p-1">
+            {([
+              ['all', 'All'],
+              ['due', 'Due'],
+              ['runway', 'Runway'],
+              ['signals', 'Signals'],
+            ] as const).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                className={cn(
+                  'rounded-sm px-2 py-1.5 text-xs font-medium transition-colors',
+                  filter === value ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+                )}
+                onClick={() => setFilter(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {hasNoProtocolState ? (
           <div className="space-y-3 rounded-md border border-dashed p-4">
             <div>
@@ -115,6 +163,11 @@ export function ProtocolCockpitCard() {
                 <Link href="/more/signals">Log signal</Link>
               </Button>
             </div>
+          </div>
+        ) : hasNoFilteredEvents ? (
+          <div className="rounded-md border border-dashed p-4">
+            <p className="text-sm font-medium">No {filter === 'runway' ? 'inventory runway' : filter} events right now</p>
+            <p className="mt-1 text-sm text-muted-foreground">Switch filters or add more protocol data to see this view.</p>
           </div>
         ) : (
           <div className="space-y-2">
