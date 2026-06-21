@@ -96,9 +96,56 @@ await page.getByRole('button', { name: 'Complete' }).first().click();
   await expect(page.getByText('No protocol activity yet')).toBeVisible();
   await expect(page.getByText('No doses due today')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Build a stack' })).toBeVisible();
-  });
+});
 
-  test('shows estimated remaining amount preview for active PK-backed stacks', async ({ page }, testInfo) => {
+test('formats IU-primary active inventory in native units without stack coverage warnings', async ({ page }, testInfo) => {
+  const exportPath = testInfo.outputPath('dashboard-hgh-inventory-data.json');
+  await writeFile(exportPath, JSON.stringify({
+    schemaVersion: 4,
+    exportedAt: '2026-06-21T00:00:00.000Z',
+    data: {
+      vials: [
+        {
+          id: 'hgh-active-dashboard',
+          name: 'hGH active vial',
+          peptideId: 'hgh',
+          containerType: 'lyophilized-vial',
+          dateAdded: '2026-06-21T00:00:00.000Z',
+          source: 'Manual',
+          lotNumber: 'HGH-LOT',
+          mg: 3.3333333333333335,
+          totalAmount: { value: 10, unit: 'iu' },
+          bacWaterMl: 1,
+          reconstitutedDate: '2026-06-21T00:00:00.000Z',
+          expirationDate: '2027-06-21T00:00:00.000Z',
+          status: 'active',
+        },
+      ],
+      doses: [],
+      stacks: [],
+      schedules: [],
+      scheduleLogs: [],
+      reconstitutionCalculations: [],
+      userCompounds: [],
+      settings: { hasSeenDisclaimer: true, hasCompletedOnboarding: true, userMode: 'researcher', biometricLock: false, darkMode: true },
+    },
+  }));
+
+  await page.goto('/more/settings');
+  await page.getByRole('button', { name: 'I Understand' }).click();
+  await page.getByLabel('Import Data File').setInputFiles(exportPath);
+  await expect(page.getByRole('alertdialog', { name: 'Restore this PeptideOS backup?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Restore backup' }).click();
+  await expect(page.getByRole('status')).toContainText('Data restored from backup');
+
+  await page.goto('/');
+  await expect(page.getByText('Active Inventory')).toBeVisible();
+  await expect(page.getByText('10 IU · HGH-LOT')).toBeVisible();
+  await expect(page.getByText(/3\.3333333333333335mg/)).toHaveCount(0);
+  await expect(page.getByText(/inventory coverage warning/)).toHaveCount(0);
+});
+
+test('shows estimated remaining amount preview for active PK-backed stacks', async ({ page }, testInfo) => {
     await page.clock.setFixedTime(new Date('2026-06-08T12:00:00-07:00'));
     const exportPath = testInfo.outputPath('dashboard-estimated-remaining-data.json');
     await writeFile(exportPath, JSON.stringify({

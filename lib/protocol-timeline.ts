@@ -160,7 +160,7 @@ export function buildProtocolCockpitSummary(data: AppData, now = new Date()): Pr
     now,
   });
   const inventoryEvents = inventoryRunway
-    .filter((runway) => runway.scope === 'stack' || runway.status === 'unscheduled')
+    .filter((runway) => runway.scope === 'stack')
     .map((runway) => buildInventoryEvent(data, runway, now))
     .filter((event): event is ProtocolTimelineEvent => Boolean(event));
   const signalEvents = data.signalCheckIns
