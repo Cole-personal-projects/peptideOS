@@ -368,49 +368,92 @@ onDismiss={() => setPendingAction(null)}
 }
 
 function formatCandidateTime(value: string) {
- return new Date(value).toLocaleString(undefined, {
- weekday: 'short',
- hour: 'numeric',
- minute: '2-digit',
- });
+  return new Date(value).toLocaleString(undefined, {
+    weekday: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function formatCandidateClock(value: string) {
+  return new Date(value).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function getCandidateStatus(value: string) {
+  const dueAt = new Date(value);
+  const now = new Date();
+  const dayStart = new Date(now);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayEnd.getDate() + 1);
+
+  if (dueAt < now) return 'Overdue';
+  if (dueAt >= dayStart && dueAt < dayEnd) return 'Later today';
+  return 'Upcoming';
 }
 
 function ScheduledDoseConfirmationCard({
- candidates,
- onReview,
- onDismiss,
+  candidates,
+  onReview,
+  onDismiss,
 }: {
  candidates: ScheduledDoseConfirmationCandidate[];
  onReview: (logId: string) => void;
- onDismiss: () => void;
+  onDismiss: () => void;
 }) {
- return (
- <div className="space-y-3 rounded-md border bg-background p-3" aria-label="Peppi scheduled dose review">
- <div className="space-y-1">
- <p className="text-xs font-medium uppercase text-muted-foreground">Scheduled dose review</p>
- <p className="font-medium">
- {candidates.length === 1 ? 'Review pending scheduled dose' : 'Choose scheduled dose'}
- </p>
- <p className="text-sm text-muted-foreground">
- Peppi will open the app confirmation flow. It will not log anything until you confirm.
- </p>
- </div>
- <div className="space-y-2">
- {candidates.map((candidate) => (
- <div key={candidate.logId} className="rounded-md border px-3 py-2 text-sm">
- <div className="flex items-start justify-between gap-3">
- <div className="min-w-0">
- <p className="font-medium">{candidate.compoundName}</p>
- <p className="text-muted-foreground">{candidate.doseLabel} · {candidate.route.toUpperCase()}</p>
- <p className="text-xs text-muted-foreground">{candidate.stackName} · {formatCandidateTime(candidate.scheduledAt)}</p>
- </div>
- <Button size="sm" onClick={() => onReview(candidate.logId)}>
- Review confirmation
- </Button>
- </div>
- </div>
- ))}
- </div>
+  const groupedCandidates = candidates.reduce<Map<string, ScheduledDoseConfirmationCandidate[]>>((groups, candidate) => {
+    const key = `${candidate.compoundId}:${candidate.stackName}`;
+    groups.set(key, [...(groups.get(key) ?? []), candidate]);
+    return groups;
+  }, new Map());
+
+  return (
+    <div className="space-y-3 rounded-md border bg-background p-3" aria-label="Peppi scheduled dose review">
+      <div className="space-y-1">
+        <p className="text-xs font-medium uppercase text-muted-foreground">Scheduled dose review</p>
+        <p className="font-medium">
+          {candidates.length === 1 ? 'Review pending scheduled dose' : 'Choose scheduled dose'}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {candidates.length === 1
+            ? 'Peppi will open the app confirmation flow. It will not log anything until you confirm.'
+            : 'Choose the scheduled item you completed. Peppi will not log anything until you confirm.'}
+        </p>
+      </div>
+      <div className="space-y-2">
+        {[...groupedCandidates.entries()].map(([groupKey, groupCandidates]) => (
+          <div key={groupKey} className="space-y-2">
+            {groupedCandidates.size > 1 && (
+              <p className="text-xs font-medium text-muted-foreground">
+                {groupCandidates[0].compoundName} · {groupCandidates[0].stackName}
+              </p>
+            )}
+            {groupCandidates.map((candidate) => (
+              <div key={candidate.logId} className="rounded-md border px-3 py-2 text-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-base font-semibold">{formatCandidateClock(candidate.scheduledAt)}</p>
+                      <span className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+                        {getCandidateStatus(candidate.scheduledAt)}
+                      </span>
+                    </div>
+                    <p className="mt-1 font-medium">{candidate.compoundName}</p>
+                    <p className="text-muted-foreground">{candidate.doseLabel} · {candidate.route.toUpperCase()}</p>
+                    <p className="text-xs text-muted-foreground">{candidate.stackName} · {formatCandidateTime(candidate.scheduledAt)}</p>
+                  </div>
+                  <Button size="sm" onClick={() => onReview(candidate.logId)}>
+                    Review {formatCandidateClock(candidate.scheduledAt)}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
  <div className="flex gap-2">
  <Button size="sm" variant="outline" asChild>
  <Link href="/log">Full log</Link>
