@@ -6,153 +6,153 @@ updated_at: "2026-06-19"
 identity:
   name: Oxytocin
   aliases:
-    - Pitocin
-    - Syntocinon
+  - Pitocin
+  - Syntocinon
   non_aliases:
-    - Vasopressin
-    - Desmopressin
-    - Carbetocin
+  - Vasopressin
+  - Desmopressin
+  - Carbetocin
   compound_type: hormone
   categories:
-    - hormone-endocrine
-    - sexual-reproductive
-    - cognitive
+  - hormone-endocrine
+  - sexual-reproductive
+  - cognitive
 
 forms:
   primary_route: intranasal
   supported_routes:
-    - intranasal
-    - im
-    - subq
+  - intranasal
+  - im
+  - subq
   excluded_routes:
-    - route: oral
-      reason: Peptide; degraded by gastric proteases. No oral oxytocin formulation.
-    - route: topical
-      reason: No clinical evidence for topical systemic oxytocin delivery.
+  - route: oral
+    reason: Peptide; degraded by gastric proteases. No oral oxytocin formulation.
+  - route: topical
+    reason: No clinical evidence for topical systemic oxytocin delivery.
   form_factors:
-    - iv-clinical-pitocin
-    - im-clinical-pitocin
-    - intranasal-spray-compounded
-    - subq-research-grade
+  - iv-clinical-pitocin
+  - im-clinical-pitocin
+  - intranasal-spray-compounded
+  - subq-research-grade
   verification_fields:
-    - manufacturer-or-compounding-pharmacy
-    - formulation
-    - concentration
-    - prescription-status
+  - manufacturer-or-compounding-pharmacy
+  - formulation
+  - concentration
+  - prescription-status
 
 positioning:
   why_use_this_compound:
-    - FDA-approved for obstetric uses (labor induction, postpartum hemorrhage control)
-    - Off-label and research interest in social bonding, anxiety, autism, PTSD
+  - FDA-approved for obstetric uses (labor induction, postpartum hemorrhage control)
+  - Off-label and research interest in social bonding, anxiety, autism, PTSD
   who_is_tracking_this:
-    - Obstetric patients receiving Pitocin under clinical care
-    - Users experimenting with intranasal oxytocin off-label for social or mood effects
+  - Obstetric patients receiving Pitocin under clinical care
+  - Users experimenting with intranasal oxytocin off-label for social or mood effects
   common_user_goals:
-    - "Clinical tracking: labor induction or postpartum bleeding control under provider care."
-    - "Off-label tracking: subjective social bonding, anxiety, mood, and prosocial-effect notes."
+  - "Clinical tracking: labor induction or postpartum bleeding control under provider care."
+  - "Off-label tracking: subjective social bonding, anxiety, mood, and prosocial-effect notes."
 
 evidence:
   tier: approved_label
   mechanism_targets:
-    - Oxytocin receptor (OXTR) in uterus, mammary tissue, and CNS
+  - Oxytocin receptor (OXTR) in uterus, mammary tissue, and CNS
   claim_summary:
-    - IV/IM oxytocin is FDA-approved for labor induction and postpartum hemorrhage control.
-    - Intranasal oxytocin is not FDA-approved; behavioral/social effects in research are context- and dose-dependent with methodological caveats.
-    - Central nervous system penetration of intranasal oxytocin is debated.
+  - IV/IM oxytocin is FDA-approved for labor induction and postpartum hemorrhage control.
+  - Intranasal oxytocin is not FDA-approved; behavioral/social effects in research are context- and dose-dependent with methodological caveats.
+  - Central nervous system penetration of intranasal oxytocin is debated.
   evidence_gaps:
-    - Replication issues in intranasal social-cognition trials
-    - Uncertain CNS bioavailability via intranasal route
-    - Long-term safety of chronic intranasal use not well characterized
+  - Replication issues in intranasal social-cognition trials
+  - Uncertain CNS bioavailability via intranasal route
+  - Long-term safety of chronic intranasal use not well characterized
 
 risks:
   by_route:
     im:
-      - Uterine hyperstimulation in obstetric context
-      - Hypotension
-      - Water intoxication / hyponatremia with high-dose or prolonged infusion (clinical context)
+    - Uterine hyperstimulation in obstetric context
+    - Hypotension
+    - Water intoxication / hyponatremia with high-dose or prolonged infusion (clinical context)
     intranasal:
-      - Headache, nasal irritation
-      - Heterogeneous behavioral effects; not all responses are prosocial
-      - Compounded products vary in concentration and quality
+    - Headache, nasal irritation
+    - Heterogeneous behavioral effects; not all responses are prosocial
+    - Compounded products vary in concentration and quality
     subq:
-      - Limited clinical safety data outside obstetric IV/IM use
-      - Unregulated supply: purity and identity not verifiable without COA
+    - Limited clinical safety data outside obstetric IV/IM use
+    - Unregulated supply: purity and identity not verifiable without COA
 
 tracking:
   useful_logs:
-    - Subjective mood and social state pre/post dose (off-label use)
-    - Side effects (headache, nasal irritation, GI)
-    - For clinical use: per provider protocol
+  - Subjective mood and social state pre/post dose (off-label use)
+  - Side effects (headache, nasal irritation, GI)
+  - For clinical use: per provider protocol
   inventory_fields:
-    - manufacturer-or-compounding-pharmacy
-    - formulation
-    - concentration
-    - expiration
+  - manufacturer-or-compounding-pharmacy
+  - formulation
+  - concentration
+  - expiration
   peppi_actions:
-    - flag-prescription-required
-    - prompt-source-verification
+  - flag-prescription-required
+  - prompt-source-verification
 
 app_profile:
   headline: FDA-approved obstetric hormone with extensive off-label and research interest in social and mood effects via intranasal use.
-  summary: "Oxytocin is the social-bonding and obstetric peptide hormone people track in two very different contexts: label-backed Pitocin use for labor/postpartum bleeding, and off-label or research intranasal experiments around bonding, anxiety, autism, PTSD, mood, and social state. PeptideOS should keep formulation, route, pharmacy/source, concentration, subjective notes, and clinical-vs-experimental context clearly separated."
+  summary: "Oxytocin is a short-acting peptide hormone used clinically in obstetric contexts and explored in social, stress, and bonding research. Useful tracking separates route, timing, context, mood or social effects, headache, blood pressure, and tolerability."
   why_people_care:
-    - Well-established clinical hormone
-    - Research interest in social cognition, anxiety, bonding
+  - Well-established clinical hormone
+  - Research interest in social cognition, anxiety, bonding
   what_to_verify:
-    - Source: licensed pharmacy vs grey-market vial
-    - Formulation and concentration
-    - Whether use is supervised by a clinician
+  - Source: licensed pharmacy vs grey-market vial
+  - Formulation and concentration
+  - Whether use is supervised by a clinician
   what_to_track:
-    - Subjective mood/social state if used off-label
-    - Side effects
+  - Subjective mood/social state if used off-label
+  - Side effects
   reality_check: Obstetric use is well established. Intranasal social-effect literature is mixed and methodologically contested; do not assume large or reliable prosocial effects from over-the-counter use.
 
 sources:
-  - id: statpearls-oxytocin
-    title: Oxytocin (StatPearls)
-    url: https://www.ncbi.nlm.nih.gov/books/NBK507848/
-    source_type: review
-    publisher: NCBI Bookshelf / StatPearls
-    year: 2024
-  - id: alzforum-intranasal-oxytocin
-    title: Intranasal Oxytocin
-    url: https://www.alzforum.org/therapeutics/intranasal-oxytocin
-    source_type: other
-    publisher: ALZFORUM
-    year: 2024
+- id: statpearls-oxytocin
+  title: Oxytocin (StatPearls)
+  url: https://www.ncbi.nlm.nih.gov/books/NBK507848/
+  source_type: review
+  publisher: NCBI Bookshelf / StatPearls
+  year: 2024
+- id: alzforum-intranasal-oxytocin
+  title: Intranasal Oxytocin
+  url: https://www.alzforum.org/therapeutics/intranasal-oxytocin
+  source_type: other
+  publisher: ALZFORUM
+  year: 2024
 
 claims:
-  - id: oxytocin-fda-approved-obstetric
-    text: Oxytocin (Pitocin) is FDA-approved for labor induction and postpartum hemorrhage control via IV/IM administration.
-    claim_type: regulatory
-    evidence_level: approved_label
-    route_scope:
-      - im
-    source_ids:
-      - statpearls-oxytocin
-    confidence: high
-    limitations: []
-  - id: oxytocin-mechanism-oxtr
-    text: Oxytocin acts via the oxytocin receptor (OXTR), expressed in uterus, mammary tissue, and the central nervous system.
-    claim_type: mechanism
-    evidence_level: human_strong
-    route_scope:
-      - im
-      - intranasal
-      - subq
-    source_ids:
-      - statpearls-oxytocin
-    confidence: high
-    limitations: []
-  - id: oxytocin-intranasal-offlabel
-    text: Intranasal oxytocin is not FDA-approved; behavioral/social effects in research are context- and dose-dependent with replication and CNS-penetration caveats.
-    claim_type: evidence
-    evidence_level: human_limited
-    route_scope:
-      - intranasal
-    source_ids:
-      - alzforum-intranasal-oxytocin
-    confidence: medium
-    limitations:
-      - Mixed replication across social-cognition studies.
-      - Uncertain CNS bioavailability via intranasal route.
+- id: oxytocin-fda-approved-obstetric
+  text: Oxytocin (Pitocin) is FDA-approved for labor induction and postpartum hemorrhage control via IV/IM administration.
+  claim_type: regulatory
+  evidence_level: approved_label
+  route_scope:
+  - im
+  source_ids:
+  - statpearls-oxytocin
+  confidence: high
+  limitations: []
+- id: oxytocin-mechanism-oxtr
+  text: Oxytocin acts via the oxytocin receptor (OXTR), expressed in uterus, mammary tissue, and the central nervous system.
+  claim_type: mechanism
+  evidence_level: human_strong
+  route_scope:
+  - im
+  - intranasal
+  - subq
+  source_ids:
+  - statpearls-oxytocin
+  confidence: high
+  limitations: []
+- id: oxytocin-intranasal-offlabel
+  text: Intranasal oxytocin is not FDA-approved; behavioral/social effects in research are context- and dose-dependent with replication and CNS-penetration caveats.
+  claim_type: evidence
+  evidence_level: human_limited
+  route_scope:
+  - intranasal
+  source_ids:
+  - alzforum-intranasal-oxytocin
+  confidence: medium
+  limitations:
+  - Mixed replication across social-cognition studies.
+  - Uncertain CNS bioavailability via intranasal route.

@@ -6,64 +6,64 @@ updated_at: "2026-06-19"
 identity:
   name: "Tesamorelin"
   aliases:
-    - "Egrifta"
-    - "GHRH 1-44"
+  - "Egrifta"
+  - "GHRH 1-44"
   non_aliases:
-    - "Tesamorelin is not the same thing as CJC-1295 or sermorelin"
+  - "Tesamorelin is not the same thing as CJC-1295 or sermorelin"
   compound_type: peptide
   categories:
-    - growth-hormone
+  - growth-hormone
 
 forms:
   primary_route: subq
   supported_routes:
-    - subq
+  - subq
   excluded_routes:
-    - route: im
-      reason: "No reviewed source in this record establishes an intramuscular tesamorelin product."
-    - route: oral
-      reason: "No reviewed source in this record establishes an oral tesamorelin product."
-    - route: intranasal
-      reason: "No reviewed source in this record establishes an intranasal tesamorelin product."
-    - route: topical
-      reason: "No reviewed source in this record establishes a topical tesamorelin product."
+  - route: im
+    reason: "No reviewed source in this record establishes an intramuscular tesamorelin product."
+  - route: oral
+    reason: "No reviewed source in this record establishes an oral tesamorelin product."
+  - route: intranasal
+    reason: "No reviewed source in this record establishes an intranasal tesamorelin product."
+  - route: topical
+    reason: "No reviewed source in this record establishes a topical tesamorelin product."
   form_factors:
-    - lyophilized vial
+  - lyophilized vial
   verification_fields:
-    - exact product name
-    - vial amount
-    - lot
-    - expiration
-    - source
-    - storage instructions
+  - exact product name
+  - vial amount
+  - lot
+  - expiration
+  - source
+  - storage instructions
 
 positioning:
   why_use_this_compound:
-    - "Track a GHRH-analog growth-hormone peptide."
-    - "Preserve vial and schedule detail for exact label-based tracking."
-    - "Keep reconstitution and longitudinal notes attached to the active container."
+  - "Track a GHRH-analog growth-hormone peptide."
+  - "Preserve vial and schedule detail for exact label-based tracking."
+  - "Prescription GHRH analog approved for reducing excess visceral abdominal fat in adults with HIV-associated lipodystrophy and often monitored through IGF-1, glucose, edema, and injection-site effects. Useful records capture dose timing, vial details, abdominal measurements, labs, and tolerability."
   who_is_tracking_this:
-    - "Growth-hormone axis users"
-    - "People logging labeled vials"
-    - "Users comparing source and container details across refill cycles"
+  - "Growth-hormone axis users"
+  - "People logging labeled vials"
+  - "Users comparing source and container details across refill cycles"
   common_user_goals:
-    - "Preserve exact container identity"
-    - "Record reconstitution and schedule notes"
-    - "Separate label-backed facts from user-entered outcomes"
+  - "Preserve exact container identity"
+  - "Record reconstitution and schedule notes"
+  - "Separate label-backed facts from user-entered outcomes"
 
 evidence:
   tier: approved_label
   mechanism_targets:
-    - growth-hormone-releasing hormone receptor
-    - GH-axis signaling context
-    - IGF-1 tracking context
+  - growth-hormone-releasing hormone receptor
+  - GH-axis signaling context
+  - IGF-1 tracking context
   claim_summary:
-    - "Tesamorelin is a GHRH-analog peptide with label-backed tracking context."
-    - "The vial amount and source details should be explicit."
-    - "Longitudinal logs are more useful than vague shorthand."
+  - "Tesamorelin is a GHRH-analog peptide with label-backed tracking context."
+  - "The vial amount and source details should be explicit."
+  - "Longitudinal logs are more useful than vague shorthand."
   evidence_gaps:
-    - "Research-market containers may not map cleanly to label assumptions."
-    - "This record is for tracking context and does not provide treatment guidance."
+  - "Research-market containers may not map cleanly to label assumptions."
+  - "This record is for tracking context and does not provide treatment guidance."
 
 risks:
   by_route:
@@ -72,86 +72,86 @@ risks:
       caution_populations: []
       negative_stack_flags: []
       formulation_risks:
-        - "Injection-site reactions and label-specific warnings should be checked on the exact product."
-        - "Source, lot, and storage details matter for vial tracking."
+      - "Injection-site reactions and label-specific warnings should be checked on the exact product."
+      - "Source, lot, and storage details matter for vial tracking."
       unknowns:
-        - "Storage and handling details depend on the exact container label."
+      - "Storage and handling details depend on the exact container label."
 
 tracking:
   useful_logs:
-    - schedule adherence
-    - reconstitution date
-    - body-composition or lab notes
-    - source-quality notes
+  - schedule adherence
+  - reconstitution date
+  - body-composition or lab notes
+  - source-quality notes
   inventory_fields:
-    - vial_amount
-    - bac_water_ml
-    - source
-    - lot_number
-    - expiration_date
+  - vial_amount
+  - bac_water_ml
+  - source
+  - lot_number
+  - expiration_date
   peppi_actions:
-    - "calculate-reconstitution"
-    - "create-inventory-from-label"
-    - "summarize-tracking"
-    - "flag-source-quality"
+  - "calculate-reconstitution"
+  - "create-inventory-from-label"
+  - "summarize-tracking"
+  - "flag-source-quality"
 
 app_profile:
   headline: "GHRH analog with label-backed vial tracking."
-  summary: "Tesamorelin is the GHRH-analog growth-hormone-axis peptide people track for visceral-fat, body-composition, IGF-1, recovery, and vial-based reconstitution context. PeptideOS should preserve the exact product, vial amount, BAC volume, storage language, schedule logs, body-composition notes, and lab notes without collapsing it into generic GH shorthand."
+  summary: "Tesamorelin is a prescription GHRH analog approved for reducing excess visceral abdominal fat in HIV-associated lipodystrophy. Useful tracking connects dose timing with waist or body-composition trends, IGF-1, glucose, edema, and injection-site notes."
   why_people_care:
-    - "Growth-hormone axis interest"
-    - "Vial-based inventory and schedule tracking"
+  - "Growth-hormone axis interest"
+  - "Vial-based inventory and schedule tracking"
   what_to_verify:
-    - "Exact product name"
-    - "Vial amount"
-    - "Storage language"
-    - "Source / lot / expiration"
+  - "Exact product name"
+  - "Vial amount"
+  - "Storage language"
+  - "Source / lot / expiration"
   what_to_track:
-    - "Reconstitution history"
-    - "Schedule adherence"
-    - "User-entered notes"
-  reality_check: "Use the exact vial label, not a generic GHRH assumption."
+  - "Reconstitution history"
+  - "Schedule adherence"
+  - "User-entered notes"
+  reality_check: "Prescription GHRH analog approved for reducing excess visceral abdominal fat in adults with HIV-associated lipodystrophy and often monitored through IGF-1, glucose, edema, and injection-site effects. Useful records capture dose timing, vial details, abdominal measurements, labs, and tolerability."
 
 sources:
-  - id: pubchem-tesamorelin
-    title: "Tesamorelin compound summary"
-    url: "https://pubchem.ncbi.nlm.nih.gov/compound/16137828"
-    source_type: database
-    publisher: "PubChem"
-    year: 2026
-  - id: dailymed-tesamorelin
-    title: "DailyMed label candidates for Tesamorelin"
-    url: "https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=Tesamorelin"
-    source_type: label
-    publisher: "DailyMed"
-    year: 2026
+- id: pubchem-tesamorelin
+  title: "Tesamorelin compound summary"
+  url: "https://pubchem.ncbi.nlm.nih.gov/compound/16137828"
+  source_type: database
+  publisher: "PubChem"
+  year: 2026
+- id: dailymed-tesamorelin
+  title: "DailyMed label candidates for Tesamorelin"
+  url: "https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=Tesamorelin"
+  source_type: label
+  publisher: "DailyMed"
+  year: 2026
 
 claims:
-  - id: identity
-    text: "Tesamorelin is a GHRH-analog peptide with alias names that should remain searchable together."
-    claim_type: identity
-    evidence_level: identity
-    route_scope: []
-    source_ids:
-      - pubchem-tesamorelin
-      - dailymed-tesamorelin
-    confidence: high
-    limitations: []
-  - id: mechanism
-    text: "Tesamorelin acts through growth-hormone-releasing hormone receptor signaling."
-    claim_type: mechanism
-    evidence_level: human_limited
-    route_scope: []
-    source_ids:
-      - pubchem-tesamorelin
-    confidence: high
-    limitations: []
-  - id: regulatory
-    text: "DailyMed provides approved-label context for tesamorelin products."
-    claim_type: regulatory
-    evidence_level: approved_label
-    route_scope: []
-    source_ids:
-      - dailymed-tesamorelin
-    confidence: high
-    limitations: []
+- id: identity
+  text: "Tesamorelin is a GHRH-analog peptide with alias names that should remain searchable together."
+  claim_type: identity
+  evidence_level: identity
+  route_scope: []
+  source_ids:
+  - pubchem-tesamorelin
+  - dailymed-tesamorelin
+  confidence: high
+  limitations: []
+- id: mechanism
+  text: "Tesamorelin acts through growth-hormone-releasing hormone receptor signaling."
+  claim_type: mechanism
+  evidence_level: human_limited
+  route_scope: []
+  source_ids:
+  - pubchem-tesamorelin
+  confidence: high
+  limitations: []
+- id: regulatory
+  text: "DailyMed provides approved-label context for tesamorelin products."
+  claim_type: regulatory
+  evidence_level: approved_label
+  route_scope: []
+  source_ids:
+  - dailymed-tesamorelin
+  confidence: high
+  limitations: []

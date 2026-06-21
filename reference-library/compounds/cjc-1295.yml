@@ -105,7 +105,7 @@ tracking:
 
 app_profile:
   headline: "Long-acting GHRH analog research peptide; naming confusion between the DAC form and modified GRF (1-29) is the main tracking hazard."
-  summary: "CJC-1295 is a synthetic 30-amino-acid analog of growth hormone-releasing hormone (GHRH). In its original Drug Affinity Complex (DAC) form, conjugation to a maleimidopropionic acid linker binds serum albumin and prolongs half-life, producing sustained GH and IGF-1 elevation for roughly a week after a single subcutaneous dose in a small Phase I study. The compound often sold as 'CJC-1295 without DAC' is actually modified GRF (1-29), a shorter-acting and pharmacokinetically distinct GHRH fragment. CJC-1295 has no FDA or EMA approval; modern grey-market supply is the only practical source, and identity, purity, and sterility depend on the vendor."
+  summary: "CJC-1295 is a GHRH analog used in growth-hormone-axis protocols. Good tracking distinguishes DAC versus no-DAC, pairing with secretagogues, injection timing, sleep, recovery, hunger, water retention, glucose, and IGF-1 follow-up."
   why_people_care:
     - "Long-acting GHRH analog that preserves endogenous pulsatile GH release rather than supplying exogenous GH"
     - "Frequently discussed alongside ipamorelin as a 'CJC-1295 / ipamorelin' stack"

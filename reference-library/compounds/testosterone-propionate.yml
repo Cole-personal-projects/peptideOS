@@ -96,7 +96,7 @@ tracking:
 
 app_profile:
   headline: "Identity-backed testosterone ester with no bundled label source."
-  summary: "Testosterone propionate is the shorter-ester testosterone record people track when they need ester-specific injection logs, lab/symptom notes, source quality, and vial concentration separated from cypionate or enanthate. PeptideOS should preserve the exact ester, source paperwork, concentration, lot, injection sites, and depletion notes while staying conservative when label-backed certainty is incomplete."
+  summary: "Testosterone propionate is a short-acting injectable testosterone ester where frequent dosing makes timing especially important. Useful tracking captures concentration, injection volume, schedule accuracy, site rotation, labs, and symptom swings between injections."
   why_people_care:
     - "Ester-specific tracking"
     - "Research-market or compounded vial contexts"

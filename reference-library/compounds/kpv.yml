@@ -102,7 +102,7 @@ tracking:
 
 app_profile:
   headline: Tripeptide derived from alpha-MSH with melanocortin-independent anti-inflammatory activity.
-  summary: KPV (Lys-Pro-Val) is the C-terminal tripeptide of alpha-MSH. Preclinical work shows it retains alpha-MSH's anti-inflammatory effect by directly inhibiting NF-kB and MAP kinase signaling, without engaging melanocortin receptors (so no pigmentation or appetite effects). It is taken up via the PepT1 transporter, making oral and intestinal exposure plausible.
+  summary: "KPV is a short alpha-MSH-derived tripeptide researched around inflammatory signaling, gut, skin, and immune contexts. Useful tracking captures route, formulation, target symptoms, timing, local response, GI changes, and tolerability."
   why_people_care:
     - Anti-inflammatory effect without alpha-MSH melanocortin side effects
     - Plausible oral and topical use, unlike many peptides

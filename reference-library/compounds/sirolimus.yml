@@ -6,137 +6,137 @@ updated_at: "2026-06-19"
 identity:
   name: "Sirolimus"
   aliases:
-    - "Rapamycin"
-    - "Rapamune"
+  - "Rapamycin"
+  - "Rapamune"
   compound_type: small-molecule
   categories:
-    - longevity
+  - longevity
 
 forms:
   primary_route: oral
   supported_routes:
-    - oral
+  - oral
   excluded_routes:
-    - route: subq
-      reason: "No reviewed source in this pass establishes a subcutaneous sirolimus product."
-    - route: im
-      reason: "No reviewed source in this pass establishes an intramuscular sirolimus product."
-    - route: intranasal
-      reason: "No reviewed source in this pass establishes an intranasal sirolimus product."
-    - route: topical
-      reason: "No reviewed source in this pass establishes a topical sirolimus product."
+  - route: subq
+    reason: "No reviewed source in this pass establishes a subcutaneous sirolimus product."
+  - route: im
+    reason: "No reviewed source in this pass establishes an intramuscular sirolimus product."
+  - route: intranasal
+    reason: "No reviewed source in this pass establishes an intranasal sirolimus product."
+  - route: topical
+    reason: "No reviewed source in this pass establishes a topical sirolimus product."
   form_factors:
-    - oral tablet
-    - oral solution
+  - oral tablet
+  - oral solution
   verification_fields:
-    - exact product name
-    - strength
-    - dosage form
-    - lot number
-    - expiration date
-    - source
-    - storage instructions
+  - exact product name
+  - strength
+  - dosage form
+  - lot number
+  - expiration date
+  - source
+  - storage instructions
 
 positioning:
   why_use_this_compound:
-    - "Sirolimus is a label-backed mTOR inhibitor that often appears in longevity discussions."
-    - "Exact product, strength, and source context matter because compounded or relabeled products may differ from labeled drugs."
-    - "Users may want to keep longevity experiment notes separate from approved-label context."
+  - "Sirolimus is a label-backed mTOR inhibitor that often appears in longevity discussions."
+  - "Exact product, strength, and source context matter because compounded or relabeled products may differ from labeled drugs."
+  - "Users may want to keep longevity experiment notes separate from approved-label context."
   who_is_tracking_this:
-    - "Users entering labeled sirolimus bottles or containers into inventory."
-    - "Users comparing rapamycin and sirolimus naming."
-    - "Users logging adherence and user-entered lab-context notes."
+  - "Users entering labeled sirolimus bottles or containers into inventory."
+  - "Users comparing rapamycin and sirolimus naming."
+  - "Users logging adherence and user-entered lab-context notes."
   common_user_goals:
-    - "Verify the exact product and dosage form."
-    - "Keep source and label information attached to the container."
-    - "Track schedule and tolerability notes without mixing in clinical advice."
+  - "Verify the exact product and dosage form."
+  - "mTOR inhibitor used clinically as an immunosuppressant and followed in longevity-oriented protocols with careful attention to schedule, trough levels when available, lipids, glucose, mouth ulcers, infection risk, and drug interactions. Records should keep dose timing and monitoring labs easy to compare."
+  - "Track schedule and tolerability notes without mixing in clinical advice."
 
 evidence:
   tier: approved_label
   mechanism_targets:
-    - mTOR pathway
-    - immunology and longevity research context
+  - mTOR pathway
+  - immunology and longevity research context
   claim_summary:
-    - "DailyMed provides product-label context for sirolimus, including prescription safety and handling information."
-    - "PubChem supports identity and naming metadata for sirolimus."
+  - "DailyMed provides product-label context for sirolimus, including prescription safety and handling information."
+  - "PubChem supports identity and naming metadata for sirolimus."
   evidence_gaps:
-    - "Longevity-oriented use cases may not map to approved-label indications or dosing contexts."
-    - "Compounded or nonstandard products require explicit user confirmation and may not match DailyMed labeling."
+  - "Longevity-oriented use cases may not map to approved-label indications or dosing contexts."
+  - "Compounded or nonstandard products require explicit user confirmation and may not match DailyMed labeling."
 
 risks:
   by_route:
     oral:
-      - "Use product labeling for contraindications, warnings, adverse reactions, interactions, and handling context."
-      - "Flag compounded, relabeled, imported, missing-prescription, missing-lot, or missing-expiration products for user review."
+    - "Use product labeling for contraindications, warnings, adverse reactions, interactions, and handling context."
+    - "Flag compounded, relabeled, imported, missing-prescription, missing-lot, or missing-expiration products for user review."
 
 tracking:
   useful_logs:
-    - schedule adherence
-    - tolerability notes
-    - lab-context notes
-    - illness notes
-    - stack changes
+  - schedule adherence
+  - tolerability notes
+  - lab-context notes
+  - illness notes
+  - stack changes
   inventory_fields:
-    - exact product name
-    - strength
-    - dosage form
-    - quantity
-    - lot number
-    - expiration date
-    - source
+  - exact product name
+  - strength
+  - dosage form
+  - quantity
+  - lot number
+  - expiration date
+  - source
   peppi_actions:
-    - "Add labeled Sirolimus or Rapamycin containers to inventory after user confirmation."
-    - "Ask for strength, dosage form, quantity, lot, expiration, source, and storage details when missing."
-    - "Track adherence, tolerability notes, and lab-context notes without interpreting medical decisions."
-    - "Surface label-backed caution and source-quality flags in summaries."
+  - "Add labeled Sirolimus or Rapamycin containers to inventory after user confirmation."
+  - "Ask for strength, dosage form, quantity, lot, expiration, source, and storage details when missing."
+  - "Track adherence, tolerability notes, and lab-context notes without interpreting medical decisions."
+  - "Surface label-backed caution and source-quality flags in summaries."
 
 app_profile:
   headline: "Label-backed sirolimus tracking for high-caution longevity and immunology contexts."
-  summary: "Sirolimus is represented here as a label-backed small-molecule reference with mTOR-pathway context. PeptideOS should keep exact product identity, storage, and user-entered notes attached to the active container."
+  summary: "Sirolimus is an mTOR inhibitor with clinical immunosuppressant use and longevity-oriented interest. Useful tracking keeps schedule, formulation, trough or safety labs, lipids, glucose, mouth sores, infection signals, interactions, and tolerability together."
   why_people_care:
-    - "It is widely discussed in longevity communities because of mTOR-pathway biology."
-    - "It is also an approved prescription-drug class compound with significant safety context."
+  - "It is widely discussed in longevity communities because of mTOR-pathway biology."
+  - "It is also an approved prescription-drug class compound with significant safety context."
   what_to_verify:
-    - "Exact product name, strength, dosage form, source, lot, and expiration."
-    - "Whether the label says sirolimus, rapamycin, Rapamune, or a compounded product."
+  - "Exact product name, strength, dosage form, source, lot, and expiration."
+  - "Whether the label says sirolimus, rapamycin, Rapamune, or a compounded product."
   what_to_track:
-    - "Adherence and skipped entries."
-    - "Tolerability notes and lab-context notes."
-    - "Source and label flags for nonstandard products."
-  reality_check: "Sirolimus is label-backed, but PeptideOS should not translate longevity interest into care guidance."
+  - "Adherence and skipped entries."
+  - "Tolerability notes and lab-context notes."
+  - "Source and label flags for nonstandard products."
+  reality_check: "Sirolimus is label-backed, but longevity interest should not be treated as care guidance."
 
 sources:
-  - id: pubchem-sirolimus
-    title: "Sirolimus compound summary"
-    url: "https://pubchem.ncbi.nlm.nih.gov/compound/5284616"
-    source_type: database
-    publisher: "PubChem"
-    year: 2026
-  - id: dailymed-sirolimus
-    title: "SIROLIMUS label search"
-    url: "https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=Sirolimus"
-    source_type: label
-    publisher: "DailyMed"
-    year: 2026
+- id: pubchem-sirolimus
+  title: "Sirolimus compound summary"
+  url: "https://pubchem.ncbi.nlm.nih.gov/compound/5284616"
+  source_type: database
+  publisher: "PubChem"
+  year: 2026
+- id: dailymed-sirolimus
+  title: "SIROLIMUS label search"
+  url: "https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=Sirolimus"
+  source_type: label
+  publisher: "DailyMed"
+  year: 2026
 
 claims:
-  - id: identity-sirolimus-pubchem
-    text: "PubChem supports identity and naming metadata for sirolimus."
-    claim_type: identity
-    evidence_level: identity
-    route_scope: []
-    source_ids:
-      - pubchem-sirolimus
-    confidence: high
-    limitations: []
-  - id: label-context-sirolimus
-    text: "DailyMed provides product-label context for sirolimus, including prescription safety and handling information."
-    claim_type: regulatory
-    evidence_level: approved_label
-    route_scope:
-      - oral
-    source_ids:
-      - dailymed-sirolimus
-    confidence: high
-    limitations:
-      - "A label-search page is a pointer to product labels, not a single universal sirolimus product."
+- id: identity-sirolimus-pubchem
+  text: "PubChem supports identity and naming metadata for sirolimus."
+  claim_type: identity
+  evidence_level: identity
+  route_scope: []
+  source_ids:
+  - pubchem-sirolimus
+  confidence: high
+  limitations: []
+- id: label-context-sirolimus
+  text: "DailyMed provides product-label context for sirolimus, including prescription safety and handling information."
+  claim_type: regulatory
+  evidence_level: approved_label
+  route_scope:
+  - oral
+  source_ids:
+  - dailymed-sirolimus
+  confidence: high
+  limitations:
+  - "A label-search page is a pointer to product labels, not a single universal sirolimus product."

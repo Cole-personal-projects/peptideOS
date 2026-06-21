@@ -45,15 +45,17 @@ forms:
 
 positioning:
   why_use_this_compound:
-    - FDA-approved first-line therapy for type 2 diabetes
-    - Most-studied candidate geroprotector with an ongoing dedicated aging trial (TAME)
+    - First-line oral therapy for type 2 diabetes (FDA-approved as Glucophage since 1995, in clinical use globally since 1957)
+    - Cheapest, most-studied, longest-tracked candidate geroprotector with a dedicated aging trial (TAME, led by Barzilai)
+    - AMPK activation and partial mitochondrial complex I inhibition drive most of the longevity-side interest
   who_is_tracking_this:
-    - People managing type 2 diabetes or prediabetes under clinician care
-    - Longevity-focused users tracking glycemic and aging biomarkers
+    - People with type 2 diabetes or prediabetes on a clinician-supervised regimen
+    - Longevity-focused users running it off-label for insulin sensitivity and aging biomarkers
+    - Bryan Johnson / Attia-adjacent stacks tracking HbA1c, fasting insulin, and CGM data
   common_user_goals:
-    - Glycemic control
-    - Insulin sensitivity
-    - Putative healthspan extension
+    - Lower fasting glucose and HbA1c
+    - Improve insulin sensitivity
+    - Bet on healthspan extension while TAME plays out
 
 evidence:
   tier: approved_label
@@ -64,11 +66,13 @@ evidence:
     - mTOR (downstream inhibition, increased autophagy)
   claim_summary:
     - Lowers hepatic glucose output and improves peripheral insulin sensitivity.
-    - Activates AMPK via complex I modulation; downstream effects include mTOR inhibition and increased autophagy.
-    - Longevity benefit in humans is hypothesized but unproven; TAME trial is the pivotal test.
+    - Partially inhibits mitochondrial complex I, raising AMP/ATP and activating AMPK; downstream effects include mTOR inhibition and increased autophagy.
+    - Longevity benefit in non-diabetic humans is hypothesized but unproven; TAME is the pivotal trial.
+    - Some evidence suggests it may blunt exercise-induced mitochondrial adaptations in athletes (mixed).
   evidence_gaps:
     - No completed RCT proving healthspan extension in non-diabetic humans
-    - Effects on exercise-induced adaptations debated
+    - Conflicting data on whether it blunts exercise/training adaptations
+    - Optimal longevity-use dose (typically below diabetic dosing) is not established
 
 risks:
   by_route:
@@ -95,21 +99,21 @@ tracking:
     - prompt-egfr-check
 
 app_profile:
-  headline: FDA-approved oral biguanide for type 2 diabetes, the most-studied longevity drug candidate.
-  summary: Metformin has been FDA approved for type 2 diabetes since 1994. It reduces hepatic glucose production and improves insulin sensitivity, with downstream AMPK activation and mTOR inhibition that drive interest as a geroprotector. The TAME trial is testing whether it delays a composite of age-related disease in older adults.
+  headline: The cheapest, most-studied longevity bet — and still the gold-standard first-line drug for type 2 diabetes.
+  summary: "Metformin is an oral biguanide used for glucose control and often tracked in metabolic and longevity-oriented routines. Useful tracking distinguishes IR versus ER, meal timing, GI tolerance, fasting glucose, A1c, appetite, training, and B12 monitoring."
   why_people_care:
-    - Strong glycemic-control track record
-    - Cheap, generic, decades of safety data
-    - Plausible aging-related benefit being tested in TAME
+    - Decades of safety data, generic, dirt cheap
+    - Rock-solid glycemic control in T2D
+    - Most credible non-rapamycin geroprotector candidate currently in trials
   what_to_verify:
-    - That use is supervised by a clinician
-    - Renal function before and during use
-    - Formulation (IR vs ER) and dose
+    - Clinician supervision (prescription required)
+    - Renal function (eGFR) before starting and periodically after
+    - Formulation (IR vs ER) and per-tablet dose
   what_to_track:
-    - Glycemic markers
-    - GI tolerability
-    - B12 status over time
-  reality_check: Longevity claims are plausible but not yet proven in humans. TAME is the trial that will move the needle.
+    - Fasting glucose, HbA1c, fasting insulin
+    - GI tolerability through the first 2-4 weeks
+    - B12 status annually on long-term use
+  reality_check: The longevity case is plausible and well-mechanistically grounded, but not yet proven in humans. Until TAME reports, the longevity use is a calculated bet, not a settled answer.
 
 sources:
   - id: mdpi-metformin-antiaging-2025

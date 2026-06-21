@@ -10,8 +10,8 @@ identity:
     - "Tyr-hGH 177-191"
     - "Modified hGH fragment 176-191 with N-terminal tyrosine"
   non_aliases:
-    - "Not identical to unmodified hGH fragment 176-191 (AOD-9604 adds an N-terminal tyrosine)"
-    - "Not human growth hormone; lacks the full hGH receptor activity"
+    - "Not the same as the unmodified hGH fragment 176-191 — AOD-9604 has an added N-terminal tyrosine"
+    - "Not human growth hormone; does not meaningfully activate the hGH receptor or raise IGF-1"
   compound_type: peptide
   categories:
     - metabolic
@@ -22,7 +22,7 @@ forms:
   supported_routes: [oral]
   excluded_routes:
     - route: subq
-      reason: "Subcutaneous formulations exist in research but AOD-9604 is not an FDA-approved drug; injectable use is outside any approved channel"
+      reason: "Subcutaneous use exists in research but AOD-9604 is not an FDA-approved drug; injectable use is outside any approved channel"
     - route: im
       reason: "No approved injectable indication"
     - route: intranasal
@@ -35,14 +35,17 @@ forms:
 
 positioning:
   why_use_this_compound:
-    - "Historically developed as a non-hormonal fat-loss candidate that targets the lipolytic effects of hGH without the growth-promoting effects"
-    - "Studied as a potential body-composition aid"
+    - "Target the lipolytic effects of growth hormone without the growth-promoting (IGF-1-raising) side"
+    - "Avoid the appetite, IGF-1, and glucose effects that come with full hGH or strong GH secretagogues"
+    - "Use as a low-risk add-on in body-composition stacks"
   who_is_tracking_this:
-    - "Biohackers interested in body composition"
-    - "Practitioners using compounded peptide protocols"
+    - "People in compounded peptide and longevity protocols"
+    - "Biohackers focused on fat loss without disturbing endocrine markers"
+    - "Clinics in Australia where it's marketed as a cosmetic ingredient"
   common_user_goals:
-    - "Understand the evidence behind AOD-9604 for fat loss"
-    - "Compare against other body-composition tools"
+    - "Reduce body fat, especially visceral fat"
+    - "Avoid water retention and insulin resistance associated with full GH"
+    - "Pair with diet and training without adding hormonal load"
 
 evidence:
   tier: human_limited
@@ -50,13 +53,14 @@ evidence:
     - "Proposed stimulation of lipolysis and fat oxidation through pathways linked to beta-3 adrenergic receptor expression in adipocytes (preclinical)"
     - "Does not appreciably activate the hGH receptor or elevate IGF-1 in published preclinical models"
   claim_summary:
-    - "AOD-9604 is a modified C-terminal hGH fragment developed by Metabolic Pharmaceuticals in Australia in the 1990s"
-    - "Underwent multiple Phase II human trials for obesity; the largest Phase IIb did not meet its primary endpoint, and development for obesity was discontinued in 2007"
-    - "Not approved by the FDA; marketed in some jurisdictions only as a cosmetic ingredient"
+    - "Modified C-terminal hGH fragment developed by Metabolic Pharmaceuticals (Australia) in the 1990s as a non-hormonal fat-loss drug"
+    - "Cleared multiple Phase II human obesity trials; the largest Phase IIb missed its primary endpoint"
+    - "Obesity development program discontinued in 2007 after the Phase IIb result"
+    - "Not FDA-approved; marketed in some jurisdictions only as a cosmetic ingredient"
   evidence_gaps:
-    - "No approved therapeutic indication for fat loss"
-    - "Human direct-lipolysis measurements at clinically relevant doses are limited"
-    - "Long-term safety data is sparse"
+    - "Phase IIb obesity trial did not show meaningful weight loss vs placebo — the headline negative result"
+    - "Direct human measurements of lipolysis at compounded doses are sparse"
+    - "Long-term safety data is thin; no Phase III ever ran"
 
 risks:
   by_route:
@@ -76,18 +80,21 @@ tracking:
     - "Flag that AOD-9604 is not FDA-approved and that the largest human trial did not meet its endpoint"
 
 app_profile:
-  headline: "Modified hGH fragment with mixed human-trial results and no FDA approval."
-  summary: "AOD-9604 is a synthetic peptide based on the C-terminus of human growth hormone, originally developed as an anti-obesity drug candidate. Preclinical data showed lipolytic effects without hGH-like growth signaling, but the largest Phase IIb obesity trial did not reach its primary endpoint and the program was discontinued in 2007."
+  headline: "hGH fragment marketed for fat loss that quietly failed its largest human trial."
+  summary: "AOD-9604 is a modified growth-hormone fragment researched for fat-metabolism signaling, with mixed clinical translation. Practical tracking focuses on formulation, dose timing, body-composition trend, appetite, training context, and local tolerability."
   why_people_care:
-    - "Targets fat metabolism without the growth-promoting effects of full hGH in preclinical models"
-    - "Familiar option in compounded peptide and longevity protocols"
+    - "Targets fat metabolism in preclinical models without raising IGF-1"
+    - "Common add-on in compounded GLP-1 and peptide weight-loss protocols"
+    - "Lower theoretical risk profile than full GH or strong secretagogues"
   what_to_verify:
     - "Source identity and purity via certificate of analysis"
-    - "Regulatory status in your jurisdiction (e.g., FDA, TGA)"
+    - "Regulatory status in your jurisdiction (FDA in US, TGA in Australia)"
+    - "Whether it's bundled in a compounded blend (common in tirzepatide/AOD stacks)"
   what_to_track:
-    - "Body composition trends"
-    - "Any subjective changes in appetite, energy, or recovery"
-  reality_check: "Despite a clean preclinical mechanism story, AOD-9604 did not show a convincing fat-loss effect in its largest human trial and is not approved by the FDA. Treat evidence for body-composition use as thin."
+    - "Body composition trends (weight, waist, body fat %)"
+    - "Appetite and energy"
+    - "Fasting glucose if used alongside a GLP-1"
+  reality_check: "The preclinical story is cleaner than the human results. AOD-9604 didn't beat placebo for weight loss in its biggest trial, the obesity program was abandoned almost 20 years ago, and most modern marketing leans on rodent data rather than the actual human readout."
 
 sources:
   - id: "heffernan-2001-endocrinology"

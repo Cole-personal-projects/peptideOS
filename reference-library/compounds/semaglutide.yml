@@ -9,6 +9,9 @@ identity:
     - "Ozempic"
     - "Wegovy"
     - "Rybelsus"
+  non_aliases:
+    - tirzepatide
+    - liraglutide
   compound_type: glp-1
   categories:
     - metabolic
@@ -20,93 +23,109 @@ forms:
     - oral
   excluded_routes:
     - route: im
-      reason: "No reviewed source in this pass establishes an intramuscular semaglutide product."
+      reason: "No approved intramuscular semaglutide product; subcutaneous is the established injection route."
     - route: intranasal
-      reason: "No reviewed source in this pass establishes an intranasal semaglutide product."
+      reason: "No approved intranasal semaglutide product."
     - route: topical
-      reason: "No reviewed source in this pass establishes a topical semaglutide product."
+      reason: "Not a topically active drug."
   form_factors:
-    - prefilled pen
-    - oral tablet
-    - labeled container
+    - prefilled-pen
+    - oral-tablet
+    - vial
   verification_fields:
-    - exact product name
+    - exact-product-name
     - route
     - strength
-    - container type
-    - lot number
-    - expiration date
+    - container-type
+    - lot-number
+    - expiration-date
     - source
 
 positioning:
   why_use_this_compound:
-    - "Semaglutide is the GLP-1 baseline users will compare against newer metabolic compounds."
-    - "Exact route and label capture matter because semaglutide appears in injectable and oral product contexts."
-    - "Users often track adherence, appetite, tolerability, and weight trend notes around the active container."
+    - "Best-validated GLP-1 receptor agonist of the decade, with strong weight loss and cardiometabolic data."
+    - "FDA-approved as Ozempic (T2D, weekly subq), Wegovy (chronic weight management), and Rybelsus (oral T2D)."
+    - "SELECT trial (2023) showed cardiovascular benefit in overweight/obese patients with established CVD, independent of diabetes."
   who_is_tracking_this:
-    - "Users entering labeled semaglutide pens, tablets, or pharmacy containers."
-    - "Users comparing branded product labels and source details."
-    - "Users logging adherence and user-entered outcome notes for metabolic tracking."
+    - users on prescribed Ozempic, Wegovy, or Rybelsus for T2D or weight management
+    - users running compounded semaglutide from a telehealth or research-grade source
+    - users tracking weight loss, appetite suppression, and side-effect tolerability week by week
   common_user_goals:
-    - "Verify the exact labeled product and route."
-    - "Keep oral and injectable forms separate in inventory."
-    - "Track user-entered adherence and tolerability notes."
+    - sustained weight loss without crash dieting
+    - appetite and 'food noise' reduction
+    - improved glycemic control or HbA1c
+    - cardiometabolic risk reduction
 
 evidence:
   tier: approved_label
   mechanism_targets:
-    - GLP-1 receptor
+    - GLP-1 receptor agonism
+    - delayed gastric emptying
+    - central appetite suppression
+    - glucose-dependent insulin secretion
   claim_summary:
-    - "DailyMed labeling identifies semaglutide product contexts and provides product-specific route, prescribing, safety, and handling information."
-    - "PubChem supports identity, naming, and compound-level reference metadata for semaglutide."
+    - "FDA-approved GLP-1 receptor agonist developed by Novo Nordisk; first approved 2017 as Ozempic for T2D."
+    - "Wegovy (higher-dose subq) approved 2021 for chronic weight management; Rybelsus (oral) approved 2019 for T2D."
+    - "SELECT trial (2023) demonstrated a 20% reduction in MACE in overweight/obese adults with established CVD and without diabetes."
+    - "GI side effects (nausea, constipation, diarrhea) are common, especially during dose escalation."
+    - "Labeled warnings for pancreatitis, gallbladder disease, and a boxed warning for thyroid C-cell tumors based on rodent data."
   evidence_gaps:
-    - "Compounded, relabeled, or research-market containers may not map cleanly to branded label assumptions and require explicit user confirmation."
-    - "This record uses product-label context for tracking and does not provide treatment guidance."
+    - Long-term effects beyond ~5 years of continuous use are still being characterized.
+    - Effects of compounded or relabeled semaglutide from non-pharmacy sources may differ from the approved products in purity, potency, and stability.
+    - Optimal protocol for weight maintenance after discontinuation is not established (rebound is common).
 
 risks:
   by_route:
     subq:
-      - "Use the exact product label for contraindications, warnings, adverse reactions, and handling details."
-      - "Flag unclear source, missing lot, missing expiration, or mismatched product naming before adding inventory."
+      - "GI side effects (nausea, vomiting, constipation, diarrhea) are common, especially during titration."
+      - "Labeled warnings: acute pancreatitis, gallbladder disease (cholelithiasis, cholecystitis), acute kidney injury from volume depletion, diabetic retinopathy complications in T2D."
+      - "Boxed warning for thyroid C-cell tumors (based on rodent data); contraindicated with personal/family history of medullary thyroid carcinoma or MEN 2."
+      - "Compounded versions from non-pharmacy sources may have inconsistent potency, purity, or sterility."
     oral:
-      - "Use the exact product label for contraindications, warnings, adverse reactions, and handling details."
-      - "Keep oral and injectable product records separate."
+      - "Same systemic warnings as subq (pancreatitis, gallbladder, thyroid C-cell, retinopathy)."
+      - "Must be taken on an empty stomach with minimal water and a 30-minute fast for absorption; missing this dramatically reduces bioavailability."
+      - "GI side effects are common and can be more prominent at initiation than with weekly subq."
 
 tracking:
   useful_logs:
-    - schedule adherence
-    - missed-dose notes
-    - appetite notes
-    - tolerability notes
-    - weight trend notes
+    - weight trend (weekly average)
+    - waist circumference
+    - appetite and 'food noise' rating
+    - nausea and GI tolerability
+    - injection-site reactions (subq) or dosing-fast adherence (oral)
+    - HbA1c and fasting glucose if diabetic
   inventory_fields:
-    - exact product name
+    - exact-product-name
     - route
     - strength
-    - container type
-    - lot number
-    - expiration date
+    - container-type
+    - lot-number
+    - expiration-date
     - source
   peppi_actions:
-    - "Add a labeled Semaglutide pen, tablet, or container to inventory after user confirmation."
-    - "Ask for route, strength, lot, expiration, source, and storage details when they are missing."
-    - "Build a schedule from user-confirmed label details or user-entered instructions."
-    - "Track adherence, missed doses, appetite notes, tolerability notes, and weight trend notes."
+    - log-weekly-dose
+    - log-weight
+    - log-appetite-rating
+    - log-side-effects
 
 app_profile:
-  headline: "Label-backed GLP-1 reference for exact route, adherence, and outcome tracking."
-  summary: "Semaglutide is represented here as a label-backed GLP-1 receptor agonist reference with oral and subcutaneous product contexts. PeptideOS should keep identity, route, and user-entered outcome notes attached to the exact container or product."
+  headline: "FDA-approved weekly GLP-1 agonist (Ozempic / Wegovy / Rybelsus) with the strongest weight-loss and cardiometabolic evidence in the class."
+  summary: "Semaglutide is a long-acting GLP-1 receptor agonist used for glucose control and weight management. Useful tracking focuses on weekly dose step, injection day, appetite, weight trend, GI effects, glucose data, and missed-dose history."
   why_people_care:
-    - "It is a widely recognized GLP-1 receptor agonist across several branded product contexts."
-    - "Users need to keep oral and injectable presentations separate."
+    - the most clinically validated GLP-1 of the decade, with weight loss and CV benefit
+    - dramatic appetite and 'food noise' reduction reported by most users
+    - weekly subq pen makes adherence easy compared to daily medications
+    - oral option (Rybelsus) exists for needle-averse users
   what_to_verify:
-    - "Exact brand or product name, route, strength, container type, lot, expiration, and source."
-    - "Product-specific storage and handling details from the exact label."
+    - exact product (Ozempic vs Wegovy vs Rybelsus vs compounded) and strength per mL or mg per tablet
+    - lot, expiration, and source (pharmacy vs telehealth-compounded vs research)
+    - container type (pen, vial, tablet blister) and storage history (refrigerated vs room temp)
   what_to_track:
-    - "Adherence and missed-dose notes."
-    - "Appetite and tolerability notes."
-    - "Weight trend notes and route-specific context."
-  reality_check: "Semaglutide has label-backed products, but PeptideOS should not collapse different routes or products into one generic GLP-1 record."
+    - weekly weight trend rather than daily fluctuations
+    - appetite and 'food noise' rating before and after each dose
+    - nausea, constipation, and other GI tolerability over the titration weeks
+    - injection-site reactions or, for Rybelsus, adherence to the fasting-with-water protocol
+  reality_check: "Tolerability during titration is the main barrier, not efficacy. Weight regain after stopping is common, and compounded sources are not equivalent to the FDA-approved pens — purity, potency, and sterility can vary."
 
 sources:
   - id: pubchem-semaglutide

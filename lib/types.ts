@@ -113,6 +113,14 @@ export interface CompoundConversion {
   notes?: string;
 }
 
+export interface CompoundPharmacokinetics {
+  halfLifeHours: number;
+  halfLifeSource: string;
+  citationIds: string[];
+  evidenceTier: ReferenceEvidenceTier;
+  modelNotes: string;
+}
+
 export type ReferenceEvidenceTier =
   | 'identity-only'
   | 'preclinical'
@@ -259,6 +267,7 @@ export interface Compound {
   vialPresets: CompoundVialPreset[];
   reconstitutionDefaults?: CompoundReconstitutionDefaults;
   conversion?: CompoundConversion;
+  pharmacokinetics?: CompoundPharmacokinetics;
   beginnerSummary: string;
   researcherDetails: string;
   mechanism?: string;

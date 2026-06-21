@@ -7,8 +7,7 @@ identity:
   aliases:
   - PT-141
   - Vyleesi
-  non_aliases:
-  - PT-141 market vials are not automatically the same thing as a labeled bremelanotide product
+  non_aliases: []
   compound_type: peptide
   categories:
   - sexual-reproductive
@@ -29,34 +28,45 @@ forms:
   - source
 positioning:
   why_use_this_compound:
-  - Track a melanocortin-pathway peptide with label-backed product identity
-  - Keep PT-141, Vyleesi, and bremelanotide alias matching clean
+  - Boost sexual desire and arousal via melanocortin signaling rather than vascular mechanisms (works on the brain, not just blood flow)
+  - On-demand option that doesn't require daily dosing
+  - Only FDA-approved medication for HSDD in premenopausal women (Vyleesi, 2019)
   who_is_tracking_this:
-  - People logging labeled product inventory
-  - Users separating label-backed products from market vials
+  - Premenopausal women with hypoactive sexual desire disorder using prescribed Vyleesi
+  - Men and women using grey-market PT-141 for libido and erectile response off-label
+  - Couples experimenting with on-demand arousal protocols
   common_user_goals:
-  - Preserve exact container identity
-  - Record adherence and user-entered notes
+  - Increase sexual desire and arousal in the hour-plus window after dosing
+  - Find an option that works centrally when PDE5 inhibitors don't help
+  - Add a non-hormonal lever to a sexual-health protocol
 evidence:
   tier: approved_label
   mechanism_targets:
-  - melanocortin receptor signaling
+  - Melanocortin-4 receptor (MC4R) agonism in the central nervous system, driving sexual arousal pathways
   claim_summary:
-  - Bremelanotide is a melanocortin-pathway peptide with PT-141/Vyleesi alias pressure
-  - The label record provides product context for route, source, and container tracking
-  - Inventory should follow the exact labeled item rather than a generic market name
+  - FDA-approved as Vyleesi (June 2019) for acquired generalized HSDD in premenopausal women
+  - Acts centrally at MC4R rather than peripherally on vascular smooth muscle, making it mechanistically distinct from PDE5 inhibitors
+  - Onset roughly 45 minutes after subcutaneous injection; effect window of several hours
+  - Nausea is the dominant side effect, reported by ~40% of users in trials (about 13% severe enough to use antiemetics)
   evidence_gaps:
-  - Market PT-141 containers may not map cleanly to labeled bremelanotide products
+  - Long-term real-world adherence has been poor; many users discontinue due to nausea
+  - Not approved or systematically studied in men, though widely used off-label for erectile function
+  - Blood pressure increases are documented in label and contraindicated in uncontrolled hypertension
 risks:
   by_route:
     subq:
-    - Injection-site reactions and label-specific warnings should be checked on the exact product
-    - Source, lot, and container-state uncertainty can blur inventory records
+    - Nausea is the most common adverse effect (~40%); often improves with subsequent doses but causes many users to quit
+    - Transient blood pressure increase and reflexive heart rate decrease — contraindicated in uncontrolled hypertension or cardiovascular disease
+    - Focal hyperpigmentation of face, gums, and breasts in some users with repeated use (melanocortin pathway side effect)
+    - Injection-site reactions
+    - Grey-market PT-141 has the same sterility, identity, and concentration risks as any compounded peptide
 tracking:
   useful_logs:
-  - Source / lot / expiration
-  - Container state
-  - Timing and user-entered tolerability notes
+  - Time-to-onset and duration of effect
+  - Subjective desire and arousal ratings
+  - Nausea severity and duration
+  - Blood pressure if cardiovascular risk factors present
+  - Skin pigmentation changes with repeated use
   inventory_fields:
   - source
   - lot_number
@@ -68,21 +78,22 @@ tracking:
   - create-inventory-from-label
   - flag-alias-mismatch
 app_profile:
-  headline: Label-backed melanocortin peptide with alias handling that matters.
-  summary: Bremelanotide / PT-141 is the melanocortin sexual-function peptide people track for libido, arousal-response notes, timing context, tolerability, and exact product identity. PeptideOS should separate labeled Vyleesi-style records from research-market PT-141 shorthand, preserving route, strength, source, lot, timing, response notes, and adverse-effect notes without implying a protocol.
+  headline: FDA-approved melanocortin agonist that drives arousal centrally — and reliably makes you nauseous.
+  summary: "Bremelanotide is a melanocortin receptor agonist used clinically for hypoactive sexual desire disorder. Useful tracking captures route, timing before use, onset, libido response, flushing, nausea, blood pressure, and repeat-dose tolerability."
   why_people_care:
-  - Users know the compound by multiple names
-  - The same shorthand can refer to different product contexts
+  - Centrally-acting mechanism works when PDE5 inhibitors don't (desire vs erection problem)
+  - Only FDA-approved drug for female HSDD that's not a daily oral
+  - Works in both men and women despite only being approved for women
   what_to_verify:
-  - Exact label text
-  - Route
-  - Strength
-  - Source quality
+  - Whether it's labeled Vyleesi (FDA-approved prefilled autoinjector) or research-market PT-141 (compounded vial)
+  - Concentration (mg/mL) — Vyleesi is 1.75 mg/0.3 mL; research vials vary
+  - Source quality for PT-141 (sterility and purity unverified in grey market)
+  - Blood pressure status before first use
   what_to_track:
-  - Adherence
-  - Inventory depletion
-  - User-entered notes
-  reality_check: Keep PT-141 shorthand searchable, but save the exact product on the container.
+  - Onset, duration, and subjective effect each use
+  - Nausea severity (many people quit because of this alone)
+  - Cumulative skin pigmentation changes if used regularly
+  reality_check: Roughly 40% of trial users got nauseous, ~13% severe enough to need antiemetics, and real-world adherence is poor. PT-141 works, but the side-effect profile is the reason it never became a blockbuster despite being the only approved drug in its class.
 sources:
 - id: pubchem-bremelanotide
   title: Bremelanotide compound summary
@@ -98,8 +109,7 @@ sources:
   year: 2026
 claims:
 - id: identity
-  text: PT-141, Vyleesi, and bremelanotide are alias-linked names that PeptideOS should keep distinct from a generic market
-    shorthand.
+  text: PT-141, Vyleesi, and bremelanotide are alias-linked names for the same melanocortin receptor agonist peptide.
   claim_type: identity
   evidence_level: identity
   route_scope: []
@@ -109,7 +119,7 @@ claims:
   confidence: high
   limitations: []
 - id: mechanism
-  text: Bremelanotide is discussed as a melanocortin-pathway peptide.
+  text: Bremelanotide is a melanocortin-4 receptor agonist that drives sexual arousal centrally rather than through peripheral vascular effects.
   claim_type: mechanism
   evidence_level: preclinical
   route_scope: []
@@ -118,8 +128,7 @@ claims:
   confidence: high
   limitations: []
 - id: regulatory
-  text: DailyMed provides label-candidate context for bremelanotide products, so exact product details should come from the
-    labeled container.
+  text: Bremelanotide is FDA-approved as Vyleesi for hypoactive sexual desire disorder in premenopausal women; product-specific dosing and warnings appear on the DailyMed label.
   claim_type: regulatory
   evidence_level: approved_label
   route_scope: []

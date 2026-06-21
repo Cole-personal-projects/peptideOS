@@ -104,7 +104,7 @@ tracking:
 
 app_profile:
   headline: "Label-backed testosterone ester with route-specific tracking."
-  summary: "Testosterone enanthate is an injectable testosterone ester people track for TRT-style hormone logs, injection-site rotation, lab context, symptom notes, vial depletion, and concentration math. PeptideOS should keep ester identity, concentration, route, source, lot, schedule logs, and lab notes explicit so enanthate does not get merged into generic testosterone or another ester."
+  summary: "Testosterone enanthate is a long-acting injectable testosterone ester used in testosterone replacement and hormone protocols. Useful tracking keeps ester, concentration, injection volume, schedule, site rotation, labs, and symptom patterns distinct from other forms."
   why_people_care:
     - "Ester-specific tracking"
     - "Injection logs and vial depletion"

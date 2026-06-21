@@ -6,64 +6,64 @@ updated_at: "2026-06-19"
 identity:
   name: "Testosterone Cypionate"
   aliases:
-    - "Testosterone cyclopentylpropionate"
-    - "Depo-Testosterone"
+  - "Testosterone cyclopentylpropionate"
+  - "Depo-Testosterone"
   non_aliases:
-    - "This ester should not be merged with enanthate or propionate"
+  - "This ester should not be merged with enanthate or propionate"
   compound_type: hormone
   categories:
-    - hormone-endocrine
+  - hormone-endocrine
 
 forms:
   primary_route: im
   supported_routes:
-    - im
+  - im
   excluded_routes:
-    - route: subq
-      reason: "No reviewed source in this record establishes a subcutaneous testosterone cypionate product."
-    - route: oral
-      reason: "No reviewed source in this record establishes an oral testosterone cypionate product."
-    - route: intranasal
-      reason: "No reviewed source in this record establishes an intranasal testosterone cypionate product."
-    - route: topical
-      reason: "No reviewed source in this record establishes a topical testosterone cypionate product."
+  - route: subq
+    reason: "No reviewed source in this record establishes a subcutaneous testosterone cypionate product."
+  - route: oral
+    reason: "No reviewed source in this record establishes an oral testosterone cypionate product."
+  - route: intranasal
+    reason: "No reviewed source in this record establishes an intranasal testosterone cypionate product."
+  - route: topical
+    reason: "No reviewed source in this record establishes a topical testosterone cypionate product."
   form_factors:
-    - vial
+  - vial
   verification_fields:
-    - exact label
-    - ester
-    - concentration
-    - vial size
-    - lot
-    - expiration
-    - source
+  - exact label
+  - ester
+  - concentration
+  - vial size
+  - lot
+  - expiration
+  - source
 
 positioning:
   why_use_this_compound:
-    - "Track an injectable testosterone ester."
-    - "Keep ester-specific inventory separate from other testosterone forms."
-    - "Preserve the vial label so concentration math stays tied to the actual product."
+  - "Track an injectable testosterone ester."
+  - "Keep ester-specific inventory separate from other testosterone forms."
+  - "Preserve the vial label so concentration math stays tied to the actual product."
   who_is_tracking_this:
-    - "Hormone users"
-    - "People logging vial-based testosterone"
-    - "Users comparing testosterone ester inventories"
+  - "Hormone users"
+  - "People logging vial-based testosterone"
+  - "Users comparing testosterone ester inventories"
   common_user_goals:
-    - "Preserve exact ester identity"
-    - "Store injection and lab notes"
-    - "Keep source and concentration explicit"
+  - "Preserve exact ester identity"
+  - "Store injection and lab notes"
+  - "Keep source and concentration explicit"
 
 evidence:
   tier: approved_label
   mechanism_targets:
-    - androgen receptor
-    - testosterone ester depot
+  - androgen receptor
+  - testosterone ester depot
   claim_summary:
-    - "Testosterone cypionate is a label-backed testosterone ester."
-    - "Concentration-based vial tracking should use the actual label."
-    - "Ester identity matters for inventory and log quality."
+  - "Testosterone cypionate is a label-backed testosterone ester."
+  - "Concentration-based vial tracking should use the actual label."
+  - "Ester identity matters for inventory and log quality."
   evidence_gaps:
-    - "This record does not infer dosing, frequency, or therapy decisions."
-    - "Product-specific handling should come from the exact container label."
+  - "This record does not infer dosing, frequency, or therapy decisions."
+  - "Product-specific handling should come from the exact container label."
 
 risks:
   by_route:
@@ -72,85 +72,85 @@ risks:
       caution_populations: []
       negative_stack_flags: []
       formulation_risks:
-        - "Injection-site reactions are possible."
-        - "Source and ester ambiguity should be resolved before inventory is saved."
+      - "Injection-site reactions are possible."
+      - "Source and ester ambiguity should be resolved before inventory is saved."
       unknowns:
-        - "Storage and handling details vary by manufacturer labeling."
+      - "Storage and handling details vary by manufacturer labeling."
 
 tracking:
   useful_logs:
-    - injection sites
-    - schedule adherence
-    - lab and symptom notes
-    - source-quality notes
+  - injection sites
+  - schedule adherence
+  - lab and symptom notes
+  - source-quality notes
   inventory_fields:
-    - concentration
-    - vial_size
-    - lot_number
-    - expiration_date
-    - source
+  - concentration
+  - vial_size
+  - lot_number
+  - expiration_date
+  - source
   peppi_actions:
-    - "create-inventory-from-label"
-    - "calculate-injection-volume"
-    - "summarize-tracking"
-    - "flag-source-quality"
+  - "create-inventory-from-label"
+  - "calculate-injection-volume"
+  - "summarize-tracking"
+  - "flag-source-quality"
 
 app_profile:
   headline: "Label-backed testosterone ester with concentration-based tracking."
-  summary: "Testosterone cypionate is the long-ester injectable testosterone people track for TRT-style logs, hormone labs, injection sites, symptom notes, vial depletion, and concentration-based injection-volume math. PeptideOS should keep ester identity, concentration, carrier/source, lot, schedule logs, labs, and subjective notes attached to the exact vial instead of flattening it into generic testosterone."
+  summary: "Testosterone cypionate is a long-acting injectable testosterone ester commonly used in TRT protocols. Useful tracking focuses on concentration, injection volume, schedule, site rotation, labs, and symptom patterns across peak and trough periods."
   why_people_care:
-    - "Ester-specific tracking"
-    - "Injection logs and vial depletion"
+  - "Ester-specific tracking"
+  - "Injection logs and vial depletion"
   what_to_verify:
-    - "Ester name"
-    - "Concentration"
-    - "Source / lot / expiration"
+  - "Ester name"
+  - "Concentration"
+  - "Source / lot / expiration"
   what_to_track:
-    - "Injection sites"
-    - "Labs"
-    - "Symptom notes"
-  reality_check: "Do not flatten cypionate into generic testosterone."
+  - "Injection sites"
+  - "Labs"
+  - "Symptom notes"
+  reality_check: "Long-acting injectable testosterone ester commonly prescribed for testosterone replacement therapy. Useful tracking centers on concentration, carrier oil, injection volume, site rotation, dosing interval, total weekly dose, labs, and symptom response across the same ester formulation."
 
 sources:
-  - id: dailymed-testosterone-cypionate
-    title: "TESTOSTERONE CYPIONATE injection, solution label"
-    url: "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=3653a602-4551-4e6c-84a7-31861f5dc482"
-    source_type: label
-    publisher: "DailyMed"
-    year: 2025
-  - id: pubchem-testosterone-cypionate
-    title: "Testosterone Cypionate compound summary"
-    url: "https://pubchem.ncbi.nlm.nih.gov/compound/441404"
-    source_type: database
-    publisher: "PubChem"
-    year: 2026
+- id: dailymed-testosterone-cypionate
+  title: "TESTOSTERONE CYPIONATE injection, solution label"
+  url: "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=3653a602-4551-4e6c-84a7-31861f5dc482"
+  source_type: label
+  publisher: "DailyMed"
+  year: 2025
+- id: pubchem-testosterone-cypionate
+  title: "Testosterone Cypionate compound summary"
+  url: "https://pubchem.ncbi.nlm.nih.gov/compound/441404"
+  source_type: database
+  publisher: "PubChem"
+  year: 2026
 
 claims:
-  - id: identity
-    text: "Testosterone cypionate is a distinct testosterone ester with label and identity metadata."
-    claim_type: identity
-    evidence_level: identity
-    route_scope: []
-    source_ids:
-      - dailymed-testosterone-cypionate
-      - pubchem-testosterone-cypionate
-    confidence: high
-    limitations: []
-  - id: mechanism
-    text: "After ester cleavage, testosterone cypionate acts through androgen receptor signaling."
-    claim_type: mechanism
-    evidence_level: human_limited
-    route_scope: []
-    source_ids:
-      - dailymed-testosterone-cypionate
-    confidence: high
-    limitations: []
-  - id: regulatory
-    text: "DailyMed provides approved-label context for testosterone cypionate injection."
-    claim_type: regulatory
-    evidence_level: approved_label
-    route_scope: []
-    source_ids:
-      - dailymed-testosterone-cypionate
-    confidence: high
-    limitations: []
+- id: identity
+  text: "Testosterone cypionate is a distinct testosterone ester with label and identity metadata."
+  claim_type: identity
+  evidence_level: identity
+  route_scope: []
+  source_ids:
+  - dailymed-testosterone-cypionate
+  - pubchem-testosterone-cypionate
+  confidence: high
+  limitations: []
+- id: mechanism
+  text: "After ester cleavage, testosterone cypionate acts through androgen receptor signaling."
+  claim_type: mechanism
+  evidence_level: human_limited
+  route_scope: []
+  source_ids:
+  - dailymed-testosterone-cypionate
+  confidence: high
+  limitations: []
+- id: regulatory
+  text: "DailyMed provides approved-label context for testosterone cypionate injection."
+  claim_type: regulatory
+  evidence_level: approved_label
+  route_scope: []
+  source_ids:
+  - dailymed-testosterone-cypionate
+  confidence: high
+  limitations: []

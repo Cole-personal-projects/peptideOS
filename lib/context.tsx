@@ -37,6 +37,11 @@ const bundledReferenceLibraryStatus: ReferenceLibraryStatus = {
 interface AppContextType {
   data: AppData;
   referenceLibraryStatus: ReferenceLibraryStatus;
+  persistenceStatus: {
+    mode: 'local-only' | 'signed-in';
+    ownerId: string;
+    lastSavedAt: string | null;
+  };
   // Peptides
   getPeptide: (id: string) => Peptide | undefined;
   // Compounds
@@ -112,9 +117,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const client = createSupabaseAuthClient(authConfig);
     return client ? createSupabaseReferenceLibraryReader(client as unknown as SupabaseReferenceLibraryClient) : null;
   }, [authConfig]);
-  const [data, setData] = useState<AppData>(initialAppData);
-  const [referenceLibraryStatus, setReferenceLibraryStatus] = useState<ReferenceLibraryStatus>(bundledReferenceLibraryStatus);
-  const [hydratedOwnerId, setHydratedOwnerId] = useState<string | null>(null);
+const [data, setData] = useState<AppData>(initialAppData);
+const [referenceLibraryStatus, setReferenceLibraryStatus] = useState<ReferenceLibraryStatus>(bundledReferenceLibraryStatus);
+const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+const [hydratedOwnerId, setHydratedOwnerId] = useState<string | null>(null);
   const hydrated = authStatus !== 'loading' && hydratedOwnerId === persistenceOwnerId;
   const saveSequence = useRef(0);
   const persistenceQueue = useRef(Promise.resolve());
@@ -136,13 +142,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     let active = true;
 
-    loadPersistedAppData(persistenceDb, initialAppData, { ownerId: persistenceOwnerId })
-      .then((persistedData) => {
-        if (!active) return;
-        dataRef.current = persistedData;
-        setData(persistedData);
-      })
-      .finally(() => {
+loadPersistedAppData(persistenceDb, initialAppData, { ownerId: persistenceOwnerId })
+.then((persistedData) => {
+if (!active) return;
+dataRef.current = persistedData;
+setData(persistedData);
+return persistenceDb.metadata.get('lastSavedAt');
+})
+.then((metadata) => {
+if (!active) return;
+setLastSavedAt(typeof metadata?.value === 'string' ? metadata.value : null);
+})
+.finally(() => {
         if (!active) return;
         setHydratedOwnerId(persistenceOwnerId);
       });
@@ -201,12 +212,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dataRef.current = nextData;
     setData(nextData);
 
-    if (hydrated) {
-      const sequence = ++saveSequence.current;
-      await enqueuePersistenceOperation(() => savePersistedAppData(persistenceDb, nextData, new Date(), { ownerId: persistenceOwnerId })).catch((error) => {
-        if (sequence === saveSequence.current) {
-          console.error('Failed to persist PeptideOS data', error);
-        }
+if (hydrated) {
+const sequence = ++saveSequence.current;
+const savedAt = new Date();
+await enqueuePersistenceOperation(() => savePersistedAppData(persistenceDb, nextData, savedAt, { ownerId: persistenceOwnerId })).then(() => {
+if (sequence === saveSequence.current) {
+setLastSavedAt(savedAt.toISOString());
+}
+}).catch((error) => {
+if (sequence === saveSequence.current) {
+console.error('Failed to persist PeptideOS data', error);
+}
       });
     }
   }, [enqueuePersistenceOperation, hydrated, persistenceDb, persistenceOwnerId]);
@@ -572,12 +588,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const nextData = skipDueDose(previousData, logId);
     if (nextData === previousData) return;
 
-    if (hydrated) {
-      const sequence = ++saveSequence.current;
-      await enqueuePersistenceOperation(() => savePersistedAppData(persistenceDb, nextData, new Date(), { ownerId: persistenceOwnerId })).catch((error) => {
-        if (sequence === saveSequence.current) {
-          console.error('Failed to persist PeptideOS data', error);
-        }
+if (hydrated) {
+const sequence = ++saveSequence.current;
+const savedAt = new Date();
+await enqueuePersistenceOperation(() => savePersistedAppData(persistenceDb, nextData, savedAt, { ownerId: persistenceOwnerId })).then(() => {
+if (sequence === saveSequence.current) {
+setLastSavedAt(savedAt.toISOString());
+}
+}).catch((error) => {
+if (sequence === saveSequence.current) {
+console.error('Failed to persist PeptideOS data', error);
+}
       });
     }
 
@@ -615,17 +636,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const importAllData = useCallback(async (file: File) => {
     const contents = await file.text();
     saveSequence.current++;
-    const importedData = await enqueuePersistenceOperation(() => importUserData(persistenceDb, initialAppData, contents, new Date(), { ownerId: persistenceOwnerId }));
-    dataRef.current = importedData;
-    setData(importedData);
-  }, [enqueuePersistenceOperation, persistenceDb, persistenceOwnerId]);
+const importedData = await enqueuePersistenceOperation(() => importUserData(persistenceDb, initialAppData, contents, new Date(), { ownerId: persistenceOwnerId }));
+dataRef.current = importedData;
+setData(importedData);
+const metadata = await persistenceDb.metadata.get('lastSavedAt');
+setLastSavedAt(typeof metadata?.value === 'string' ? metadata.value : new Date().toISOString());
+}, [enqueuePersistenceOperation, persistenceDb, persistenceOwnerId]);
 
   const clearAllData = useCallback(async () => {
     saveSequence.current++;
-    const resetData = await enqueuePersistenceOperation(() => resetPersistedAppData(persistenceDb, initialAppData));
-    dataRef.current = resetData;
-    setData(resetData);
-  }, [enqueuePersistenceOperation, persistenceDb]);
+const resetData = await enqueuePersistenceOperation(() => resetPersistedAppData(persistenceDb, initialAppData));
+dataRef.current = resetData;
+setData(resetData);
+setLastSavedAt(null);
+}, [enqueuePersistenceOperation, persistenceDb]);
 
   if (!hydrated) {
     return null;
@@ -635,6 +659,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider value={{
       data,
       referenceLibraryStatus,
+      persistenceStatus: {
+        mode: authStatus === 'signed-in' ? 'signed-in' : 'local-only',
+        ownerId: persistenceOwnerId,
+        lastSavedAt,
+      },
       getPeptide,
       getCompound,
       addUserCompound,

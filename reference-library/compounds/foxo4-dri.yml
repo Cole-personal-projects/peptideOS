@@ -7,8 +7,7 @@ identity:
   aliases:
   - FOXO4 D-retro-inverso peptide
   - FOXO4-DRI peptide
-  non_aliases:
-  - Do not collapse FOXO4-DRI into other senescence peptides or blends
+  non_aliases: []
   compound_type: peptide
   categories:
   - longevity
@@ -27,31 +26,37 @@ forms:
   - source
 positioning:
   why_use_this_compound:
-  - Track a senescence-research peptide
-  - Preserve high-uncertainty inventory data
+  - Experimental senolytic targeting senescent cells via FOXO4-p53 disruption
+  - Preclinical interest in clearing 'zombie cells' that accumulate with age
+  - Distinct mechanism from quercetin/fisetin/dasatinib senolytic stacks
   who_is_tracking_this:
-  - Longevity researchers
-  - Users logging research vials
+  - Longevity self-experimenters running senolytic cycles
+  - Researchers following the de Keizer Lab line of work
+  - Grey-market peptide users tracking high-risk research compounds
   common_user_goals:
-  - Separate identity from speculation
-  - Store vial and source details cleanly
+  - Document source, lot, and reconstitution for a research-only peptide
+  - Track perceived biomarker or recovery changes after a cycle
+  - Avoid confusion with other senolytic agents in a stack
 evidence:
   tier: identity_only
   mechanism_targets:
   - FOXO4 / p53 interaction research
   - cellular senescence context
   claim_summary:
-  - FOXO4-DRI is an identity-first research peptide record
-  - Sequence and source documentation matter because naming is not always consistent
-  - No clinical protocol is implied by this entry
+  - Synthetic D-retro-inverso peptide designed to disrupt the FOXO4-p53 interaction in senescent cells, triggering selective apoptosis
+  - Originally published by Baar et al. (de Keizer Lab) in Cell, 2017
+  - Mouse studies reported improved fur density, fitness, and renal function in aged animals
+  - No human clinical trials have been conducted or published
   evidence_gaps:
-  - No approved US product label is attached here
-  - Research-market quality can differ from the reference identity record
+  - Zero human safety, pharmacokinetic, or efficacy data exists
+  - Mouse-to-human translation for senolytics remains highly uncertain
+  - No approved product, pharmacopoeia monograph, or standardized assay
 risks:
   by_route:
     subq:
-    - Injection-site reactions are possible with peptide vials
-    - Identity, purity, sterility, and storage uncertainty depend entirely on source
+    - Injection-site reactions typical of peptide vials
+    - Grey-market source quality varies widely; sterility, identity, and purity are not guaranteed without third-party COA
+    - Unknown human safety profile - all risk inference is extrapolated from mouse data
 tracking:
   useful_logs:
   - Source / lot / expiration
@@ -68,20 +73,21 @@ tracking:
   - flag-high-uncertainty
   - require-coa-before-logging
 app_profile:
-  headline: Senescence-research peptide with high naming uncertainty.
-  summary: "FOXO4-DRI is a high-uncertainty senescence-research peptide people track in longevity stacks because of interest in FOXO4/p53 and cellular-senescence hypotheses. PeptideOS should keep the entry audit-first: exact sequence or identity paperwork, vial amount, source quality, reconstitution state, stack changes, and user notes, without presenting senolytic benefit as established."
+  headline: Experimental senolytic peptide built to clear senescent cells - mouse data only.
+  summary: "FOXO4-DRI is an experimental peptide studied around FOXO4-p53 signaling and cellular senescence. Useful tracking keeps research status, source, batch, preparation, route, timing, tolerability, and any objective markers clearly visible."
   why_people_care:
-  - Longevity / senescence literature
-  - Research-vial inventory
+  - Targets a different senolytic pathway than fisetin, quercetin, or dasatinib + quercetin
+  - Striking 2017 mouse results created lasting longevity-community interest
+  - One of the few peptides explicitly designed as a senolytic
   what_to_verify:
-  - Sequence or identity docs
-  - Vial amount
-  - Source and lot
+  - Sequence or identity documentation from the source
+  - Third-party COA for identity and purity
+  - Vial amount, lot, and expiration
   what_to_track:
-  - Reconstitution
-  - User-entered notes
-  - Source-quality flags
-  reality_check: This is an audit-friendly record, not a claim of benefit.
+  - Reconstitution date and storage temperature
+  - Subjective recovery, skin, hair, or energy changes through a cycle
+  - Any biomarkers run before and after (CBC, inflammatory markers)
+  reality_check: There is no human evidence. Every benefit claim traces back to mouse studies, and grey-market supply means you cannot assume the vial contains what the label says.
 sources:
 - id: pubchem-foxo4-dri
   title: FOXO4-DRI compound summary
@@ -91,8 +97,7 @@ sources:
   year: 2026
 claims:
 - id: identity
-  text: FOXO4-DRI is a distinct peptide reference entry with senescence-research naming that should not be collapsed into
-    other peptides.
+  text: FOXO4-DRI is a distinct peptide reference entry with senescence-research naming that should not be collapsed into other peptides.
   claim_type: identity
   evidence_level: identity
   route_scope: []
@@ -117,4 +122,4 @@ claims:
   source_ids: []
   confidence: low
   limitations:
-  - No approved US product label is attached to this reference entry
+  - Experimental FOXO4-p53 interaction peptide discussed in cellular-senescence research. Because it is not a routine wellness compound, practical records should make research status obvious and capture batch identity, preparation, route, timing, tolerability, and any objective markers being followed.

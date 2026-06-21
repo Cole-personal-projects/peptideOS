@@ -23,6 +23,22 @@ export interface UserDataExport {
   data: PersistedUserData;
 }
 
+export interface UserDataImportPreview {
+  schemaVersion: number;
+  exportedAt: string;
+  counts: {
+    vials: number;
+    inventoryBatches: number;
+    doses: number;
+    stacks: number;
+    schedules: number;
+    scheduleLogs: number;
+    reconstitutionCalculations: number;
+    signalCheckIns: number;
+    userCompounds: number;
+  };
+}
+
 export interface PersistenceOptions {
   ownerId?: string;
 }
@@ -432,6 +448,26 @@ function parseUserDataExport(input: string): UserDataExport {
         ? data.userCompounds as Compound[]
         : [],
       settings: data.settings as unknown as AppSettings,
+    },
+  };
+}
+
+export function validateUserDataExport(input: string): UserDataImportPreview {
+  const parsed = parseUserDataExport(input);
+
+  return {
+    schemaVersion: parsed.schemaVersion,
+    exportedAt: parsed.exportedAt,
+    counts: {
+      vials: parsed.data.vials.length,
+      inventoryBatches: parsed.data.inventoryBatches.length,
+      doses: parsed.data.doses.length,
+      stacks: parsed.data.stacks.length,
+      schedules: parsed.data.schedules.length,
+      scheduleLogs: parsed.data.scheduleLogs.length,
+      reconstitutionCalculations: parsed.data.reconstitutionCalculations.length,
+      signalCheckIns: parsed.data.signalCheckIns.length,
+      userCompounds: parsed.data.userCompounds.length,
     },
   };
 }
