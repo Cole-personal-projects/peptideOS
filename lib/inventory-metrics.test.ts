@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { getInventoryStockHealthSummary, getVialInventoryMetrics, getVialRunoutForecast } from './inventory-metrics';
-import type { Dose, Schedule, ScheduleLog, Vial } from './types';
+import { buildProtocolInventoryRunway, getInventoryStockHealthSummary, getVialInventoryMetrics, getVialRunoutForecast } from './inventory-metrics';
+import type { Dose, Schedule, ScheduleLog, Stack, Vial } from './types';
 
 const baseVial: Vial = {
   id: 'vial-1',
@@ -44,6 +44,17 @@ const schedule: Schedule = {
   startDate: '2026-05-20T00:00:00.000Z',
   endDate: '2026-06-30T23:59:59.999Z',
   status: 'active',
+};
+
+const stack: Stack = {
+  id: 'stack-1',
+  name: 'Recovery stack',
+  description: '',
+  peptides: [],
+  startDate: '2026-05-20T00:00:00.000Z',
+  durationDays: 30,
+  status: 'active',
+  notes: '',
 };
 
 function log(overrides: Partial<ScheduleLog>): ScheduleLog {
@@ -224,13 +235,71 @@ describe('inventory metrics', () => {
       expiringSoonDays: 7,
     });
 
-    expect(summary).toEqual({
-      activeCount: 4,
-      healthyCount: 2,
-      lowStockCount: 0,
-      runoutCount: 1,
-      expiringSoonCount: 1,
-      unscheduledCount: 1,
+  expect(summary).toEqual({
+    activeCount: 4,
+    healthyCount: 2,
+    lowStockCount: 0,
+    runoutCount: 1,
+    expiringSoonCount: 1,
+    unscheduledCount: 1,
+  });
+});
+
+  it('builds protocol runway rows for covered, low-stock, runout, expiring, and unscheduled states', () => {
+    const now = new Date('2026-05-22T07:00:00.000Z');
+    const activeStacks: Stack[] = [
+      stack,
+      { ...stack, id: 'stack-covered', name: 'Covered stack' },
+      { ...stack, id: 'stack-runout', name: 'Runout stack' },
+    ];
+    const coveredSchedule: Schedule = {
+      ...schedule,
+      id: 'schedule-covered',
+      stackId: 'stack-covered',
+      stackPeptideId: 'covered-item',
+      peptideId: 'sermorelin',
+      doseValue: 0.25,
+    };
+    const runoutSchedule: Schedule = {
+      ...schedule,
+      id: 'schedule-runout',
+      stackId: 'stack-runout',
+      stackPeptideId: 'runout-item',
+      peptideId: 'tb-500',
+      doseValue: 1,
+    };
+    const expiringSchedule: Schedule = {
+      ...schedule,
+      id: 'schedule-expiring',
+      peptideId: 'cjc-1295',
+      doseValue: 0.25,
+    };
+    const runway = buildProtocolInventoryRunway({
+      vials: [
+        { ...baseVial, id: 'covered-vial', peptideId: 'sermorelin', mg: 5 },
+        { ...baseVial, id: 'low-vial', mg: 1 },
+        { ...baseVial, id: 'runout-vial', peptideId: 'tb-500', mg: 0 },
+        { ...baseVial, id: 'expiring-vial', peptideId: 'cjc-1295', mg: 5, expirationDate: '2026-05-25T00:00:00.000Z' },
+        { ...baseVial, id: 'unscheduled-vial', peptideId: 'ghk-cu', mg: 5 },
+      ],
+      doses: [],
+      stacks: activeStacks,
+      schedules: [schedule, coveredSchedule, runoutSchedule, expiringSchedule],
+      scheduleLogs: [
+        log({ id: 'low-1', dueAt: '2026-05-22T08:00:00.000Z' }),
+        log({ id: 'low-2', dueAt: '2026-05-23T08:00:00.000Z' }),
+        log({ id: 'covered-1', scheduleId: coveredSchedule.id, stackId: coveredSchedule.stackId, stackPeptideId: coveredSchedule.stackPeptideId, peptideId: 'sermorelin', dueAt: '2026-05-22T08:00:00.000Z' }),
+        log({ id: 'runout-1', scheduleId: runoutSchedule.id, stackId: runoutSchedule.stackId, stackPeptideId: runoutSchedule.stackPeptideId, peptideId: 'tb-500', dueAt: '2026-05-22T08:00:00.000Z' }),
+        log({ id: 'expiring-1', scheduleId: expiringSchedule.id, stackId: expiringSchedule.stackId, stackPeptideId: expiringSchedule.stackPeptideId, peptideId: 'cjc-1295', dueAt: '2026-05-22T08:00:00.000Z' }),
+      ],
+      now,
+      expiringSoonDays: 7,
     });
+
+    expect(runway.find((row) => row.scope === 'stack' && row.stackId === 'stack-covered' && row.compoundId === 'sermorelin')?.status).toBe('covered');
+    expect(runway.find((row) => row.scope === 'stack' && row.stackId === 'stack-1' && row.compoundId === 'bpc-157')?.status).toBe('low-stock');
+    expect(runway.find((row) => row.scope === 'stack' && row.stackId === 'stack-runout' && row.compoundId === 'tb-500')?.status).toBe('runout');
+    expect(runway.find((row) => row.scope === 'stack' && row.compoundId === 'cjc-1295')?.status).toBe('expiring');
+    expect(runway.find((row) => row.scope === 'compound' && row.compoundId === 'ghk-cu')?.status).toBe('unscheduled');
   });
 });
