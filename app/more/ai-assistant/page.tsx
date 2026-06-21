@@ -13,6 +13,7 @@ import {
   buildAssistantTodaySummary,
   isAssistantAction,
   isTodayStatusRequest,
+  PEPPI_PROTOCOL_DRAFT_STORAGE_KEY,
   proposeAssistantActionFromMessage,
   type AssistantAction,
   type AssistantActionProposal,
@@ -345,7 +346,10 @@ function ProtocolDraftCard({
   onDismiss: () => void;
 }) {
   const firstCompoundId = action.payload.peptides[0]?.peptideId;
-  const editHref = firstCompoundId ? `/stacks?compound=${encodeURIComponent(firstCompoundId)}&add=protocol` : '/stacks?add=protocol';
+  const editHref = firstCompoundId ? `/stacks?compound=${encodeURIComponent(firstCompoundId)}&add=protocol&draft=peppi` : '/stacks?add=protocol&draft=peppi';
+  const storeDraftForBuilder = () => {
+    window.sessionStorage.setItem(PEPPI_PROTOCOL_DRAFT_STORAGE_KEY, JSON.stringify(action.payload));
+  };
 
   return (
     <div className="space-y-3 rounded-md border bg-background p-3" aria-label="Peppi protocol draft">
@@ -398,7 +402,7 @@ function ProtocolDraftCard({
           Confirm Schedule
         </Button>
         <Button asChild size="sm" variant="outline">
-          <Link href={editHref}>Edit in builder</Link>
+          <Link href={editHref} onClick={storeDraftForBuilder}>Edit in builder</Link>
         </Button>
         <Button size="sm" variant="outline" onClick={onDismiss}>
           <X className="w-4 h-4" />

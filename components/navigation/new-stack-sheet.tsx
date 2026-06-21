@@ -17,36 +17,53 @@ import { applySchedulePreset, applyScheduleTimes, getSchedulePreset } from '@/li
 import { getStackConflictWarnings } from '@/lib/stack-conflicts';
 import { stackTemplates, templateToStackDraft } from '@/lib/stack-templates';
 import { cn } from '@/lib/utils';
-import type { StackPeptide } from '@/lib/types';
+import type { Stack, StackPeptide } from '@/lib/types';
 import type { SchedulePreset } from '@/lib/schedules';
 
 interface NewStackSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialCompoundId?: string;
+  initialDraft?: Omit<Stack, 'id'>;
 }
 
 const steps = ['Basics', 'Compounds', 'Schedule', 'Review'] as const;
 type BuilderStep = typeof steps[number];
 
-export function NewStackSheet({ open, onOpenChange, initialCompoundId }: NewStackSheetProps) {
+function getInitialName(initialDraft: Omit<Stack, 'id'> | undefined, initialCompound: { name: string } | undefined) {
+  return initialDraft?.name ?? (initialCompound ? `${initialCompound.name} research plan` : '');
+}
+
+function getInitialDescription(initialDraft: Omit<Stack, 'id'> | undefined, initialCompound: { name: string } | undefined) {
+  return initialDraft?.description ?? (initialCompound ? `Track ${initialCompound.name} from user-confirmed label details.` : '');
+}
+
+function getInitialSelectedPeptides(initialDraft: Omit<Stack, 'id'> | undefined, initialCompound: { id: string } | undefined) {
+  return initialDraft?.peptides.map((peptide) => peptide.peptideId) ?? (initialCompound ? [initialCompound.id] : []);
+}
+
+function getInitialDurationDays(initialDraft: Omit<Stack, 'id'> | undefined) {
+  return initialDraft?.durationDays.toString() ?? '28';
+}
+
+export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDraft }: NewStackSheetProps) {
   const { data, addStack } = useApp();
   const trackableCompounds = useMemo(() => getTrackableCompounds(data), [data]);
   const initialCompound = trackableCompounds.find((candidate) => candidate.id === initialCompoundId);
   const [currentStep, setCurrentStep] = useState(0);
-  const [name, setName] = useState(initialCompound ? `${initialCompound.name} research plan` : '');
-  const [description, setDescription] = useState(initialCompound ? `Track ${initialCompound.name} from user-confirmed label details.` : '');
-  const [selectedPeptides, setSelectedPeptides] = useState<string[]>(initialCompound ? [initialCompound.id] : []);
-  const [templatePeptides, setTemplatePeptides] = useState<StackPeptide[] | null>(null);
-  const [durationDays, setDurationDays] = useState('28');
+  const [name, setName] = useState(() => getInitialName(initialDraft, initialCompound));
+  const [description, setDescription] = useState(() => getInitialDescription(initialDraft, initialCompound));
+  const [selectedPeptides, setSelectedPeptides] = useState<string[]>(() => getInitialSelectedPeptides(initialDraft, initialCompound));
+  const [templatePeptides, setTemplatePeptides] = useState<StackPeptide[] | null>(() => initialDraft?.peptides ?? null);
+  const [durationDays, setDurationDays] = useState(() => getInitialDurationDays(initialDraft));
 
   const resetForm = () => {
     setCurrentStep(0);
-    setName(initialCompound ? `${initialCompound.name} research plan` : '');
-    setDescription(initialCompound ? `Track ${initialCompound.name} from user-confirmed label details.` : '');
-    setSelectedPeptides(initialCompound ? [initialCompound.id] : []);
-    setTemplatePeptides(null);
-    setDurationDays('28');
+    setName(getInitialName(initialDraft, initialCompound));
+    setDescription(getInitialDescription(initialDraft, initialCompound));
+    setSelectedPeptides(getInitialSelectedPeptides(initialDraft, initialCompound));
+    setTemplatePeptides(initialDraft?.peptides ?? null);
+    setDurationDays(getInitialDurationDays(initialDraft));
   };
 
   const getDraftPeptides = (): StackPeptide[] => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Plus, Play, Pause, Clock, CheckCircle2, Sparkles } from 'lucide-react';
@@ -13,9 +13,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { useApp } from '@/lib/context';
+import { isAssistantAction, PEPPI_PROTOCOL_DRAFT_STORAGE_KEY } from '@/lib/assistant-actions';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { getEmptyStateContent } from '@/lib/empty-states';
 import { cn } from '@/lib/utils';
+import type { Stack } from '@/lib/types';
 
 const statusConfig = {
   active: { icon: Play, label: 'Active', className: 'bg-primary/20 text-primary' },
@@ -29,10 +31,29 @@ export default function StacksPage() {
   const searchParams = useSearchParams();
   const [newStackOpen, setNewStackOpen] = useState(() => searchParams.get('add') === 'protocol');
   const [aiStackOpen, setAiStackOpen] = useState(false);
+  const [peppiDraft, setPeppiDraft] = useState<Omit<Stack, 'id'> | null>(null);
   const initialCompoundId = searchParams.get('compound') ?? undefined;
   const stacks = data.stacks;
   const emptyState = getEmptyStateContent('stacks-empty');
   const trackableCompounds = getTrackableCompounds(data);
+
+  useEffect(() => {
+    if (searchParams.get('draft') !== 'peppi') return;
+
+    const storedDraft = window.sessionStorage.getItem(PEPPI_PROTOCOL_DRAFT_STORAGE_KEY);
+    if (!storedDraft) return;
+
+    try {
+      const parsedDraft = JSON.parse(storedDraft);
+      const action = { id: 'peppi-builder-draft', type: 'create_stack_from_protocol', payload: parsedDraft };
+      if (isAssistantAction(action) && action.type === 'create_stack_from_protocol') {
+        setPeppiDraft(action.payload);
+        setNewStackOpen(true);
+      }
+    } finally {
+      window.sessionStorage.removeItem(PEPPI_PROTOCOL_DRAFT_STORAGE_KEY);
+    }
+  }, [searchParams]);
 
   const getProgressPercentage = (startDate: string, durationDays: number, status: string) => {
     if (status === 'planned') return 0;
@@ -140,11 +161,12 @@ export default function StacksPage() {
           })
         )}
       </div>
-      <NewStackSheet
-        key={initialCompoundId ?? 'manual-stack'}
+<NewStackSheet
+        key={peppiDraft ? `peppi-${peppiDraft.name}` : initialCompoundId ?? 'manual-stack'}
         open={newStackOpen}
         onOpenChange={setNewStackOpen}
         initialCompoundId={initialCompoundId}
+        initialDraft={peppiDraft ?? undefined}
       />
       <AiStackSheet open={aiStackOpen} onOpenChange={setAiStackOpen} />
     </AppShell>
