@@ -3,6 +3,15 @@ import type { Schedule, ScheduleLog, ScheduleRecurrence, Stack, StackPeptide } f
 export type SchedulePreset = 'daily' | 'twice-daily' | 'weekly' | 'twice-weekly' | 'weekdays' | 'every-other-day' | 'five-on-two-off' | 'custom';
 
 const weekdayLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const timeOfDayPattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export function normalizeTimesOfDayInput(timesOfDay: string[], fallback: string[] = ['08:00']): string[] {
+  const normalized = timesOfDay
+    .map((time) => time.trim())
+    .filter((time) => timeOfDayPattern.test(time));
+
+  return normalized.length > 0 ? normalized : fallback;
+}
 
 function getTimesOfDay(frequency: string, timing: string): string[] {
   const normalized = `${frequency} ${timing}`.toLowerCase();
@@ -57,7 +66,7 @@ export function getDefaultScheduleRecurrence(peptide: Pick<StackPeptide, 'freque
 }
 
 export function normalizeScheduleRecurrence(recurrence: ScheduleRecurrence): ScheduleRecurrence {
-  const timesOfDay = recurrence.timesOfDay.length > 0 ? recurrence.timesOfDay : ['08:00'];
+  const timesOfDay = normalizeTimesOfDayInput(recurrence.timesOfDay);
 
   if (recurrence.frequency === 'weekly') {
     return {
@@ -111,12 +120,19 @@ export function applySchedulePreset(stackPeptide: StackPeptide, preset: Schedule
     return stackPeptide;
   }
 
+  const recurrence = normalizeScheduleRecurrence(stackPeptide.schedule ?? getDefaultScheduleRecurrence(stackPeptide));
+  const onceDailyTime = recurrence.timesOfDay[0] ?? '08:00';
+  const twiceDailyTimes = normalizeTimesOfDayInput(
+    recurrence.timesOfDay.length > 1 ? recurrence.timesOfDay.slice(0, 2) : [onceDailyTime, '20:00'],
+    ['08:00', '20:00'],
+  );
+
   if (preset === 'twice-daily') {
     return {
       ...stackPeptide,
       frequency: '2x daily',
       timing: 'Morning and evening',
-      schedule: { frequency: 'daily', timesOfDay: ['08:00', '20:00'] },
+      schedule: { frequency: 'daily', timesOfDay: twiceDailyTimes },
     };
   }
 
@@ -125,7 +141,7 @@ export function applySchedulePreset(stackPeptide: StackPeptide, preset: Schedule
       ...stackPeptide,
       frequency: 'weekly',
       timing: 'Monday morning',
-      schedule: { frequency: 'weekly', timesOfDay: ['08:00'], weekdays: [1] },
+      schedule: { frequency: 'weekly', timesOfDay: [onceDailyTime], weekdays: [1] },
     };
   }
 
@@ -134,7 +150,7 @@ export function applySchedulePreset(stackPeptide: StackPeptide, preset: Schedule
       ...stackPeptide,
       frequency: '2x weekly',
       timing: 'Monday and Thursday',
-      schedule: { frequency: 'weekly', timesOfDay: ['08:00'], weekdays: [1, 4] },
+      schedule: { frequency: 'weekly', timesOfDay: [onceDailyTime], weekdays: [1, 4] },
     };
   }
 
@@ -143,7 +159,7 @@ export function applySchedulePreset(stackPeptide: StackPeptide, preset: Schedule
       ...stackPeptide,
       frequency: 'weekdays',
       timing: 'Weekday morning',
-      schedule: { frequency: 'weekly', timesOfDay: ['08:00'], weekdays: [1, 2, 3, 4, 5] },
+      schedule: { frequency: 'weekly', timesOfDay: [onceDailyTime], weekdays: [1, 2, 3, 4, 5] },
     };
   }
 
@@ -152,7 +168,7 @@ export function applySchedulePreset(stackPeptide: StackPeptide, preset: Schedule
       ...stackPeptide,
       frequency: 'every 2 days',
       timing: 'Morning',
-      schedule: { frequency: 'interval', timesOfDay: ['08:00'], intervalDays: 2 },
+      schedule: { frequency: 'interval', timesOfDay: [onceDailyTime], intervalDays: 2 },
     };
   }
 
@@ -161,7 +177,7 @@ export function applySchedulePreset(stackPeptide: StackPeptide, preset: Schedule
       ...stackPeptide,
       frequency: '5 days on / 2 days off',
       timing: 'Morning',
-      schedule: { frequency: 'cycle', timesOfDay: ['08:00'], cycleOnDays: 5, cycleOffDays: 2 },
+      schedule: { frequency: 'cycle', timesOfDay: [onceDailyTime], cycleOnDays: 5, cycleOffDays: 2 },
     };
   }
 
@@ -169,7 +185,20 @@ export function applySchedulePreset(stackPeptide: StackPeptide, preset: Schedule
     ...stackPeptide,
     frequency: 'daily',
     timing: 'Morning',
-    schedule: { frequency: 'daily', timesOfDay: ['08:00'] },
+    schedule: { frequency: 'daily', timesOfDay: [onceDailyTime] },
+  };
+}
+
+export function applyScheduleTimes(stackPeptide: StackPeptide, timesOfDay: string[]): StackPeptide {
+  const recurrence = normalizeScheduleRecurrence(stackPeptide.schedule ?? getDefaultScheduleRecurrence(stackPeptide));
+  const normalizedTimes = normalizeTimesOfDayInput(timesOfDay, recurrence.timesOfDay);
+
+  return {
+    ...stackPeptide,
+    schedule: {
+      ...recurrence,
+      timesOfDay: normalizedTimes,
+    },
   };
 }
 
@@ -376,6 +405,25 @@ export interface UpdateStackPeptideScheduleInput {
 }
 
 export function updateStackPeptideSchedule(input: UpdateStackPeptideScheduleInput): ActivateStackSchedulesResult {
+  return updateStackPeptide(input, (stackPeptide) => applySchedulePreset(stackPeptide, input.preset));
+}
+
+export interface UpdateStackPeptideScheduleTimesInput {
+  stack: Stack;
+  stackPeptideId: string;
+  timesOfDay: string[];
+  existingSchedules: Schedule[];
+  existingScheduleLogs: ScheduleLog[];
+}
+
+export function updateStackPeptideScheduleTimes(input: UpdateStackPeptideScheduleTimesInput): ActivateStackSchedulesResult {
+  return updateStackPeptide(input, (stackPeptide) => applyScheduleTimes(stackPeptide, input.timesOfDay));
+}
+
+function updateStackPeptide(
+  input: Omit<UpdateStackPeptideScheduleInput, 'preset'> | Omit<UpdateStackPeptideScheduleTimesInput, 'timesOfDay'>,
+  updateStackPeptide: (stackPeptide: StackPeptide) => StackPeptide,
+): ActivateStackSchedulesResult {
   const normalizedStack = normalizeStack(input.stack);
   const stackPeptide = normalizedStack.peptides.find((peptide) => peptide.id === input.stackPeptideId);
   if (!stackPeptide) {
@@ -386,7 +434,7 @@ export function updateStackPeptideSchedule(input: UpdateStackPeptideScheduleInpu
     };
   }
 
-  const updatedPeptide = applySchedulePreset(stackPeptide, input.preset);
+  const updatedPeptide = updateStackPeptide(stackPeptide);
   const stack = {
     ...normalizedStack,
     peptides: normalizedStack.peptides.map((peptide) => peptide.id === input.stackPeptideId ? updatedPeptide : peptide),

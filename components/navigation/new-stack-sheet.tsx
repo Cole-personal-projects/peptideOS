@@ -9,10 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScheduleTimeFields } from '@/components/stacks/schedule-time-fields';
 import { useApp } from '@/lib/context';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose, getDefaultDoseUnit } from '@/lib/dose-helpers';
-import { applySchedulePreset, getSchedulePreset } from '@/lib/schedules';
+import { applySchedulePreset, applyScheduleTimes, getSchedulePreset } from '@/lib/schedules';
 import { getStackConflictWarnings } from '@/lib/stack-conflicts';
 import { stackTemplates, templateToStackDraft } from '@/lib/stack-templates';
 import { cn } from '@/lib/utils';
@@ -70,6 +71,13 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId }: NewStac
   const updateDraftPeptideSchedule = (peptideId: string, preset: SchedulePreset) => {
     const nextPeptides = getDraftPeptides().map((stackPeptide) => (
       stackPeptide.peptideId === peptideId ? applySchedulePreset(stackPeptide, preset) : stackPeptide
+    ));
+    setTemplatePeptides(nextPeptides);
+  };
+
+  const updateDraftPeptideScheduleTimes = (peptideId: string, timesOfDay: string[]) => {
+    const nextPeptides = getDraftPeptides().map((stackPeptide) => (
+      stackPeptide.peptideId === peptideId ? applyScheduleTimes(stackPeptide, timesOfDay) : stackPeptide
     ));
     setTemplatePeptides(nextPeptides);
   };
@@ -287,16 +295,21 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId }: NewStac
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="daily">Daily · 8:00 AM</SelectItem>
-                            <SelectItem value="twice-daily">2x daily · 8:00 AM, 8:00 PM</SelectItem>
-                            <SelectItem value="weekdays">Weekdays · 8:00 AM</SelectItem>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="twice-daily">2x daily</SelectItem>
+                            <SelectItem value="weekdays">Weekdays</SelectItem>
                             <SelectItem value="weekly">Weekly · Monday</SelectItem>
                             <SelectItem value="twice-weekly">2x weekly · Monday, Thursday</SelectItem>
-                            <SelectItem value="every-other-day">Every other day · 8:00 AM</SelectItem>
-                            <SelectItem value="five-on-two-off">5 days on / 2 days off · 8:00 AM</SelectItem>
-                            <SelectItem value="custom" disabled>Custom AI schedule</SelectItem>
+                            <SelectItem value="every-other-day">Every other day</SelectItem>
+                            <SelectItem value="five-on-two-off">5 days on / 2 days off</SelectItem>
+                            <SelectItem value="custom" disabled>Custom cadence</SelectItem>
                           </SelectContent>
                         </Select>
+                        <ScheduleTimeFields
+                          stackPeptide={stackPeptide}
+                          idPrefix={`builder-${stackPeptide.peptideId}`}
+                          onTimesChange={(timesOfDay) => updateDraftPeptideScheduleTimes(stackPeptide.peptideId, timesOfDay)}
+                        />
                       </div>
                     </div>
                   );
