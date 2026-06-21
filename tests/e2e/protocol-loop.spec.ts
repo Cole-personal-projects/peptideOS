@@ -29,13 +29,14 @@ test.describe('protocol loop', () => {
 
     await page.getByRole('link', { name: 'Dashboard' }).click();
     await expect(page.getByText(/BPC-157 - 250 mcg/).first()).toBeVisible();
-    await page.getByRole('button', { name: 'Complete' }).first().click();
-    await expect(page.getByRole('dialog', { name: 'Complete scheduled dose' })).toBeVisible();
-    await page.getByRole('dialog', { name: 'Complete scheduled dose' }).getByRole('combobox').click();
-    await expect(page.getByRole('option', { name: /left/ }).first()).toBeVisible();
-    await page.getByRole('option', { name: /BPC-157 active vial/ }).click();
-    await page.getByRole('button', { name: 'Upper Left Abdomen' }).click();
-    await page.getByRole('button', { name: 'Complete dose' }).click();
+  await page.getByRole('button', { name: 'Complete' }).first().click();
+  const completeDialog = page.getByRole('dialog', { name: 'Complete scheduled dose' });
+  await expect(completeDialog).toBeVisible();
+  await completeDialog.getByRole('combobox', { name: 'Vial' }).click();
+  await expect(page.getByRole('option', { name: /left/ }).first()).toBeVisible();
+  await page.getByRole('option', { name: /BPC-157 active vial/ }).click();
+  await completeDialog.getByRole('button', { name: 'Upper Left Abdomen', exact: true }).click();
+  await completeDialog.getByRole('button', { name: 'Complete dose' }).click();
 
     await expect(page.getByRole('dialog', { name: 'Complete scheduled dose' })).toHaveCount(0);
     await expect(page.getByText('Taken today', { exact: true }).first()).toBeVisible();

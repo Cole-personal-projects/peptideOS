@@ -46,10 +46,12 @@ test.describe('MVP tester walkthrough', () => {
     await page.goto('/');
     await expect(page.getByText(/BPC-157 - 250 mcg/).first()).toBeVisible();
     await page.getByRole('button', { name: 'Complete' }).first().click();
-    await page.getByRole('combobox').filter({ hasText: 'Select active vial' }).click();
+    const completeDialog = page.getByRole('dialog', { name: 'Complete scheduled dose' });
+    await expect(completeDialog).toBeVisible();
+    await completeDialog.getByRole('combobox', { name: 'Vial' }).click();
     await page.getByRole('option', { name: /MVP Walkthrough BPC/ }).click();
-    await page.getByRole('button', { name: 'Upper Left Abdomen' }).click();
-    await page.getByRole('button', { name: 'Complete dose' }).click();
+    await completeDialog.getByRole('button', { name: 'Upper Left Abdomen', exact: true }).click();
+    await completeDialog.getByRole('button', { name: 'Complete dose' }).click();
     await expect(page.getByText('Taken today', { exact: true }).first()).toBeVisible();
 
     await page.goto('/log');
