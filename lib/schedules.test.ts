@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { beforeAll, describe, expect, test } from 'vitest';
 import {
   activateStackSchedules,
   applySchedulePreset,
@@ -12,6 +12,10 @@ import {
   updateStackPeptideScheduleTimes,
 } from './schedules';
 import type { Schedule, ScheduleLog, Stack, StackPeptide } from './types';
+
+beforeAll(() => {
+  process.env.TZ = 'UTC';
+});
 
 const legacyStack = {
   id: 'stack-legacy',
@@ -374,5 +378,77 @@ describe('schedule editing', () => {
       '2026-05-24T10:30:00.000Z',
       '2026-05-24T21:45:00.000Z',
     ]);
+  });
+
+  test('generates schedule logs from local dose times instead of treating time input as UTC', () => {
+    const previousTimeZone = process.env.TZ;
+    process.env.TZ = 'America/Los_Angeles';
+
+    try {
+      const schedule: Schedule = {
+        id: 'schedule-local-time',
+        stackId: 'stack-local',
+        stackPeptideId: 'stack-local-item',
+        peptideId: 'bpc-157',
+        doseValue: 250,
+        doseUnit: 'mcg',
+        route: 'subq',
+        recurrence: { frequency: 'daily', timesOfDay: ['22:00'] },
+        startDate: '2026-06-21T07:00:00.000Z',
+        endDate: '2026-06-21T23:59:59.999-07:00',
+        status: 'active',
+      };
+
+      const [log] = generateScheduleLogs(schedule);
+
+      expect(log.dueAt).toBe('2026-06-22T05:00:00.000Z');
+      expect(new Date(log.dueAt).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'America/Los_Angeles',
+      })).toBe('10:00 PM');
+      expect(log.id).toContain('2026-06-21-2200');
+    } finally {
+      process.env.TZ = previousTimeZone;
+    }
+  });
+
+  test('does not regenerate a new single-dose pending log for a local day already taken', () => {
+    const previousTimeZone = process.env.TZ;
+    process.env.TZ = 'America/Los_Angeles';
+
+    try {
+      const stack = normalizeStack({
+        ...legacyStack,
+        startDate: '2026-06-21T13:00:00.000Z',
+        durationDays: 2,
+        peptides: [legacyStack.peptides[0]],
+        status: 'active',
+      });
+      const activated = activateStackSchedules({ stack, existingSchedules: [], existingScheduleLogs: [] });
+      const firstLog = activated.scheduleLogs[0];
+      const takenLog: ScheduleLog = {
+        ...firstLog,
+        status: 'taken',
+        doseId: 'dose-1',
+        takenAt: '2026-06-21T15:00:00.000Z',
+      };
+
+      const result = updateStackPeptideScheduleTimes({
+        stack: activated.stack,
+        stackPeptideId: activated.stack.peptides[0].id!,
+        timesOfDay: ['22:00'],
+        existingSchedules: activated.schedules,
+        existingScheduleLogs: [takenLog, ...activated.scheduleLogs.slice(1)],
+      });
+
+      expect(result.scheduleLogs).toContainEqual(takenLog);
+      expect(result.scheduleLogs.filter((log) => log.status === 'pending').map((log) => log.dueAt)).toEqual([
+        '2026-06-23T05:00:00.000Z',
+      ]);
+    } finally {
+      process.env.TZ = previousTimeZone;
+    }
   });
 });
