@@ -195,9 +195,7 @@ export default function AIAssistantPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-          <div className="whitespace-pre-line rounded-md bg-secondary/50 p-3 text-sm leading-relaxed">
-            {assistantMessage}
-          </div>
+          <PeppiMessage content={assistantMessage} />
 
           {summaryCards.length > 0 && (
             <div className="grid gap-2" aria-label="Peppi today summary cards">
@@ -358,4 +356,50 @@ export default function AIAssistantPage() {
 
     </AppShell>
   );
+}
+
+function PeppiMessage({ content }: { content: string }) {
+  const blocks = content.trim().split(/\n\s*\n/).filter(Boolean);
+
+  return (
+    <div className="space-y-3 rounded-md bg-secondary/50 p-3 text-sm leading-relaxed">
+      {blocks.map((block, blockIndex) => {
+        const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
+        const listItems = lines
+          .map((line) => line.match(/^\d+\.\s+(.+)$/)?.[1])
+          .filter((line): line is string => Boolean(line));
+
+        if (listItems.length === lines.length) {
+          return (
+            <ol key={`block-${blockIndex}`} className="list-decimal space-y-1 pl-5">
+              {listItems.map((item, itemIndex) => (
+                <li key={`item-${blockIndex}-${itemIndex}`}>{renderInlineMarkdown(item)}</li>
+              ))}
+            </ol>
+          );
+        }
+
+        return (
+          <p key={`block-${blockIndex}`}>
+            {lines.map((line, lineIndex) => (
+              <span key={`line-${blockIndex}-${lineIndex}`}>
+                {lineIndex > 0 && <br />}
+                {renderInlineMarkdown(line)}
+              </span>
+            ))}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+function renderInlineMarkdown(value: string) {
+  return value.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index} className="font-semibold">{part.slice(2, -2)}</strong>;
+    }
+
+    return <span key={index}>{part}</span>;
+  });
 }
