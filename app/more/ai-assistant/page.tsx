@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Bot, Check, Plus, Send, X } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
@@ -15,6 +16,7 @@ import {
   proposeAssistantActionFromMessage,
   type AssistantAction,
   type AssistantActionProposal,
+  type AssistantSummaryCard,
 } from '@/lib/assistant-actions';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose } from '@/lib/dose-helpers';
@@ -82,6 +84,7 @@ export default function AIAssistantPage() {
   );
   const [isSending, setIsSending] = useState(false);
   const [pendingAction, setPendingAction] = useState<AssistantAction | null>(null);
+  const [summaryCards, setSummaryCards] = useState<AssistantSummaryCard[]>([]);
   const [assistantMessage, setAssistantMessage] = useState('Tell Peppi what you want to capture or change.');
   const proposalCompounds = trackableCompounds.map((compound) => ({
     id: compound.id,
@@ -98,6 +101,7 @@ export default function AIAssistantPage() {
     if (isTodayStatusRequest(trimmedMessage)) {
       const localSummary = buildAssistantTodaySummary(data);
       setPendingAction(null);
+      setSummaryCards(localSummary.summaryCards ?? []);
       setAssistantMessage(localSummary.message);
       setMessage('');
       return;
@@ -109,6 +113,7 @@ export default function AIAssistantPage() {
 
     if (peppiProposal) {
       setPendingAction(peppiProposal.action);
+      setSummaryCards([]);
       setAssistantMessage(peppiProposal.message);
       setMessage('');
       return;
@@ -117,11 +122,13 @@ export default function AIAssistantPage() {
     const nextAction = proposeAssistantActionFromMessage(trimmedMessage);
 
     if (!nextAction) {
+      setSummaryCards([]);
       setAssistantMessage('I can capture Signal check-ins right now. Include energy and/or sleep so I can draft one for approval.');
       return;
     }
 
     setPendingAction(nextAction);
+    setSummaryCards([]);
     setAssistantMessage('I will add this Signal check-in.');
     setMessage('');
   };
@@ -191,6 +198,27 @@ export default function AIAssistantPage() {
           <div className="whitespace-pre-line rounded-md bg-secondary/50 p-3 text-sm leading-relaxed">
             {assistantMessage}
           </div>
+
+          {summaryCards.length > 0 && (
+            <div className="grid gap-2" aria-label="Peppi today summary cards">
+              {summaryCards.map((card) => (
+                <div key={card.id} className="rounded-md border bg-background p-3 text-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 space-y-1">
+                      {card.eyebrow && <p className="text-xs text-muted-foreground">{card.eyebrow}</p>}
+                      <p className="font-medium">{card.title}</p>
+                      <p className="text-muted-foreground">{card.body}</p>
+                    </div>
+                    {card.href && card.actionLabel && (
+                      <Button asChild size="sm" variant="outline" className="shrink-0">
+                        <Link href={card.href}>{card.actionLabel}</Link>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
             {pendingAction?.type === 'add_signal_check_in' && (
               <div className="space-y-3 rounded-md border bg-background p-3">
