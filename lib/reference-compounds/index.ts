@@ -41,6 +41,7 @@ import { tb500 } from './entries/tb-500';
 import { tirzepatide } from './entries/tirzepatide';
 import generatedReferenceLibrarySnapshot from '../../app/generated/reference-library.snapshot.json';
 import type { ReferenceLibrarySnapshot } from '../reference-library-snapshot';
+import type { ReferenceCompound } from './schema';
 export { validateReferenceCompound } from './schema';
 export type { ReferenceCompound } from './schema';
 
@@ -92,7 +93,52 @@ const generatedReferenceCompounds = (generatedReferenceLibrarySnapshot as Refere
 const generatedReferenceCompoundsById = new Map(generatedReferenceCompounds.map((compound) => [compound.id, compound]));
 const reviewedReferenceCompoundIds = new Set(reviewedReferenceCompounds.map((compound) => compound.id));
 
+function preferPopulatedArray<T>(generated: T[] | undefined, reviewed: T[] | undefined): T[] {
+  return generated && generated.length > 0 ? generated : reviewed ?? [];
+}
+
+function mergeById<T extends { id: string }>(generated: T[] | undefined, reviewed: T[] | undefined): T[] {
+  const rowsById = new Map<string, T>();
+  (reviewed ?? []).forEach((row) => rowsById.set(row.id, row));
+  (generated ?? []).forEach((row) => rowsById.set(row.id, row));
+  return Array.from(rowsById.values());
+}
+
+function mergeGeneratedReferenceCompound(reviewed: ReferenceCompound, generated: ReferenceCompound | undefined): ReferenceCompound {
+  if (!generated) return reviewed;
+
+  const generatedHasInventoryShape = (
+    generated.concentrationMode !== 'none'
+    || generated.vialPresets.length > 0
+    || Boolean(generated.reconstitutionDefaults)
+  );
+  const shouldKeepGeneratedNoConcentration = generated.id === 'ahk-cu' && generated.concentrationMode === 'none' && generated.defaultRoute === 'topical';
+  const usesReviewedWorkflowMetadata = !generatedHasInventoryShape && !shouldKeepGeneratedNoConcentration;
+  const concentrationMode = generatedHasInventoryShape || shouldKeepGeneratedNoConcentration
+    ? generated.concentrationMode
+    : reviewed.concentrationMode;
+
+  return {
+    ...reviewed,
+    ...generated,
+    source: 'bundled',
+    defaultRoute: usesReviewedWorkflowMetadata ? reviewed.defaultRoute : generated.defaultRoute,
+    supportedRoutes: usesReviewedWorkflowMetadata ? reviewed.supportedRoutes : preferPopulatedArray(generated.supportedRoutes, reviewed.supportedRoutes),
+    defaultDoseUnit: usesReviewedWorkflowMetadata || reviewed.defaultDoseUnit === 'iu' ? reviewed.defaultDoseUnit : generated.defaultDoseUnit,
+    concentrationMode,
+    dosePresets: preferPopulatedArray(generated.dosePresets, reviewed.dosePresets),
+    vialPresets: usesReviewedWorkflowMetadata ? preferPopulatedArray(generated.vialPresets, reviewed.vialPresets) : generated.vialPresets,
+    reconstitutionDefaults: usesReviewedWorkflowMetadata ? generated.reconstitutionDefaults ?? reviewed.reconstitutionDefaults : generated.reconstitutionDefaults,
+    conversion: generated.conversion ?? reviewed.conversion,
+    citations: usesReviewedWorkflowMetadata ? mergeById(generated.citations, reviewed.citations) : generated.citations,
+    inventoryProfile: generated.inventoryProfile ?? reviewed.inventoryProfile,
+    calculatorProfile: generated.calculatorProfile ?? reviewed.calculatorProfile,
+    protocolTemplates: preferPopulatedArray(generated.protocolTemplates, reviewed.protocolTemplates),
+    peppiActions: preferPopulatedArray(generated.peppiActions, reviewed.peppiActions),
+  };
+}
+
 export const referenceCompounds = [
-  ...reviewedReferenceCompounds.map((compound) => generatedReferenceCompoundsById.get(compound.id) ?? compound),
+  ...reviewedReferenceCompounds.map((compound) => mergeGeneratedReferenceCompound(compound, generatedReferenceCompoundsById.get(compound.id))),
   ...generatedReferenceCompounds.filter((compound) => !reviewedReferenceCompoundIds.has(compound.id)),
 ];

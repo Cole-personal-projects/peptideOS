@@ -23,26 +23,26 @@ export function buildActionableLibraryProfile(compound: Compound): ActionableLib
     evidenceLabel: evidence.tierLabel,
     statusLabel: evidence.statusLabel,
     mechanismClass: evidence.mechanismClass,
-    primaryActions: unique([
+    primaryActions: uniqueDisplayItems([
       ...getCoreActions(compound),
       ...(profile?.peptideOSActions ?? []),
     ]),
-    verifyBeforeUse: unique([
+    verifyBeforeUse: uniqueDisplayItems([
       ...getVerificationChecklist(compound),
       ...(profile?.biohackerBrief.verifyBeforeUse ?? []),
     ]),
-    trackInApp: unique([
+    trackInApp: uniqueDisplayItems([
       ...getTrackingChecklist(compound),
       ...(profile?.biohackerBrief.trackInApp ?? []),
       ...(profile?.practicalNotes ?? []),
     ]),
-    inventoryGuidance: unique(getInventoryGuidance(compound)),
-    transparencyFlags: unique([
+    inventoryGuidance: uniqueDisplayItems(getInventoryGuidance(compound)),
+    transparencyFlags: uniqueDisplayItems([
       ...getTransparencyFlags(compound),
       ...(profile?.evidenceGaps ?? []),
     ]),
-    trackingDomains: unique(getTrackingDomains(compound)),
-    peppiPrompts: unique(getPeppiPrompts(compound)),
+    trackingDomains: uniqueDisplayItems(getTrackingDomains(compound)),
+    peppiPrompts: uniqueDisplayItems(getPeppiPrompts(compound)),
   };
 }
 
@@ -226,6 +226,30 @@ function getTransparencyFlags(compound: Compound): string[] {
   return flags;
 }
 
-function unique(values: string[]): string[] {
-  return [...new Set(values.filter((value) => value.trim().length > 0))];
+function toDisplayText(value: unknown): string {
+  if (typeof value === 'string') return value;
+
+  if (value && typeof value === 'object') {
+    return Object.entries(value)
+      .map(([key, entryValue]) => `${key}: ${String(entryValue)}`)
+      .join('; ');
+  }
+
+  return '';
+}
+
+function isDisplayAction(value: string): boolean {
+  return value.includes(' ') || value.endsWith('.');
+}
+
+function uniqueDisplayItems(values: unknown[]): string[] {
+  return [
+    ...new Set(
+      values
+        .map(toDisplayText)
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0)
+        .filter(isDisplayAction),
+    ),
+  ];
 }

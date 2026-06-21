@@ -326,21 +326,21 @@ describe('reference compounds', () => {
     expect(somatropin).toEqual(expect.objectContaining({
       compoundType: 'hormone',
       category: 'hormone-endocrine',
-      defaultDoseUnit: 'mg',
-      concentrationMode: 'none',
+      defaultDoseUnit: 'iu',
+      concentrationMode: 'prefilled',
     }));
     testosteroneCompounds.forEach((compound) => {
       expect(compound).toEqual(expect.objectContaining({
         compoundType: 'hormone',
         category: 'hormone-endocrine',
         defaultDoseUnit: 'mg',
-        concentrationMode: 'none',
+        concentrationMode: 'concentration',
       }));
       expect(compound.source).toBe('bundled');
     });
   });
 
-  test('keeps peptide-style entries publishable without requiring reconstitution defaults', () => {
+  test('preserves workflow metadata when generated peptide records are content-only', () => {
     const peptideIds = ['bpc-157', 'tb-500', 'ghk-cu'];
 
     peptideIds.forEach((id) => {
@@ -348,11 +348,19 @@ describe('reference compounds', () => {
 
       expect(compound).toEqual(expect.objectContaining({
         compoundType: 'peptide',
-        concentrationMode: 'none',
+        concentrationMode: 'reconstituted',
         source: 'bundled',
       }));
+      expect(compound?.reconstitutionDefaults).toBeDefined();
       expect(compound?.referenceProfile?.biohackerBrief.verifyBeforeUse.length).toBeGreaterThanOrEqual(2);
     });
+
+    expect(referenceCompounds.find((entry) => entry.id === 'ahk-cu')).toEqual(expect.objectContaining({
+      compoundType: 'peptide',
+      defaultRoute: 'topical',
+      concentrationMode: 'none',
+      source: 'bundled',
+    }));
   });
 
   test('reports actionable issues for malformed reference entries', () => {

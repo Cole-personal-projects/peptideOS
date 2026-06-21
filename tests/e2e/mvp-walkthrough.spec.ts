@@ -40,6 +40,7 @@ test.describe('MVP tester walkthrough', () => {
 
     await page.getByRole('link', { name: /MVP Walkthrough Stack/ }).click();
     await page.getByRole('button', { name: 'Start' }).click();
+    await expect(page.getByText('Active', { exact: true }).first()).toBeVisible();
     await expect(page.getByText(/pending/).first()).toBeVisible();
 
     await page.goto('/');
