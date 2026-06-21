@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useApp } from '@/lib/context';
 import { cn } from '@/lib/utils';
-import { getVialRunoutForecast } from '@/lib/inventory-metrics';
+import { getVialInventoryMetrics, getVialRunoutForecast } from '@/lib/inventory-metrics';
 
 export function InventoryStatusCard() {
   const { data, getPeptide } = useApp();
@@ -73,6 +73,7 @@ export function InventoryStatusCard() {
             schedules: data.schedules,
             scheduleLogs: data.scheduleLogs,
           });
+          const metrics = getVialInventoryMetrics(vial, data.doses);
           const isExpiringSoon = daysLeft <= 7;
           const isExpired = daysLeft <= 0;
 
@@ -90,7 +91,7 @@ export function InventoryStatusCard() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {forecast.status === 'unscheduled' ? `${vial.mg}mg · ${vial.lotNumber}` : forecast.label}
+                    {forecast.status === 'unscheduled' ? `${metrics.remainingLabel} · ${vial.lotNumber}` : forecast.label}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">

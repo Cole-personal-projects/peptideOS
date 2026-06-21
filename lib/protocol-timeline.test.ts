@@ -175,6 +175,23 @@ describe('buildProtocolCockpitSummary', () => {
   });
   });
 
+  it('does not surface inventory coverage warnings without active stack schedules', () => {
+    const summary = buildProtocolCockpitSummary(
+      appData({
+        stacks: [],
+        schedules: [],
+        scheduleLogs: [],
+        vials: [{ ...vial, mg: 1 }],
+      }),
+      new Date('2026-06-21T08:00:00.000Z'),
+    );
+
+    expect(summary.activeStackCount).toBe(0);
+    expect(summary.inventoryRiskCount).toBe(0);
+    expect(summary.mostUrgentInventoryRisk).toBeUndefined();
+    expect(summary.events.some((event) => event.kind === 'inventory')).toBe(false);
+  });
+
   it('ranks critical inventory and overdue events ahead of low-urgency recent activity', () => {
     const summary = buildProtocolCockpitSummary(
       appData({
