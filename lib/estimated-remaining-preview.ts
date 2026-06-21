@@ -21,6 +21,34 @@ export interface EstimatedRemainingPreviewRow {
   latestActualEvent?: PharmacokineticDoseEvent;
 }
 
+export interface DashboardEstimatedRemainingPreviewRow extends EstimatedRemainingPreviewRow {
+  stackId: string;
+  stackName: string;
+  href: string;
+}
+
+export function buildDashboardEstimatedRemainingPreview(
+  data: Pick<AppData, 'compounds' | 'doses' | 'schedules' | 'scheduleLogs' | 'stacks'>,
+  sampledAt = new Date().toISOString(),
+  limit = 3,
+): DashboardEstimatedRemainingPreviewRow[] {
+  return data.stacks
+    .filter((stack) => stack.status === 'active')
+    .flatMap((stack) => buildEstimatedRemainingPreview(stack, data, sampledAt).map((row) => ({
+      ...row,
+      stackId: stack.id,
+      stackName: stack.name,
+      href: `/stacks/${stack.id}`,
+    })))
+    .sort((a, b) => {
+      const aLatest = a.latestActualEvent?.occurredAt ?? '';
+      const bLatest = b.latestActualEvent?.occurredAt ?? '';
+      if (aLatest !== bLatest) return bLatest.localeCompare(aLatest);
+      return b.actualEstimatedRemainingMg - a.actualEstimatedRemainingMg;
+    })
+    .slice(0, limit);
+}
+
 export function buildEstimatedRemainingPreview(
   stack: Stack,
   data: Pick<AppData, 'compounds' | 'doses' | 'schedules' | 'scheduleLogs'>,

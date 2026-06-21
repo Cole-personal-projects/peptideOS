@@ -97,4 +97,104 @@ await page.getByRole('button', { name: 'Complete' }).first().click();
   await expect(page.getByText('No doses due today')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Build a stack' })).toBeVisible();
   });
+
+  test('shows estimated remaining amount preview for active PK-backed stacks', async ({ page }, testInfo) => {
+    await page.clock.setFixedTime(new Date('2026-06-08T12:00:00-07:00'));
+    const exportPath = testInfo.outputPath('dashboard-estimated-remaining-data.json');
+    await writeFile(exportPath, JSON.stringify({
+      schemaVersion: 4,
+      exportedAt: '2026-06-08T00:00:00.000Z',
+      data: {
+        vials: [],
+        doses: [
+          {
+            id: 'dose-semaglutide-dashboard',
+            peptideId: 'semaglutide',
+            vialId: '',
+            scheduleLogId: 'log-semaglutide-taken',
+            dateTime: '2026-06-01T08:00:00.000Z',
+            doseValue: 1,
+            doseUnit: 'mg',
+            route: 'subq',
+            site: 'abdomen-upper-left',
+            notes: '',
+            completed: true,
+          },
+        ],
+        stacks: [
+          {
+            id: 'stack-semaglutide-dashboard',
+            name: 'Semaglutide Dashboard Stack',
+            description: '',
+            peptides: [
+              {
+                id: 'stack-item-semaglutide',
+                peptideId: 'semaglutide',
+                doseValue: 1,
+                doseUnit: 'mg',
+                frequency: 'weekly',
+                route: 'subq',
+                timing: 'Morning',
+              },
+            ],
+            startDate: '2026-06-01T00:00:00.000Z',
+            durationDays: 30,
+            status: 'active',
+            notes: '',
+          },
+        ],
+        schedules: [
+          {
+            id: 'schedule-semaglutide-dashboard',
+            stackId: 'stack-semaglutide-dashboard',
+            stackPeptideId: 'stack-item-semaglutide',
+            peptideId: 'semaglutide',
+            doseValue: 1,
+            doseUnit: 'mg',
+            route: 'subq',
+            recurrence: { frequency: 'weekly', timesOfDay: ['08:00'], weekdays: [1] },
+            startDate: '2026-06-01T00:00:00.000Z',
+            endDate: '2026-07-01T00:00:00.000Z',
+            status: 'active',
+          },
+        ],
+        scheduleLogs: [
+          {
+            id: 'log-semaglutide-taken',
+            scheduleId: 'schedule-semaglutide-dashboard',
+            stackId: 'stack-semaglutide-dashboard',
+            stackPeptideId: 'stack-item-semaglutide',
+            peptideId: 'semaglutide',
+            dueAt: '2026-06-01T08:00:00.000Z',
+            status: 'taken',
+            doseId: 'dose-semaglutide-dashboard',
+            takenAt: '2026-06-01T08:00:00.000Z',
+          },
+        ],
+        reconstitutionCalculations: [],
+        userCompounds: [],
+        settings: {
+          hasSeenDisclaimer: true,
+          hasCompletedOnboarding: true,
+          userMode: 'researcher',
+          biometricLock: false,
+          darkMode: true,
+        },
+      },
+    }));
+
+    await page.goto('/more/settings');
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByLabel('Import Data File').setInputFiles(exportPath);
+    await expect(page.getByRole('alertdialog', { name: 'Restore this PeptideOS backup?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Restore backup' }).click();
+    await expect(page.getByRole('status')).toContainText('Data restored from backup');
+
+    await page.goto('/');
+    await expect(page.getByText('Estimated remaining amount')).toBeVisible();
+    const estimatedPreview = page.getByRole('link', { name: /Semaglutide Dashboard Stack/ }).first();
+    await expect(estimatedPreview).toContainText('Semaglutide');
+    await expect(estimatedPreview).toContainText('half-life assumption 7 days');
+    await expect(page.getByText('First-order estimate from logged completed doses. Not measured concentration or dose guidance.')).toBeVisible();
+  });
 });
