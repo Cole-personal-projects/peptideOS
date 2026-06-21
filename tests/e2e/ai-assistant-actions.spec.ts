@@ -1,6 +1,24 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('Peppi action approvals', () => {
+  test('summarizes today locally without calling AI', async ({ page }) => {
+    let aiRequested = false;
+    await page.route('**/api/ai/propose-action', async (route) => {
+      aiRequested = true;
+      await route.abort();
+    });
+
+    await page.goto('/more/ai-assistant');
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('textbox', { name: 'Message Peppi' }).fill('Summarize today');
+    await page.getByRole('button', { name: 'Send message' }).click();
+
+    await expect(page.getByText('Today: 0 due, 0 overdue, 0 completed, 0 skipped or missed.')).toBeVisible();
+    await expect(page.getByText('No pending due-dose action found for today.')).toBeVisible();
+    await expect(page.getByText('not dosing or safety advice')).toBeVisible();
+    expect(aiRequested).toBe(false);
+  });
+
   test('proposes and confirms sealed kit inventory from chat', async ({ page }) => {
     await page.route('**/api/ai/propose-action', async (route) => {
       await route.fulfill({

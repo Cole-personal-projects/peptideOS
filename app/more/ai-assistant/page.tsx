@@ -9,7 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
+  buildAssistantTodaySummary,
   isAssistantAction,
+  isTodayStatusRequest,
   proposeAssistantActionFromMessage,
   type AssistantAction,
   type AssistantActionProposal,
@@ -21,6 +23,10 @@ import type { ProtocolCompoundInput } from '@/lib/ai-protocol';
 import { buildNewVialBatch, getPhysicalVialCount } from '@/lib/vial-create';
 
 const workflowPrompts = [
+  {
+    label: 'Today summary',
+    prompt: 'Summarize today: due, completed, missed, inventory coverage, and latest Signal.',
+  },
   {
     label: 'Add to my schedule',
     prompt: 'Add to my schedule: ',
@@ -88,6 +94,14 @@ export default function AIAssistantPage() {
   const sendMessage = async () => {
     const trimmedMessage = message.trim();
     if (!trimmedMessage || isSending) return;
+
+    if (isTodayStatusRequest(trimmedMessage)) {
+      const localSummary = buildAssistantTodaySummary(data);
+      setPendingAction(null);
+      setAssistantMessage(localSummary.message);
+      setMessage('');
+      return;
+    }
 
     setIsSending(true);
     const peppiProposal = await requestAssistantActionProposal(trimmedMessage, proposalCompounds);
