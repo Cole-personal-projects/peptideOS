@@ -7,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { QuickConfirmDoseDialog } from '@/components/dashboard/quick-confirm-dose-dialog';
 import { useApp } from '@/lib/context';
 import { buildDashboardEstimatedRemainingPreview } from '@/lib/estimated-remaining-preview';
 import { buildProtocolCockpitSummary, type ProtocolTimelineEvent } from '@/lib/protocol-timeline';
@@ -50,9 +51,22 @@ function statusLabel(value: string) {
   return value.replace(/-/g, ' ');
 }
 
-function TimelineEventLink({ event }: { event: ProtocolTimelineEvent }) {
-  return (
-    <Link key={event.id} href={event.href ?? '/'} className="block rounded-md border p-3 transition-colors hover:bg-secondary/50">
+function getScheduleLogId(event: ProtocolTimelineEvent): string | null {
+  const prefix = 'schedule-log:';
+  return event.id.startsWith(prefix) ? event.id.slice(prefix.length) : null;
+}
+
+function TimelineEventLink({ event, onQuickConfirm }: { event: ProtocolTimelineEvent; onQuickConfirm?: (logId: string) => void }) {
+  const scheduleLogId = getScheduleLogId(event);
+  const canQuickConfirm = Boolean(
+    scheduleLogId &&
+      event.kind === 'due-dose' &&
+      (event.status === 'pending' || event.status === 'overdue') &&
+      onQuickConfirm,
+  );
+
+  const eventBody = (
+    <>
       <div className="flex items-start gap-3">
         <div className="mt-0.5 text-muted-foreground">{eventIcon(event)}</div>
         <div className="min-w-0 flex-1">
@@ -66,6 +80,28 @@ function TimelineEventLink({ event }: { event: ProtocolTimelineEvent }) {
         </div>
         <p className="text-right text-[11px] text-muted-foreground">{formatEventTime(event.occurredAt)}</p>
       </div>
+    </>
+  );
+
+  if (canQuickConfirm && scheduleLogId) {
+    return (
+      <div key={event.id} className="rounded-md border p-3">
+        {eventBody}
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Button asChild size="sm" variant="outline">
+            <Link href={event.href ?? '/log'}>Details</Link>
+          </Button>
+          <Button size="sm" onClick={() => onQuickConfirm?.(scheduleLogId)}>
+            Quick confirm
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Link key={event.id} href={event.href ?? '/'} className="block rounded-md border p-3 transition-colors hover:bg-secondary/50">
+      {eventBody}
     </Link>
   );
 }
@@ -83,6 +119,7 @@ function formatHalfLife(hours: number): string {
 export function ProtocolCockpitCard() {
   const { data } = useApp();
   const [filter, setFilter] = useState<CockpitFilter>('all');
+  const [quickConfirmLogId, setQuickConfirmLogId] = useState<string | null>(null);
   const summary = buildProtocolCockpitSummary(data);
   const estimatedRemainingRows = buildDashboardEstimatedRemainingPreview(data);
   const filteredEvents = summary.events.filter((event) => {
@@ -247,7 +284,7 @@ export function ProtocolCockpitCard() {
           </div>
         ) : (
           <div className="space-y-2">
-            {primaryEvent && <TimelineEventLink event={primaryEvent} />}
+            {primaryEvent && <TimelineEventLink event={primaryEvent} onQuickConfirm={setQuickConfirmLogId} />}
             {drawerEvents.length > 0 && (
               <Accordion type="single" collapsible className="rounded-md border px-3">
                 <AccordionItem value="more-events" className="border-b-0">
@@ -255,7 +292,7 @@ export function ProtocolCockpitCard() {
                     {drawerEvents.length} more upcoming item{drawerEvents.length === 1 ? '' : 's'}
                   </AccordionTrigger>
                   <AccordionContent className="space-y-2 pb-3">
-                    {drawerEvents.map((event) => <TimelineEventLink key={event.id} event={event} />)}
+                    {drawerEvents.map((event) => <TimelineEventLink key={event.id} event={event} onQuickConfirm={setQuickConfirmLogId} />)}
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -268,6 +305,11 @@ export function ProtocolCockpitCard() {
             Latest signal: {summary.latestSignal.detail}
           </p>
         )}
+        <QuickConfirmDoseDialog
+          logId={quickConfirmLogId}
+          open={Boolean(quickConfirmLogId)}
+          onOpenChange={(open) => !open && setQuickConfirmLogId(null)}
+        />
       </CardContent>
     </Card>
   );

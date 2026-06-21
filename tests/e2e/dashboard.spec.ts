@@ -47,22 +47,26 @@ test.describe('dashboard polish', () => {
 
 await expect(page.getByText('Due today')).toBeVisible();
 await expect(page.getByText('Pending action', { exact: true }).first()).toBeVisible();
-await expect(page.getByText('Next action')).toBeVisible();
-await expect(page.getByRole('button', { name: 'All' })).toBeVisible();
-await page.getByRole('button', { name: 'Due' }).click();
-await expect(page.getByRole('link', { name: /BPC-157 250 mcg.*Dashboard Actionability Stack/ }).first()).toBeVisible();
+  await expect(page.getByText('Next action')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'All' })).toBeVisible();
+  await page.getByRole('button', { name: 'Due' }).click();
+  await expect(page.getByText(/BPC-157 250 mcg/).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Quick confirm' }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Coverage' }).click();
   await expect(page.getByText('No inventory coverage events right now')).toBeVisible();
-await page.getByRole('button', { name: 'All' }).click();
+  await page.getByRole('button', { name: 'All' }).click();
 
-await page.getByRole('button', { name: 'Complete' }).first().click();
-    await page.getByRole('combobox').filter({ hasText: 'Select active vial' }).click();
-    await page.getByRole('option', { name: /BPC-157 active vial/ }).click();
-    await page.getByRole('button', { name: 'Upper Left Abdomen' }).click();
-    await page.getByRole('button', { name: 'Complete dose' }).click();
+  await page.getByRole('button', { name: 'Quick confirm' }).first().click();
+  const quickConfirm = page.getByRole('dialog', { name: 'Quick confirm dose' });
+  await expect(quickConfirm).toBeVisible();
+  await expect(quickConfirm.getByText('Dashboard Actionability Stack')).toBeVisible();
+  await quickConfirm.getByRole('combobox', { name: 'Vial' }).click();
+  await page.getByRole('option', { name: /BPC-157 active vial/ }).click();
+  await quickConfirm.getByRole('button', { name: 'Upper Left Abdomen' }).click();
+  await quickConfirm.getByRole('button', { name: 'Confirm dose' }).click();
 
-    await expect(page.getByText('Taken today', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText('Completed scheduled dose')).toBeVisible();
+  await expect(page.getByText('Taken today', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Completed scheduled dose')).toBeVisible();
   });
 
   test('gives a stack-building action when there are no due doses', async ({ page }, testInfo) => {
