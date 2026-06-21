@@ -147,9 +147,16 @@ test.describe('Peppi action approvals', () => {
     await page.getByRole('button', { name: 'Send message' }).click();
 
     await expect(page.getByText('I will create this schedule for review.')).toBeVisible();
-    await expect(page.getByText('AI BPC Schedule')).toBeVisible();
-    await expect(page.getByText('BPC-157', { exact: true })).toBeVisible();
-    await expect(page.getByText('250 mcg · daily · SUBQ · Morning')).toBeVisible();
+  await expect(page.getByLabel('Peppi protocol draft')).toBeVisible();
+  await expect(page.getByText('Protocol draft')).toBeVisible();
+  await expect(page.getByText('AI BPC Schedule')).toBeVisible();
+  await expect(page.getByText('BPC-157', { exact: true })).toBeVisible();
+  await expect(page.getByText('250 mcg')).toBeVisible();
+  await expect(page.getByText('daily', { exact: true })).toBeVisible();
+  await expect(page.getByText('SUBQ', { exact: true })).toBeVisible();
+  await expect(page.getByText('Morning', { exact: true })).toBeVisible();
+  await expect(page.getByText('28 days')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Edit in builder' })).toHaveAttribute('href', '/stacks?compound=bpc-157&add=protocol');
 
     await page.getByRole('button', { name: 'Confirm Schedule' }).click();
     await expect(page.getByText('Schedule saved.')).toBeVisible();
