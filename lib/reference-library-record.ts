@@ -3,6 +3,7 @@ import type {
   Citation,
   CompoundDosePreset,
   CompoundCategory,
+  CompoundPharmacokinetics,
   ConcentrationMode,
   CompoundType,
   DoseUnit,
@@ -129,6 +130,13 @@ export interface ReferenceLibraryRecord {
   };
   storage?: {
     handling?: string[];
+  };
+  pharmacokinetics?: {
+    half_life_hours: number;
+    half_life_source: string;
+    source_ids: string[];
+    evidence_tier?: RecordEvidenceTier;
+    model_notes: string;
   };
   calculator_profile?: {
     reconstitution_compatible: boolean;
@@ -266,6 +274,29 @@ export function validateReferenceLibraryRecord(record: ReferenceLibraryRecord): 
     });
   });
 
+  if (record.pharmacokinetics) {
+    if (!Number.isFinite(record.pharmacokinetics.half_life_hours) || record.pharmacokinetics.half_life_hours <= 0) {
+      issues.push(`${record.compound_id}: pharmacokinetics.half_life_hours must be positive`);
+    }
+    if (!record.pharmacokinetics.half_life_source.trim()) {
+      issues.push(`${record.compound_id}: pharmacokinetics.half_life_source is required`);
+    }
+    if (!record.pharmacokinetics.model_notes.trim()) {
+      issues.push(`${record.compound_id}: pharmacokinetics.model_notes is required`);
+    }
+    if (record.pharmacokinetics.evidence_tier && !allowedEvidenceTiers.has(record.pharmacokinetics.evidence_tier)) {
+      issues.push(`${record.compound_id}: pharmacokinetics.evidence_tier "${record.pharmacokinetics.evidence_tier}" invalid`);
+    }
+    if (record.pharmacokinetics.source_ids.length === 0) {
+      issues.push(`${record.compound_id}: pharmacokinetics.source_ids are required`);
+    }
+    record.pharmacokinetics.source_ids.forEach((sourceId) => {
+      if (!sourceIds.has(sourceId)) {
+        issues.push(`${record.compound_id}: pharmacokinetics references unknown source "${sourceId}"`);
+      }
+    });
+  }
+
   record.sources.forEach((source) => {
     if (!allowedSourceTypes.has(source.source_type)) {
       issues.push(`${record.compound_id}: source "${source.id}" has invalid source_type "${source.source_type}"`);
@@ -368,6 +399,7 @@ export function referenceLibraryRecordToCompound(record: ReferenceLibraryRecord)
     concentrationMode: record.forms.concentration_mode ?? 'none',
     dosePresets: buildDosePresets(record),
     vialPresets: buildVialPresets(record),
+    ...(record.pharmacokinetics ? { pharmacokinetics: recordPharmacokineticsToCompound(record) } : {}),
     ...(record.calculator_profile?.reconstitution_compatible ? {
       reconstitutionDefaults: {
         typicalVialAmounts: record.calculator_profile.typical_vial_amounts,
@@ -460,6 +492,21 @@ export function referenceLibraryRecordToCompound(record: ReferenceLibraryRecord)
   }
 
   return compound;
+}
+
+function recordPharmacokineticsToCompound(record: ReferenceLibraryRecord): CompoundPharmacokinetics {
+  const pharmacokinetics = record.pharmacokinetics;
+  if (!pharmacokinetics) {
+    throw new Error(`Reference library record "${record.compound_id}" does not include pharmacokinetics`);
+  }
+
+  return {
+    halfLifeHours: pharmacokinetics.half_life_hours,
+    halfLifeSource: pharmacokinetics.half_life_source,
+    citationIds: pharmacokinetics.source_ids,
+    evidenceTier: mapEvidenceTier(pharmacokinetics.evidence_tier ?? record.evidence.tier),
+    modelNotes: pharmacokinetics.model_notes,
+  };
 }
 
 function buildStorageSummary(record: ReferenceLibraryRecord): string {

@@ -1,7 +1,7 @@
 {
   "libraryVersion": "2026.05.0",
   "schemaVersion": 1,
-  "exportedAt": "2026-06-21T03:15:36.381Z",
+  "exportedAt": "2026-06-21T03:56:17.011Z",
   "source": {
     "kind": "bundled",
     "registry": "peptideos-reference-registry"
@@ -4825,6 +4825,15 @@
           ]
         }
       ],
+      "pharmacokinetics": {
+        "halfLifeHours": 144,
+        "halfLifeSource": "Published phase 2 retatrutide trial context describes a half-life of approximately 6 days.",
+        "citationIds": [
+          "pubmed-retatrutide-obesity-phase-2"
+        ],
+        "evidenceTier": "phase-2-published",
+        "modelNotes": "First-order estimated remaining amount only; investigational compound context does not represent measured concentration, clinical response, or dose guidance."
+      },
       "reconstitutionDefaults": {
         "typicalVialAmounts": [
           {
@@ -5374,6 +5383,15 @@
       "concentrationMode": "none",
       "dosePresets": [],
       "vialPresets": [],
+      "pharmacokinetics": {
+        "halfLifeHours": 168,
+        "halfLifeSource": "DailyMed semaglutide labeling describes an elimination half-life of approximately 1 week.",
+        "citationIds": [
+          "dailymed-semaglutide"
+        ],
+        "evidenceTier": "approved-label",
+        "modelNotes": "First-order estimated remaining amount only; does not represent measured concentration, clinical response, or dose guidance."
+      },
       "beginnerSummary": "Semaglutide is a long-acting GLP-1 receptor agonist used for glucose control and weight management. Useful tracking focuses on weekly dose step, injection day, appetite, weight trend, GI effects, glucose data, and missed-dose history.",
       "researcherDetails": "Semaglutide is a long-acting GLP-1 receptor agonist used for glucose control and weight management. Useful tracking focuses on weekly dose step, injection day, appetite, weight trend, GI effects, glucose data, and missed-dose history.",
       "mechanism": "GLP-1 receptor agonism, delayed gastric emptying, central appetite suppression, glucose-dependent insulin secretion",
@@ -6845,6 +6863,15 @@
       "concentrationMode": "none",
       "dosePresets": [],
       "vialPresets": [],
+      "pharmacokinetics": {
+        "halfLifeHours": 120,
+        "halfLifeSource": "DailyMed tirzepatide labeling describes an elimination half-life of approximately 5 days.",
+        "citationIds": [
+          "dailymed-tirzepatide"
+        ],
+        "evidenceTier": "approved-label",
+        "modelNotes": "First-order estimated remaining amount only; does not represent measured concentration, clinical response, or dose guidance."
+      },
       "beginnerSummary": "Tirzepatide is a weekly GIP and GLP-1 receptor agonist used for metabolic care and weight management. Useful tracking centers on dose escalation, injection day, appetite, GI effects, weight trend, glucose markers, and missed-dose history.",
       "researcherDetails": "Tirzepatide is a weekly GIP and GLP-1 receptor agonist used for metabolic care and weight management. Useful tracking centers on dose escalation, injection day, appetite, GI effects, weight trend, glucose markers, and missed-dose history.",
       "mechanism": "GIP receptor, GLP-1 receptor",
