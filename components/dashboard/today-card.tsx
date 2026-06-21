@@ -6,22 +6,15 @@ import { CheckCircle2, Circle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { BodyMannequin } from '@/components/site-picker/body-mannequin';
+import { QuickConfirmDoseDialog } from '@/components/dashboard/quick-confirm-dose-dialog';
 import { useApp } from '@/lib/context';
 import { cn } from '@/lib/utils';
 import { formatDose } from '@/lib/dose-helpers';
-import { getVialInventoryMetrics } from '@/lib/inventory-metrics';
 import { buildDueDoseInbox, type DueDoseInboxItem, type DueDoseState } from '@/lib/due-doses';
-import type { Schedule, ScheduleLog, SiteCode } from '@/lib/types';
-
-const injectableRoutes = new Set(['subq', 'im']);
+import type { Schedule, ScheduleLog } from '@/lib/types';
 
 export function TodayCard() {
-  const { data, getTodaysDoses, getTodaysScheduleLogs, getPeptide, updateDose, completeScheduleLog, skipScheduleLog } = useApp();
+  const { data, getTodaysDoses, getTodaysScheduleLogs, getPeptide, updateDose, skipScheduleLog } = useApp();
   const todaysDoses = getTodaysDoses();
   const todaysScheduleLogs = getTodaysScheduleLogs();
   const dueDoseInbox = useMemo(() => buildDueDoseInbox(data), [data]);
@@ -40,21 +33,8 @@ export function TodayCard() {
     ...todayScheduleItems,
   ];
   const standaloneDoses = todaysDoses.filter((dose) => !dose.scheduleLogId);
-  const [activeLog, setActiveLog] = useState<ScheduleLog | null>(null);
-  const [vialId, setVialId] = useState('');
-  const [site, setSite] = useState<SiteCode | ''>('');
-  const [notes, setNotes] = useState('');
+  const [activeLogId, setActiveLogId] = useState<string | null>(null);
   const [savingLogId, setSavingLogId] = useState<string | null>(null);
-
-  const activeSchedule = useMemo(
-    () => activeLog ? data.schedules.find((schedule) => schedule.id === activeLog.scheduleId) : undefined,
-    [activeLog, data.schedules],
-  );
-  const activeVials = activeSchedule
-    ? data.vials.filter((vial) => vial.status === 'active' && vial.peptideId === activeSchedule.peptideId)
-    : [];
-  const requiresSite = activeSchedule ? injectableRoutes.has(activeSchedule.route) : false;
-  const canCompleteActiveLog = Boolean(vialId && (!requiresSite || site));
 
   const formatTime = (dateTime: string) => {
     return new Date(dateTime).toLocaleTimeString('en-US', {
@@ -69,28 +49,11 @@ export function TodayCard() {
   };
 
   const openCompletion = (log: ScheduleLog) => {
-    setActiveLog(log);
-    setVialId('');
-    setSite('');
-    setNotes('');
+    setActiveLogId(log.id);
   };
 
   const closeCompletion = () => {
-    setActiveLog(null);
-    setVialId('');
-    setSite('');
-    setNotes('');
-  };
-
-  const handleCompleteScheduleLog = async () => {
-    if (!activeLog || !vialId || (requiresSite && !site)) return;
-    setSavingLogId(activeLog.id);
-    try {
-      await completeScheduleLog(activeLog.id, { vialId, site, notes });
-      closeCompletion();
-    } finally {
-      setSavingLogId(null);
-    }
+    setActiveLogId(null);
   };
 
   const handleSkipScheduleLog = async (logId: string) => {
@@ -235,87 +198,14 @@ export function TodayCard() {
         </CardContent>
       </Card>
 
-      <Dialog open={Boolean(activeLog)} onOpenChange={(open) => !open && closeCompletion()}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Complete scheduled dose</DialogTitle>
-            <DialogDescription>
-              Select the vial and confirm the details used for this scheduled dose.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-5">
-            {activeSchedule && (
-              <div className="rounded-md bg-secondary p-3 text-sm">
-                <p className="font-medium">
-                  {getPeptide(activeSchedule.peptideId)?.name} · {formatDose(activeSchedule.doseValue, activeSchedule.doseUnit)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {activeSchedule.route.toUpperCase()} route
-                </p>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label>Vial</Label>
-              {activeVials.length > 0 ? (
-                <Select value={vialId} onValueChange={setVialId}>
-                  <SelectTrigger aria-label="Vial">
-                    <SelectValue placeholder="Select active vial" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activeVials.map((vial) => {
-                      const metrics = getVialInventoryMetrics(vial, data.doses);
-                      return (
-                        <SelectItem key={vial.id} value={vial.id}>
-                          {vial.name} · {vial.lotNumber || 'no lot'} · {metrics.remainingLabel} left
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="rounded-md border border-chart-4/40 bg-chart-4/10 p-3 text-sm">
-                  <p className="font-medium text-chart-4">No active vial available</p>
-                  <p className="mt-1 text-muted-foreground">
-                    Activate or add a vial in Inventory before completing this scheduled dose.
-                  </p>
-                  <Button asChild size="sm" variant="outline" className="mt-3">
-                    <Link href="/more/inventory">Open Inventory</Link>
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {activeSchedule && requiresSite && (
-              <div className="space-y-2">
-                <Label>Injection Site</Label>
-                <BodyMannequin
-                  compact
-                  doses={data.doses}
-                  route={activeSchedule.route}
-                  selectedSite={site}
-                  onSiteChange={setSite}
-                  onRouteChange={() => undefined}
-                  getPeptide={getPeptide}
-                />
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label>Notes</Label>
-              <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Optional notes" />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={closeCompletion}>Cancel</Button>
-            <Button onClick={() => void handleCompleteScheduleLog()} disabled={!canCompleteActiveLog || savingLogId === activeLog?.id}>
-              Complete dose
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <QuickConfirmDoseDialog
+        logId={activeLogId}
+        open={Boolean(activeLogId)}
+        onOpenChange={(open) => !open && closeCompletion()}
+        title="Complete scheduled dose"
+        description="Select the vial and confirm the details used for this scheduled dose."
+        confirmLabel="Complete dose"
+      />
     </>
   );
 }

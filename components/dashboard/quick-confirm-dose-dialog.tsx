@@ -34,6 +34,9 @@ interface QuickConfirmDoseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirmed?: (result: QuickConfirmDoseResult) => void;
+  title?: string;
+  description?: string;
+  confirmLabel?: string;
 }
 
 const injectableRoutes = new Set(['subq', 'im']);
@@ -60,7 +63,15 @@ function formatSiteLabel(siteCode: SiteCode | ''): string {
   return getInjectionZoneById(siteCode)?.label ?? siteCode.replace(/-/g, ' ');
 }
 
-export function QuickConfirmDoseDialog({ logId, open, onOpenChange, onConfirmed }: QuickConfirmDoseDialogProps) {
+export function QuickConfirmDoseDialog({
+  logId,
+  open,
+  onOpenChange,
+  onConfirmed,
+  title = 'Quick confirm dose',
+  description = 'Review the scheduled dose, choose the inventory source, then confirm the log.',
+  confirmLabel = 'Confirm dose',
+}: QuickConfirmDoseDialogProps) {
   const { data, getPeptide, completeScheduleLog } = useApp();
   const [vialId, setVialId] = useState('');
   const [site, setSite] = useState<SiteCode | ''>('');
@@ -145,9 +156,9 @@ export function QuickConfirmDoseDialog({ logId, open, onOpenChange, onConfirmed 
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Quick confirm dose</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            Review the scheduled dose, choose the inventory source, then confirm the log.
+            {description}
           </DialogDescription>
         </DialogHeader>
 
@@ -280,7 +291,7 @@ export function QuickConfirmDoseDialog({ logId, open, onOpenChange, onConfirmed 
             <Link href="/log">Full log</Link>
           </Button>
           <Button onClick={() => void handleConfirm()} disabled={!canConfirm || saving}>
-            Confirm dose
+            {confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
