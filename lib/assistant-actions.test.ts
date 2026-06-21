@@ -1,7 +1,126 @@
 import { describe, expect, test } from 'vitest';
-import { isAssistantAction, proposeAssistantActionFromMessage } from './assistant-actions';
+import { buildAssistantTodaySummary, isAssistantAction, isTodayStatusRequest, proposeAssistantActionFromMessage } from './assistant-actions';
+import type { AppData } from './types';
+
+const baseData: AppData = {
+  peptides: [],
+  compounds: [{
+    id: 'bpc-157',
+    name: 'BPC-157',
+    aliases: [],
+    compoundType: 'peptide',
+    category: 'healing',
+    defaultRoute: 'subq',
+    supportedRoutes: ['subq'],
+    defaultDoseUnit: 'mcg',
+    concentrationMode: 'reconstituted',
+    dosePresets: [],
+    vialPresets: [],
+    beginnerSummary: '',
+    researcherDetails: '',
+    mechanism: '',
+    safety: '',
+    storage: '',
+    citations: [],
+    source: 'bundled',
+    curationStatus: 'reviewed',
+  }],
+  vials: [],
+  inventoryBatches: [],
+  doses: [],
+  stacks: [],
+  schedules: [],
+  scheduleLogs: [],
+  reconstitutionCalculations: [],
+  signalCheckIns: [],
+  hasSeenDisclaimer: true,
+  hasCompletedOnboarding: true,
+  userMode: 'researcher',
+  biometricLock: false,
+  darkMode: true,
+};
 
 describe('assistant action proposals', () => {
+ test('detects local today status requests', () => {
+ expect(isTodayStatusRequest('What is due today?')).toBe(true);
+ expect(isTodayStatusRequest('summarize today')).toBe(true);
+ expect(isTodayStatusRequest('Add inventory: BPC vial')).toBe(false);
+ });
+
+ test('summarizes today from local protocol records without proposing mutation', () => {
+ const proposal = buildAssistantTodaySummary({
+ ...baseData,
+ stacks: [{
+ id: 'stack-1',
+ name: 'Active stack',
+ description: '',
+ peptides: [],
+ startDate: '2026-06-20T00:00:00.000Z',
+ durationDays: 14,
+ status: 'active',
+ notes: '',
+ }],
+ schedules: [{
+ id: 'schedule-1',
+ stackId: 'stack-1',
+ stackPeptideId: 'stack-peptide-1',
+ peptideId: 'bpc-157',
+ doseValue: 250,
+ doseUnit: 'mcg',
+ route: 'subq',
+ recurrence: { frequency: 'daily', timesOfDay: ['08:00'] },
+ startDate: '2026-06-20T00:00:00.000Z',
+ endDate: '2026-07-04T00:00:00.000Z',
+ status: 'active',
+ }],
+ scheduleLogs: [
+ {
+ id: 'due-today',
+ scheduleId: 'schedule-1',
+ stackId: 'stack-1',
+ stackPeptideId: 'stack-peptide-1',
+ peptideId: 'bpc-157',
+ dueAt: '2026-06-21T20:00:00.000Z',
+ status: 'pending',
+ },
+ {
+ id: 'taken-today',
+ scheduleId: 'schedule-1',
+ stackId: 'stack-1',
+ stackPeptideId: 'stack-peptide-1',
+ peptideId: 'bpc-157',
+ dueAt: '2026-06-21T08:00:00.000Z',
+ status: 'taken',
+ takenAt: '2026-06-21T08:05:00.000Z',
+ },
+ {
+ id: 'missed-today',
+ scheduleId: 'schedule-1',
+ stackId: 'stack-1',
+ stackPeptideId: 'stack-peptide-1',
+ peptideId: 'bpc-157',
+ dueAt: '2026-06-21T07:00:00.000Z',
+ status: 'missed',
+ missedAt: '2026-06-21T09:00:00.000Z',
+ },
+ ],
+ signalCheckIns: [{
+ id: 'signal-1',
+ checkedAt: '2026-06-21T09:30:00.000Z',
+ energy: 7,
+ sleepHours: 6.5,
+ notes: 'calm morning',
+ }],
+ }, new Date('2026-06-21T12:00:00.000Z'));
+
+ expect(proposal.action).toBeNull();
+ expect(proposal.message).toContain('Today: 1 due, 0 overdue, 1 completed, 1 skipped or missed.');
+ expect(proposal.message).toContain('1 active stack.');
+ expect(proposal.message).toContain('Next action: BPC-157');
+ expect(proposal.message).toContain('Latest Signal: Energy 7/10');
+ expect(proposal.message).toContain('not dosing or safety advice');
+ });
+
   test('creates a Signal check-in action from a user note', () => {
     const action = proposeAssistantActionFromMessage(
       'Energy was 7, slept 6 hours, shoulder calm today.',

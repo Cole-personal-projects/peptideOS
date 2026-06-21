@@ -1,5 +1,6 @@
 import type { NewVialInput } from './vial-create';
-import type { DoseUnit, InventoryContainerType, Route, ScheduleFrequency, ScheduleRecurrence, SignalCheckIn, Stack } from './types';
+import { buildProtocolCockpitSummary } from './protocol-timeline';
+import type { AppData, DoseUnit, InventoryContainerType, Route, ScheduleFrequency, ScheduleRecurrence, SignalCheckIn, Stack } from './types';
 
 export type AssistantAction =
   | {
@@ -21,6 +22,42 @@ export type AssistantAction =
 export interface AssistantActionProposal {
   message: string;
   action: AssistantAction | null;
+}
+
+export function isTodayStatusRequest(message: string) {
+  return /\b(today|due|overdue|completed|missed|skipped|what did i do|what do i need)\b/i.test(message)
+    && /\b(summary|summarize|status|brief|briefing|due|completed|missed|skipped|need|do)\b/i.test(message);
+}
+
+export function buildAssistantTodaySummary(data: AppData, now = new Date()): AssistantActionProposal {
+  const summary = buildProtocolCockpitSummary(data, now);
+  const parts = [
+    `Today: ${summary.dueCount} due, ${summary.overdueCount} overdue, ${summary.completedTodayCount} completed, ${summary.skippedOrMissedCount} skipped or missed.`,
+    `${summary.activeStackCount} active stack${summary.activeStackCount === 1 ? '' : 's'}.`,
+  ];
+
+  if (summary.mostUrgentInventoryRisk) {
+    parts.push(`Inventory coverage: ${summary.mostUrgentInventoryRisk.label} - ${summary.mostUrgentInventoryRisk.detail}.`);
+  } else {
+    parts.push('No inventory coverage warnings right now.');
+  }
+
+  if (summary.nextAction) {
+    parts.push(`Next action: ${summary.nextAction.label} - ${summary.nextAction.detail}.`);
+  } else {
+    parts.push('No pending due-dose action found for today.');
+  }
+
+  if (summary.latestSignal) {
+    parts.push(`Latest Signal: ${summary.latestSignal.detail}.`);
+  }
+
+  parts.push('This is a summary of your local PeptideOS records, not dosing or safety advice.');
+
+  return {
+    message: parts.join(' '),
+    action: null,
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
