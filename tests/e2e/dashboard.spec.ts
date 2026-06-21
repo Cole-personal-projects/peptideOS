@@ -47,8 +47,8 @@ await expect(page.getByText('Next action')).toBeVisible();
 await expect(page.getByRole('button', { name: 'All' })).toBeVisible();
 await page.getByRole('button', { name: 'Due' }).click();
 await expect(page.getByRole('link', { name: /BPC-157 250 mcg.*Dashboard Actionability Stack/ }).first()).toBeVisible();
-await page.getByRole('button', { name: 'Runway' }).click();
-await expect(page.getByText('No inventory runway events right now')).toBeVisible();
+  await page.getByRole('button', { name: 'Coverage' }).click();
+  await expect(page.getByText('No inventory coverage events right now')).toBeVisible();
 await page.getByRole('button', { name: 'All' }).click();
 
 await page.getByRole('button', { name: 'Complete' }).first().click();

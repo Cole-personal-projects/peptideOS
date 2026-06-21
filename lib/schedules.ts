@@ -258,52 +258,55 @@ export function normalizeStacks(stacks: Stack[]): Stack[] {
   return stacks.map(normalizeStack);
 }
 
+function padDatePart(value: number): string {
+  return value.toString().padStart(2, '0');
+}
+
 function dateKey(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`;
+}
+
+function localDayStart(date: Date): Date {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  return next;
 }
 
 function applyTimeOfDay(date: Date, timeOfDay: string): Date {
   const [hours = '0', minutes = '0'] = timeOfDay.split(':');
-  const next = new Date(Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate(),
-    Number.parseInt(hours, 10),
-    Number.parseInt(minutes, 10),
-    0,
-    0,
-  ));
+  const next = new Date(date);
+  next.setHours(Number.parseInt(hours, 10), Number.parseInt(minutes, 10), 0, 0);
   return next;
 }
 
 function addDays(date: Date, days: number): Date {
   const next = new Date(date);
-  next.setUTCDate(next.getUTCDate() + days);
+  next.setDate(next.getDate() + days);
   return next;
 }
 
 function daysSince(start: Date, current: Date): number {
-  const startDay = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
-  const currentDay = Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate());
+  const startDay = localDayStart(start).getTime();
+  const currentDay = localDayStart(current).getTime();
   return Math.floor((currentDay - startDay) / 86_400_000);
 }
 
 function getStackEndDate(stack: Stack): string {
-  const start = new Date(stack.startDate);
+  const start = localDayStart(new Date(stack.startDate));
   const end = addDays(start, Math.max(stack.durationDays - 1, 0));
-  end.setUTCHours(23, 59, 59, 999);
+  end.setHours(23, 59, 59, 999);
   return end.toISOString();
 }
 
 export function generateScheduleLogs(schedule: Schedule): ScheduleLog[] {
   const logs: ScheduleLog[] = [];
-  const start = new Date(schedule.startDate);
+  const start = localDayStart(new Date(schedule.startDate));
   const end = new Date(schedule.endDate);
   const recurrence = normalizeScheduleRecurrence(schedule.recurrence);
   const weekdays = recurrence.weekdays ?? [];
 
   for (let cursor = new Date(start); cursor <= end; cursor = addDays(cursor, 1)) {
-    if (recurrence.frequency === 'weekly' && !weekdays.includes(cursor.getUTCDay())) {
+    if (recurrence.frequency === 'weekly' && !weekdays.includes(cursor.getDay())) {
       continue;
     }
     if (recurrence.frequency === 'interval') {
@@ -461,7 +464,21 @@ function updateStackPeptide(
     log.scheduleId !== nextSchedule.id || log.status !== 'pending'
   ));
   const preservedIds = new Set(preservedLogs.map((log) => log.id));
-  const regeneratedLogs = generateScheduleLogs(nextSchedule).filter((log) => !preservedIds.has(log.id));
+  const handledSingleDoseDays = nextSchedule.recurrence.timesOfDay.length === 1
+    ? new Set(
+      preservedLogs
+        .filter((log) => (
+          log.scheduleId === nextSchedule.id &&
+          log.stackPeptideId === nextSchedule.stackPeptideId &&
+          log.peptideId === nextSchedule.peptideId &&
+          log.status !== 'pending'
+        ))
+        .map((log) => dateKey(new Date(log.takenAt ?? log.skippedAt ?? log.missedAt ?? log.dueAt))),
+    )
+    : new Set<string>();
+  const regeneratedLogs = generateScheduleLogs(nextSchedule).filter((log) => (
+    !preservedIds.has(log.id) && !handledSingleDoseDays.has(dateKey(new Date(log.dueAt)))
+  ));
 
   return {
     stack,

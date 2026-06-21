@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Activity, AlertTriangle, CalendarClock, ChevronRight, ClipboardList, FlaskConical, MessageSquareText } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,6 +50,26 @@ function statusLabel(value: string) {
   return value.replace(/-/g, ' ');
 }
 
+function TimelineEventLink({ event }: { event: ProtocolTimelineEvent }) {
+  return (
+    <Link key={event.id} href={event.href ?? '/'} className="block rounded-md border p-3 transition-colors hover:bg-secondary/50">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 text-muted-foreground">{eventIcon(event)}</div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate text-sm font-medium">{event.label}</p>
+            <Badge variant="outline" className={cn('capitalize', statusClassName[event.status])}>
+              {statusLabel(event.status)}
+            </Badge>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">{event.detail}</p>
+        </div>
+        <p className="text-right text-[11px] text-muted-foreground">{formatEventTime(event.occurredAt)}</p>
+      </div>
+    </Link>
+  );
+}
+
 function formatEstimatedRemainingMg(value: number): string {
   if (value < 0.01) return '<0.01 mg';
   return `${value.toLocaleString('en-US', { maximumFractionDigits: 2 })} mg`;
@@ -71,6 +92,8 @@ export function ProtocolCockpitCard() {
     return true;
   });
   const visibleEvents = filteredEvents.slice(0, 6);
+  const primaryEvent = visibleEvents[0];
+  const drawerEvents = visibleEvents.slice(1);
 
   const hasNoProtocolState = summary.events.length === 0 && summary.activeStackCount === 0;
   const hasNoFilteredEvents = !hasNoProtocolState && visibleEvents.length === 0;
@@ -102,7 +125,7 @@ export function ProtocolCockpitCard() {
           </div>
           <div className="rounded-md border bg-secondary/30 p-2">
             <p className="text-lg font-semibold">{summary.inventoryRiskCount}</p>
-            <p className="text-[11px] text-muted-foreground">Runway</p>
+            <p className="text-[11px] text-muted-foreground">Coverage</p>
           </div>
           <div className="rounded-md border bg-secondary/30 p-2">
             <p className="text-lg font-semibold">{summary.activeStackCount}</p>
@@ -115,7 +138,7 @@ export function ProtocolCockpitCard() {
             <AlertTriangle className="mt-0.5 h-4 w-4 text-chart-4" />
             <p>
               {summary.overdueCount > 0 ? `${summary.overdueCount} overdue item${summary.overdueCount === 1 ? '' : 's'}. ` : ''}
-              {summary.inventoryRiskCount > 0 ? `${summary.inventoryRiskCount} inventory runway warning${summary.inventoryRiskCount === 1 ? '' : 's'}.` : ''}
+              {summary.inventoryRiskCount > 0 ? `${summary.inventoryRiskCount} inventory coverage warning${summary.inventoryRiskCount === 1 ? '' : 's'}.` : ''}
             </p>
           </div>
         )}
@@ -125,7 +148,7 @@ export function ProtocolCockpitCard() {
             <div className="flex items-start gap-3">
               <FlaskConical className="mt-0.5 h-4 w-4 text-chart-4" />
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium uppercase tracking-wide text-chart-4">Inventory runway</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-chart-4">Inventory coverage</p>
                 <p className="mt-0.5 truncate text-sm font-semibold">{summary.mostUrgentInventoryRisk.label}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{summary.mostUrgentInventoryRisk.detail}</p>
               </div>
@@ -179,7 +202,7 @@ export function ProtocolCockpitCard() {
             {([
               ['all', 'All'],
               ['due', 'Due'],
-              ['runway', 'Runway'],
+              ['runway', 'Coverage'],
               ['signals', 'Signals'],
             ] as const).map(([value, label]) => (
               <button
@@ -219,28 +242,24 @@ export function ProtocolCockpitCard() {
           </div>
         ) : hasNoFilteredEvents ? (
           <div className="rounded-md border border-dashed p-4">
-            <p className="text-sm font-medium">No {filter === 'runway' ? 'inventory runway' : filter} events right now</p>
+            <p className="text-sm font-medium">No {filter === 'runway' ? 'inventory coverage' : filter} events right now</p>
             <p className="mt-1 text-sm text-muted-foreground">Switch filters or add more protocol data to see this view.</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {visibleEvents.map((event) => (
-              <Link key={event.id} href={event.href ?? '/'} className="block rounded-md border p-3 transition-colors hover:bg-secondary/50">
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5 text-muted-foreground">{eventIcon(event)}</div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-sm font-medium">{event.label}</p>
-                      <Badge variant="outline" className={cn('capitalize', statusClassName[event.status])}>
-                        {statusLabel(event.status)}
-                      </Badge>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">{event.detail}</p>
-                  </div>
-                  <p className="text-right text-[11px] text-muted-foreground">{formatEventTime(event.occurredAt)}</p>
-                </div>
-              </Link>
-            ))}
+            {primaryEvent && <TimelineEventLink event={primaryEvent} />}
+            {drawerEvents.length > 0 && (
+              <Accordion type="single" collapsible className="rounded-md border px-3">
+                <AccordionItem value="more-events" className="border-b-0">
+                  <AccordionTrigger className="py-3 text-xs text-muted-foreground hover:no-underline">
+                    {drawerEvents.length} more upcoming item{drawerEvents.length === 1 ? '' : 's'}
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-2 pb-3">
+                    {drawerEvents.map((event) => <TimelineEventLink key={event.id} event={event} />)}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            )}
           </div>
         )}
 
