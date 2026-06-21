@@ -240,8 +240,9 @@ export default function SettingsPage() {
 
             <div className="flex items-start gap-3 rounded-md border bg-secondary/20 p-3">
               <Database className="mt-0.5 h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="font-medium text-sm">{formattedReferenceLibraryStatus.label}</p>
+<div>
+<p className="text-xs text-muted-foreground">Reference library</p>
+<p className="mt-1 font-medium text-sm">{formattedReferenceLibraryStatus.label}</p>
                 <p className="text-xs text-muted-foreground mt-1">{formattedReferenceLibraryStatus.detail}</p>
               </div>
             </div>

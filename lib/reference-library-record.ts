@@ -58,6 +58,13 @@ const allowedSourceTypes = new Set<SourceType>([
   'regulatory',
   'other',
 ]);
+const allowedReferenceSourceQualities = new Set<ReferenceSourceQuality>([
+  'source-backed',
+  'label-backed',
+  'trial-registry',
+  'community-reported',
+  'uncited-emerging',
+]);
 
 export interface ReferenceLibraryRecord {
   schema_version: 1 | 2;
@@ -295,6 +302,17 @@ export function validateReferenceLibraryRecord(record: ReferenceLibraryRecord): 
         issues.push(`${record.compound_id}: pharmacokinetics references unknown source "${sourceId}"`);
       }
     });
+  }
+
+  record.evidence.clinical_evidence?.forEach((evidence, index) => {
+    if (evidence.source_quality && !allowedReferenceSourceQualities.has(evidence.source_quality)) {
+      issues.push(`${record.compound_id}: evidence.clinical_evidence[${index}].source_quality "${evidence.source_quality}" invalid`);
+    }
+  });
+
+  const regulatorySourceQuality = record.evidence.regulatory_status?.source_quality;
+  if (regulatorySourceQuality && !allowedReferenceSourceQualities.has(regulatorySourceQuality)) {
+    issues.push(`${record.compound_id}: evidence.regulatory_status.source_quality "${regulatorySourceQuality}" invalid`);
   }
 
   record.sources.forEach((source) => {

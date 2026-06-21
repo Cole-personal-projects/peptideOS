@@ -59,7 +59,7 @@ test.describe('MVP tester walkthrough', () => {
 
     await page.goto('/more/settings');
     const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Export All Data' }).click();
+    await page.getByRole('button', { name: 'Export full backup' }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe('peptideos-export-2026-05-26.json');
   });

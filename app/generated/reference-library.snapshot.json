@@ -1,7 +1,7 @@
 {
   "libraryVersion": "2026.05.0",
   "schemaVersion": 1,
-  "exportedAt": "2026-06-21T03:56:17.011Z",
+  "exportedAt": "2026-06-21T04:41:28.381Z",
   "source": {
     "kind": "bundled",
     "registry": "peptideos-reference-registry"
@@ -4907,7 +4907,7 @@
             "citationIds": [
               "pubmed-retatrutide-obesity-phase-2"
             ],
-            "sourceQuality": "Triple GIP/GLP-1/glucagon receptor agonist in clinical development for obesity and metabolic disease, typically tracked around weekly dose step, appetite, weight trend, GI effects, heart-rate changes, glucose data, and dose-escalation tolerance. Concentration and injection volume should be easy to verify before each dose.",
+            "sourceQuality": "source-backed",
             "limitations": "Trial setting does not validate user-sourced product identity, concentration, sterility, or storage."
           },
           {

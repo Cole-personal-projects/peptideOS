@@ -126,7 +126,7 @@ test.describe('library filters', () => {
     const retatrutideCard = page.getByRole('link', { name: /Retatrutide/ });
     await expect(retatrutideCard).toBeVisible();
     await expect(retatrutideCard.getByText('Strong Human')).toBeVisible();
-    await expect(retatrutideCard.getByText('Investigational')).toBeVisible();
+  await expect(retatrutideCard).toContainText('Investigational');
     await expect(retatrutideCard.getByText('GLP-1 / GIP / Glucagon')).toBeVisible();
     await expect(retatrutideCard.getByText('Approved')).toHaveCount(0);
 
