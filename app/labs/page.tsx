@@ -106,6 +106,29 @@ const importMethods: Array<{
   { id: 'csv', label: 'CSV / Spreadsheet', subtitle: 'Bulk import multiple tests', icon: Table2, tone: 'primary' },
 ];
 
+function shouldUsePdfOcrFallback(draft: LabImportDraft) {
+  return draft.rows.length === 0
+    || draft.parserConfidence < 0.65
+    || draft.unresolvedRows.length > draft.rows.length;
+}
+
+function inferLabSourceLabel(text: string) {
+  const lower = text.toLowerCase();
+  if (lower.includes('labcorp') || lower.includes('laboratory corporation')) return 'LabCorp';
+  if (lower.includes('quest diagnostics')) return 'Quest Diagnostics';
+  if (lower.includes('ulta lab')) return 'Ulta Lab Tests';
+  return undefined;
+}
+
+function inferLabPanelName(text: string) {
+  const lower = text.toLowerCase();
+  if (lower.includes('basic metabolic') || lower.includes('glucose') || lower.includes('creatinine')) return 'Metabolic';
+  if (lower.includes('estradiol') || lower.includes('testosterone') || lower.includes('igf-1')) return 'Hormones';
+  if (lower.includes('cholesterol') || lower.includes('triglycerides')) return 'Lipids';
+  if (lower.includes('tsh') || lower.includes('thyroid')) return 'Thyroid';
+  return undefined;
+}
+
 export default function LabsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -132,6 +155,7 @@ export default function LabsPage() {
   const [analysisCards, setAnalysisCards] = useState<LabAnalysisCard[]>([]);
   const [analysisMessage, setAnalysisMessage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSavingImport, setIsSavingImport] = useState(false);
   const [shareMessage, setShareMessage] = useState<string | null>(null);
 
   const timelineCards = useMemo(() => buildLabTimelineCards(data), [data]);
@@ -180,16 +204,29 @@ export default function LabsPage() {
     setImportStep(2);
   };
 
-  const saveDraft = () => {
+  const applyPdfDraft = (nextDraft: LabImportDraft, pageCount: number, mode: 'text' | 'ocr') => {
+    setDraft(nextDraft);
+    setSourceLabel(nextDraft.sourceLabel ?? sourceLabel);
+    setPanelName(nextDraft.panelName ?? panelName);
+    setPdfImportMessage(`${mode === 'ocr' ? 'OCR parsed' : 'Parsed'} ${nextDraft.rows.length} marker${nextDraft.rows.length === 1 ? '' : 's'} from ${pageCount} page${pageCount === 1 ? '' : 's'}. Review before saving.`);
+    setImportStep(2);
+  };
+
+  const saveDraft = async () => {
     if (!draft || draft.rows.length === 0) return;
+    setIsSavingImport(true);
     const persisted = persistLabImportDraft(draft);
-    addLabImport(persisted);
-    setSavedReport(persisted.report);
-    setDraft(null);
-    setRawInput('');
-    setManualRows([]);
-    setSelectedFileName('');
-    setImportStep(3);
+    try {
+      await addLabImport(persisted);
+      setSavedReport(persisted.report);
+      setDraft(null);
+      setRawInput('');
+      setManualRows([]);
+      setSelectedFileName('');
+      setImportStep(3);
+    } finally {
+      setIsSavingImport(false);
+    }
   };
 
   const updateDraftRow = (index: number, updates: Partial<LabImportRow>) => {
@@ -243,18 +280,34 @@ export default function LabsPage() {
         body: formData,
       });
       const payload = await response.json() as { draft?: LabImportDraft; error?: string; pageCount?: number };
-      if (!response.ok || !payload.draft) {
-        setPdfImportMessage(payload.error ?? 'Could not import that PDF.');
+      if (response.ok && payload.draft && !shouldUsePdfOcrFallback(payload.draft)) {
+        applyPdfDraft(payload.draft, payload.pageCount ?? 1, 'text');
         return;
       }
 
-      setDraft(payload.draft);
-      setSourceLabel(payload.draft.sourceLabel ?? sourceLabel);
-      const pageCount = payload.pageCount ?? 1;
-      setPdfImportMessage(`Parsed ${payload.draft.rows.length} marker${payload.draft.rows.length === 1 ? '' : 's'} from ${pageCount} page${pageCount === 1 ? '' : 's'}. Review before saving.`);
-      setImportStep(2);
-    } catch {
-      setPdfImportMessage('Could not import that PDF. Try a text-based PDF or enter values manually.');
+      setPdfImportMessage(payload.error ? `${payload.error} Running local OCR...` : 'Running local OCR for this PDF...');
+      const { extractLabPdfTextWithOcr } = await import('@/lib/lab-pdf-ocr');
+      const ocrResult = await extractLabPdfTextWithOcr(file, (progress) => {
+        const percent = typeof progress.progress === 'number' ? ` ${Math.round(progress.progress * 100)}%` : '';
+        setPdfImportMessage(`OCR page ${progress.page} of ${progress.pageCount}: ${progress.status}${percent}`);
+      });
+      const ocrDraft = parseLabText(ocrResult.text, {
+        ...baseImportOptions,
+        sourceLabel: sourceLabel || inferLabSourceLabel(ocrResult.text),
+        panelName: panelName || inferLabPanelName(ocrResult.text),
+      });
+      const pdfDraft: LabImportDraft = {
+        ...ocrDraft,
+        method: 'pdf',
+        unresolvedRows: [],
+      };
+      if (pdfDraft.rows.length === 0) {
+        setPdfImportMessage('OCR finished, but no lab markers were parsed. Use manual entry for this report.');
+        return;
+      }
+      applyPdfDraft(pdfDraft, ocrResult.pageCount, 'ocr');
+    } catch (error) {
+      setPdfImportMessage(error instanceof Error ? `Could not import PDF: ${error.message}` : 'Could not import PDF. Try manual entry.');
     } finally {
       setIsParsingPdf(false);
     }
@@ -351,8 +404,9 @@ export default function LabsPage() {
           manualRow={manualRow}
             manualRows={manualRows}
             draft={draft}
-            activeStacks={activeStacks}
-            savedReport={savedReport}
+          activeStacks={activeStacks}
+          savedReport={savedReport}
+          isSavingImport={isSavingImport}
             onStepChange={setImportStep}
             onChooseMethod={chooseImportMethod}
             onImportMethodChange={setImportMethod}
@@ -461,6 +515,7 @@ function ImportWizard(props: {
   draft: LabImportDraft | null;
   activeStacks: Array<{ id: string; name: string }>;
   savedReport: LabReport | null;
+  isSavingImport: boolean;
   onStepChange: (step: number) => void;
   onChooseMethod: (method: ImportMethod) => void;
   onImportMethodChange: (method: ImportMethod) => void;
@@ -478,7 +533,7 @@ function ImportWizard(props: {
   onBuildDraft: () => void;
   onUpdateDraftRow: (index: number, updates: Partial<LabImportRow>) => void;
   onRemoveDraftRow: (index: number) => void;
-  onSaveDraft: () => void;
+  onSaveDraft: () => Promise<void>;
   onViewTimeline: () => void;
 }) {
   const progress = [0, 1, 2, 3];
@@ -543,7 +598,7 @@ function ImportInputStep(props: Parameters<typeof ImportWizard>[0]) {
               <p className="text-sm font-semibold">{props.method === 'pdf' ? 'Select a lab PDF' : 'Select a lab photo or screenshot'}</p>
               <p className="text-xs text-muted-foreground">
                 {props.method === 'pdf'
-                  ? 'Text-based PDFs import into editable markers. Scanned PDFs still need OCR.'
+                  ? 'Text-based PDFs import directly. Scanned or image PDFs run local OCR before review.'
                   : 'Photo OCR is not connected yet. Switch to manual or CSV/text to save.'}
               </p>
             </div>
@@ -638,12 +693,12 @@ function ManualEntryFields(props: Parameters<typeof ImportWizard>[0]) {
     <Card>
       <CardContent className="space-y-3 p-4">
         <div className="grid grid-cols-2 gap-2">
-          <Input value={props.manualRow.testName} onChange={(event) => props.onManualRowChange({ ...props.manualRow, testName: event.target.value })} placeholder="Test name" />
-          <Input value={props.manualRow.assayMethod} onChange={(event) => props.onManualRowChange({ ...props.manualRow, assayMethod: event.target.value })} placeholder="Assay/method" />
-          <Input value={props.manualRow.value} onChange={(event) => props.onManualRowChange({ ...props.manualRow, value: event.target.value })} placeholder="Value" />
-          <Input value={props.manualRow.unit} onChange={(event) => props.onManualRowChange({ ...props.manualRow, unit: event.target.value })} placeholder="Unit" />
-          <Input value={props.manualRow.range} onChange={(event) => props.onManualRowChange({ ...props.manualRow, range: event.target.value })} placeholder="Reference range" />
-          <Input value={props.manualRow.flag} onChange={(event) => props.onManualRowChange({ ...props.manualRow, flag: event.target.value })} placeholder="normal, high, low" />
+        <Input aria-label="Manual test name" value={props.manualRow.testName} onChange={(event) => props.onManualRowChange({ ...props.manualRow, testName: event.target.value })} placeholder="Test name" />
+        <Input aria-label="Manual assay method" value={props.manualRow.assayMethod} onChange={(event) => props.onManualRowChange({ ...props.manualRow, assayMethod: event.target.value })} placeholder="Assay/method" />
+        <Input aria-label="Manual result value" value={props.manualRow.value} onChange={(event) => props.onManualRowChange({ ...props.manualRow, value: event.target.value })} placeholder="Value" />
+        <Input aria-label="Manual result unit" value={props.manualRow.unit} onChange={(event) => props.onManualRowChange({ ...props.manualRow, unit: event.target.value })} placeholder="Unit" />
+        <Input aria-label="Manual reference range" value={props.manualRow.range} onChange={(event) => props.onManualRowChange({ ...props.manualRow, range: event.target.value })} placeholder="Reference range" />
+        <Input aria-label="Manual result flag" value={props.manualRow.flag} onChange={(event) => props.onManualRowChange({ ...props.manualRow, flag: event.target.value })} placeholder="normal, high, low" />
         </div>
         <Button type="button" variant="outline" onClick={props.onAddManualRow}>Add row</Button>
         {props.manualRows.length > 0 && <p className="text-sm text-muted-foreground">{props.manualRows.length} manual rows queued.</p>}
@@ -698,7 +753,13 @@ function ReviewStep(props: Parameters<typeof ImportWizard>[0]) {
           {(props.draft?.unresolvedRows.length ?? 0) > 0 && <p className="text-xs text-muted-foreground">{props.draft?.unresolvedRows.length} rows need manual review and were not saved.</p>}
         </CardContent>
       </Card>
-      <WizardActions backLabel="Back" nextLabel="Confirm Import" onBack={() => props.onStepChange(1)} onNext={props.onSaveDraft} nextDisabled={!props.draft || props.draft.rows.length === 0} />
+      <WizardActions
+        backLabel="Back"
+        nextLabel={props.isSavingImport ? 'Saving...' : 'Confirm Import'}
+        onBack={() => props.onStepChange(1)}
+        onNext={() => void props.onSaveDraft()}
+        nextDisabled={props.isSavingImport || !props.draft || props.draft.rows.length === 0}
+      />
     </div>
   );
 }
@@ -948,7 +1009,7 @@ function StepLabel({ children }: { children: React.ReactNode }) {
   return <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{children}</p>;
 }
 
-function WizardActions({ backLabel, nextLabel, onBack, onNext, nextDisabled }: { backLabel: string; nextLabel: string; onBack: () => void; onNext: () => void; nextDisabled?: boolean }) {
+function WizardActions({ backLabel, nextLabel, onBack, onNext, nextDisabled }: { backLabel: string; nextLabel: string; onBack: () => void; onNext: () => void | Promise<void>; nextDisabled?: boolean }) {
   return (
     <div className="grid grid-cols-2 gap-2">
       <Button variant="outline" onClick={onBack}>{backLabel}</Button>
