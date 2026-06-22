@@ -51,6 +51,7 @@ export default function SettingsPage() {
     data,
     referenceLibraryStatus,
 persistenceStatus,
+setUserMode,
 setDarkMode,
 toggleBiometricLock,
 exportAllData,
@@ -417,6 +418,43 @@ void retrieveFromCloud();
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Content mode</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-start gap-3">
+              <UserRound className="mt-0.5 h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">
+                  {data.userMode === 'researcher' ? 'Experienced tracker' : 'Beginner'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Beginner mode emphasizes first actions and what to track. Experienced mode shows evidence, mechanisms, caveats, and source detail.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={data.userMode === 'beginner' ? 'default' : 'outline'}
+                className="justify-start"
+                onClick={() => setUserMode('beginner')}
+              >
+                Beginner
+              </Button>
+              <Button
+                type="button"
+                variant={data.userMode === 'researcher' ? 'default' : 'outline'}
+                className="justify-start"
+                onClick={() => setUserMode('researcher')}
+              >
+                Experienced
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

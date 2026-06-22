@@ -18,7 +18,12 @@ export function LibraryProfileView({ children, model }: { children?: ReactNode; 
     <div className="space-y-4">
       <Card className="border-primary/20 bg-secondary/25">
         <CardHeader className="pb-2">
-          <h2 className="text-base font-semibold leading-none">At a glance</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold leading-none">At a glance</h2>
+            <Badge variant="outline" className="text-[10px]">
+              {model.modeLabel}
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">{model.summary}</p>
@@ -76,7 +81,7 @@ function LibraryProfileSectionDrawer({ section }: { section: LibraryProfileSecti
             </li>
           ))}
         </ul>
-        {section.title === 'Evidence and transparency' ? (
+        {section.title === 'Evidence transparency' ? (
           <div className="mt-3 flex flex-wrap gap-2">
             <Badge variant="outline">Transparent limits</Badge>
             <Badge variant="outline">Not medical advice</Badge>
