@@ -5,6 +5,9 @@ import type {
   Compound,
   Dose,
   InventoryBatch,
+  LabImportAudit,
+  LabReport,
+  LabResult,
   ReconstitutionCalculation,
   Schedule,
   ScheduleLog,
@@ -22,6 +25,9 @@ export type SupabaseSyncCollection =
   | 'schedule_logs'
   | 'reconstitution_calculations'
   | 'signal_check_ins'
+  | 'lab_reports'
+  | 'lab_results'
+  | 'lab_import_audits'
   | 'user_compounds'
   | 'settings';
 
@@ -97,6 +103,9 @@ const collectionOrder: SupabaseSyncCollection[] = [
   'schedule_logs',
   'reconstitution_calculations',
   'signal_check_ins',
+  'lab_reports',
+  'lab_results',
+  'lab_import_audits',
   'user_compounds',
 ];
 
@@ -163,6 +172,9 @@ export function buildSupabaseSyncRows(input: BuildSupabaseSyncRowsInput): Supaba
   appendCollectionRows(rows, userId, 'schedule_logs', input.data.scheduleLogs, updatedAt);
   appendCollectionRows(rows, userId, 'reconstitution_calculations', input.data.reconstitutionCalculations, updatedAt);
   appendCollectionRows(rows, userId, 'signal_check_ins', input.data.signalCheckIns, updatedAt);
+  appendCollectionRows(rows, userId, 'lab_reports', input.data.labReports, updatedAt);
+  appendCollectionRows(rows, userId, 'lab_results', input.data.labResults, updatedAt);
+  appendCollectionRows(rows, userId, 'lab_import_audits', input.data.labImportAudits, updatedAt);
   appendCollectionRows(rows, userId, 'user_compounds', input.data.userCompounds, updatedAt);
 
   return rows.sort((a, b) => {
@@ -194,6 +206,9 @@ export function supabaseSyncRowsToPersistedUserData(rows: SupabaseSyncRow[]): Pe
     scheduleLogs: typedPayloads<ScheduleLog>(rows, 'schedule_logs'),
     reconstitutionCalculations: typedPayloads<ReconstitutionCalculation>(rows, 'reconstitution_calculations'),
     signalCheckIns: typedPayloads<SignalCheckIn>(rows, 'signal_check_ins'),
+    labReports: typedPayloads<LabReport>(rows, 'lab_reports'),
+    labResults: typedPayloads<LabResult>(rows, 'lab_results'),
+    labImportAudits: typedPayloads<LabImportAudit>(rows, 'lab_import_audits'),
     userCompounds: typedPayloads<Compound>(rows, 'user_compounds'),
     settings: settingsRow ?? defaultSettings,
   };

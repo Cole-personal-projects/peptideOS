@@ -1,7 +1,21 @@
 import Dexie, { type Table } from 'dexie';
-import type { AppSettings, Compound, Dose, InventoryBatch, ReconstitutionCalculation, Schedule, ScheduleLog, SignalCheckIn, Stack, Vial } from './types';
+import type {
+  AppSettings,
+  Compound,
+  Dose,
+  InventoryBatch,
+  LabImportAudit,
+  LabReport,
+  LabResult,
+  ReconstitutionCalculation,
+  Schedule,
+  ScheduleLog,
+  SignalCheckIn,
+  Stack,
+  Vial,
+} from './types';
 
-export const PERSISTENCE_SCHEMA_VERSION = 6;
+export const PERSISTENCE_SCHEMA_VERSION = 7;
 export const DEFAULT_DATABASE_NAME = 'PeptideOS';
 export const LOCAL_PERSISTENCE_OWNER_ID = 'local';
 
@@ -20,69 +34,25 @@ export interface PersistedAppSettings extends AppSettings {
   syncState: SyncState;
 }
 
-export type PersistedVial = Vial & {
+type PersistedRecord<T> = T & {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
   syncState: SyncState;
 };
 
-export type PersistedInventoryBatch = InventoryBatch & {
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  syncState: SyncState;
-};
-
-export type PersistedDose = Dose & {
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  syncState: SyncState;
-};
-
-export type PersistedStack = Stack & {
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  syncState: SyncState;
-};
-
-export type PersistedSchedule = Schedule & {
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  syncState: SyncState;
-};
-
-export type PersistedScheduleLog = ScheduleLog & {
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  syncState: SyncState;
-};
-
-export type PersistedUserCompound = Compound & {
-  source: 'user';
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  syncState: SyncState;
-};
-
-export type PersistedReconstitutionCalculation = ReconstitutionCalculation & {
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  syncState: SyncState;
-};
-
-export type PersistedSignalCheckIn = SignalCheckIn & {
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  syncState: SyncState;
-};
+export type PersistedVial = PersistedRecord<Vial>;
+export type PersistedInventoryBatch = PersistedRecord<InventoryBatch>;
+export type PersistedDose = PersistedRecord<Dose>;
+export type PersistedStack = PersistedRecord<Stack>;
+export type PersistedSchedule = PersistedRecord<Schedule>;
+export type PersistedScheduleLog = PersistedRecord<ScheduleLog>;
+export type PersistedUserCompound = PersistedRecord<Compound & { source: 'user' }>;
+export type PersistedReconstitutionCalculation = PersistedRecord<ReconstitutionCalculation>;
+export type PersistedSignalCheckIn = PersistedRecord<SignalCheckIn>;
+export type PersistedLabReport = PersistedRecord<LabReport>;
+export type PersistedLabResult = PersistedRecord<LabResult>;
+export type PersistedLabImportAudit = PersistedRecord<LabImportAudit>;
 
 export class PeptideOSDatabase extends Dexie {
   vials!: Table<PersistedVial, string>;
@@ -94,6 +64,9 @@ export class PeptideOSDatabase extends Dexie {
   userCompounds!: Table<PersistedUserCompound, string>;
   reconstitutionCalculations!: Table<PersistedReconstitutionCalculation, string>;
   signalCheckIns!: Table<PersistedSignalCheckIn, string>;
+  labReports!: Table<PersistedLabReport, string>;
+  labResults!: Table<PersistedLabResult, string>;
+  labImportAudits!: Table<PersistedLabImportAudit, string>;
   settings!: Table<PersistedAppSettings, string>;
   metadata!: Table<PersistedMetadata, string>;
 
@@ -143,9 +116,9 @@ export class PeptideOSDatabase extends Dexie {
       metadata: 'key',
     });
 
-    this.version(PERSISTENCE_SCHEMA_VERSION).stores({
-      vials: 'id, inventoryBatchId, peptideId, status, updatedAt, syncState, deletedAt',
-      inventoryBatches: 'id, peptideId, dateAdded, lotNumber, updatedAt, syncState, deletedAt',
+    this.version(6).stores({
+      vials: 'id, peptideId, status, updatedAt, syncState, deletedAt',
+      inventoryBatches: 'id, peptideId, dateAdded, expirationDate, updatedAt, syncState, deletedAt',
       doses: 'id, peptideId, vialId, scheduleLogId, dateTime, completed, updatedAt, syncState, deletedAt',
       stacks: 'id, status, updatedAt, syncState, deletedAt',
       schedules: 'id, stackId, stackPeptideId, peptideId, status, updatedAt, syncState, deletedAt',
@@ -153,6 +126,23 @@ export class PeptideOSDatabase extends Dexie {
       userCompounds: 'id, compoundType, category, updatedAt, syncState, deletedAt',
       reconstitutionCalculations: 'id, compoundId, savedAt, updatedAt, syncState, deletedAt',
       signalCheckIns: 'id, checkedAt, updatedAt, syncState, deletedAt',
+      settings: 'id, updatedAt, syncState',
+      metadata: 'key',
+    });
+
+    this.version(7).stores({
+      vials: 'id, peptideId, status, updatedAt, syncState, deletedAt',
+      inventoryBatches: 'id, peptideId, dateAdded, expirationDate, updatedAt, syncState, deletedAt',
+      doses: 'id, peptideId, vialId, scheduleLogId, dateTime, completed, updatedAt, syncState, deletedAt',
+      stacks: 'id, status, updatedAt, syncState, deletedAt',
+      schedules: 'id, stackId, stackPeptideId, peptideId, status, updatedAt, syncState, deletedAt',
+      scheduleLogs: 'id, scheduleId, stackId, stackPeptideId, peptideId, dueAt, status, doseId, updatedAt, syncState, deletedAt',
+      userCompounds: 'id, compoundType, category, updatedAt, syncState, deletedAt',
+      reconstitutionCalculations: 'id, compoundId, savedAt, updatedAt, syncState, deletedAt',
+      signalCheckIns: 'id, checkedAt, updatedAt, syncState, deletedAt',
+      labReports: 'id, drawDate, uniqueImportKey, updatedAt, syncState, deletedAt',
+      labResults: 'id, reportId, normalizedKey, testName, updatedAt, syncState, deletedAt',
+      labImportAudits: 'id, reportId, method, importedAt, updatedAt, syncState, deletedAt',
       settings: 'id, updatedAt, syncState',
       metadata: 'key',
     });

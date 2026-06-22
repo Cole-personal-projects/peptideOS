@@ -1,8 +1,41 @@
-import { db as defaultDb, LOCAL_PERSISTENCE_OWNER_ID, PERSISTENCE_SCHEMA_VERSION, type PeptideOSDatabase, type PersistedDose, type PersistedInventoryBatch, type PersistedReconstitutionCalculation, type PersistedSchedule, type PersistedScheduleLog, type PersistedSignalCheckIn, type PersistedStack, type PersistedUserCompound, type PersistedVial, type SyncState } from './db';
+import {
+  db as defaultDb,
+  LOCAL_PERSISTENCE_OWNER_ID,
+  PERSISTENCE_SCHEMA_VERSION,
+  type PeptideOSDatabase,
+  type PersistedDose,
+  type PersistedInventoryBatch,
+  type PersistedLabImportAudit,
+  type PersistedLabReport,
+  type PersistedLabResult,
+  type PersistedReconstitutionCalculation,
+  type PersistedSchedule,
+  type PersistedScheduleLog,
+  type PersistedSignalCheckIn,
+  type PersistedStack,
+  type PersistedUserCompound,
+  type PersistedVial,
+  type SyncState,
+} from './db';
 import { ensureInventoryBatches } from './inventory-batches';
 import { normalizeStacks } from './schedules';
 import { getPersistableUserCompounds, mergeCompoundLibrary } from './user-compounds';
-import type { AppData, AppSettings, Compound, Dose, InventoryBatch, ReconstitutionCalculation, Schedule, ScheduleLog, SignalCheckIn, Stack, Vial } from './types';
+import type {
+  AppData,
+  AppSettings,
+  Compound,
+  Dose,
+  InventoryBatch,
+  LabImportAudit,
+  LabReport,
+  LabResult,
+  ReconstitutionCalculation,
+  Schedule,
+  ScheduleLog,
+  SignalCheckIn,
+  Stack,
+  Vial,
+} from './types';
 
 export interface PersistedUserData {
   vials: Vial[];
@@ -13,6 +46,9 @@ export interface PersistedUserData {
   scheduleLogs: ScheduleLog[];
   reconstitutionCalculations: ReconstitutionCalculation[];
   signalCheckIns: SignalCheckIn[];
+  labReports: LabReport[];
+  labResults: LabResult[];
+  labImportAudits: LabImportAudit[];
   userCompounds: Compound[];
   settings: AppSettings;
 }
@@ -35,6 +71,9 @@ export interface UserDataImportPreview {
     scheduleLogs: number;
     reconstitutionCalculations: number;
     signalCheckIns: number;
+    labReports: number;
+    labResults: number;
+    labImportAudits: number;
     userCompounds: number;
   };
 }
@@ -42,6 +81,22 @@ export interface UserDataImportPreview {
 export interface PersistenceOptions {
   ownerId?: string;
 }
+
+export class UserDataImportError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'UserDataImportError';
+  }
+}
+
+const DEFAULT_APP_SETTINGS: AppSettings = {
+  hasSeenDisclaimer: false,
+  hasCompletedOnboarding: false,
+  userMode: 'beginner',
+  biometricLock: false,
+  darkMode: true,
+  cloudSyncEnabled: false,
+};
 
 const HISTORICAL_DEMO_VIALS = [
   { id: 'vial-1', peptideId: 'bpc-157', lotNumber: 'BPC-2024-001' },
@@ -58,6 +113,7 @@ const HISTORICAL_DEMO_STACK_NAMES = new Map([
   ['stack-2', 'Longevity + GH Protocol'],
   ['stack-3', 'Metabolic Reset'],
 ]);
+
 const HISTORICAL_DEMO_DOSE_ID_PATTERNS = [
   /^dose-bpc-(?:am|pm)-\d+$/,
   /^dose-tb500-\d+$/,
@@ -66,48 +122,32 @@ const HISTORICAL_DEMO_DOSE_ID_PATTERNS = [
   /^dose-today-(?:bpc-am|bpc-pm|ipa)$/,
 ];
 
-export class UserDataImportError extends Error {
-constructor(message: string) {
-super(message);
-this.name = 'UserDataImportError';
-}
-}
-
-const DEFAULT_APP_SETTINGS: AppSettings = {
-hasSeenDisclaimer: false,
-hasCompletedOnboarding: false,
-userMode: 'beginner',
-biometricLock: false,
-darkMode: true,
-cloudSyncEnabled: false,
-};
-
 function getDefaultSettings(defaults: AppData): AppSettings {
-return {
-hasSeenDisclaimer: defaults.hasSeenDisclaimer,
-hasCompletedOnboarding: defaults.hasCompletedOnboarding,
-userMode: defaults.userMode,
-biometricLock: defaults.biometricLock,
-darkMode: defaults.darkMode,
-cloudSyncEnabled: defaults.cloudSyncEnabled ?? false,
-};
+  return {
+    hasSeenDisclaimer: defaults.hasSeenDisclaimer,
+    hasCompletedOnboarding: defaults.hasCompletedOnboarding,
+    userMode: defaults.userMode,
+    biometricLock: defaults.biometricLock,
+    darkMode: defaults.darkMode,
+    cloudSyncEnabled: defaults.cloudSyncEnabled ?? false,
+  };
 }
 
 function normalizeSettings(settings: Partial<AppSettings> | undefined, defaults: AppSettings): AppSettings {
-return {
-hasSeenDisclaimer: settings?.hasSeenDisclaimer ?? defaults.hasSeenDisclaimer,
-hasCompletedOnboarding: settings?.hasCompletedOnboarding ?? defaults.hasCompletedOnboarding,
-userMode: settings?.userMode ?? defaults.userMode,
-biometricLock: settings?.biometricLock ?? defaults.biometricLock,
-darkMode: settings?.darkMode ?? defaults.darkMode,
-cloudSyncEnabled: settings?.cloudSyncEnabled ?? defaults.cloudSyncEnabled,
-};
+  return {
+    hasSeenDisclaimer: settings?.hasSeenDisclaimer ?? defaults.hasSeenDisclaimer,
+    hasCompletedOnboarding: settings?.hasCompletedOnboarding ?? defaults.hasCompletedOnboarding,
+    userMode: settings?.userMode ?? defaults.userMode,
+    biometricLock: settings?.biometricLock ?? defaults.biometricLock,
+    darkMode: settings?.darkMode ?? defaults.darkMode,
+    cloudSyncEnabled: settings?.cloudSyncEnabled ?? defaults.cloudSyncEnabled,
+  };
 }
 
 function applyUserData(defaults: AppData, persisted: PersistedUserData): AppData {
-const settings = normalizeSettings(persisted.settings, getDefaultSettings(defaults));
-return ensureInventoryBatches({
-...defaults,
+  const settings = normalizeSettings(persisted.settings, getDefaultSettings(defaults));
+  return ensureInventoryBatches({
+    ...defaults,
     vials: persisted.vials,
     inventoryBatches: persisted.inventoryBatches,
     doses: persisted.doses,
@@ -115,67 +155,35 @@ return ensureInventoryBatches({
     schedules: persisted.schedules,
     scheduleLogs: persisted.scheduleLogs,
     reconstitutionCalculations: persisted.reconstitutionCalculations,
-signalCheckIns: persisted.signalCheckIns,
-compounds: mergeCompoundLibrary(persisted.userCompounds),
-...settings,
-});
-}
-
-function isHistoricalDemoVial(vial: Vial) {
-  return HISTORICAL_DEMO_VIALS.some((demoVial) => (
-    vial.id === demoVial.id
-    && vial.peptideId === demoVial.peptideId
-    && vial.lotNumber === demoVial.lotNumber
-  ));
-}
-
-function isHistoricalDemoDose(dose: Dose, demoVialIds: Set<string>) {
-  return demoVialIds.has(dose.vialId)
-    || HISTORICAL_DEMO_DOSE_ID_PATTERNS.some((pattern) => pattern.test(dose.id));
-}
-
-function isHistoricalDemoStack(stack: Stack) {
-  return HISTORICAL_DEMO_STACK_NAMES.get(stack.id) === stack.name;
+    signalCheckIns: persisted.signalCheckIns,
+    labReports: persisted.labReports,
+    labResults: persisted.labResults,
+    labImportAudits: persisted.labImportAudits,
+    compounds: mergeCompoundLibrary(persisted.userCompounds),
+    ...settings,
+  });
 }
 
 function pruneHistoricalDemoUserData(persisted: PersistedUserData): { data: PersistedUserData; changed: boolean } {
-  const demoVialIds = new Set(persisted.vials.filter(isHistoricalDemoVial).map((vial) => vial.id));
-  const demoStackIds = new Set(persisted.stacks.filter(isHistoricalDemoStack).map((stack) => stack.id));
+  const demoVialIds = new Set(persisted.vials.filter((vial) => HISTORICAL_DEMO_VIALS.some((demo) => (
+    vial.id === demo.id && vial.peptideId === demo.peptideId && vial.lotNumber === demo.lotNumber
+  ))).map((vial) => vial.id));
+  const demoStackIds = new Set(persisted.stacks.filter((stack) => HISTORICAL_DEMO_STACK_NAMES.get(stack.id) === stack.name).map((stack) => stack.id));
   const vials = persisted.vials.filter((vial) => !demoVialIds.has(vial.id));
   const remainingBatchIds = new Set(vials.map((vial) => vial.inventoryBatchId).filter(Boolean));
   const inventoryBatches = persisted.inventoryBatches.filter((batch) => remainingBatchIds.has(batch.id));
-  const doses = persisted.doses.filter((dose) => !isHistoricalDemoDose(dose, demoVialIds));
+  const doses = persisted.doses.filter((dose) => !demoVialIds.has(dose.vialId) && !HISTORICAL_DEMO_DOSE_ID_PATTERNS.some((pattern) => pattern.test(dose.id)));
   const stacks = persisted.stacks.filter((stack) => !demoStackIds.has(stack.id));
-  const removedScheduleIds = new Set(
-    persisted.schedules
-      .filter((schedule) => demoStackIds.has(schedule.stackId))
-      .map((schedule) => schedule.id),
-  );
-  const schedules = persisted.schedules.filter((schedule) => (
-    !demoStackIds.has(schedule.stackId)
-  ));
-  const scheduleLogs = persisted.scheduleLogs.filter((log) => (
-    !demoStackIds.has(log.stackId)
-    && !removedScheduleIds.has(log.scheduleId)
-  ));
-
+  const schedules = persisted.schedules.filter((schedule) => !demoStackIds.has(schedule.stackId));
+  const scheduleIds = new Set(schedules.map((schedule) => schedule.id));
+  const scheduleLogs = persisted.scheduleLogs.filter((log) => scheduleIds.has(log.scheduleId) && !demoStackIds.has(log.stackId));
   const changed = vials.length !== persisted.vials.length
-    || inventoryBatches.length !== persisted.inventoryBatches.length
     || doses.length !== persisted.doses.length
     || stacks.length !== persisted.stacks.length
     || schedules.length !== persisted.schedules.length
     || scheduleLogs.length !== persisted.scheduleLogs.length;
-
   return {
-    data: {
-      ...persisted,
-      vials,
-      inventoryBatches,
-      doses,
-      stacks,
-      schedules,
-      scheduleLogs,
-    },
+    data: { ...persisted, vials, inventoryBatches, doses, stacks, schedules, scheduleLogs },
     changed,
   };
 }
@@ -194,7 +202,6 @@ function isSyncState(value: unknown): value is SyncState {
 function withPersistenceMetadata<T extends { id: string }>(value: T, now: string) {
   const persistedValue = value as T & { createdAt?: string; deletedAt?: string | null; syncState?: string };
   const syncState: SyncState = isSyncState(persistedValue.syncState) ? persistedValue.syncState : 'dirty';
-
   return {
     ...value,
     createdAt: persistedValue.createdAt ?? now,
@@ -222,14 +229,10 @@ function getPersistenceOwner(options?: PersistenceOptions) {
 
 async function ensureMetadata(database: PeptideOSDatabase, now: string, options?: PersistenceOptions) {
   let deviceId = await database.metadata.get('deviceId');
-
   if (!deviceId) {
-    const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
-      ? crypto.randomUUID()
-      : `device-${Date.now()}`;
+    const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `device-${Date.now()}`;
     deviceId = { key: 'deviceId', value: id };
   }
-
   await database.metadata.bulkPut([
     { key: 'schemaVersion', value: PERSISTENCE_SCHEMA_VERSION },
     { key: 'persisted', value: true },
@@ -239,12 +242,28 @@ async function ensureMetadata(database: PeptideOSDatabase, now: string, options?
   ]);
 }
 
-export async function loadPersistedAppData(database: PeptideOSDatabase = defaultDb, defaults: AppData, options?: PersistenceOptions): Promise<AppData> {
-  if (!(await hasValidSchemaMetadata(database)) || !(await isPersisted(database))) {
-    return defaults;
-  }
+export async function loadPersistedAppData(
+  database: PeptideOSDatabase = defaultDb,
+  defaults: AppData,
+  options?: PersistenceOptions,
+): Promise<AppData> {
+  if (!(await hasValidSchemaMetadata(database)) || !(await isPersisted(database))) return defaults;
 
-  const [vials, inventoryBatches, doses, stacks, schedules, scheduleLogs, reconstitutionCalculations, signalCheckIns, userCompounds, settings] = await Promise.all([
+  const [
+    vials,
+    inventoryBatches,
+    doses,
+    stacks,
+    schedules,
+    scheduleLogs,
+    reconstitutionCalculations,
+    signalCheckIns,
+    labReports,
+    labResults,
+    labImportAudits,
+    userCompounds,
+    settings,
+  ] = await Promise.all([
     database.vials.toArray(),
     database.inventoryBatches.toArray(),
     database.doses.toArray(),
@@ -253,42 +272,45 @@ export async function loadPersistedAppData(database: PeptideOSDatabase = default
     database.scheduleLogs.toArray(),
     database.reconstitutionCalculations.toArray(),
     database.signalCheckIns.toArray(),
+    database.labReports.toArray(),
+    database.labResults.toArray(),
+    database.labImportAudits.toArray(),
     database.userCompounds.toArray(),
     database.settings.get('app-settings'),
   ]);
 
-  if (!settings) {
-    return defaults;
-  }
+  if (!settings) return defaults;
 
   const persistedUserData: PersistedUserData = {
-    vials: vials.filter((vial) => !vial.deletedAt).map((vial) => stripPersistenceMetadata(vial) as Vial),
-    inventoryBatches: inventoryBatches.filter((batch) => !batch.deletedAt).map((batch) => stripPersistenceMetadata(batch) as InventoryBatch),
-    doses: doses.filter((dose) => !dose.deletedAt).map((dose) => stripPersistenceMetadata(dose) as Dose),
-    stacks: stacks.filter((stack) => !stack.deletedAt).map((stack) => stripPersistenceMetadata(stack) as Stack),
-    schedules: schedules.filter((schedule) => !schedule.deletedAt).map((schedule) => stripPersistenceMetadata(schedule) as Schedule),
-    scheduleLogs: scheduleLogs.filter((log) => !log.deletedAt).map((log) => stripPersistenceMetadata(log) as ScheduleLog),
-    reconstitutionCalculations: reconstitutionCalculations
-      .filter((calculation) => !calculation.deletedAt)
-      .map((calculation) => stripPersistenceMetadata(calculation) as ReconstitutionCalculation),
-    signalCheckIns: signalCheckIns
-      .filter((checkIn) => !checkIn.deletedAt)
-      .map((checkIn) => stripPersistenceMetadata(checkIn) as SignalCheckIn),
-    userCompounds: userCompounds as Compound[],
+    vials: active(vials) as Vial[],
+    inventoryBatches: active(inventoryBatches) as InventoryBatch[],
+    doses: active(doses) as Dose[],
+    stacks: active(stacks) as Stack[],
+    schedules: active(schedules) as Schedule[],
+    scheduleLogs: active(scheduleLogs) as ScheduleLog[],
+    reconstitutionCalculations: active(reconstitutionCalculations) as ReconstitutionCalculation[],
+    signalCheckIns: active(signalCheckIns) as SignalCheckIn[],
+    labReports: active(labReports) as LabReport[],
+    labResults: active(labResults) as LabResult[],
+    labImportAudits: active(labImportAudits) as LabImportAudit[],
+    userCompounds: userCompounds.filter((compound) => !compound.deletedAt) as unknown as Compound[],
     settings: stripPersistenceMetadata(settings) as AppSettings,
   };
 
   const pruned = pruneHistoricalDemoUserData(persistedUserData);
   const loaded = applyUserData(defaults, pruned.data);
-
   if (pruned.changed) {
     await savePersistedAppData(database, loaded, new Date(), options);
   }
-
   return loaded;
 }
 
-export async function savePersistedAppData(database: PeptideOSDatabase = defaultDb, data: AppData, savedAt = new Date(), options?: PersistenceOptions) {
+export async function savePersistedAppData(
+  database: PeptideOSDatabase = defaultDb,
+  data: AppData,
+  savedAt = new Date(),
+  options?: PersistenceOptions,
+) {
   const now = savedAt.toISOString();
   const normalizedData = ensureInventoryBatches(data);
   const settings = withPersistenceMetadata({ id: 'app-settings' as const, ...getDefaultSettings(normalizedData) }, now);
@@ -300,12 +322,30 @@ export async function savePersistedAppData(database: PeptideOSDatabase = default
   const scheduleLogs = normalizedData.scheduleLogs.map((log) => withPersistenceMetadata(log, now) as PersistedScheduleLog);
   const reconstitutionCalculations = normalizedData.reconstitutionCalculations.map((calculation) => withPersistenceMetadata(calculation, now) as PersistedReconstitutionCalculation);
   const signalCheckIns = normalizedData.signalCheckIns.map((checkIn) => withPersistenceMetadata(checkIn, now) as PersistedSignalCheckIn);
+  const labReports = normalizedData.labReports.map((report) => withPersistenceMetadata(report, now) as PersistedLabReport);
+  const labResults = normalizedData.labResults.map((result) => withPersistenceMetadata(result, now) as PersistedLabResult);
+  const labImportAudits = normalizedData.labImportAudits.map((audit) => withPersistenceMetadata(audit, now) as PersistedLabImportAudit);
   const userCompounds = getPersistableUserCompounds(normalizedData.compounds).map((compound) => withPersistenceMetadata({
     ...compound,
     source: 'user' as const,
   }, now) as PersistedUserCompound);
 
-  await database.transaction('rw', [database.vials, database.inventoryBatches, database.doses, database.stacks, database.schedules, database.scheduleLogs, database.reconstitutionCalculations, database.signalCheckIns, database.userCompounds, database.settings, database.metadata], async () => {
+  await database.transaction('rw', [
+    database.vials,
+    database.inventoryBatches,
+    database.doses,
+    database.stacks,
+    database.schedules,
+    database.scheduleLogs,
+    database.reconstitutionCalculations,
+    database.signalCheckIns,
+    database.labReports,
+    database.labResults,
+    database.labImportAudits,
+    database.userCompounds,
+    database.settings,
+    database.metadata,
+  ], async () => {
     await Promise.all([
       database.vials.clear(),
       database.inventoryBatches.clear(),
@@ -315,10 +355,12 @@ export async function savePersistedAppData(database: PeptideOSDatabase = default
       database.scheduleLogs.clear(),
       database.reconstitutionCalculations.clear(),
       database.signalCheckIns.clear(),
+      database.labReports.clear(),
+      database.labResults.clear(),
+      database.labImportAudits.clear(),
       database.userCompounds.clear(),
       database.settings.clear(),
     ]);
-
     await Promise.all([
       database.vials.bulkPut(vials),
       database.inventoryBatches.bulkPut(inventoryBatches),
@@ -328,6 +370,9 @@ export async function savePersistedAppData(database: PeptideOSDatabase = default
       database.scheduleLogs.bulkPut(scheduleLogs),
       database.reconstitutionCalculations.bulkPut(reconstitutionCalculations),
       database.signalCheckIns.bulkPut(signalCheckIns),
+      database.labReports.bulkPut(labReports),
+      database.labResults.bulkPut(labResults),
+      database.labImportAudits.bulkPut(labImportAudits),
       database.userCompounds.bulkPut(userCompounds),
       database.settings.put(settings),
       ensureMetadata(database, now, options),
@@ -336,7 +381,22 @@ export async function savePersistedAppData(database: PeptideOSDatabase = default
 }
 
 export async function resetPersistedAppData(database: PeptideOSDatabase = defaultDb, defaults: AppData): Promise<AppData> {
-  await database.transaction('rw', [database.vials, database.inventoryBatches, database.doses, database.stacks, database.schedules, database.scheduleLogs, database.reconstitutionCalculations, database.signalCheckIns, database.userCompounds, database.settings, database.metadata], async () => {
+  await database.transaction('rw', [
+    database.vials,
+    database.inventoryBatches,
+    database.doses,
+    database.stacks,
+    database.schedules,
+    database.scheduleLogs,
+    database.reconstitutionCalculations,
+    database.signalCheckIns,
+    database.labReports,
+    database.labResults,
+    database.labImportAudits,
+    database.userCompounds,
+    database.settings,
+    database.metadata,
+  ], async () => {
     await Promise.all([
       database.vials.clear(),
       database.inventoryBatches.clear(),
@@ -346,18 +406,34 @@ export async function resetPersistedAppData(database: PeptideOSDatabase = defaul
       database.scheduleLogs.clear(),
       database.reconstitutionCalculations.clear(),
       database.signalCheckIns.clear(),
+      database.labReports.clear(),
+      database.labResults.clear(),
+      database.labImportAudits.clear(),
       database.userCompounds.clear(),
       database.settings.clear(),
       database.metadata.clear(),
     ]);
   });
-
   return defaults;
 }
 
 export async function exportUserData(database: PeptideOSDatabase = defaultDb, exportedAt = new Date()): Promise<UserDataExport> {
-const fallbackSettings = DEFAULT_APP_SETTINGS;
-  const [vials, inventoryBatches, doses, stacks, schedules, scheduleLogs, reconstitutionCalculations, signalCheckIns, userCompounds, settings] = await Promise.all([
+  const fallbackSettings = DEFAULT_APP_SETTINGS;
+  const [
+    vials,
+    inventoryBatches,
+    doses,
+    stacks,
+    schedules,
+    scheduleLogs,
+    reconstitutionCalculations,
+    signalCheckIns,
+    labReports,
+    labResults,
+    labImportAudits,
+    userCompounds,
+    settings,
+  ] = await Promise.all([
     database.vials.toArray(),
     database.inventoryBatches.toArray(),
     database.doses.toArray(),
@@ -366,6 +442,9 @@ const fallbackSettings = DEFAULT_APP_SETTINGS;
     database.scheduleLogs.toArray(),
     database.reconstitutionCalculations.toArray(),
     database.signalCheckIns.toArray(),
+    database.labReports.toArray(),
+    database.labResults.toArray(),
+    database.labImportAudits.toArray(),
     database.userCompounds.toArray(),
     database.settings.get('app-settings'),
   ]);
@@ -374,19 +453,18 @@ const fallbackSettings = DEFAULT_APP_SETTINGS;
     schemaVersion: PERSISTENCE_SCHEMA_VERSION,
     exportedAt: exportedAt.toISOString(),
     data: {
-      vials: vials.filter((vial) => !vial.deletedAt).map((vial) => stripPersistenceMetadata(vial) as Vial),
-      inventoryBatches: inventoryBatches.filter((batch) => !batch.deletedAt).map((batch) => stripPersistenceMetadata(batch) as InventoryBatch),
-      doses: doses.filter((dose) => !dose.deletedAt).map((dose) => stripPersistenceMetadata(dose) as Dose),
-      stacks: stacks.filter((stack) => !stack.deletedAt).map((stack) => stripPersistenceMetadata(stack) as Stack),
-      schedules: schedules.filter((schedule) => !schedule.deletedAt).map((schedule) => stripPersistenceMetadata(schedule) as Schedule),
-      scheduleLogs: scheduleLogs.filter((log) => !log.deletedAt).map((log) => stripPersistenceMetadata(log) as ScheduleLog),
-      reconstitutionCalculations: reconstitutionCalculations
-        .filter((calculation) => !calculation.deletedAt)
-        .map((calculation) => stripPersistenceMetadata(calculation) as ReconstitutionCalculation),
-      signalCheckIns: signalCheckIns
-        .filter((checkIn) => !checkIn.deletedAt)
-        .map((checkIn) => stripPersistenceMetadata(checkIn) as SignalCheckIn),
-      userCompounds: userCompounds.filter((compound) => !compound.deletedAt) as Compound[],
+      vials: active(vials) as Vial[],
+      inventoryBatches: active(inventoryBatches) as InventoryBatch[],
+      doses: active(doses) as Dose[],
+      stacks: active(stacks) as Stack[],
+      schedules: active(schedules) as Schedule[],
+      scheduleLogs: active(scheduleLogs) as ScheduleLog[],
+      reconstitutionCalculations: active(reconstitutionCalculations) as ReconstitutionCalculation[],
+      signalCheckIns: active(signalCheckIns) as SignalCheckIn[],
+      labReports: active(labReports) as LabReport[],
+      labResults: active(labResults) as LabResult[],
+      labImportAudits: active(labImportAudits) as LabImportAudit[],
+      userCompounds: active(userCompounds) as Compound[],
       settings: normalizeSettings(settings ? stripPersistenceMetadata(settings) as AppSettings : undefined, fallbackSettings),
     },
   };
@@ -396,25 +474,20 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function assertArray(value: unknown, label: string): asserts value is unknown[] {
-  if (!Array.isArray(value)) {
-    throw new UserDataImportError(`Import is missing ${label}.`);
-  }
+function assertArray(value: unknown, label: string) {
+  if (!Array.isArray(value)) throw new UserDataImportError(`Import missing ${label}.`);
 }
 
 function parseUserDataExport(input: string): UserDataExport {
   let parsed: unknown;
-
   try {
-    parsed = JSON.parse(input) as unknown;
+    parsed = JSON.parse(input);
   } catch {
     throw new UserDataImportError('Select a valid PeptideOS export JSON file.');
   }
-
   if (!isRecord(parsed) || !isRecord(parsed.data)) {
     throw new UserDataImportError('Select a valid PeptideOS export JSON file.');
   }
-
   if (typeof parsed.schemaVersion !== 'number' || parsed.schemaVersion < 1 || parsed.schemaVersion > PERSISTENCE_SCHEMA_VERSION) {
     throw new UserDataImportError('This PeptideOS export uses an unsupported schema version.');
   }
@@ -425,44 +498,31 @@ function parseUserDataExport(input: string): UserDataExport {
   assertArray(data.stacks, 'stacks');
   assertArray(data.schedules, 'schedules');
   assertArray(data.scheduleLogs, 'scheduleLogs');
-  if ('reconstitutionCalculations' in data && data.reconstitutionCalculations !== undefined) {
-    assertArray(data.reconstitutionCalculations, 'reconstitutionCalculations');
-  }
-  if ('signalCheckIns' in data && data.signalCheckIns !== undefined) {
-    assertArray(data.signalCheckIns, 'signalCheckIns');
-  }
-  if ('inventoryBatches' in data && data.inventoryBatches !== undefined) {
-    assertArray(data.inventoryBatches, 'inventoryBatches');
-  }
-  if ('userCompounds' in data && data.userCompounds !== undefined) {
-    assertArray(data.userCompounds, 'userCompounds');
-  }
-
-  if (!isRecord(data.settings)) {
-    throw new UserDataImportError('Import is missing settings.');
-  }
+  optionalArray(data, 'inventoryBatches');
+  optionalArray(data, 'reconstitutionCalculations');
+  optionalArray(data, 'signalCheckIns');
+  optionalArray(data, 'labReports');
+  optionalArray(data, 'labResults');
+  optionalArray(data, 'labImportAudits');
+  optionalArray(data, 'userCompounds');
+  if (!isRecord(data.settings)) throw new UserDataImportError('Import missing settings.');
 
   return {
     schemaVersion: parsed.schemaVersion,
     exportedAt: typeof parsed.exportedAt === 'string' ? parsed.exportedAt : new Date().toISOString(),
     data: {
       vials: data.vials as Vial[],
-      inventoryBatches: 'inventoryBatches' in data && Array.isArray(data.inventoryBatches)
-        ? data.inventoryBatches as InventoryBatch[]
-        : [],
+      inventoryBatches: Array.isArray(data.inventoryBatches) ? data.inventoryBatches as InventoryBatch[] : [],
       doses: data.doses as Dose[],
       stacks: data.stacks as Stack[],
       schedules: data.schedules as Schedule[],
       scheduleLogs: data.scheduleLogs as ScheduleLog[],
-      reconstitutionCalculations: 'reconstitutionCalculations' in data && Array.isArray(data.reconstitutionCalculations)
-        ? data.reconstitutionCalculations as ReconstitutionCalculation[]
-        : [],
-      signalCheckIns: 'signalCheckIns' in data && Array.isArray(data.signalCheckIns)
-        ? data.signalCheckIns as SignalCheckIn[]
-        : [],
-      userCompounds: 'userCompounds' in data && Array.isArray(data.userCompounds)
-        ? data.userCompounds as Compound[]
-        : [],
+      reconstitutionCalculations: Array.isArray(data.reconstitutionCalculations) ? data.reconstitutionCalculations as ReconstitutionCalculation[] : [],
+      signalCheckIns: Array.isArray(data.signalCheckIns) ? data.signalCheckIns as SignalCheckIn[] : [],
+      labReports: Array.isArray(data.labReports) ? data.labReports as LabReport[] : [],
+      labResults: Array.isArray(data.labResults) ? data.labResults as LabResult[] : [],
+      labImportAudits: Array.isArray(data.labImportAudits) ? data.labImportAudits as LabImportAudit[] : [],
+      userCompounds: Array.isArray(data.userCompounds) ? data.userCompounds as Compound[] : [],
       settings: normalizeSettings(data.settings as Partial<AppSettings> | undefined, DEFAULT_APP_SETTINGS),
     },
   };
@@ -470,7 +530,6 @@ function parseUserDataExport(input: string): UserDataExport {
 
 export function validateUserDataExport(input: string): UserDataImportPreview {
   const parsed = parseUserDataExport(input);
-
   return {
     schemaVersion: parsed.schemaVersion,
     exportedAt: parsed.exportedAt,
@@ -483,38 +542,37 @@ export function validateUserDataExport(input: string): UserDataImportPreview {
       scheduleLogs: parsed.data.scheduleLogs.length,
       reconstitutionCalculations: parsed.data.reconstitutionCalculations.length,
       signalCheckIns: parsed.data.signalCheckIns.length,
+      labReports: parsed.data.labReports.length,
+      labResults: parsed.data.labResults.length,
+      labImportAudits: parsed.data.labImportAudits.length,
       userCompounds: parsed.data.userCompounds.length,
     },
   };
 }
 
 export async function importUserData(
-database: PeptideOSDatabase = defaultDb,
-defaults: AppData,
-input: string,
-importedAt = new Date(),
+  database: PeptideOSDatabase = defaultDb,
+  defaults: AppData,
+  input: string,
+  importedAt = new Date(),
   options?: PersistenceOptions,
 ): Promise<AppData> {
   const imported = parseUserDataExport(input);
   const nextData = applyUserData(defaults, imported.data);
-
   await savePersistedAppData(database, nextData, importedAt, options);
-
-return nextData;
+  return nextData;
 }
 
 export async function restorePersistedUserData(
-database: PeptideOSDatabase = defaultDb,
-defaults: AppData,
-persisted: PersistedUserData,
-restoredAt = new Date(),
-options?: PersistenceOptions,
+  database: PeptideOSDatabase = defaultDb,
+  defaults: AppData,
+  persisted: PersistedUserData,
+  restoredAt = new Date(),
+  options?: PersistenceOptions,
 ): Promise<AppData> {
-const nextData = applyUserData(defaults, persisted);
-
-await savePersistedAppData(database, nextData, restoredAt, options);
-
-return nextData;
+  const nextData = applyUserData(defaults, persisted);
+  await savePersistedAppData(database, nextData, restoredAt, options);
+  return nextData;
 }
 
 export function downloadUserData(exported: UserDataExport) {
@@ -527,4 +585,12 @@ export function downloadUserData(exported: UserDataExport) {
   anchor.click();
   anchor.remove();
   URL.revokeObjectURL(url);
+}
+
+function active<T extends { deletedAt?: string | null }>(records: T[]) {
+  return records.filter((record) => !record.deletedAt).map((record) => stripPersistenceMetadata(record));
+}
+
+function optionalArray(data: Record<string, unknown>, key: string) {
+  if (key in data && data[key] !== undefined) assertArray(data[key], key);
 }

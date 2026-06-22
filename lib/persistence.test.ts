@@ -190,7 +190,7 @@ describe('Dexie persistence', () => {
       expect.objectContaining({ id: 'batch-kpv-kit', vialCount: 2 }),
     ]);
     expect(loaded.vials.map((vial) => vial.inventoryBatchId)).toEqual(['batch-kpv-kit', 'batch-kpv-kit']);
-    expect(exported.schemaVersion).toBe(6);
+    expect(exported.schemaVersion).toBe(7);
     expect(exported.data.inventoryBatches).toEqual([
       expect.objectContaining({ id: 'batch-kpv-kit', vialCount: 2 }),
     ]);
@@ -492,7 +492,7 @@ describe('Dexie persistence', () => {
 
     const exported = await exportUserData(db, new Date('2026-05-23T00:00:00.000Z'));
 
-    expect(exported.schemaVersion).toBe(6);
+    expect(exported.schemaVersion).toBe(7);
     expect(exported.exportedAt).toBe('2026-05-23T00:00:00.000Z');
     expect(exported.data.vials).toHaveLength(1);
     expect(exported.data.vials[0]?.name).toBe('Exported vial');
@@ -675,6 +675,9 @@ describe('Dexie persistence', () => {
         scheduleLogs: [],
         reconstitutionCalculations: [],
         signalCheckIns: [],
+        labReports: [],
+        labResults: [],
+        labImportAudits: [],
         userCompounds: [],
         settings: {
           hasSeenDisclaimer: false,
@@ -722,6 +725,9 @@ describe('Dexie persistence', () => {
         scheduleLogs: [],
         reconstitutionCalculations: [],
         signalCheckIns: [],
+        labReports: [],
+        labResults: [],
+        labImportAudits: [],
         userCompounds: [],
         settings: {
           hasSeenDisclaimer: false,
@@ -762,7 +768,7 @@ describe('Dexie persistence', () => {
 
   test('validates import preview metadata and entity counts before restore', () => {
     const preview = validateUserDataExport(JSON.stringify({
-      schemaVersion: 6,
+      schemaVersion: 7,
       exportedAt: '2026-06-21T12:00:00.000Z',
       data: {
         vials: [mockVials[0]],
@@ -773,6 +779,9 @@ describe('Dexie persistence', () => {
         scheduleLogs: [],
         reconstitutionCalculations: [],
         signalCheckIns: [],
+        labReports: [],
+        labResults: [],
+        labImportAudits: [],
         userCompounds: [customCompound],
         settings: {
           hasSeenDisclaimer: true,
@@ -785,7 +794,7 @@ describe('Dexie persistence', () => {
     }));
 
     expect(preview).toEqual({
-      schemaVersion: 6,
+      schemaVersion: 7,
       exportedAt: '2026-06-21T12:00:00.000Z',
       counts: {
         vials: 1,
@@ -796,6 +805,9 @@ describe('Dexie persistence', () => {
         scheduleLogs: 0,
         reconstitutionCalculations: 0,
         signalCheckIns: 0,
+        labReports: 0,
+        labResults: 0,
+        labImportAudits: 0,
         userCompounds: 1,
       },
     });
