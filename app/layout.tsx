@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register'
+import { ThemeSync } from '@/components/theme-sync'
 import { AuthProvider } from '@/lib/auth-context'
 import { AppProvider } from '@/lib/context'
 import './globals.css'
@@ -40,6 +41,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <AuthProvider>
           <AppProvider>
+            <ThemeSync />
             {children}
           </AppProvider>
         </AuthProvider>

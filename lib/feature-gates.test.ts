@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getFeatureGate } from './feature-gates';
+import { getFeatureGate, isFeatureEnabled } from './feature-gates';
 
 describe('feature gates', () => {
   test('gates Peppi features behind the pro tier', () => {
@@ -7,6 +7,7 @@ describe('feature gates', () => {
       feature: 'ai-assistant',
       tier: 'pro',
       enforced: false,
+      enabled: true,
     });
   });
 
@@ -14,5 +15,15 @@ describe('feature gates', () => {
     expect(getFeatureGate('compound-catalog').tier).toBe('free');
     expect(getFeatureGate('dose-calculator').tier).toBe('free');
     expect(getFeatureGate('reconstitution-calculator').tier).toBe('free');
+  });
+
+  test('keeps biometric lock hidden unless explicitly enabled', () => {
+    expect(getFeatureGate('biometric-lock')).toEqual({
+      feature: 'biometric-lock',
+      tier: 'free',
+      enforced: false,
+      enabled: false,
+    });
+    expect(isFeatureEnabled('biometric-lock')).toBe(false);
   });
 });
