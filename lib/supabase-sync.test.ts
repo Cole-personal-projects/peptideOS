@@ -156,12 +156,12 @@ describe('Supabase user-data sync contracts', () => {
     });
   });
 
-  test('pulls signed-in rows from Supabase and reports latest cloud timestamp', async () => {
+  test('pulls compatible signed-in rows from Supabase and reports latest cloud timestamp', async () => {
     const rows: SupabaseSyncRow[] = buildSupabaseSyncRows({
       userId: 'user-amy',
       data: emptyData,
       syncedAt: new Date('2026-06-16T12:00:00.000Z'),
-    });
+    }).map((row) => ({ ...row, schema_version: 5 }));
     const filters: Array<[string, string | number]> = [];
 
     const client = {
@@ -191,15 +191,44 @@ describe('Supabase user-data sync contracts', () => {
     const adapter = createSupabaseUserDataSyncAdapter(client);
     const result = await adapter.pullUserData({ userId: 'user-amy' });
 
-    expect(filters).toEqual([
-      ['user_id', 'user-amy'],
-      ['schema_version', 6],
-    ]);
+    expect(filters).toEqual([['user_id', 'user-amy']]);
     expect(result).toEqual({
       data: emptyData,
       pulledRows: 1,
       pulledAt: '2026-06-16T12:00:00.000Z',
+      ignoredRows: 0,
     });
+  });
+
+  test('rejects cloud rows from newer unsupported app schemas', async () => {
+    const rows: SupabaseSyncRow[] = buildSupabaseSyncRows({
+      userId: 'user-amy',
+      data: emptyData,
+      syncedAt: new Date('2026-06-16T12:00:00.000Z'),
+    }).map((row) => ({ ...row, schema_version: 999 }));
+    const client = {
+      from() {
+        return {
+          select() {
+            return {
+              eq() {
+                return this;
+              },
+              order() {
+                return Promise.resolve({ data: rows, error: null });
+              },
+            };
+          },
+          upsert() {
+            return Promise.resolve({ error: null });
+          },
+        };
+      },
+    };
+
+    const adapter = createSupabaseUserDataSyncAdapter(client);
+
+    await expect(adapter.pullUserData({ userId: 'user-amy' })).rejects.toThrow(/newer PeptideOS version/i);
   });
 
   test('rejects unsigned sync and surfaces Supabase failures', async () => {

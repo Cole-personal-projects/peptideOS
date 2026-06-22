@@ -67,25 +67,47 @@ const HISTORICAL_DEMO_DOSE_ID_PATTERNS = [
 ];
 
 export class UserDataImportError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'UserDataImportError';
-  }
+constructor(message: string) {
+super(message);
+this.name = 'UserDataImportError';
+}
 }
 
+const DEFAULT_APP_SETTINGS: AppSettings = {
+hasSeenDisclaimer: false,
+hasCompletedOnboarding: false,
+userMode: 'beginner',
+biometricLock: false,
+darkMode: true,
+cloudSyncEnabled: false,
+};
+
 function getDefaultSettings(defaults: AppData): AppSettings {
-  return {
-    hasSeenDisclaimer: defaults.hasSeenDisclaimer,
-    hasCompletedOnboarding: defaults.hasCompletedOnboarding,
-    userMode: defaults.userMode,
-    biometricLock: defaults.biometricLock,
-    darkMode: defaults.darkMode,
-  };
+return {
+hasSeenDisclaimer: defaults.hasSeenDisclaimer,
+hasCompletedOnboarding: defaults.hasCompletedOnboarding,
+userMode: defaults.userMode,
+biometricLock: defaults.biometricLock,
+darkMode: defaults.darkMode,
+cloudSyncEnabled: defaults.cloudSyncEnabled ?? false,
+};
+}
+
+function normalizeSettings(settings: Partial<AppSettings> | undefined, defaults: AppSettings): AppSettings {
+return {
+hasSeenDisclaimer: settings?.hasSeenDisclaimer ?? defaults.hasSeenDisclaimer,
+hasCompletedOnboarding: settings?.hasCompletedOnboarding ?? defaults.hasCompletedOnboarding,
+userMode: settings?.userMode ?? defaults.userMode,
+biometricLock: settings?.biometricLock ?? defaults.biometricLock,
+darkMode: settings?.darkMode ?? defaults.darkMode,
+cloudSyncEnabled: settings?.cloudSyncEnabled ?? defaults.cloudSyncEnabled,
+};
 }
 
 function applyUserData(defaults: AppData, persisted: PersistedUserData): AppData {
-  return ensureInventoryBatches({
-    ...defaults,
+const settings = normalizeSettings(persisted.settings, getDefaultSettings(defaults));
+return ensureInventoryBatches({
+...defaults,
     vials: persisted.vials,
     inventoryBatches: persisted.inventoryBatches,
     doses: persisted.doses,
@@ -93,10 +115,10 @@ function applyUserData(defaults: AppData, persisted: PersistedUserData): AppData
     schedules: persisted.schedules,
     scheduleLogs: persisted.scheduleLogs,
     reconstitutionCalculations: persisted.reconstitutionCalculations,
-    signalCheckIns: persisted.signalCheckIns,
-    compounds: mergeCompoundLibrary(persisted.userCompounds),
-    ...persisted.settings,
-  });
+signalCheckIns: persisted.signalCheckIns,
+compounds: mergeCompoundLibrary(persisted.userCompounds),
+...settings,
+});
 }
 
 function isHistoricalDemoVial(vial: Vial) {
@@ -334,13 +356,7 @@ export async function resetPersistedAppData(database: PeptideOSDatabase = defaul
 }
 
 export async function exportUserData(database: PeptideOSDatabase = defaultDb, exportedAt = new Date()): Promise<UserDataExport> {
-  const fallbackSettings: AppSettings = {
-    hasSeenDisclaimer: false,
-    hasCompletedOnboarding: false,
-    userMode: 'beginner',
-    biometricLock: false,
-    darkMode: true,
-  };
+const fallbackSettings = DEFAULT_APP_SETTINGS;
   const [vials, inventoryBatches, doses, stacks, schedules, scheduleLogs, reconstitutionCalculations, signalCheckIns, userCompounds, settings] = await Promise.all([
     database.vials.toArray(),
     database.inventoryBatches.toArray(),
@@ -371,7 +387,7 @@ export async function exportUserData(database: PeptideOSDatabase = defaultDb, ex
         .filter((checkIn) => !checkIn.deletedAt)
         .map((checkIn) => stripPersistenceMetadata(checkIn) as SignalCheckIn),
       userCompounds: userCompounds.filter((compound) => !compound.deletedAt) as Compound[],
-      settings: settings ? stripPersistenceMetadata(settings) as AppSettings : fallbackSettings,
+      settings: normalizeSettings(settings ? stripPersistenceMetadata(settings) as AppSettings : undefined, fallbackSettings),
     },
   };
 }
@@ -447,7 +463,7 @@ function parseUserDataExport(input: string): UserDataExport {
       userCompounds: 'userCompounds' in data && Array.isArray(data.userCompounds)
         ? data.userCompounds as Compound[]
         : [],
-      settings: data.settings as unknown as AppSettings,
+      settings: normalizeSettings(data.settings as Partial<AppSettings> | undefined, DEFAULT_APP_SETTINGS),
     },
   };
 }

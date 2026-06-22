@@ -43,7 +43,12 @@ export interface BuildSupabaseSyncRowsInput {
 
 export interface SupabaseUserDataSyncAdapter {
   pushUserData: (input: BuildSupabaseSyncRowsInput) => Promise<{ pushedRows: number }>;
-  pullUserData: (input: { userId: string }) => Promise<{ data: PersistedUserData; pulledRows: number; pulledAt: string | null }>;
+  pullUserData: (input: { userId: string }) => Promise<{
+    data: PersistedUserData;
+    pulledRows: number;
+    pulledAt: string | null;
+    ignoredRows: number;
+  }>;
 }
 
 interface SupabaseSyncUpsertResult {
@@ -61,10 +66,7 @@ interface SupabaseSyncTableClient {
     options: { onConflict: 'user_id,collection,record_id' },
   ) => PromiseLike<SupabaseSyncUpsertResult>;
   select?: (columns: string) => {
-    eq: (column: 'user_id' | 'schema_version', value: string | number) => {
-      eq: (column: 'schema_version', value: number) => {
-        order: (column: 'collection' | 'record_id', options?: { ascending?: boolean }) => PromiseLike<SupabaseSyncSelectResult>;
-      };
+    eq: (column: 'user_id', value: string) => {
       order: (column: 'collection' | 'record_id', options?: { ascending?: boolean }) => PromiseLike<SupabaseSyncSelectResult>;
     };
   };
@@ -82,6 +84,7 @@ const defaultSettings: AppSettings = {
   userMode: 'beginner',
   biometricLock: false,
   darkMode: true,
+  cloudSyncEnabled: false,
 };
 
 const collectionOrder: SupabaseSyncCollection[] = [
@@ -228,7 +231,6 @@ export function createSupabaseUserDataSyncAdapter(client: SupabaseSyncClient): S
       const { data, error } = await table
         .select('user_id,collection,record_id,payload,updated_at,deleted_at,schema_version')
         .eq('user_id', userId)
-        .eq('schema_version', PERSISTENCE_SCHEMA_VERSION)
         .order('collection', { ascending: true });
 
       if (error) {
@@ -236,10 +238,16 @@ export function createSupabaseUserDataSyncAdapter(client: SupabaseSyncClient): S
       }
 
       const rows = data ?? [];
+      const compatibleRows = rows.filter((row) => row.schema_version <= PERSISTENCE_SCHEMA_VERSION);
+      if (rows.length > 0 && compatibleRows.length === 0) {
+        throw new Error('Cloud data was saved by a newer PeptideOS version. Update this device before retrieving.');
+      }
+
       return {
-        data: supabaseSyncRowsToPersistedUserData(rows),
-        pulledRows: rows.length,
-        pulledAt: latestUpdatedAt(rows),
+        data: supabaseSyncRowsToPersistedUserData(compatibleRows),
+        pulledRows: compatibleRows.length,
+        pulledAt: latestUpdatedAt(compatibleRows),
+        ignoredRows: rows.length - compatibleRows.length,
       };
     },
   };

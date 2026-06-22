@@ -91,8 +91,9 @@ cloudMessage: string | null;
   // Settings
   setHasSeenDisclaimer: (seen: boolean) => void;
   completeOnboarding: (userMode?: UserMode) => Promise<void>;
-  toggleDarkMode: () => void;
-  toggleBiometricLock: () => void;
+toggleDarkMode: () => void;
+toggleBiometricLock: () => void;
+setCloudSyncEnabled: (enabled: boolean) => Promise<void>;
 exportAllData: () => Promise<void>;
 importAllData: (file: File) => Promise<void>;
 clearAllData: () => Promise<void>;
@@ -140,9 +141,11 @@ const [cloudMessage, setCloudMessage] = useState<string | null>(null);
 const [hydratedOwnerId, setHydratedOwnerId] = useState<string | null>(null);
   const hydrated = authStatus !== 'loading' && hydratedOwnerId === persistenceOwnerId;
   const saveSequence = useRef(0);
-  const persistenceQueue = useRef(Promise.resolve());
-  const dataRef = useRef(data);
-  const loadedReferenceLibraryKey = useRef<string | null>(null);
+const persistenceQueue = useRef(Promise.resolve());
+const dataRef = useRef(data);
+const loadedReferenceLibraryKey = useRef<string | null>(null);
+const autoCloudRetrieveKey = useRef<string | null>(null);
+const skipNextCloudPush = useRef(false);
 
   useEffect(() => {
     dataRef.current = data;
@@ -225,9 +228,9 @@ setLastSavedAt(typeof metadata?.value === 'string' ? metadata.value : null);
   }, []);
 
   const setAndPersistData = useCallback(async (updater: (previousData: AppData) => AppData) => {
-    const nextData = updater(dataRef.current);
-    dataRef.current = nextData;
-    setData(nextData);
+const nextData = updater(dataRef.current);
+dataRef.current = nextData;
+setData(nextData);
 
 if (hydrated) {
 const sequence = ++saveSequence.current;
@@ -240,11 +243,30 @@ setLastSavedAt(savedAt.toISOString());
 if (sequence === saveSequence.current) {
 console.error('Failed to persist PeptideOS data', error);
 }
-      });
-    }
-  }, [enqueuePersistenceOperation, hydrated, persistenceDb, persistenceOwnerId]);
+});
 
-  // Peptides
+if (skipNextCloudPush.current) {
+skipNextCloudPush.current = false;
+} else if (nextData.cloudSyncEnabled && authStatus === 'signed-in' && authUser && cloudSyncAdapter) {
+try {
+const exported = await exportUserData(persistenceDb);
+const result = await cloudSyncAdapter.pushUserData({
+userId: authUser.id,
+data: exported.data,
+syncedAt: savedAt,
+});
+setCloudLastSavedAt(savedAt.toISOString());
+setCloudStatus('ready');
+setCloudMessage(`Synced ${result.pushedRows} records to cloud.`);
+} catch (error) {
+setCloudStatus('error');
+setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed.');
+}
+}
+}
+}, [authStatus, authUser, cloudSyncAdapter, enqueuePersistenceOperation, hydrated, persistenceDb, persistenceOwnerId]);
+
+// Peptides
   const getPeptide = useCallback((id: string) => {
     return data.peptides.find(p => p.id === id);
   }, [data.peptides]);
@@ -736,10 +758,18 @@ return;
 
 const restoredAt = new Date();
 saveSequence.current++;
+const persistedCloudSyncEnabled = dataRef.current.cloudSyncEnabled;
+const restoredPersistedData = {
+...result.data,
+settings: {
+...result.data.settings,
+cloudSyncEnabled: persistedCloudSyncEnabled,
+},
+};
 const restoredData = await enqueuePersistenceOperation(() => restorePersistedUserData(
 persistenceDb,
 initialAppData,
-result.data,
+restoredPersistedData,
 restoredAt,
 { ownerId: persistenceOwnerId },
 ));
@@ -754,6 +784,35 @@ setCloudStatus('error');
 setCloudMessage(error instanceof Error ? error.message : 'Cloud retrieve failed.');
 }
 }, [authStatus, authUser, cloudSyncAdapter, enqueuePersistenceOperation, persistenceDb, persistenceOwnerId]);
+
+const setCloudSyncEnabled = useCallback(async (enabled: boolean) => {
+if (enabled && authStatus !== 'signed-in') {
+setCloudStatus('unavailable');
+setCloudMessage('Sign in before turning on Cloud mode.');
+return;
+}
+
+if (enabled) {
+skipNextCloudPush.current = true;
+}
+await setAndPersistData((prev) => ({ ...prev, cloudSyncEnabled: enabled }));
+if (!enabled) {
+setCloudStatus('ready');
+setCloudMessage('Cloud mode is off. Data stays on this device until you manually save to cloud.');
+return;
+}
+
+await retrieveFromCloud();
+await saveToCloud();
+}, [authStatus, retrieveFromCloud, saveToCloud, setAndPersistData]);
+
+useEffect(() => {
+if (!hydrated || authStatus !== 'signed-in' || !authUser || !data.cloudSyncEnabled || !cloudSyncAdapter) return;
+const syncKey = `${authUser.id}:${persistenceOwnerId}`;
+if (autoCloudRetrieveKey.current === syncKey) return;
+autoCloudRetrieveKey.current = syncKey;
+void retrieveFromCloud();
+}, [authStatus, authUser, cloudSyncAdapter, data.cloudSyncEnabled, hydrated, persistenceOwnerId, retrieveFromCloud]);
 
 if (!hydrated) {
 return null;
@@ -814,8 +873,9 @@ cloudMessage: effectiveCloudMessage,
       getActiveStacks,
       setHasSeenDisclaimer,
       completeOnboarding,
-      toggleDarkMode,
-      toggleBiometricLock,
+toggleDarkMode,
+toggleBiometricLock,
+setCloudSyncEnabled,
 exportAllData,
 importAllData,
 clearAllData,

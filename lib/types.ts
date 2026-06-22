@@ -453,16 +453,18 @@ export interface AppData {
   reconstitutionCalculations: ReconstitutionCalculation[];
   signalCheckIns: SignalCheckIn[];
   hasSeenDisclaimer: boolean;
-  hasCompletedOnboarding: boolean;
-  userMode: UserMode;
-  biometricLock: boolean;
-  darkMode: boolean;
+hasCompletedOnboarding: boolean;
+userMode: UserMode;
+biometricLock: boolean;
+darkMode: boolean;
+cloudSyncEnabled?: boolean;
 }
 
 export interface AppSettings {
-  hasSeenDisclaimer: boolean;
-  hasCompletedOnboarding: boolean;
-  userMode: UserMode;
-  biometricLock: boolean;
-  darkMode: boolean;
+hasSeenDisclaimer: boolean;
+hasCompletedOnboarding: boolean;
+userMode: UserMode;
+biometricLock: boolean;
+darkMode: boolean;
+cloudSyncEnabled?: boolean;
 }
