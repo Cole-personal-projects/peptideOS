@@ -24,6 +24,9 @@ const emptyData: PersistedUserData = {
   scheduleLogs: [],
   reconstitutionCalculations: [],
   signalCheckIns: [],
+  labReports: [],
+  labResults: [],
+  labImportAudits: [],
   userCompounds: [],
   settings,
 };
@@ -68,7 +71,7 @@ describe('Supabase user-data sync contracts', () => {
       payload: settings,
       updated_at: '2026-06-16T12:00:00.000Z',
       deleted_at: null,
-      schema_version: 6,
+      schema_version: 7,
     });
     expect(rows[1]).toEqual(expect.objectContaining({
       user_id: 'user-amy',
@@ -77,7 +80,7 @@ describe('Supabase user-data sync contracts', () => {
       payload: data.vials[0],
       updated_at: '2026-06-16T12:00:00.000Z',
       deleted_at: null,
-      schema_version: 6,
+      schema_version: 7,
     }));
   });
 

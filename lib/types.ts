@@ -441,6 +441,50 @@ export interface SignalCheckIn {
   notes: string;
 }
 
+export type LabImportMethod = 'manual' | 'csv' | 'text';
+export type LabResultFlag = 'low' | 'high' | 'normal' | 'critical' | 'unknown';
+
+export interface LabReferenceRange {
+  text: string;
+  low?: number;
+  high?: number;
+}
+
+export interface LabReport {
+  id: string;
+  drawDate: string;
+  resultedDate?: string;
+  sourceLabel?: string;
+  panelName?: string;
+  uniqueImportKey: string;
+  notes: string;
+  createdAt: string;
+}
+
+export interface LabResult {
+  id: string;
+  reportId: string;
+  testName: string;
+  normalizedKey: string;
+  assayMethod?: string;
+  value: string;
+  numericValue?: number;
+  unit: string;
+  referenceRange?: LabReferenceRange;
+  flag: LabResultFlag;
+  panelName?: string;
+}
+
+export interface LabImportAudit {
+  id: string;
+  reportId: string;
+  method: LabImportMethod;
+  importedAt: string;
+  parserConfidence: number;
+  unresolvedRows: string[];
+  duplicateStatus: 'new' | 'possible-duplicate';
+}
+
 export interface AppData {
   peptides: Peptide[];
   compounds: Compound[];
@@ -452,9 +496,12 @@ export interface AppData {
   scheduleLogs: ScheduleLog[];
   reconstitutionCalculations: ReconstitutionCalculation[];
   signalCheckIns: SignalCheckIn[];
+  labReports: LabReport[];
+  labResults: LabResult[];
+  labImportAudits: LabImportAudit[];
   hasSeenDisclaimer: boolean;
-hasCompletedOnboarding: boolean;
-userMode: UserMode;
+  hasCompletedOnboarding: boolean;
+  userMode: UserMode;
 biometricLock: boolean;
 darkMode: boolean;
 cloudSyncEnabled?: boolean;

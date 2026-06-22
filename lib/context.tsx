@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
-import type { AppData, Compound, Peptide, Vial, Dose, InventoryBatch, ReconstitutionCalculation, ScheduleLog, SignalCheckIn, SiteCode, Stack, UserMode } from './types';
+import type { AppData, Compound, Peptide, Vial, Dose, InventoryBatch, LabImportAudit, LabReport, LabResult, ReconstitutionCalculation, ScheduleLog, SignalCheckIn, SiteCode, Stack, UserMode } from './types';
 import { initialAppData } from './mock-data';
 import { useAuth } from './auth-context';
 import { createSupabaseAuthClient } from './auth';
@@ -76,6 +76,9 @@ cloudMessage: string | null;
   deleteReconstitutionCalculation: (id: string) => void;
   // Signals
   addSignalCheckIn: (checkIn: Omit<SignalCheckIn, 'id'>) => void;
+  // Labs
+  addLabImport: (input: { report: LabReport; results: LabResult[]; audit: LabImportAudit }) => void;
+  deleteLabReport: (reportId: string) => void;
   // Stacks
   getStack: (id: string) => Stack | undefined;
   addStack: (stack: Omit<Stack, 'id'>) => void;
@@ -526,6 +529,30 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed
     }));
   }, [setAndPersistData]);
 
+  const addLabImport = useCallback((input: { report: LabReport; results: LabResult[]; audit: LabImportAudit }) => {
+    void setAndPersistData(prev => ({
+      ...prev,
+      labReports: [input.report, ...prev.labReports.filter((report) => report.id !== input.report.id)],
+      labResults: [
+        ...input.results,
+        ...prev.labResults.filter((result) => result.reportId !== input.report.id),
+      ],
+      labImportAudits: [
+        input.audit,
+        ...prev.labImportAudits.filter((audit) => audit.reportId !== input.report.id),
+      ],
+    }));
+  }, [setAndPersistData]);
+
+  const deleteLabReport = useCallback((reportId: string) => {
+    void setAndPersistData(prev => ({
+      ...prev,
+      labReports: prev.labReports.filter((report) => report.id !== reportId),
+      labResults: prev.labResults.filter((result) => result.reportId !== reportId),
+      labImportAudits: prev.labImportAudits.filter((audit) => audit.reportId !== reportId),
+    }));
+  }, [setAndPersistData]);
+
   // Stacks
   const getStack = useCallback((id: string) => {
     return data.stacks.find(s => s.id === id);
@@ -865,6 +892,8 @@ cloudMessage: effectiveCloudMessage,
       addReconstitutionCalculation,
       deleteReconstitutionCalculation,
       addSignalCheckIn,
+      addLabImport,
+      deleteLabReport,
       getStack,
       addStack,
       updateStack,

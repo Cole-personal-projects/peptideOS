@@ -47,7 +47,7 @@ const menuSections: MenuSection[] = [
     title: 'Health Data',
     items: [
       { href: '/more/signals', label: 'Signals', icon: Activity, description: 'Capture check-ins' },
-      { href: '/more/lab-results', label: 'Lab Results', icon: TestTube, description: 'Track bloodwork', badge: 'Soon' },
+      { href: '/more/lab-results', label: 'Lab Results', icon: TestTube, description: 'Track bloodwork' },
       { href: '/more/integrations', label: 'Health Integrations', icon: Heart, description: 'Connect devices', badge: 'Soon' },
     ]
   },

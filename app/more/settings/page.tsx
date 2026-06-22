@@ -38,6 +38,8 @@ function formatImportCounts(preview: UserDataImportPreview) {
     `${preview.counts.doses} logged doses`,
     `${preview.counts.vials} containers`,
     `${preview.counts.signalCheckIns} signals`,
+    `${preview.counts.labReports} lab reports`,
+    `${preview.counts.labResults} lab results`,
     `${preview.counts.userCompounds} custom compounds`,
   ].join(' · ');
 }
