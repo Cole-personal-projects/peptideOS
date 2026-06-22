@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/lib/auth-context';
 import { useApp } from '@/lib/context';
+import { isFeatureEnabled } from '@/lib/feature-gates';
 import { validateUserDataExport, type UserDataImportPreview } from '@/lib/persistence';
 import { formatReferenceLibraryStatus } from '@/lib/reference-library-status';
 
@@ -47,9 +48,9 @@ export default function SettingsPage() {
   const {
     data,
     referenceLibraryStatus,
-    persistenceStatus,
-    toggleDarkMode,
-    toggleBiometricLock,
+persistenceStatus,
+setDarkMode,
+toggleBiometricLock,
 exportAllData,
 importAllData,
 clearAllData,
@@ -72,6 +73,7 @@ const [isClearing, setIsClearing] = useState(false);
 const formattedReferenceLibraryStatus = formatReferenceLibraryStatus(referenceLibraryStatus);
 const isCloudBusy = persistenceStatus.cloudStatus === 'saving' || persistenceStatus.cloudStatus === 'retrieving';
 const canUseCloud = persistenceStatus.mode === 'signed-in' && persistenceStatus.cloudStatus !== 'unavailable';
+const biometricLockEnabled = isFeatureEnabled('biometric-lock');
 
   const handleImportFile = async (file: File | undefined) => {
     if (!file) return;
@@ -421,20 +423,39 @@ void retrieveFromCloud();
             <CardTitle className="text-base">Appearance</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 {data.darkMode ? <Moon className="w-5 h-5 text-muted-foreground" /> : <Sun className="w-5 h-5 text-muted-foreground" />}
                 <div>
-                  <p className="font-medium text-sm">Dark Mode</p>
-                  <p className="text-xs text-muted-foreground">Toggle dark/light theme</p>
+                  <p className="font-medium text-sm">Theme</p>
+                  <p className="text-xs text-muted-foreground">Choose how PeptideOS appears on this device.</p>
                 </div>
               </div>
-              <Switch checked={data.darkMode} onCheckedChange={toggleDarkMode} />
+              <Switch aria-label="Use dark theme" checked={data.darkMode} onCheckedChange={setDarkMode} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={!data.darkMode ? 'default' : 'outline'}
+                className="justify-start"
+                onClick={() => setDarkMode(false)}
+              >
+                <Sun className="w-4 h-4 mr-2" />
+                Light
+              </Button>
+              <Button
+                type="button"
+                variant={data.darkMode ? 'default' : 'outline'}
+                className="justify-start"
+                onClick={() => setDarkMode(true)}
+              >
+                <Moon className="w-4 h-4 mr-2" />
+                Dark
+              </Button>
             </div>
           </CardContent>
-        </Card>
-
-        <Card>
+        </Card> {biometricLockEnabled && (
+<Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Security</CardTitle>
           </CardHeader>
@@ -452,6 +473,8 @@ void retrieveFromCloud();
           </CardContent>
         </Card>
 
+        
+        )}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Privacy</CardTitle>

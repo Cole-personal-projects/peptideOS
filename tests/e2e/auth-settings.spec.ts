@@ -21,7 +21,21 @@ test.describe('account settings', () => {
     await expect(page.getByText('Cloud retrieve')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Save to cloud' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Retrieve from cloud' })).toBeDisabled();
+    await expect(page.getByText('Biometric Lock')).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
+  });
+
+  test('applies light and dark theme choices to the PWA shell', async ({ page }) => {
+    await page.goto('/more/settings');
+    await page.getByRole('button', { name: 'I Understand' }).click();
+
+    await page.getByRole('button', { name: 'Light' }).click();
+    await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(false);
+    await expect(page.getByRole('switch', { name: 'Use dark theme' })).not.toBeChecked();
+
+    await page.getByRole('button', { name: 'Dark' }).click();
+    await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(true);
+    await expect(page.getByRole('switch', { name: 'Use dark theme' })).toBeChecked();
   });
 
   test('anchors settings content in a stable readable column on full-screen iPad', async ({ page }) => {
