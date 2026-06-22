@@ -77,7 +77,7 @@ cloudMessage: string | null;
   // Signals
   addSignalCheckIn: (checkIn: Omit<SignalCheckIn, 'id'>) => void;
   // Labs
-  addLabImport: (input: { report: LabReport; results: LabResult[]; audit: LabImportAudit }) => void;
+  addLabImport: (input: { report: LabReport; results: LabResult[]; audit: LabImportAudit }) => Promise<void>;
   deleteLabReport: (reportId: string) => void;
   // Stacks
   getStack: (id: string) => Stack | undefined;
@@ -531,7 +531,7 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed
   }, [setAndPersistData]);
 
   const addLabImport = useCallback((input: { report: LabReport; results: LabResult[]; audit: LabImportAudit }) => {
-    void setAndPersistData(prev => ({
+    return setAndPersistData(prev => ({
       ...prev,
       labReports: [input.report, ...prev.labReports.filter((report) => report.id !== input.report.id)],
       labResults: [

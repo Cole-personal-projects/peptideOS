@@ -41,6 +41,33 @@ async function importQuestHormones(page: import('@playwright/test').Page, drawDa
 }
 
 test.describe('lab results workspace', () => {
+  test('manual lab imports persist after reload', async ({ page }) => {
+    await page.goto('/labs');
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByRole('button', { name: 'Import Lab Results' }).click();
+    await page.getByRole('button', { name: 'Manual Entry' }).click();
+    await page.getByLabel('Draw date').fill('2026-04-23');
+    await page.getByLabel('Lab provider').fill('LabCorp');
+    await page.getByLabel('Panel name').fill('Metabolic');
+    await page.getByLabel('Manual test name').fill('Glucose');
+    await page.getByLabel('Manual result value').fill('89');
+    await page.getByLabel('Manual result unit').fill('mg/dL');
+    await page.getByLabel('Manual reference range').fill('70-99');
+    await page.getByLabel('Manual result flag').fill('normal');
+    await page.getByRole('button', { name: 'Add row' }).click();
+    await page.getByRole('button', { name: 'Review Data' }).click();
+    await expect(page.getByLabel('Test name 1')).toHaveValue('Glucose');
+    await page.getByRole('button', { name: 'Confirm Import' }).click();
+    await expect(page.getByText('Import complete')).toBeVisible();
+    await page.getByRole('button', { name: 'View Timeline' }).click();
+    await expect(page.getByText(/Apr 23, 2026 · Metabolic/)).toBeVisible();
+    await expect(page.getByRole('link', { name: /Glucose/ })).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByText(/Apr 23, 2026 · Metabolic/)).toBeVisible();
+    await expect(page.getByRole('link', { name: /Glucose/ })).toBeVisible();
+  });
+
   test('imports labs and exposes timeline, detail, compare, trends, and redirect flows', async ({ page }) => {
     await page.goto('/more/lab-results');
     await page.getByRole('button', { name: 'I Understand' }).click();
