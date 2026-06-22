@@ -1,6 +1,17 @@
 import { PERSISTENCE_SCHEMA_VERSION } from './db';
 import type { PersistedUserData } from './persistence';
-import type { AppSettings, Compound, Dose, InventoryBatch, ReconstitutionCalculation, Schedule, ScheduleLog, SignalCheckIn, Stack, Vial } from './types';
+import type {
+  AppSettings,
+  Compound,
+  Dose,
+  InventoryBatch,
+  ReconstitutionCalculation,
+  Schedule,
+  ScheduleLog,
+  SignalCheckIn,
+  Stack,
+  Vial,
+} from './types';
 
 export type SupabaseSyncCollection =
   | 'vials'
@@ -32,16 +43,34 @@ export interface BuildSupabaseSyncRowsInput {
 
 export interface SupabaseUserDataSyncAdapter {
   pushUserData: (input: BuildSupabaseSyncRowsInput) => Promise<{ pushedRows: number }>;
+  pullUserData: (input: { userId: string }) => Promise<{ data: PersistedUserData; pulledRows: number; pulledAt: string | null }>;
+}
+
+interface SupabaseSyncUpsertResult {
+  error: { message: string } | null;
+}
+
+interface SupabaseSyncSelectResult {
+  data: SupabaseSyncRow[] | null;
+  error: { message: string } | null;
 }
 
 interface SupabaseSyncTableClient {
   upsert: (
     rows: SupabaseSyncRow[],
     options: { onConflict: 'user_id,collection,record_id' },
-  ) => Promise<{ error: { message: string } | null }>;
+  ) => PromiseLike<SupabaseSyncUpsertResult>;
+  select?: (columns: string) => {
+    eq: (column: 'user_id' | 'schema_version', value: string | number) => {
+      eq: (column: 'schema_version', value: number) => {
+        order: (column: 'collection' | 'record_id', options?: { ascending?: boolean }) => PromiseLike<SupabaseSyncSelectResult>;
+      };
+      order: (column: 'collection' | 'record_id', options?: { ascending?: boolean }) => PromiseLike<SupabaseSyncSelectResult>;
+    };
+  };
 }
 
-interface SupabaseSyncClient {
+export interface SupabaseSyncClient {
   from: (table: 'app_user_sync_records') => SupabaseSyncTableClient;
 }
 
@@ -68,15 +97,22 @@ const collectionOrder: SupabaseSyncCollection[] = [
   'user_compounds',
 ];
 
+function requireUserId(userId: string) {
+  const trimmed = userId.trim();
+  if (!trimmed) {
+    throw new Error('Supabase sync requires signed-in user id.');
+  }
+  return trimmed;
+}
+
 function toRow(
   userId: string,
   collection: SupabaseSyncCollection,
   recordId: string,
   payload: Record<string, unknown>,
   updatedAt: string,
+  deletedAt: string | null = null,
 ): SupabaseSyncRow {
-  const deletedAt = typeof payload.deletedAt === 'string' ? payload.deletedAt : null;
-
   return {
     user_id: userId,
     collection,
@@ -88,27 +124,29 @@ function toRow(
   };
 }
 
-function appendCollectionRows(
+function appendCollectionRows<T extends SyncRecord>(
   rows: SupabaseSyncRow[],
   userId: string,
   collection: SupabaseSyncCollection,
-  records: SyncRecord[],
+  records: T[],
   updatedAt: string,
 ) {
-  records
-    .filter((record) => record.id.trim())
-    .sort((a, b) => a.id.localeCompare(b.id))
-    .forEach((record) => {
-      rows.push(toRow(userId, collection, record.id, record as Record<string, unknown>, updatedAt));
-    });
+  records.forEach((record) => {
+    rows.push(
+      toRow(
+        userId,
+        collection,
+        record.id,
+        record as unknown as Record<string, unknown>,
+        updatedAt,
+        record.deletedAt ?? null,
+      ),
+    );
+  });
 }
 
 export function buildSupabaseSyncRows(input: BuildSupabaseSyncRowsInput): SupabaseSyncRow[] {
-  const userId = input.userId.trim();
-  if (!userId) {
-    throw new Error('Supabase sync requires a signed-in user id.');
-  }
-
+  const userId = requireUserId(input.userId);
   const updatedAt = (input.syncedAt ?? new Date()).toISOString();
   const rows: SupabaseSyncRow[] = [
     toRow(userId, 'settings', 'app-settings', input.data.settings as unknown as Record<string, unknown>, updatedAt),
@@ -158,6 +196,13 @@ export function supabaseSyncRowsToPersistedUserData(rows: SupabaseSyncRow[]): Pe
   };
 }
 
+function latestUpdatedAt(rows: SupabaseSyncRow[]) {
+  return rows.reduce<string | null>((latest, row) => {
+    if (!latest) return row.updated_at;
+    return new Date(row.updated_at).getTime() > new Date(latest).getTime() ? row.updated_at : latest;
+  }, null);
+}
+
 export function createSupabaseUserDataSyncAdapter(client: SupabaseSyncClient): SupabaseUserDataSyncAdapter {
   return {
     async pushUserData(input) {
@@ -171,6 +216,31 @@ export function createSupabaseUserDataSyncAdapter(client: SupabaseSyncClient): S
       }
 
       return { pushedRows: rows.length };
+    },
+
+    async pullUserData(input) {
+      const userId = requireUserId(input.userId);
+      const table = client.from('app_user_sync_records');
+      if (!table.select) {
+        throw new Error('Supabase sync client does not support cloud retrieval.');
+      }
+
+      const { data, error } = await table
+        .select('user_id,collection,record_id,payload,updated_at,deleted_at,schema_version')
+        .eq('user_id', userId)
+        .eq('schema_version', PERSISTENCE_SCHEMA_VERSION)
+        .order('collection', { ascending: true });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const rows = data ?? [];
+      return {
+        data: supabaseSyncRowsToPersistedUserData(rows),
+        pulledRows: rows.length,
+        pulledAt: latestUpdatedAt(rows),
+      };
     },
   };
 }

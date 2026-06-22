@@ -127,7 +127,7 @@ test.describe('local persistence', () => {
 
     await page.goto('/more/settings');
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await expect(page.getByText('Data ownership')).toBeVisible();
+    await expect(page.getByText('Data ownership', { exact: true })).toBeVisible();
     await expect(page.getByText('Exports include saved containers, doses, stacks, schedules, reconstitution calculations, signals, custom compounds, and settings.')).toBeVisible();
     await page.getByLabel('Import Data File').setInputFiles(exportPath);
     await expect(page.getByRole('alertdialog', { name: 'Restore this PeptideOS backup?' })).toBeVisible();
