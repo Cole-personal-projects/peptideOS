@@ -43,6 +43,8 @@ const protocolContextSchema = z.object({
   })),
   recentCompletedLogs: z.number(),
   recentSkippedOrMissedLogs: z.number(),
+  prior30DayCompletedLogs: z.number().optional(),
+  prior30DaySkippedOrMissedLogs: z.number().optional(),
   latestSignal: z.object({
     checkedAt: z.string(),
     energy: z.number(),
@@ -86,7 +88,7 @@ const SYSTEM_PROMPT = [
 export async function POST(request: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
-      { error: 'Peppi lab analysis is not configured. Set ANTHROPIC_API_KEY on the server.' },
+      { error: 'Peppi lab analysis is not connected in this environment. Manual lab import and trends still work.' },
       { status: 503 },
     );
   }

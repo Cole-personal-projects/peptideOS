@@ -184,6 +184,15 @@ describe('lab results', () => {
           dueAt: '2026-06-09T08:00:00.000Z',
           status: 'skipped',
         },
+        {
+          id: 'log-3',
+          scheduleId: 'schedule-1',
+          stackId: 'stack-ghk',
+          stackPeptideId: 'sp-1',
+          peptideId: 'ghk-cu',
+          dueAt: '2026-05-25T08:00:00.000Z',
+          status: 'taken',
+        },
       ],
     };
 
@@ -191,6 +200,8 @@ describe('lab results', () => {
     expect(context.activeStacks[0]).toMatchObject({ name: 'GHK-Cu run', day: 10 });
     expect(context.recentCompletedLogs).toBe(1);
     expect(context.recentSkippedOrMissedLogs).toBe(1);
+    expect(context.prior30DayCompletedLogs).toBe(2);
+    expect(context.prior30DaySkippedOrMissedLogs).toBe(1);
     expect(context.latestSignal).toMatchObject({ energy: 7, notes: 'Felt steady' });
   });
 

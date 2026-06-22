@@ -47,6 +47,8 @@ export interface LabProtocolContext {
   activeStacks: Array<{ id: string; name: string; day: number }>;
   recentCompletedLogs: number;
   recentSkippedOrMissedLogs: number;
+  prior30DayCompletedLogs: number;
+  prior30DaySkippedOrMissedLogs: number;
   latestSignal?: Pick<SignalCheckIn, 'checkedAt' | 'energy' | 'sleepHours' | 'notes'>;
 }
 
@@ -225,8 +227,10 @@ export function hasMixedAssays(points: LabTrendPoint[]) {
 
 export function buildLabProtocolContext(data: AppData, drawDate: string): LabProtocolContext {
   const draw = new Date(drawDate);
-  const windowStart = new Date(draw);
-  windowStart.setDate(windowStart.getDate() - 14);
+  const window14Start = new Date(draw);
+  window14Start.setDate(window14Start.getDate() - 14);
+  const window30Start = new Date(draw);
+  window30Start.setDate(window30Start.getDate() - 30);
   const activeStacks = data.stacks
     .filter((stack) => isStackActiveOnDate(stack, draw))
     .map((stack) => ({
@@ -234,7 +238,8 @@ export function buildLabProtocolContext(data: AppData, drawDate: string): LabPro
       name: stack.name,
       day: Math.max(1, Math.floor((startOfDay(draw).getTime() - startOfDay(new Date(stack.startDate)).getTime()) / 86400000) + 1),
     }));
-  const recentLogs = data.scheduleLogs.filter((log) => isBetween(new Date(log.dueAt), windowStart, draw));
+  const recentLogs = data.scheduleLogs.filter((log) => isBetween(new Date(log.dueAt), window14Start, draw));
+  const prior30DayLogs = data.scheduleLogs.filter((log) => isBetween(new Date(log.dueAt), window30Start, draw));
   const latestSignal = [...data.signalCheckIns]
     .filter((signal) => new Date(signal.checkedAt).getTime() <= draw.getTime())
     .sort((a, b) => new Date(b.checkedAt).getTime() - new Date(a.checkedAt).getTime())[0];
@@ -244,6 +249,8 @@ export function buildLabProtocolContext(data: AppData, drawDate: string): LabPro
     activeStacks,
     recentCompletedLogs: recentLogs.filter((log) => log.status === 'taken').length,
     recentSkippedOrMissedLogs: recentLogs.filter((log) => log.status === 'skipped' || log.status === 'missed').length,
+    prior30DayCompletedLogs: prior30DayLogs.filter((log) => log.status === 'taken').length,
+    prior30DaySkippedOrMissedLogs: prior30DayLogs.filter((log) => log.status === 'skipped' || log.status === 'missed').length,
     latestSignal: latestSignal ? {
       checkedAt: latestSignal.checkedAt,
       energy: latestSignal.energy,

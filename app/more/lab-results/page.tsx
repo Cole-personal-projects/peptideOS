@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from 'react';
-import { Bot, FileText, Plus, Save, TestTube, Trash2, TrendingUp, Upload } from 'lucide-react';
+import { Bot, FileText, Plus, Save, TestTube, Trash2, TrendingUp, Upload, X } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,32 @@ interface LabAnalysisCard {
 }
 
 const today = new Date().toISOString().slice(0, 10);
+
+const csvTemplates = [
+  {
+    label: 'Quest hormones',
+    sourceLabel: 'Quest',
+    panelName: 'Hormones',
+    body: [
+      'Test,Value,Unit,Reference Range,Flag,Assay',
+      'Estradiol Sensitive,22,pg/mL,8-35,normal,LC/MS/MS',
+      'Estradiol,31,pg/mL,8-35,normal,Immunoassay',
+      'Testosterone Total,640,ng/dL,250-1100,normal,Immunoassay',
+      'IGF-1,184,ng/mL,83-456,normal,',
+    ].join('\n'),
+  },
+  {
+    label: 'Labcorp metabolic',
+    sourceLabel: 'Labcorp',
+    panelName: 'Metabolic',
+    body: [
+      'Test,Value,Unit,Reference Range,Flag,Assay',
+      'Glucose,88,mg/dL,70-99,normal,',
+      'Hemoglobin A1c,5.2,%,4.8-5.6,normal,',
+      'ALT,41,IU/L,0-44,normal,',
+    ].join('\n'),
+  },
+];
 
 export default function LabResultsPage() {
   const { data, addLabImport, deleteLabReport } = useApp();
@@ -65,6 +91,14 @@ export default function LabResultsPage() {
     existingReports: data.labReports,
   };
 
+  const applyTemplate = (template: typeof csvTemplates[number]) => {
+    setImportMode('csv');
+    setSourceLabel(template.sourceLabel);
+    setPanelName(template.panelName);
+    setRawInput(template.body);
+    setDraft(null);
+  };
+
   const buildDraft = () => {
     const nextDraft = importMode === 'csv'
       ? parseLabCsv(rawInput, baseImportOptions)
@@ -80,6 +114,26 @@ export default function LabResultsPage() {
     setDraft(null);
     setRawInput('');
     setManualRows([]);
+  };
+
+  const updateDraftRow = (index: number, updates: Partial<LabImportRow>) => {
+    setDraft((previous) => {
+      if (!previous) return previous;
+      return {
+        ...previous,
+        rows: previous.rows.map((row, rowIndex) => (rowIndex === index ? { ...row, ...updates } : row)),
+      };
+    });
+  };
+
+  const removeDraftRow = (index: number) => {
+    setDraft((previous) => {
+      if (!previous) return previous;
+      return {
+        ...previous,
+        rows: previous.rows.filter((_, rowIndex) => rowIndex !== index),
+      };
+    });
   };
 
   const addManualRow = () => {
@@ -105,18 +159,21 @@ export default function LabResultsPage() {
     setImportMode('csv');
   };
 
-  const analyzeLabs = async () => {
+  const analyzeLabs = async (reportId?: string) => {
     setIsAnalyzing(true);
     setAnalysisMessage(null);
     setAnalysisCards([]);
+    const scopedReports = reportId ? data.labReports.filter((report) => report.id === reportId) : data.labReports;
+    const scopedReportIds = new Set(scopedReports.map((report) => report.id));
+    const scopedResults = reportId ? data.labResults.filter((result) => scopedReportIds.has(result.reportId)) : data.labResults;
     try {
       const response = await fetch('/api/ai/analyze-labs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          labReports: data.labReports,
-          labResults: data.labResults,
-          protocolContexts: data.labReports.map((report) => buildLabProtocolContext(data, report.drawDate)),
+          labReports: scopedReports,
+          labResults: scopedResults,
+          protocolContexts: scopedReports.map((report) => buildLabProtocolContext(data, report.drawDate)),
           stacks: data.stacks.map((stack) => ({ id: stack.id, name: stack.name, status: stack.status, startDate: stack.startDate, durationDays: stack.durationDays })),
         }),
       });
@@ -125,7 +182,7 @@ export default function LabResultsPage() {
         setAnalysisMessage(payload.error ?? 'Peppi could not analyze these labs.');
         return;
       }
-      setAnalysisMessage(payload.message ?? 'Peppi reviewed these labs against your PeptideOS records.');
+      setAnalysisMessage(payload.message ?? (reportId ? 'Peppi reviewed this lab report against your PeptideOS records.' : 'Peppi reviewed labs against your PeptideOS records.'));
       setAnalysisCards(Array.isArray(payload.cards) ? payload.cards : []);
     } catch {
       setAnalysisMessage('Peppi lab analysis is unavailable right now.');
@@ -192,6 +249,13 @@ export default function LabResultsPage() {
 
             {importMode === 'csv' && (
               <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  {csvTemplates.map((template) => (
+                    <Button key={template.label} type="button" size="sm" variant="outline" onClick={() => applyTemplate(template)}>
+                      {template.label}
+                    </Button>
+                  ))}
+                </div>
                 <Input type="file" accept=".csv,.tsv,.txt" onChange={(event) => void importFile(event.target.files?.[0])} />
                 <Textarea value={rawInput} onChange={(event) => setRawInput(event.target.value)} rows={7} placeholder={'Test,Value,Unit,Reference Range,Flag,Assay\nEstradiol Sensitive,22,pg/mL,8-35,normal,LC/MS/MS'} />
               </div>
@@ -235,14 +299,23 @@ export default function LabResultsPage() {
               {draft.duplicateStatus === 'possible-duplicate' && (
                 <p className="rounded-md border border-amber-300 bg-background px-3 py-2 text-sm">This looks like a lab set you already imported.</p>
               )}
-              <div className="max-h-72 overflow-auto rounded-md border">
+              <div className="max-h-[28rem] overflow-auto rounded-md border">
                 {draft.rows.map((row, index) => (
-                  <div key={`${row.testName}-${index}`} className="grid grid-cols-[1fr_auto] gap-3 border-b p-3 text-sm last:border-b-0">
-                    <div>
-                      <p className="font-medium">{row.testName}</p>
-                      <p className="text-xs text-muted-foreground">{row.assayMethod || 'Assay not specified'}{row.referenceRange?.text ? ` · ref ${row.referenceRange.text}` : ''}</p>
+                  <div key={`${row.testName}-${index}`} className="space-y-3 border-b p-3 text-sm last:border-b-0">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-medium">Result {index + 1}</p>
+                      <Button type="button" size="icon" variant="ghost" aria-label="Remove lab result row" onClick={() => removeDraftRow(index)}>
+                        <X className="w-4 h-4" />
+                      </Button>
                     </div>
-                    <p className="font-medium">{row.value} {row.unit}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input aria-label={`Test name ${index + 1}`} value={row.testName} onChange={(event) => updateDraftRow(index, { testName: event.target.value })} />
+                      <Input aria-label={`Assay method ${index + 1}`} value={row.assayMethod ?? ''} onChange={(event) => updateDraftRow(index, { assayMethod: event.target.value || undefined })} placeholder="Assay/method" />
+                      <Input aria-label={`Result value ${index + 1}`} value={row.value} onChange={(event) => updateDraftRow(index, { value: event.target.value })} />
+                      <Input aria-label={`Result unit ${index + 1}`} value={row.unit} onChange={(event) => updateDraftRow(index, { unit: event.target.value })} placeholder="Unit" />
+                      <Input aria-label={`Reference range ${index + 1}`} value={row.referenceRange?.text ?? ''} onChange={(event) => updateDraftRow(index, { referenceRange: event.target.value ? { text: event.target.value } : undefined })} placeholder="Reference range" />
+                      <Input aria-label={`Result flag ${index + 1}`} value={row.flag} onChange={(event) => updateDraftRow(index, { flag: event.target.value as LabImportRow['flag'] })} placeholder="normal, high, low" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -267,7 +340,7 @@ export default function LabResultsPage() {
                 <Bot className="w-4 h-4 text-primary" />
                 Peppi lab analysis
               </span>
-              <Button size="sm" variant="outline" onClick={analyzeLabs} disabled={data.labResults.length === 0 || isAnalyzing}>
+              <Button size="sm" variant="outline" onClick={() => void analyzeLabs()} disabled={data.labResults.length === 0 || isAnalyzing}>
                 {isAnalyzing ? 'Analyzing...' : 'Analyze'}
               </Button>
             </CardTitle>
@@ -276,7 +349,9 @@ export default function LabResultsPage() {
             <p className="text-sm text-muted-foreground">
               Peppi explains trends and timing against your protocols. It does not diagnose, recommend dose changes, or determine safety.
             </p>
-            {analysisMessage && <p className="text-sm">{analysisMessage}</p>}
+            {analysisMessage && (
+              <p className="rounded-md border bg-background px-3 py-2 text-sm">{analysisMessage}</p>
+            )}
             {analysisCards.map((card) => (
               <div key={card.id} className="rounded-md border bg-background p-3 text-sm">
                 <p className="font-medium">{card.title}</p>
@@ -305,7 +380,8 @@ export default function LabResultsPage() {
                 key={report.id}
                 report={report}
                 results={resultsByReport.get(report.id) ?? []}
-                protocolLabel={formatProtocolContext(buildLabProtocolContext(data, report.drawDate))}
+                protocolContext={buildLabProtocolContext(data, report.drawDate)}
+                onAnalyze={() => void analyzeLabs(report.id)}
                 onDelete={() => deleteLabReport(report.id)}
               />
             ))}
@@ -352,18 +428,51 @@ export default function LabResultsPage() {
   );
 }
 
-function LabReportCard({ report, results, protocolLabel, onDelete }: { report: LabReport; results: LabResult[]; protocolLabel: string; onDelete: () => void }) {
+function LabReportCard({
+  report,
+  results,
+  protocolContext,
+  onAnalyze,
+  onDelete,
+}: {
+  report: LabReport;
+  results: LabResult[];
+  protocolContext: ReturnType<typeof buildLabProtocolContext>;
+  onAnalyze: () => void;
+  onDelete: () => void;
+}) {
   return (
     <Card>
       <CardContent className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="font-medium">{formatDate(report.drawDate)}{report.panelName ? ` · ${report.panelName}` : ''}</p>
-            <p className="text-xs text-muted-foreground">{report.sourceLabel || 'Source not specified'} · {protocolLabel}</p>
+            <p className="text-xs text-muted-foreground">{report.sourceLabel || 'Source not specified'} · {results.length} result{results.length === 1 ? '' : 's'}</p>
           </div>
-          <Button size="icon" variant="ghost" aria-label="Delete lab report" onClick={onDelete}>
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          <div className="flex gap-1">
+            <Button size="sm" variant="outline" onClick={onAnalyze}>
+              <Bot className="w-4 h-4" />
+              Analyze
+            </Button>
+            <Button size="icon" variant="ghost" aria-label="Delete lab report" onClick={onDelete}>
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="grid gap-2 rounded-md border bg-background p-3 text-xs">
+          <p className="font-medium text-sm">Protocol context</p>
+          <p className="text-muted-foreground">{formatProtocolContext(protocolContext)}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <span className="rounded-md bg-secondary px-2 py-1">{protocolContext.recentCompletedLogs} completed · 14d</span>
+            <span className="rounded-md bg-secondary px-2 py-1">{protocolContext.recentSkippedOrMissedLogs} skipped/missed · 14d</span>
+            <span className="rounded-md bg-secondary px-2 py-1">{protocolContext.prior30DayCompletedLogs} completed · 30d</span>
+            <span className="rounded-md bg-secondary px-2 py-1">{protocolContext.prior30DaySkippedOrMissedLogs} skipped/missed · 30d</span>
+          </div>
+          {protocolContext.latestSignal && (
+            <p className="text-muted-foreground">
+              Latest Signal before draw: energy {protocolContext.latestSignal.energy}/10 · sleep {protocolContext.latestSignal.sleepHours} hr
+            </p>
+          )}
         </div>
         <div className="space-y-2">
           {results.slice(0, 6).map((result) => (
