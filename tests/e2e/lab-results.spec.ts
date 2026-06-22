@@ -1,5 +1,32 @@
 import { expect, test } from '@playwright/test';
 
+function createTextPdf(lines: string[]) {
+  const escapedLines = lines
+    .map((line) => `(${line.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)')}) Tj`)
+    .join(' T*\n');
+  const stream = `BT\n/F1 12 Tf\n50 760 Td\n14 TL\n${escapedLines}\nET`;
+  const objects = [
+    '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n',
+    '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n',
+    '3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n',
+    '4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n',
+    `5 0 obj\n<< /Length ${Buffer.byteLength(stream)} >>\nstream\n${stream}\nendstream\nendobj\n`,
+  ];
+  let body = '%PDF-1.4\n';
+  const offsets = [0];
+  for (const object of objects) {
+    offsets.push(Buffer.byteLength(body));
+    body += object;
+  }
+  const xrefOffset = Buffer.byteLength(body);
+  body += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let index = 1; index < offsets.length; index += 1) {
+    body += `${String(offsets[index]).padStart(10, '0')} 00000 n \n`;
+  }
+  body += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+  return Buffer.from(body);
+}
+
 async function importQuestHormones(page: import('@playwright/test').Page, drawDate: string) {
   await page.getByRole('button', { name: 'Import' }).click();
   await page.getByRole('button', { name: 'CSV / Spreadsheet' }).click();
@@ -25,13 +52,23 @@ test.describe('lab results workspace', () => {
     await page.getByRole('button', { name: 'Import Lab Results' }).click();
     await expect(page.getByText('Step 1 of 4')).toBeVisible();
     await page.getByRole('button', { name: 'Upload PDF' }).click();
-    await expect(page.getByText('OCR/AI extraction is coming later')).toBeVisible();
-    await page.getByRole('button', { name: 'CSV/text' }).click();
-    await page.getByRole('button', { name: 'Quest hormones' }).click();
     await page.getByLabel('Draw date').fill('2026-06-01');
-    await page.getByRole('button', { name: 'Review Data' }).click();
-    await expect(page.getByLabel('Test name 1')).toHaveValue('Estradiol Sensitive');
-    await expect(page.getByLabel('Assay method 1')).toHaveValue('LC/MS/MS');
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'quest-hormones.pdf',
+      mimeType: 'application/pdf',
+      buffer: createTextPdf([
+        'Quest Diagnostics',
+        'Estradiol Sensitive LC/MS/MS 22 pg/mL 8-35 normal',
+        'Estradiol Immunoassay 31 pg/mL 8-35 normal',
+        'Testosterone Total 640 ng/dL 250-1100 normal',
+        'IGF-1 184 ng/mL 83-456 normal',
+      ]),
+    });
+    await expect(page.getByText('Step 3 of 4')).toBeVisible();
+    await expect(page.getByLabel('Test name 1')).toHaveValue('Estradiol Sensitive LC/MS/MS');
+    await expect(page.getByLabel('Result value 1')).toHaveValue('22');
+    await expect(page.getByLabel('Test name 4')).toHaveValue('IGF-1');
+    await expect(page.getByLabel('Test name 5')).toBeHidden();
     await page.getByRole('button', { name: 'Confirm Import' }).click();
     await expect(page.getByText('Import complete')).toBeVisible();
     await page.getByRole('button', { name: 'View Timeline' }).click();
@@ -42,11 +79,11 @@ test.describe('lab results workspace', () => {
     await page.getByRole('link', { name: /Estradiol Sensitive/ }).click();
     await expect(page).toHaveURL(/view=detail/);
     await expect(page.getByText('Active stack during test')).toBeVisible();
-    await expect(page.getByText(/Assay or unit changed.*Compare cautiously/)).toBeVisible();
+    await expect(page.getByText(/Assay or unit changed.*Compare cautiously/).first()).toBeVisible();
 
     await page.getByRole('button', { name: 'Compare Tests' }).click();
     await expect(page.getByLabel('Test 1')).toBeVisible();
-    await expect(page.getByText('Estradiol Sensitive', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(/Estradiol Sensitive/).first()).toBeVisible();
 
     await importQuestHormones(page, '2026-07-01');
     await page.getByRole('button', { name: 'Compare' }).first().click();
@@ -56,7 +93,7 @@ test.describe('lab results workspace', () => {
 
     await page.getByRole('button', { name: 'Trends' }).click();
     await expect(page.getByText('Key marker trends')).toBeVisible();
-    await expect(page.getByText(/Assay or unit changed.*Compare cautiously/)).toBeVisible();
+    await expect(page.getByText(/Assay or unit changed.*Compare cautiously/).first()).toBeVisible();
     await expect(page.getByText(/Not enough data|strong|moderate|weak/).first()).toBeVisible();
   });
 });
