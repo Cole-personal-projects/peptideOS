@@ -123,6 +123,8 @@ export default function LabsPage() {
   const [notes, setNotes] = useState('');
   const [rawInput, setRawInput] = useState('');
   const [selectedFileName, setSelectedFileName] = useState('');
+  const [pdfImportMessage, setPdfImportMessage] = useState<string | null>(null);
+  const [isParsingPdf, setIsParsingPdf] = useState(false);
   const [manualRow, setManualRow] = useState({ testName: '', assayMethod: '', value: '', unit: '', range: '', flag: 'unknown' });
   const [manualRows, setManualRows] = useState<LabImportRow[]>([]);
   const [draft, setDraft] = useState<LabImportDraft | null>(null);
@@ -224,7 +226,38 @@ export default function LabsPage() {
   const importFile = async (file: File | undefined) => {
     if (!file) return;
     setSelectedFileName(file.name);
-    if (importMethod === 'csv' || importMethod === 'text') setRawInput(await file.text());
+    setPdfImportMessage(null);
+    if (importMethod === 'csv' || importMethod === 'text') {
+      setRawInput(await file.text());
+      return;
+    }
+    if (importMethod !== 'pdf') return;
+
+    setIsParsingPdf(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('metadata', JSON.stringify(baseImportOptions));
+      const response = await fetch('/api/labs/parse-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+      const payload = await response.json() as { draft?: LabImportDraft; error?: string; pageCount?: number };
+      if (!response.ok || !payload.draft) {
+        setPdfImportMessage(payload.error ?? 'Could not import that PDF.');
+        return;
+      }
+
+      setDraft(payload.draft);
+      setSourceLabel(payload.draft.sourceLabel ?? sourceLabel);
+      const pageCount = payload.pageCount ?? 1;
+      setPdfImportMessage(`Parsed ${payload.draft.rows.length} marker${payload.draft.rows.length === 1 ? '' : 's'} from ${pageCount} page${pageCount === 1 ? '' : 's'}. Review before saving.`);
+      setImportStep(2);
+    } catch {
+      setPdfImportMessage('Could not import that PDF. Try a text-based PDF or enter values manually.');
+    } finally {
+      setIsParsingPdf(false);
+    }
   };
 
   const applyTemplate = (template: typeof csvTemplates[number]) => {
@@ -311,9 +344,11 @@ export default function LabsPage() {
             panelName={panelName}
             linkedStackId={linkedStackId}
             notes={notes}
-            rawInput={rawInput}
-            selectedFileName={selectedFileName}
-            manualRow={manualRow}
+          rawInput={rawInput}
+          selectedFileName={selectedFileName}
+          pdfImportMessage={pdfImportMessage}
+          isParsingPdf={isParsingPdf}
+          manualRow={manualRow}
             manualRows={manualRows}
             draft={draft}
             activeStacks={activeStacks}
@@ -419,6 +454,8 @@ function ImportWizard(props: {
   notes: string;
   rawInput: string;
   selectedFileName: string;
+  pdfImportMessage: string | null;
+  isParsingPdf: boolean;
   manualRow: { testName: string; assayMethod: string; value: string; unit: string; range: string; flag: string };
   manualRows: LabImportRow[];
   draft: LabImportDraft | null;
@@ -491,22 +528,29 @@ function ImportMethodStep({ onChooseMethod }: { onChooseMethod: (method: ImportM
 }
 
 function ImportInputStep(props: Parameters<typeof ImportWizard>[0]) {
-  const isUploadShell = props.method === 'pdf' || props.method === 'photo';
+  const isPdf = props.method === 'pdf';
+  const isPhotoShell = props.method === 'photo';
   return (
     <div className="space-y-4">
       <StepLabel>Step 2 of 4 · Upload or enter results</StepLabel>
       <ImportMetaFields {...props} />
 
-      {isUploadShell ? (
+      {isPdf || isPhotoShell ? (
         <Card className="border-dashed">
           <CardContent className="space-y-3 p-5 text-center">
             {props.method === 'pdf' ? <FileText className="mx-auto h-8 w-8 text-muted-foreground" /> : <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground" />}
             <div>
               <p className="text-sm font-semibold">{props.method === 'pdf' ? 'Select a lab PDF' : 'Select a lab photo or screenshot'}</p>
-              <p className="text-xs text-muted-foreground">OCR/AI extraction is coming later. For now, use this as a review shell and switch to manual or CSV/text to save.</p>
+              <p className="text-xs text-muted-foreground">
+                {props.method === 'pdf'
+                  ? 'Text-based PDFs import into editable markers. Scanned PDFs still need OCR.'
+                  : 'Photo OCR is not connected yet. Switch to manual or CSV/text to save.'}
+              </p>
             </div>
             <Input type="file" accept={props.method === 'pdf' ? '.pdf' : 'image/*'} onChange={(event) => void props.onImportFile(event.target.files?.[0])} />
             {props.selectedFileName && <p className="text-xs text-muted-foreground">Selected: {props.selectedFileName}</p>}
+            {props.isParsingPdf && <p className="text-xs text-primary">Reading PDF...</p>}
+            {props.pdfImportMessage && <p className="rounded-md border bg-background px-3 py-2 text-xs text-muted-foreground">{props.pdfImportMessage}</p>}
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" onClick={() => props.onImportMethodChange('manual')}>Manual entry</Button>
               <Button variant="outline" onClick={() => props.onImportMethodChange('csv')}>CSV/text</Button>
@@ -524,7 +568,7 @@ function ImportInputStep(props: Parameters<typeof ImportWizard>[0]) {
         nextLabel="Review Data"
         onBack={() => props.onStepChange(0)}
         onNext={props.onBuildDraft}
-        nextDisabled={isUploadShell || (props.method === 'manual' ? props.manualRows.length === 0 : props.rawInput.trim().length === 0)}
+        nextDisabled={isPdf || isPhotoShell || (props.method === 'manual' ? props.manualRows.length === 0 : props.rawInput.trim().length === 0)}
       />
     </div>
   );
