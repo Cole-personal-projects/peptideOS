@@ -55,6 +55,7 @@ importAllData,
 clearAllData,
 saveToCloud,
 retrieveFromCloud,
+setCloudSyncEnabled,
 } = useApp();
   const { config: authConfig, status: authStatus, user, signInWithEmail, verifyEmailCode, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -168,8 +169,8 @@ const canUseCloud = persistenceStatus.mode === 'signed-in' && persistenceStatus.
                 <p className="font-medium text-sm">{authStatus === 'signed-in' ? user?.email : 'Local-only mode'}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {authStatus === 'signed-in'
-                    ? 'Signed in. Cloud sync will be added in a future slice.'
-                    : 'Your data remains on this device until you sign in and cloud sync is available.'}
+                    ? 'Signed in. Cloud mode can keep this device synced with your account.'
+                    : 'Your data remains on this device until you sign in and turn on Cloud mode.'}
                 </p>
                 {!authConfig.enabled && (
                   <p className="mt-2 text-xs text-muted-foreground">Sign-in is ready for Supabase public config.</p>
@@ -268,6 +269,23 @@ const canUseCloud = persistenceStatus.mode === 'signed-in' && persistenceStatus.
               Exports include saved containers, doses, stacks, schedules, reconstitution calculations, signals, custom compounds, and settings.
               Bundled reference compounds stay app-owned.
             </p>
+
+<div className="flex items-center justify-between rounded-md border bg-secondary/20 p-3">
+<div className="flex items-start gap-3">
+<Cloud className="mt-0.5 h-5 w-5 text-muted-foreground" />
+<div>
+<p className="font-medium text-sm">Cloud mode</p>
+<p className="text-xs text-muted-foreground mt-1">
+When on, this device retrieves your account data and auto-saves local changes to cloud.
+</p>
+</div>
+</div>
+<Switch
+checked={Boolean(data.cloudSyncEnabled)}
+disabled={persistenceStatus.mode !== 'signed-in' || isCloudBusy}
+onCheckedChange={(checked) => void setCloudSyncEnabled(checked)}
+/>
+</div>
 
 <Button variant="outline" className="w-full justify-start" onClick={() => void exportAllData()}>
 <Download className="w-4 h-4 mr-3" />

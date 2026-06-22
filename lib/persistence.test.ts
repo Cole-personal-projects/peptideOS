@@ -536,6 +536,7 @@ describe('Dexie persistence', () => {
       userMode: 'beginner',
       biometricLock: false,
       darkMode: true,
+      cloudSyncEnabled: false,
     });
   });
 

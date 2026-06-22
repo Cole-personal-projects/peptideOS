@@ -515,6 +515,7 @@ export const initialAppData: AppData = {
   hasSeenDisclaimer: false,
   hasCompletedOnboarding: false,
   userMode: 'beginner',
-  biometricLock: false,
-  darkMode: true
+biometricLock: false,
+darkMode: true,
+cloudSyncEnabled: false
 };
