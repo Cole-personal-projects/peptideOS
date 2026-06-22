@@ -16,6 +16,7 @@ export interface LabImportDraft {
   resultedDate?: string;
   sourceLabel?: string;
   panelName?: string;
+  linkedStackId?: string;
   notes: string;
   method: LabImportMethod;
   rows: LabImportRow[];
@@ -110,7 +111,9 @@ export function buildLabImportKey(drawDate: string, rows: LabImportRow[]) {
   return `${drawDate.slice(0, 10)}:${hashString(normalizedRows)}`;
 }
 
-export function parseLabCsv(input: string, options: { drawDate: string; resultedDate?: string; sourceLabel?: string; panelName?: string; notes?: string; existingReports?: LabReport[] }): LabImportDraft {
+type LabImportOptions = { drawDate: string; resultedDate?: string; sourceLabel?: string; panelName?: string; linkedStackId?: string; notes?: string; existingReports?: LabReport[] };
+
+export function parseLabCsv(input: string, options: LabImportOptions): LabImportDraft {
   const lines = input.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   if (lines.length === 0) return buildDraft([], [], 'csv', options);
   const delimiter = lines[0].includes('\t') ? '\t' : ',';
@@ -131,7 +134,7 @@ export function parseLabCsv(input: string, options: { drawDate: string; resulted
   return buildDraft(rows, unresolvedRows, 'csv', options);
 }
 
-export function parseLabText(input: string, options: { drawDate: string; resultedDate?: string; sourceLabel?: string; panelName?: string; notes?: string; existingReports?: LabReport[] }): LabImportDraft {
+export function parseLabText(input: string, options: LabImportOptions): LabImportDraft {
   const rows: LabImportRow[] = [];
   const unresolvedRows: string[] = [];
 
@@ -156,7 +159,7 @@ export function parseLabText(input: string, options: { drawDate: string; resulte
   return buildDraft(rows, unresolvedRows, 'text', options);
 }
 
-export function createManualLabDraft(input: { drawDate: string; resultedDate?: string; sourceLabel?: string; panelName?: string; notes?: string; rows: LabImportRow[]; existingReports?: LabReport[] }): LabImportDraft {
+export function createManualLabDraft(input: LabImportOptions & { rows: LabImportRow[] }): LabImportDraft {
   return buildDraft(input.rows.map(normalizeRow), [], 'manual', input);
 }
 
@@ -169,6 +172,8 @@ export function persistLabImportDraft(draft: LabImportDraft, now = new Date()): 
     resultedDate: draft.resultedDate,
     sourceLabel: draft.sourceLabel,
     panelName: draft.panelName,
+    linkedStackId: draft.linkedStackId,
+    sourceMethod: draft.method,
     uniqueImportKey: draft.uniqueImportKey,
     notes: draft.notes,
     createdAt: now.toISOString(),
@@ -260,7 +265,7 @@ export function buildLabProtocolContext(data: AppData, drawDate: string): LabPro
   };
 }
 
-function buildDraft(rows: LabImportRow[], unresolvedRows: string[], method: LabImportMethod, options: { drawDate: string; resultedDate?: string; sourceLabel?: string; panelName?: string; notes?: string; existingReports?: LabReport[] }): LabImportDraft {
+function buildDraft(rows: LabImportRow[], unresolvedRows: string[], method: LabImportMethod, options: LabImportOptions): LabImportDraft {
   const normalizedRows = rows.map(normalizeRow);
   const uniqueImportKey = buildLabImportKey(options.drawDate, normalizedRows);
   return {
@@ -268,6 +273,7 @@ function buildDraft(rows: LabImportRow[], unresolvedRows: string[], method: LabI
     resultedDate: options.resultedDate ? normalizeDate(options.resultedDate) : undefined,
     sourceLabel: options.sourceLabel?.trim() || undefined,
     panelName: options.panelName?.trim() || undefined,
+    linkedStackId: options.linkedStackId?.trim() || undefined,
     notes: options.notes?.trim() ?? '',
     method,
     rows: normalizedRows,

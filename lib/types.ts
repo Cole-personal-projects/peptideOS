@@ -441,7 +441,7 @@ export interface SignalCheckIn {
   notes: string;
 }
 
-export type LabImportMethod = 'manual' | 'csv' | 'text';
+export type LabImportMethod = 'manual' | 'csv' | 'text' | 'pdf' | 'photo';
 export type LabResultFlag = 'low' | 'high' | 'normal' | 'critical' | 'unknown';
 
 export interface LabReferenceRange {
@@ -456,6 +456,8 @@ export interface LabReport {
   resultedDate?: string;
   sourceLabel?: string;
   panelName?: string;
+  linkedStackId?: string;
+  sourceMethod?: LabImportMethod;
   uniqueImportKey: string;
   notes: string;
   createdAt: string;

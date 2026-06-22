@@ -17,7 +17,7 @@ describe('lab results', () => {
   test('parses CSV rows with assay details and duplicate keys', () => {
     const draft = parseLabCsv(
       'Test,Value,Unit,Reference Range,Flag,Assay\nEstradiol Sensitive,22,pg/mL,8-35,normal,LC/MS/MS',
-      { drawDate: '2026-06-01', panelName: 'Hormones' },
+{ drawDate: '2026-06-01', panelName: 'Hormones', linkedStackId: 'stack-1' },
     );
 
     expect(draft.rows).toHaveLength(1);
@@ -28,7 +28,11 @@ describe('lab results', () => {
       unit: 'pg/mL',
       flag: 'normal',
     });
-    expect(draft.uniqueImportKey).toMatch(/^2026-06-01:/);
+expect(draft.uniqueImportKey).toMatch(/^2026-06-01:/);
+expect(persistLabImportDraft(draft).report).toMatchObject({
+linkedStackId: 'stack-1',
+sourceMethod: 'csv',
+});
 
     const duplicate = parseLabCsv(
       'Test,Value,Unit,Reference Range,Flag,Assay\nEstradiol Sensitive,22,pg/mL,8-35,normal,LC/MS/MS',

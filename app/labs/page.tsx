@@ -1,0 +1,994 @@
+"use client";
+
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useMemo, useState } from 'react';
+import {
+  AlertCircle,
+  Bot,
+  Camera,
+  Check,
+  ChevronRight,
+  ClipboardList,
+  Copy,
+  FileText,
+  Grid3X3,
+  ImageIcon,
+  Pencil,
+  Share2,
+  Table2,
+  TestTube,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+  Upload,
+} from 'lucide-react';
+import { AppShell } from '@/components/app-shell';
+import { PageHeader } from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useApp } from '@/lib/context';
+import {
+  buildLabProtocolContext,
+  createManualLabDraft,
+  parseLabCsv,
+  parseLabText,
+  persistLabImportDraft,
+  type LabImportDraft,
+  type LabImportRow,
+} from '@/lib/lab-results';
+import {
+  buildLabComparison,
+  buildLabMarkerDetail,
+  buildLabTimelineCards,
+  buildLabTrendsDashboard,
+  formatResultValue,
+  makeLabCompareHref,
+  makeLabMarkerHref,
+  type LabCompareRow,
+} from '@/lib/lab-results-view';
+import type { LabImportMethod, LabReport, LabResult } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+interface LabAnalysisCard {
+  id: string;
+  title: string;
+  body: string;
+  severity: 'info' | 'watch' | 'caveat';
+}
+
+type LabView = 'timeline' | 'import' | 'detail' | 'compare' | 'trends';
+type ImportMethod = LabImportMethod;
+
+const today = new Date().toISOString().slice(0, 10);
+
+const csvTemplates = [
+  {
+    label: 'Quest hormones',
+    sourceLabel: 'Quest Diagnostics',
+    panelName: 'Hormones',
+    body: [
+      'Test,Value,Unit,Reference Range,Flag,Assay',
+      'Estradiol Sensitive,22,pg/mL,8-35,normal,LC/MS/MS',
+      'Estradiol,31,pg/mL,8-35,normal,Immunoassay',
+      'Testosterone Total,640,ng/dL,250-1100,normal,Immunoassay',
+      'IGF-1,184,ng/mL,83-456,normal,',
+    ].join('\n'),
+  },
+  {
+    label: 'Labcorp metabolic',
+    sourceLabel: 'LabCorp',
+    panelName: 'Metabolic',
+    body: [
+      'Test,Value,Unit,Reference Range,Flag,Assay',
+      'Glucose,88,mg/dL,70-99,normal,',
+      'Hemoglobin A1c,5.2,%,4.8-5.6,normal,',
+      'ALT,41,IU/L,0-44,normal,',
+    ].join('\n'),
+  },
+];
+
+const importMethods: Array<{
+  id: ImportMethod;
+  label: string;
+  subtitle: string;
+  icon: typeof Upload;
+  tone: 'amber' | 'green' | 'teal' | 'primary';
+}> = [
+  { id: 'pdf', label: 'Upload PDF', subtitle: 'Quest, LabCorp, Ulta Lab Tests', icon: FileText, tone: 'amber' },
+  { id: 'manual', label: 'Manual Entry', subtitle: 'Type values directly', icon: Pencil, tone: 'green' },
+  { id: 'photo', label: 'Photo / Screenshot', subtitle: 'Camera or photo library', icon: Camera, tone: 'teal' },
+  { id: 'csv', label: 'CSV / Spreadsheet', subtitle: 'Bulk import multiple tests', icon: Table2, tone: 'primary' },
+];
+
+export default function LabsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { data, addLabImport, deleteLabReport } = useApp();
+
+  const requestedView = (searchParams.get('view') as LabView | null) ?? 'timeline';
+  const view = requestedView;
+  const [importStep, setImportStep] = useState(0);
+  const [importMethod, setImportMethod] = useState<ImportMethod>('csv');
+  const [drawDate, setDrawDate] = useState(today);
+  const [resultedDate, setResultedDate] = useState('');
+  const [sourceLabel, setSourceLabel] = useState('');
+  const [panelName, setPanelName] = useState('');
+  const [linkedStackId, setLinkedStackId] = useState('');
+  const [notes, setNotes] = useState('');
+  const [rawInput, setRawInput] = useState('');
+  const [selectedFileName, setSelectedFileName] = useState('');
+  const [manualRow, setManualRow] = useState({ testName: '', assayMethod: '', value: '', unit: '', range: '', flag: 'unknown' });
+  const [manualRows, setManualRows] = useState<LabImportRow[]>([]);
+  const [draft, setDraft] = useState<LabImportDraft | null>(null);
+  const [savedReport, setSavedReport] = useState<LabReport | null>(null);
+  const [analysisCards, setAnalysisCards] = useState<LabAnalysisCard[]>([]);
+  const [analysisMessage, setAnalysisMessage] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
+
+  const timelineCards = useMemo(() => buildLabTimelineCards(data), [data]);
+  const dashboard = useMemo(() => buildLabTrendsDashboard(data), [data]);
+  const reports = timelineCards.map((card) => card.report);
+  const firstReportId = searchParams.get('first') ?? reports[0]?.id ?? '';
+  const secondReportId = searchParams.get('second') ?? reports[1]?.id ?? reports[0]?.id ?? '';
+  const detail = useMemo(
+    () => buildLabMarkerDetail(data, searchParams.get('report') ?? reports[0]?.id ?? '', searchParams.get('marker') ?? ''),
+    [data, reports, searchParams],
+  );
+  const comparison = useMemo(() => buildLabComparison(data, firstReportId, secondReportId), [data, firstReportId, secondReportId]);
+
+  const activeStacks = data.stacks.filter((stack) => stack.status === 'active');
+  const baseImportOptions = {
+    drawDate,
+    resultedDate: resultedDate || undefined,
+    sourceLabel,
+    panelName,
+    linkedStackId: linkedStackId || undefined,
+    notes,
+    existingReports: data.labReports,
+  };
+
+  const setWorkspaceView = (nextView: LabView) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextView === 'timeline') params.delete('view');
+    else params.set('view', nextView);
+    router.replace(params.toString() ? `/labs?${params.toString()}` : '/labs', { scroll: false });
+  };
+
+  const chooseImportMethod = (method: ImportMethod) => {
+    setImportMethod(method);
+    setDraft(null);
+    setImportStep(1);
+  };
+
+  const buildDraft = () => {
+    if (importMethod === 'pdf' || importMethod === 'photo') return;
+    const nextDraft = importMethod === 'csv'
+      ? parseLabCsv(rawInput, baseImportOptions)
+      : importMethod === 'text'
+        ? parseLabText(rawInput, baseImportOptions)
+        : createManualLabDraft({ ...baseImportOptions, rows: manualRows });
+    setDraft(nextDraft);
+    setImportStep(2);
+  };
+
+  const saveDraft = () => {
+    if (!draft || draft.rows.length === 0) return;
+    const persisted = persistLabImportDraft(draft);
+    addLabImport(persisted);
+    setSavedReport(persisted.report);
+    setDraft(null);
+    setRawInput('');
+    setManualRows([]);
+    setSelectedFileName('');
+    setImportStep(3);
+  };
+
+  const updateDraftRow = (index: number, updates: Partial<LabImportRow>) => {
+    setDraft((previous) => previous ? {
+      ...previous,
+      rows: previous.rows.map((row, rowIndex) => rowIndex === index ? { ...row, ...updates } : row),
+    } : previous);
+  };
+
+  const removeDraftRow = (index: number) => {
+    setDraft((previous) => previous ? {
+      ...previous,
+      rows: previous.rows.filter((_, rowIndex) => rowIndex !== index),
+    } : previous);
+  };
+
+  const addManualRow = () => {
+    if (!manualRow.testName.trim() || !manualRow.value.trim()) return;
+    setManualRows((previous) => [
+      ...previous,
+      {
+        testName: manualRow.testName,
+        assayMethod: manualRow.assayMethod || undefined,
+        value: manualRow.value,
+        unit: manualRow.unit,
+        referenceRange: manualRow.range ? { text: manualRow.range } : undefined,
+        flag: manualRow.flag as LabImportRow['flag'],
+        panelName,
+      },
+    ]);
+    setManualRow({ testName: '', assayMethod: '', value: '', unit: '', range: '', flag: 'unknown' });
+  };
+
+  const importFile = async (file: File | undefined) => {
+    if (!file) return;
+    setSelectedFileName(file.name);
+    if (importMethod === 'csv' || importMethod === 'text') setRawInput(await file.text());
+  };
+
+  const applyTemplate = (template: typeof csvTemplates[number]) => {
+    setImportMethod('csv');
+    setSourceLabel(template.sourceLabel);
+    setPanelName(template.panelName);
+    setRawInput(template.body);
+    setDraft(null);
+    setImportStep(1);
+  };
+
+  const analyzeLabs = async (reportId?: string) => {
+    setIsAnalyzing(true);
+    setAnalysisMessage(null);
+    setAnalysisCards([]);
+    const scopedReports = reportId ? data.labReports.filter((report) => report.id === reportId) : data.labReports;
+    const scopedReportIds = new Set(scopedReports.map((report) => report.id));
+    const scopedResults = reportId ? data.labResults.filter((result) => scopedReportIds.has(result.reportId)) : data.labResults;
+    try {
+      const response = await fetch('/api/ai/analyze-labs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          labReports: scopedReports,
+          labResults: scopedResults,
+          protocolContexts: scopedReports.map((report) => buildLabProtocolContext(data, report.drawDate)),
+          stacks: data.stacks.map((stack) => ({ id: stack.id, name: stack.name, status: stack.status, startDate: stack.startDate, durationDays: stack.durationDays })),
+        }),
+      });
+      const payload = await response.json() as { message?: string; cards?: LabAnalysisCard[]; error?: string };
+      if (!response.ok) {
+        setAnalysisMessage(payload.error ?? 'Peppi could not analyze these labs.');
+        return;
+      }
+      setAnalysisMessage(payload.message ?? 'Peppi reviewed labs against PeptideOS records.');
+      setAnalysisCards(Array.isArray(payload.cards) ? payload.cards : []);
+    } catch {
+      setAnalysisMessage('Peppi lab analysis unavailable right now.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const shareText = async (text: string) => {
+    try {
+      const canShare = 'share' in navigator;
+      if (canShare) await navigator.share({ text });
+      else await navigator.clipboard.writeText(text);
+      setShareMessage(canShare ? 'Share sheet opened.' : 'Summary copied.');
+    } catch {
+      setShareMessage('Share unavailable right now.');
+    }
+  };
+
+  const showEmpty = timelineCards.length === 0 && view === 'timeline';
+
+  return (
+    <AppShell>
+      <PageHeader
+        title="Lab Results"
+        backHref="/more"
+        rightElement={
+          <Button size="sm" onClick={() => { setWorkspaceView('import'); setImportStep(0); }}>
+            <Upload className="h-4 w-4" />
+            Import
+          </Button>
+        }
+      />
+
+      <div className="space-y-4 p-4">
+        {timelineCards.length > 0 && (
+          <LabWorkspaceTabs view={view} onViewChange={setWorkspaceView} />
+        )}
+
+        {showEmpty ? (
+          <EmptyLabs onImport={() => { setWorkspaceView('import'); setImportStep(0); }} />
+        ) : view === 'import' ? (
+          <ImportWizard
+            step={importStep}
+            method={importMethod}
+            drawDate={drawDate}
+            resultedDate={resultedDate}
+            sourceLabel={sourceLabel}
+            panelName={panelName}
+            linkedStackId={linkedStackId}
+            notes={notes}
+            rawInput={rawInput}
+            selectedFileName={selectedFileName}
+            manualRow={manualRow}
+            manualRows={manualRows}
+            draft={draft}
+            activeStacks={activeStacks}
+            savedReport={savedReport}
+            onStepChange={setImportStep}
+            onChooseMethod={chooseImportMethod}
+            onImportMethodChange={setImportMethod}
+            onDrawDateChange={setDrawDate}
+            onResultedDateChange={setResultedDate}
+            onSourceLabelChange={setSourceLabel}
+            onPanelNameChange={setPanelName}
+            onLinkedStackIdChange={setLinkedStackId}
+            onNotesChange={setNotes}
+            onRawInputChange={setRawInput}
+            onManualRowChange={setManualRow}
+            onAddManualRow={addManualRow}
+            onApplyTemplate={applyTemplate}
+            onImportFile={importFile}
+            onBuildDraft={buildDraft}
+            onUpdateDraftRow={updateDraftRow}
+            onRemoveDraftRow={removeDraftRow}
+            onSaveDraft={saveDraft}
+            onViewTimeline={() => setWorkspaceView('timeline')}
+          />
+        ) : view === 'detail' ? (
+          <MarkerDetailView detail={detail} onCompare={() => setWorkspaceView('compare')} onShare={shareText} />
+        ) : view === 'compare' ? (
+          <CompareView
+            reports={reports}
+            firstReportId={firstReportId}
+            secondReportId={secondReportId}
+            rows={comparison}
+            onSelect={(first, second) => router.replace(makeLabCompareHref(first, second), { scroll: false })}
+            onShare={shareText}
+          />
+        ) : view === 'trends' ? (
+          <TrendsView dashboard={dashboard} />
+        ) : (
+          <TimelineView
+            cards={timelineCards}
+            analysisMessage={analysisMessage}
+            analysisCards={analysisCards}
+            isAnalyzing={isAnalyzing}
+            onAnalyze={analyzeLabs}
+            onDelete={deleteLabReport}
+          />
+        )}
+
+        {shareMessage && <p className="rounded-md border bg-card px-3 py-2 text-sm text-muted-foreground">{shareMessage}</p>}
+      </div>
+    </AppShell>
+  );
+}
+
+function LabWorkspaceTabs({ view, onViewChange }: { view: LabView; onViewChange: (view: LabView) => void }) {
+  return (
+    <div className="grid grid-cols-3 gap-1 rounded-xl border bg-secondary p-1">
+      {[
+        ['timeline', 'Timeline'],
+        ['compare', 'Compare'],
+        ['trends', 'Trends'],
+      ].map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          className={cn('rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground', view === id && 'bg-card text-foreground shadow-sm')}
+          onClick={() => onViewChange(id as LabView)}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function EmptyLabs({ onImport }: { onImport: () => void }) {
+  return (
+    <div className="pt-10">
+      <Empty className="border-2 border-dashed bg-secondary/30 py-12">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Grid3X3 className="h-5 w-5" />
+          </EmptyMedia>
+          <EmptyTitle>No lab results yet</EmptyTitle>
+          <EmptyDescription>
+            Import test results to track marker trends, connect them to active stacks, and compare changes over time.
+          </EmptyDescription>
+          <Button onClick={onImport}>Import Lab Results</Button>
+        </EmptyHeader>
+      </Empty>
+    </div>
+  );
+}
+
+function ImportWizard(props: {
+  step: number;
+  method: ImportMethod;
+  drawDate: string;
+  resultedDate: string;
+  sourceLabel: string;
+  panelName: string;
+  linkedStackId: string;
+  notes: string;
+  rawInput: string;
+  selectedFileName: string;
+  manualRow: { testName: string; assayMethod: string; value: string; unit: string; range: string; flag: string };
+  manualRows: LabImportRow[];
+  draft: LabImportDraft | null;
+  activeStacks: Array<{ id: string; name: string }>;
+  savedReport: LabReport | null;
+  onStepChange: (step: number) => void;
+  onChooseMethod: (method: ImportMethod) => void;
+  onImportMethodChange: (method: ImportMethod) => void;
+  onDrawDateChange: (value: string) => void;
+  onResultedDateChange: (value: string) => void;
+  onSourceLabelChange: (value: string) => void;
+  onPanelNameChange: (value: string) => void;
+  onLinkedStackIdChange: (value: string) => void;
+  onNotesChange: (value: string) => void;
+  onRawInputChange: (value: string) => void;
+  onManualRowChange: (value: { testName: string; assayMethod: string; value: string; unit: string; range: string; flag: string }) => void;
+  onAddManualRow: () => void;
+  onApplyTemplate: (template: typeof csvTemplates[number]) => void;
+  onImportFile: (file: File | undefined) => Promise<void>;
+  onBuildDraft: () => void;
+  onUpdateDraftRow: (index: number, updates: Partial<LabImportRow>) => void;
+  onRemoveDraftRow: (index: number) => void;
+  onSaveDraft: () => void;
+  onViewTimeline: () => void;
+}) {
+  const progress = [0, 1, 2, 3];
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-1.5">
+        {progress.map((item) => <div key={item} className={cn('h-1 flex-1 rounded-full bg-border', props.step >= item && 'bg-primary')} />)}
+      </div>
+
+      {props.step === 0 && <ImportMethodStep onChooseMethod={props.onChooseMethod} />}
+      {props.step === 1 && <ImportInputStep {...props} />}
+      {props.step === 2 && <ReviewStep {...props} />}
+      {props.step === 3 && <ConfirmationStep report={props.savedReport} draft={props.draft} onViewTimeline={props.onViewTimeline} />}
+    </div>
+  );
+}
+
+function ImportMethodStep({ onChooseMethod }: { onChooseMethod: (method: ImportMethod) => void }) {
+  return (
+    <div className="space-y-3">
+      <StepLabel>Step 1 of 4 · Choose method</StepLabel>
+      {importMethods.map((method) => {
+        const Icon = method.icon;
+        return (
+          <button
+            key={method.id}
+            type="button"
+            className="flex w-full items-center gap-3 rounded-xl border bg-card p-4 text-left transition-colors hover:bg-secondary/50"
+            onClick={() => onChooseMethod(method.id)}
+          >
+            <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', toneClass(method.tone))}>
+              <Icon className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">{method.label}</span>
+              <span className="block text-xs text-muted-foreground">{method.subtitle}</span>
+            </span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+        );
+      })}
+      <p className="rounded-xl border border-accent/30 bg-accent/10 px-3 py-2 text-xs text-muted-foreground">
+        Your lab data stays in your PeptideOS records. Do not include names, addresses, accession numbers, or other patient identifiers.
+      </p>
+    </div>
+  );
+}
+
+function ImportInputStep(props: Parameters<typeof ImportWizard>[0]) {
+  const isUploadShell = props.method === 'pdf' || props.method === 'photo';
+  return (
+    <div className="space-y-4">
+      <StepLabel>Step 2 of 4 · Upload or enter results</StepLabel>
+      <ImportMetaFields {...props} />
+
+      {isUploadShell ? (
+        <Card className="border-dashed">
+          <CardContent className="space-y-3 p-5 text-center">
+            {props.method === 'pdf' ? <FileText className="mx-auto h-8 w-8 text-muted-foreground" /> : <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground" />}
+            <div>
+              <p className="text-sm font-semibold">{props.method === 'pdf' ? 'Select a lab PDF' : 'Select a lab photo or screenshot'}</p>
+              <p className="text-xs text-muted-foreground">OCR/AI extraction is coming later. For now, use this as a review shell and switch to manual or CSV/text to save.</p>
+            </div>
+            <Input type="file" accept={props.method === 'pdf' ? '.pdf' : 'image/*'} onChange={(event) => void props.onImportFile(event.target.files?.[0])} />
+            {props.selectedFileName && <p className="text-xs text-muted-foreground">Selected: {props.selectedFileName}</p>}
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" onClick={() => props.onImportMethodChange('manual')}>Manual entry</Button>
+              <Button variant="outline" onClick={() => props.onImportMethodChange('csv')}>CSV/text</Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : props.method === 'manual' ? (
+        <ManualEntryFields {...props} />
+      ) : (
+        <CsvTextFields {...props} />
+      )}
+
+      <WizardActions
+        backLabel="Back"
+        nextLabel="Review Data"
+        onBack={() => props.onStepChange(0)}
+        onNext={props.onBuildDraft}
+        nextDisabled={isUploadShell || (props.method === 'manual' ? props.manualRows.length === 0 : props.rawInput.trim().length === 0)}
+      />
+    </div>
+  );
+}
+
+function ImportMetaFields(props: Parameters<typeof ImportWizard>[0]) {
+  return (
+    <Card>
+      <CardContent className="grid gap-3 p-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="lab-draw-date">Test Date</Label>
+            <Input id="lab-draw-date" aria-label="Draw date" type="date" value={props.drawDate} onChange={(event) => props.onDrawDateChange(event.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="lab-resulted-date">Resulted</Label>
+            <Input id="lab-resulted-date" type="date" value={props.resultedDate} onChange={(event) => props.onResultedDateChange(event.target.value)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Input aria-label="Lab provider" placeholder="Lab provider" value={props.sourceLabel} onChange={(event) => props.onSourceLabelChange(event.target.value)} />
+          <Input aria-label="Panel name" placeholder="Panel name" value={props.panelName} onChange={(event) => props.onPanelNameChange(event.target.value)} />
+        </div>
+        <select
+          aria-label="Active Stack"
+          className="h-10 rounded-md border border-input bg-secondary px-3 text-sm"
+          value={props.linkedStackId}
+          onChange={(event) => props.onLinkedStackIdChange(event.target.value)}
+        >
+          <option value="">Baseline / no linked stack</option>
+          {props.activeStacks.map((stack) => <option key={stack.id} value={stack.id}>{stack.name}</option>)}
+        </select>
+        <Textarea value={props.notes} onChange={(event) => props.onNotesChange(event.target.value)} placeholder="Report notes without patient identifiers" />
+      </CardContent>
+    </Card>
+  );
+}
+
+function CsvTextFields(props: Parameters<typeof ImportWizard>[0]) {
+  return (
+    <Card>
+      <CardContent className="space-y-3 p-4">
+        <div className="flex flex-wrap gap-2">
+          {csvTemplates.map((template) => (
+            <Button key={template.label} type="button" size="sm" variant="outline" onClick={() => props.onApplyTemplate(template)}>
+              {template.label}
+            </Button>
+          ))}
+          <Button type="button" size="sm" variant={props.method === 'text' ? 'default' : 'outline'} onClick={() => props.onImportMethodChange(props.method === 'text' ? 'csv' : 'text')}>
+            Paste raw results
+          </Button>
+        </div>
+        <Input type="file" accept=".csv,.tsv,.txt" onChange={(event) => void props.onImportFile(event.target.files?.[0])} />
+        <Textarea
+          value={props.rawInput}
+          onChange={(event) => props.onRawInputChange(event.target.value)}
+          rows={8}
+          placeholder={props.method === 'text' ? 'Estradiol Sensitive LC/MS/MS 22 pg/mL 8-35 normal' : 'Test,Value,Unit,Reference Range,Flag,Assay'}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+function ManualEntryFields(props: Parameters<typeof ImportWizard>[0]) {
+  return (
+    <Card>
+      <CardContent className="space-y-3 p-4">
+        <div className="grid grid-cols-2 gap-2">
+          <Input value={props.manualRow.testName} onChange={(event) => props.onManualRowChange({ ...props.manualRow, testName: event.target.value })} placeholder="Test name" />
+          <Input value={props.manualRow.assayMethod} onChange={(event) => props.onManualRowChange({ ...props.manualRow, assayMethod: event.target.value })} placeholder="Assay/method" />
+          <Input value={props.manualRow.value} onChange={(event) => props.onManualRowChange({ ...props.manualRow, value: event.target.value })} placeholder="Value" />
+          <Input value={props.manualRow.unit} onChange={(event) => props.onManualRowChange({ ...props.manualRow, unit: event.target.value })} placeholder="Unit" />
+          <Input value={props.manualRow.range} onChange={(event) => props.onManualRowChange({ ...props.manualRow, range: event.target.value })} placeholder="Reference range" />
+          <Input value={props.manualRow.flag} onChange={(event) => props.onManualRowChange({ ...props.manualRow, flag: event.target.value })} placeholder="normal, high, low" />
+        </div>
+        <Button type="button" variant="outline" onClick={props.onAddManualRow}>Add row</Button>
+        {props.manualRows.length > 0 && <p className="text-sm text-muted-foreground">{props.manualRows.length} manual rows queued.</p>}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ReviewStep(props: Parameters<typeof ImportWizard>[0]) {
+  const flagged = props.draft?.rows.filter((row) => row.flag === 'high' || row.flag === 'low' || row.flag === 'critical') ?? [];
+  return (
+    <div className="space-y-4">
+      <StepLabel>Step 3 of 4 · Review & validate</StepLabel>
+      {flagged.length > 0 && (
+        <div className="flex gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+          <div>
+            <p className="font-semibold text-destructive">{flagged.length} flagged marker{flagged.length === 1 ? '' : 's'}</p>
+            <p className="text-muted-foreground">Review values and reference ranges before saving.</p>
+          </div>
+        </div>
+      )}
+      <Card className={props.draft?.duplicateStatus === 'possible-duplicate' ? 'border-chart-4/50 bg-chart-4/10' : undefined}>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center justify-between text-base">
+            <span>Review import</span>
+            <span className="text-xs font-normal text-muted-foreground">{Math.round((props.draft?.parserConfidence ?? 0) * 100)}% parsed</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {props.draft?.duplicateStatus === 'possible-duplicate' && <p className="rounded-md border bg-background px-3 py-2 text-sm">This looks like a lab set you already imported.</p>}
+          <div className="max-h-[30rem] overflow-auto rounded-lg border">
+            {props.draft?.rows.map((row, index) => (
+              <div key={`${row.testName}-${index}`} className="space-y-3 border-b p-3 text-sm last:border-b-0">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium">Result {index + 1}</p>
+                  <Button type="button" size="icon" variant="ghost" aria-label="Remove lab result row" onClick={() => props.onRemoveDraftRow(index)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input aria-label={`Test name ${index + 1}`} value={row.testName} onChange={(event) => props.onUpdateDraftRow(index, { testName: event.target.value })} />
+                  <Input aria-label={`Assay method ${index + 1}`} value={row.assayMethod ?? ''} onChange={(event) => props.onUpdateDraftRow(index, { assayMethod: event.target.value || undefined })} placeholder="Assay/method" />
+                  <Input aria-label={`Result value ${index + 1}`} value={row.value} onChange={(event) => props.onUpdateDraftRow(index, { value: event.target.value })} />
+                  <Input aria-label={`Result unit ${index + 1}`} value={row.unit} onChange={(event) => props.onUpdateDraftRow(index, { unit: event.target.value })} placeholder="Unit" />
+                  <Input aria-label={`Reference range ${index + 1}`} value={row.referenceRange?.text ?? ''} onChange={(event) => props.onUpdateDraftRow(index, { referenceRange: event.target.value ? { text: event.target.value } : undefined })} placeholder="Reference range" />
+                  <Input aria-label={`Result flag ${index + 1}`} value={row.flag} onChange={(event) => props.onUpdateDraftRow(index, { flag: event.target.value as LabImportRow['flag'] })} placeholder="normal, high, low" />
+                </div>
+              </div>
+            ))}
+          </div>
+          {(props.draft?.unresolvedRows.length ?? 0) > 0 && <p className="text-xs text-muted-foreground">{props.draft?.unresolvedRows.length} rows need manual review and were not saved.</p>}
+        </CardContent>
+      </Card>
+      <WizardActions backLabel="Back" nextLabel="Confirm Import" onBack={() => props.onStepChange(1)} onNext={props.onSaveDraft} nextDisabled={!props.draft || props.draft.rows.length === 0} />
+    </div>
+  );
+}
+
+function ConfirmationStep({ report, onViewTimeline }: { report: LabReport | null; draft: LabImportDraft | null; onViewTimeline: () => void }) {
+  return (
+    <Card>
+      <CardContent className="space-y-4 p-6 text-center">
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-chart-3/15 text-chart-3">
+          <Check className="h-6 w-6" />
+        </span>
+        <div>
+          <p className="font-semibold">Import complete</p>
+          <p className="text-sm text-muted-foreground">Results saved to your lab timeline.</p>
+        </div>
+        <div className="rounded-lg border text-left text-sm">
+          <SummaryRow label="Date" value={report ? formatDate(report.drawDate) : 'Saved'} />
+          <SummaryRow label="Provider" value={report?.sourceLabel || 'Not specified'} />
+          <SummaryRow label="Panel" value={report?.panelName || 'Lab results'} />
+        </div>
+        <Button className="w-full" onClick={onViewTimeline}>View Timeline</Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TimelineView(props: {
+  cards: ReturnType<typeof buildLabTimelineCards>;
+  analysisMessage: string | null;
+  analysisCards: LabAnalysisCard[];
+  isAnalyzing: boolean;
+  onAnalyze: (reportId?: string) => void;
+  onDelete: (reportId: string) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center justify-between gap-3 text-base">
+            <span className="flex items-center gap-2"><Bot className="h-4 w-4 text-primary" /> Peppi lab analysis</span>
+            <Button size="sm" variant="outline" onClick={() => props.onAnalyze()} disabled={props.cards.length === 0 || props.isAnalyzing}>
+              {props.isAnalyzing ? 'Analyzing...' : 'Analyze'}
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">Peppi explains trends against local protocol records. It does not diagnose, recommend dose changes, or determine safety.</p>
+          {props.analysisMessage && <p className="rounded-md border bg-background px-3 py-2 text-sm">{props.analysisMessage}</p>}
+          {props.analysisCards.map((card) => (
+            <div key={card.id} className="rounded-md border bg-background p-3 text-sm">
+              <p className="font-medium">{card.title}</p>
+              <p className="text-muted-foreground">{card.body}</p>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {props.cards.map((card) => (
+        <Card key={card.report.id} className="overflow-hidden">
+          <CardContent className="p-0">
+            <div className="flex items-start justify-between gap-3 border-b p-4">
+              <div>
+                <p className="font-semibold">{formatDate(card.report.drawDate)}{card.report.panelName ? ` · ${card.report.panelName}` : ''}</p>
+                <p className="text-xs text-muted-foreground">{card.report.sourceLabel || 'Source not specified'} · {card.markerCount} marker{card.markerCount === 1 ? '' : 's'}</p>
+              </div>
+              <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary">{card.stackLabel}</Badge>
+            </div>
+            <div className="space-y-2 p-3">
+              {card.markers.slice(0, 6).map((marker) => (
+                <Link key={marker.id} href={makeLabMarkerHref(card.report.id, { id: marker.id, normalizedKey: marker.normalizedKey })} className="flex items-center justify-between gap-3 rounded-md bg-secondary/60 px-3 py-2">
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium">{marker.name}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{marker.rangeLabel}</span>
+                  </span>
+                  <span className="text-right">
+                    <span className={cn('block text-sm font-semibold', flagClass(marker.flag))}>{marker.valueLabel}</span>
+                    {marker.trend && <TrendBadge direction={marker.trend.direction} percent={marker.trend.percent} />}
+                  </span>
+                </Link>
+              ))}
+              {card.markerCount > 6 && <p className="px-1 text-xs text-muted-foreground">+{card.markerCount - 6} more markers</p>}
+            </div>
+            <div className="grid grid-cols-4 gap-2 border-t bg-secondary/30 p-3">
+              <Button variant="outline" size="sm" asChild><Link href={makeLabCompareHref(card.report.id)}>Compare</Link></Button>
+              <Button variant="outline" size="sm">Notes</Button>
+              <Button variant="outline" size="sm" onClick={() => props.onAnalyze(card.report.id)}>Analyze</Button>
+              <Button variant="ghost" size="icon" aria-label="Delete lab report" onClick={() => props.onDelete(card.report.id)}><Trash2 className="h-4 w-4" /></Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function MarkerDetailView({ detail, onCompare, onShare }: { detail: ReturnType<typeof buildLabMarkerDetail>; onCompare: () => void; onShare: (text: string) => void }) {
+  if (!detail) {
+    return <Empty><EmptyHeader><EmptyTitle>Marker not found</EmptyTitle><EmptyDescription>Select a marker from the timeline.</EmptyDescription></EmptyHeader></Empty>;
+  }
+  const latest = detail.result.numericValue ?? 0;
+  const rangeLow = detail.result.referenceRange?.low;
+  const rangeHigh = detail.result.referenceRange?.high;
+  const rangePercent = rangeLow !== undefined && rangeHigh !== undefined && rangeHigh > rangeLow
+    ? Math.min(100, Math.max(0, ((latest - rangeLow) / (rangeHigh - rangeLow)) * 100))
+    : 50;
+  return (
+    <div className="space-y-4">
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div className="space-y-4 border-b p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-semibold">{detail.result.testName}</p>
+                <p className="text-sm text-muted-foreground">{detail.result.unit || 'unit not specified'} · Ref: {detail.result.referenceRange?.text ?? 'not specified'}</p>
+              </div>
+              <div className="text-right">
+                <p className={cn('text-2xl font-bold leading-none', flagClass(detail.result.flag))}>{detail.result.value}</p>
+                {detail.latestTrend && <TrendBadge direction={detail.latestTrend.direction} percent={detail.latestTrend.percent} />}
+              </div>
+            </div>
+            <div>
+              <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                <div className="h-full rounded-full bg-gradient-to-r from-accent to-primary" style={{ width: `${rangePercent}%` }} />
+              </div>
+              <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+                <span>{rangeLow ?? 'Low'}</span>
+                <span>Reference range</span>
+                <span>{rangeHigh ?? 'High'}</span>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-3 p-4">
+            <p className="text-xs font-medium text-muted-foreground">Trend</p>
+            <TrendBars points={detail.comparablePoints.length ? detail.comparablePoints : detail.points} />
+            {detail.mixedAssays && <p className="rounded-md border border-chart-4/40 bg-chart-4/10 px-3 py-2 text-xs text-muted-foreground">Assay or unit changed across this trend. Compare cautiously.</p>}
+          </div>
+          <div className="border-t bg-secondary/40 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Active stack during test</p>
+            <p className="text-sm font-medium">{detail.stackLabel}</p>
+            <p className="text-xs text-muted-foreground">{formatDate(detail.report.drawDate)}</p>
+          </div>
+        </CardContent>
+      </Card>
+      <div className="grid grid-cols-2 gap-2">
+        <Button onClick={onCompare}>Compare Tests</Button>
+        <Button variant="outline" onClick={() => onShare(`${detail.result.testName}: ${formatResultValue(detail.result)} on ${formatDate(detail.report.drawDate)}`)}>
+          <Share2 className="h-4 w-4" /> Share Result
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function CompareView({ reports, firstReportId, secondReportId, rows, onSelect, onShare }: {
+  reports: LabReport[];
+  firstReportId: string;
+  secondReportId: string;
+  rows: LabCompareRow[];
+  onSelect: (first: string, second: string) => void;
+  onShare: (text: string) => void;
+}) {
+  const first = reports.find((report) => report.id === firstReportId);
+  const second = reports.find((report) => report.id === secondReportId);
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <DateSelect label="Test 1" value={firstReportId} reports={reports} onChange={(value) => onSelect(value, secondReportId)} />
+        <DateSelect label="Test 2" value={secondReportId} reports={reports} onChange={(value) => onSelect(firstReportId, value)} />
+      </div>
+      <Card className="overflow-hidden">
+        <div className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-2 border-b bg-secondary/70 px-3 py-2 text-[11px] font-semibold text-muted-foreground">
+          <span>Marker</span><span className="text-right">Test 1</span><span className="text-right">Test 2</span><span className="text-right">Delta</span>
+        </div>
+        {rows.map((row) => (
+          <div key={row.key} className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-2 border-b px-3 py-3 text-sm last:border-b-0">
+            <span className="font-medium">{row.marker}</span>
+            <span className="text-right">{row.first ? formatResultValue(row.first) : '—'}</span>
+            <span className="text-right">{row.second ? formatResultValue(row.second) : '—'}</span>
+            <span className={cn('text-right font-semibold', deltaClass(row.deltaPercent))}>{formatDelta(row)}</span>
+          </div>
+        ))}
+      </Card>
+      <Card className="border-accent/40 bg-accent/10">
+        <CardContent className="space-y-2 p-4 text-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-accent">Summary</p>
+          {rows.length === 0 ? <p className="text-muted-foreground">Import at least two reports to compare.</p> : rows.slice(0, 4).map((row) => <p key={row.key} className="text-muted-foreground">· {row.marker}: {formatDelta(row)}</p>)}
+        </CardContent>
+      </Card>
+      <Button className="w-full" onClick={() => onShare(`Lab comparison: ${first ? formatDate(first.drawDate) : 'Test 1'} vs ${second ? formatDate(second.drawDate) : 'Test 2'}`)}>
+        <Copy className="h-4 w-4" /> Share Comparison
+      </Button>
+    </div>
+  );
+}
+
+function TrendsView({ dashboard }: { dashboard: ReturnType<typeof buildLabTrendsDashboard> }) {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-2">
+        <StatCard label="Tests" value={String(dashboard.totalReports)} />
+        <StatCard label="Markers" value={String(dashboard.markersTracked)} />
+        <StatCard label="Changing" value={String(dashboard.improvingCount)} accent />
+      </div>
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-base">Key marker trends</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          {dashboard.keyTrends.length === 0 ? <p className="text-sm text-muted-foreground">Import labs to build trends.</p> : dashboard.keyTrends.map((trend) => (
+            <div key={trend.key} className="space-y-1.5">
+              <div className="flex justify-between text-sm">
+                <span className="font-medium">{trend.label}</span>
+                {trend.latestTrend ? <TrendBadge direction={trend.latestTrend.direction} percent={trend.latestTrend.percent} /> : <span className="text-xs text-muted-foreground">1 point</span>}
+              </div>
+              <TrendBars points={trend.points} compact />
+              {trend.mixedAssays && <p className="text-xs text-chart-4">Assay or unit changed. Compare cautiously.</p>}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-base">Marker correlations</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {dashboard.correlations.length === 0 ? <p className="text-sm text-muted-foreground">Not enough data.</p> : dashboard.correlations.map((correlation) => (
+            <div key={correlation.label} className="flex items-center justify-between gap-3 border-b py-2 text-sm last:border-b-0">
+              <span>{correlation.label}</span>
+              <Badge variant="outline">{correlation.coefficient.toFixed(2)} {correlation.strength}</Badge>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-base">Stack performance</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          {dashboard.stackPerformance.length === 0 ? <p className="text-sm text-muted-foreground">Link a lab import to a stack to see stack-level summaries.</p> : dashboard.stackPerformance.map((item) => (
+            <div key={item.stackId} className="border-l-2 border-accent pl-3 text-sm">
+              <p className="font-semibold">{item.stackName}</p>
+              <p className="text-xs text-muted-foreground">{formatDate(item.latestDate)} · {item.reportCount} report{item.reportCount === 1 ? '' : 's'}</p>
+              <p>{item.summary}</p>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function StepLabel({ children }: { children: React.ReactNode }) {
+  return <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{children}</p>;
+}
+
+function WizardActions({ backLabel, nextLabel, onBack, onNext, nextDisabled }: { backLabel: string; nextLabel: string; onBack: () => void; onNext: () => void; nextDisabled?: boolean }) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <Button variant="outline" onClick={onBack}>{backLabel}</Button>
+      <Button onClick={onNext} disabled={nextDisabled}>{nextLabel}</Button>
+    </div>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return <div className="flex justify-between border-b px-3 py-2 last:border-b-0"><span className="text-muted-foreground">{label}</span><span className="font-medium">{value}</span></div>;
+}
+
+function DateSelect({ label, value, reports, onChange }: { label: string; value: string; reports: LabReport[]; onChange: (value: string) => void }) {
+  return (
+    <label className="space-y-1.5 text-sm">
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <select className="h-10 w-full rounded-md border border-input bg-secondary px-3 text-sm" value={value} onChange={(event) => onChange(event.target.value)}>
+        {reports.map((report) => <option key={report.id} value={report.id}>{formatDate(report.drawDate)}</option>)}
+      </select>
+    </label>
+  );
+}
+
+function StatCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return <Card><CardContent className="p-3"><p className={cn('text-xl font-bold', accent && 'text-chart-3')}>{value}</p><p className="text-xs text-muted-foreground">{label}</p></CardContent></Card>;
+}
+
+function TrendBars({ points, compact }: { points: Array<{ numericValue?: number; drawDate: string }>; compact?: boolean }) {
+  const numeric = points.filter((point) => typeof point.numericValue === 'number').slice(-6);
+  if (numeric.length === 0) return <p className="text-xs text-muted-foreground">No numeric trend yet.</p>;
+  const max = Math.max(...numeric.map((point) => point.numericValue as number), 1);
+  return (
+    <div>
+      <div className={cn('flex items-end gap-1.5', compact ? 'h-8' : 'h-14')}>
+        {numeric.map((point, index) => (
+          <div key={`${point.drawDate}-${index}`} className="flex-1 rounded-t bg-primary/35 last:bg-primary" style={{ height: `${Math.max(10, ((point.numericValue as number) / max) * 100)}%` }} />
+        ))}
+      </div>
+      {!compact && <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">{numeric.map((point) => <span key={point.drawDate}>{formatMonth(point.drawDate)}</span>)}</div>}
+    </div>
+  );
+}
+
+function TrendBadge({ direction, percent }: { direction: 'up' | 'down' | 'flat'; percent: number }) {
+  const Icon = direction === 'down' ? TrendingDown : TrendingUp;
+  return <span className={cn('inline-flex items-center justify-end gap-0.5 text-xs font-medium', direction === 'down' ? 'text-accent' : direction === 'up' ? 'text-destructive' : 'text-muted-foreground')}><Icon className="h-3 w-3" /> {percent}%</span>;
+}
+
+function formatDelta(row: LabCompareRow) {
+  if (row.status === 'missing') return 'Missing';
+  if (row.status === 'unit-mismatch') return 'Unit';
+  if (row.status === 'non-numeric') return 'Text';
+  if (row.deltaPercent === undefined) return '—';
+  return `${row.deltaPercent > 0 ? '+' : ''}${Math.round(row.deltaPercent)}%`;
+}
+
+function flagClass(flag: LabResult['flag']) {
+  if (flag === 'high' || flag === 'critical') return 'text-destructive';
+  if (flag === 'low') return 'text-accent';
+  return '';
+}
+
+function deltaClass(delta?: number) {
+  if (delta === undefined || Math.abs(delta) < 1) return 'text-muted-foreground';
+  return delta > 0 ? 'text-destructive' : 'text-accent';
+}
+
+function toneClass(tone: 'amber' | 'green' | 'teal' | 'primary') {
+  switch (tone) {
+    case 'amber':
+      return 'bg-chart-4/15 text-chart-4';
+    case 'green':
+      return 'bg-chart-3/15 text-chart-3';
+    case 'teal':
+      return 'bg-accent/15 text-accent';
+    case 'primary':
+      return 'bg-primary/15 text-primary';
+  }
+}
+
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatMonth(value: string) {
+  return new Date(value).toLocaleDateString('en-US', { month: 'short' });
+}

@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Layers, CalendarDays, Library, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, Layers, CalendarDays, Library, MoreHorizontal, TestTube } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const tabs = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/stacks', label: 'Stacks', icon: Layers },
+  { href: '/labs', label: 'Labs', icon: TestTube },
   { href: '/log', label: 'Log', icon: CalendarDays },
   { href: '/library', label: 'Library', icon: Library },
   { href: '/more', label: 'More', icon: MoreHorizontal },
