@@ -21,6 +21,10 @@ test.describe('account settings', () => {
     await expect(page.getByText('Cloud retrieve')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Save to cloud' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Retrieve from cloud' })).toBeDisabled();
+    await expect(page.getByText('Content mode')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Beginner' })).toBeVisible();
+    await page.getByRole('button', { name: 'Experienced' }).click();
+    await expect(page.getByText('Experienced tracker')).toBeVisible();
     await expect(page.getByText('Biometric Lock')).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
   });

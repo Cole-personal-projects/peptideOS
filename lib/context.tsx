@@ -93,7 +93,8 @@ cloudMessage: string | null;
   getActiveStacks: () => Stack[];
   // Settings
   setHasSeenDisclaimer: (seen: boolean) => void;
-completeOnboarding: (userMode?: UserMode) => Promise<void>;
+  completeOnboarding: (userMode?: UserMode) => Promise<void>;
+  setUserMode: (userMode: UserMode) => void;
 setDarkMode: (enabled: boolean) => void;
 toggleDarkMode: () => void;
 toggleBiometricLock: () => void;
@@ -704,11 +705,15 @@ console.error('Failed to persist PeptideOS data', error);
     void setAndPersistData(prev => ({ ...prev, hasSeenDisclaimer: seen }));
   }, [setAndPersistData]);
 
-const completeOnboarding = useCallback((userMode?: UserMode) => {
-return setAndPersistData(prev => completeOnboardingState(prev, userMode));
-}, [setAndPersistData]);
+  const completeOnboarding = useCallback((userMode?: UserMode) => {
+    return setAndPersistData(prev => completeOnboardingState(prev, userMode));
+  }, [setAndPersistData]);
 
-const setDarkMode = useCallback((enabled: boolean) => {
+  const setUserMode = useCallback((userMode: UserMode) => {
+    void setAndPersistData(prev => ({ ...prev, userMode }));
+  }, [setAndPersistData]);
+
+  const setDarkMode = useCallback((enabled: boolean) => {
 void setAndPersistData(prev => ({ ...prev, darkMode: enabled }));
 }, [setAndPersistData]);
 
@@ -907,6 +912,7 @@ cloudMessage: effectiveCloudMessage,
       getActiveStacks,
 setHasSeenDisclaimer,
 completeOnboarding,
+setUserMode,
 setDarkMode,
 toggleDarkMode,
 toggleBiometricLock,

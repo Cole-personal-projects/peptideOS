@@ -18,6 +18,7 @@ import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle, 
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/lib/context';
+import { buildActionableLibraryProfile } from '@/lib/actionable-library-profile';
 import { formatCompoundDisplayLabel, libraryCategoryOptions, libraryCompoundTypeOptions } from '@/lib/compound-display';
 import { getEmptyStateContent } from '@/lib/empty-states';
 import {
@@ -28,7 +29,7 @@ import {
 } from '@/lib/library-evidence';
 import { filterCompounds } from '@/lib/library-filters';
 import { cn } from '@/lib/utils';
-import type { CompoundCategory, CompoundType, DoseUnit, Route } from '@/lib/types';
+import type { Compound, CompoundCategory, CompoundType, DoseUnit, Route } from '@/lib/types';
 
 const categoryColors: Partial<Record<CompoundCategory, string>> = {
   healing: 'bg-chart-3/20 text-chart-3 border-chart-3/30',
@@ -43,6 +44,14 @@ const categoryColors: Partial<Record<CompoundCategory, string>> = {
   'hormone-endocrine': 'bg-chart-1/20 text-chart-1 border-chart-1/30',
   custom: 'bg-secondary text-secondary-foreground border-border',
 };
+
+function getCompoundCardSummary(compound: Compound, researcherMode: boolean) {
+  if (researcherMode) return compound.researcherDetails;
+  if (compound.beginnerSummary && compound.beginnerSummary !== compound.researcherDetails) {
+    return compound.beginnerSummary;
+  }
+  return buildActionableLibraryProfile(compound).summary;
+}
 
 const categories = libraryCategoryOptions;
 const compoundTypes = libraryCompoundTypeOptions;
@@ -477,7 +486,7 @@ export default function LibraryPage() {
                             </Badge>
                           </div>
                           <p className="text-sm text-muted-foreground line-clamp-2">
-                            {researcherMode ? compound.researcherDetails : compound.beginnerSummary}
+                            {getCompoundCardSummary(compound, researcherMode)}
                           </p>
                           <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted-foreground">
                             <span>{formatLabel(compound.compoundType)}</span>

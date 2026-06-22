@@ -9,76 +9,63 @@ function compound(id: string) {
 }
 
 describe('library profile view model', () => {
-  it('builds one database-driven profile shape for approved-label, reconstituted, and pro-profile compounds', () => {
+  it('makes beginner mode task-first instead of pro-evidence-first', () => {
     const tirzepatide = buildLibraryProfileViewModel(compound('tirzepatide'), { researcherMode: false });
-    const bpc157 = buildLibraryProfileViewModel(compound('bpc-157'), { researcherMode: false });
-    const retatrutide = buildLibraryProfileViewModel(compound('retatrutide'), { researcherMode: true });
 
+    expect(tirzepatide.modeLabel).toBe('Beginner view');
     expect(tirzepatide.atAGlance).toEqual(expect.arrayContaining([
       { label: 'Evidence', value: 'Approved Label' },
       { label: 'Status', value: 'Approved' },
       { label: 'Route', value: 'SUBQ' },
       { label: 'Form', value: 'Prefilled' },
+      { label: 'Default unit', value: 'MG' },
     ]));
-    expect(tirzepatide.sections.map((section) => section.title)).toEqual(expect.arrayContaining([
-      'Field brief',
-      'Why people run this',
-      'Storage',
-      'Safety',
-      'Evidence and transparency',
-      'Citations',
-    ]));
-    expect(tirzepatide.sections.map((section) => section.title)).not.toEqual(expect.arrayContaining([
-      'What you can do',
-      'Peppi prompts',
-      'Inventory and math',
-      'Tracking domains',
-      'Practical tracking',
-      'Legal',
-    ]));
-
-    expect(bpc157.sections.map((section) => section.title)).not.toContain('Inventory and math');
-    expect(bpc157.sections.map((section) => section.title)).not.toContain('Tracking domains');
-
-    expect(retatrutide.atAGlance).toEqual(expect.arrayContaining([
-      { label: 'Evidence', value: 'Strong Human' },
-      { label: 'Status', value: 'Investigational' },
-      { label: 'Mechanism', value: 'GLP-1 / GIP / Glucagon' },
-    ]));
-    expect(retatrutide.sections.find((section) => section.title === 'Evidence and transparency')?.items).toEqual(expect.arrayContaining([
-      'No FDA-approved US prescribing label or consumer storage instructions.',
-      'Some phase 3 results are company-announced/topline or not yet reflected in an FDA-approved label.',
-    ]));
-    expect(retatrutide.sections.find((section) => section.title === 'Field brief')?.items).toEqual(expect.arrayContaining([
-      'A triple-agonist metabolic peptide people are watching because it may push past the current GLP-1/GIP ceiling.',
-    ]));
-    expect(retatrutide.sections.find((section) => section.title === 'Why people run this')?.items).toEqual(expect.arrayContaining([
-      'It hits GLP-1, GIP, and glucagon receptors instead of only one or two incretin pathways.',
-    ]));
-    expect(retatrutide.sections.find((section) => section.title === 'Regulatory context')?.items).toEqual(expect.arrayContaining([
-      'Lilly describes Retatrutide as not FDA approved and investigational while phase 3 trials evaluate safety and efficacy.',
-    ]));
-    expect(retatrutide.sections.find((section) => section.title === 'Reality check')?.items).toEqual(expect.arrayContaining([
-      'The clinical Retatrutide story is not a gray-market vial. Track what you actually have, what you actually did, and what remains uncertain.',
-    ]));
-    expect(retatrutide.sections.find((section) => section.title === 'Evidence details')?.items.join(' ')).toContain('phase-2-randomized-controlled-trial');
+    expect(tirzepatide.sections.map((section) => section.title)).toEqual([
+      'Plain-language brief',
+      'Start by verifying',
+      'Track in PeptideOS',
+      'Useful first actions',
+      'Inventory and storage',
+      'Safety note',
+    ]);
+    expect(tirzepatide.sections.find((section) => section.title === 'Start by verifying')?.tone).toBe('warning');
+    expect(tirzepatide.sections.find((section) => section.title === 'Track in PeptideOS')?.items.length).toBeGreaterThan(0);
+    expect(tirzepatide.sections.map((section) => section.title)).not.toContain('Clinical evidence');
   });
 
-  it('keeps AHK-Cu topical data prominent without generic workflow sections', () => {
+  it('makes experienced mode evidence-first with mechanisms and source detail', () => {
+    const bpc157 = buildLibraryProfileViewModel(compound('bpc-157'), { researcherMode: true });
+
+    expect(bpc157.modeLabel).toBe('Experienced tracker view');
+    expect(bpc157.atAGlance).toEqual(expect.arrayContaining([
+      { label: 'Evidence', value: 'Preclinical' },
+      { label: 'Route', value: 'SUBQ' },
+      { label: 'Source', value: 'Reference' },
+    ]));
+    const sectionTitles = bpc157.sections.map((section) => section.title);
+    expect(sectionTitles).toEqual(expect.arrayContaining([
+      'Mechanism and targets',
+      'Clinical evidence',
+      'Evidence transparency',
+      'Storage',
+      'Safety',
+    ]));
+    expect(sectionTitles).not.toEqual(expect.arrayContaining([
+      'Plain-language brief',
+      'Start by verifying',
+      'Track in PeptideOS',
+      'Useful first actions',
+    ]));
+    expect(bpc157.sections.find((section) => section.title === 'Clinical evidence')?.items.length).toBeGreaterThan(0);
+  });
+
+  it('keeps AHK-Cu topical data prominent in experienced mode', () => {
     const ahkCu = buildLibraryProfileViewModel(compound('ahk-cu'), { researcherMode: true });
 
     expect(ahkCu.atAGlance).toEqual(expect.arrayContaining([
       { label: 'Evidence', value: 'Preclinical' },
       { label: 'Route', value: 'TOPICAL' },
       { label: 'Form', value: 'None' },
-    ]));
-    expect(ahkCu.sections.map((section) => section.title)).not.toEqual(expect.arrayContaining([
-      'What you can do',
-      'Peppi prompts',
-      'Inventory and math',
-      'Tracking domains',
-      'Practical tracking',
-      'Legal',
     ]));
     expect(ahkCu.sections.find((section) => section.title === 'Storage')?.items.join(' ')).toContain(
       'Finished topical AHK-Cu products',
