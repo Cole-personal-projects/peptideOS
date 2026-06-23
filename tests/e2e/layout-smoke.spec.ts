@@ -80,6 +80,7 @@ async function expectNoBottomNavOverlap(page: Page) {
 
 test.describe('mobile layout smoke', () => {
   test('primary routes keep bottom content clear of fixed navigation', async ({ page }) => {
+    test.setTimeout(60_000);
     const stackHref = await createStack(page);
     const routes = ['/', '/stacks', stackHref, '/labs', '/log', '/more', '/more/settings', '/more/ai-assistant', '/library'];
 

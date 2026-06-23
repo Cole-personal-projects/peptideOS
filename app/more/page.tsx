@@ -73,10 +73,10 @@ export default function MorePage() {
     <AppShell>
       <PageHeader title="More" />
 
-      <div className="p-4 space-y-6">
+      <div className="space-y-5 p-4">
         {menuSections.map((section) => (
           <div key={section.title}>
-            <h2 className="text-sm font-semibold text-muted-foreground mb-2 px-1">
+            <h2 className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               {section.title}
             </h2>
             <Card>
@@ -87,25 +87,25 @@ export default function MorePage() {
                     <Link 
                       key={item.href} 
                       href={item.href}
-                      className="flex items-center justify-between p-4 hover:bg-secondary/50 transition-colors"
+                      className="flex items-center justify-between px-3.5 py-3 transition-colors hover:bg-secondary/50"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-secondary">
-                          <Icon className="w-5 h-5 text-muted-foreground" />
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="rounded-lg bg-secondary p-2">
+                          <Icon className="h-4 w-4 text-muted-foreground" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="font-medium text-sm">{item.label}</p>
+                            <p className="truncate text-sm font-medium">{item.label}</p>
                             {item.badge && (
                               <Badge variant="secondary" className="px-1.5 py-0 text-[11px]">
                                 {item.badge}
                               </Badge>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">{item.description}</p>
+                          <p className="truncate text-xs text-muted-foreground">{item.description}</p>
                         </div>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                     </Link>
                   );
                 })}

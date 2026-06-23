@@ -538,7 +538,7 @@ function ImportWizard(props: {
 }) {
   const progress = [0, 1, 2, 3];
   return (
-    <div className="space-y-4">
+<div className="space-y-3">
       <div className="flex gap-1.5">
         {progress.map((item) => <div key={item} className={cn('h-1 flex-1 rounded-full bg-border', props.step >= item && 'bg-primary')} />)}
       </div>
@@ -797,16 +797,16 @@ function TimelineView(props: {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center justify-between gap-3 text-base">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center justify-between gap-3 text-sm">
             <span className="flex items-center gap-2"><Bot className="h-4 w-4 text-primary" /> Peppi lab analysis</span>
             <Button size="sm" variant="outline" onClick={() => props.onAnalyze()} disabled={props.cards.length === 0 || props.isAnalyzing}>
               {props.isAnalyzing ? 'Analyzing...' : 'Analyze'}
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">Peppi explains trends against local protocol records. It does not diagnose, recommend dose changes, or determine safety.</p>
+        <CardContent className="space-y-2">
+          <p className="text-xs text-muted-foreground">Peppi explains trends against local protocol records. It does not diagnose, recommend dose changes, or determine safety.</p>
           {props.analysisMessage && <p className="rounded-md border bg-background px-3 py-2 text-sm">{props.analysisMessage}</p>}
           {props.analysisCards.map((card) => (
             <div key={card.id} className="rounded-md border bg-background p-3 text-sm">
@@ -820,14 +820,14 @@ function TimelineView(props: {
       {props.cards.map((card) => (
         <Card key={card.report.id} className="overflow-hidden">
           <CardContent className="p-0">
-            <div className="flex items-start justify-between gap-3 border-b p-4">
-              <div>
-                <p className="font-semibold">{formatDate(card.report.drawDate)}{card.report.panelName ? ` · ${card.report.panelName}` : ''}</p>
+<div className="flex items-start justify-between gap-3 border-b px-3.5 py-3">
+<div className="min-w-0">
+<p className="truncate text-sm font-semibold">{formatDate(card.report.drawDate)}{card.report.panelName ? ` · ${card.report.panelName}` : ''}</p>
                 <p className="text-xs text-muted-foreground">{card.report.sourceLabel || 'Source not specified'} · {card.markerCount} marker{card.markerCount === 1 ? '' : 's'}</p>
               </div>
-              <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary">{card.stackLabel}</Badge>
+<Badge variant="outline" className="shrink-0 border-primary/40 bg-primary/10 text-primary">{card.stackLabel}</Badge>
             </div>
-            <div className="space-y-2 p-3">
+<div className="space-y-1.5 p-2.5">
               {card.markers.slice(0, 6).map((marker) => (
                 <Link key={marker.id} href={makeLabMarkerHref(card.report.id, { id: marker.id, normalizedKey: marker.normalizedKey })} className="flex items-center justify-between gap-3 rounded-md bg-secondary/60 px-3 py-2">
                   <span className="min-w-0">
@@ -842,7 +842,7 @@ function TimelineView(props: {
               ))}
               {card.markerCount > 6 && <p className="px-1 text-xs text-muted-foreground">+{card.markerCount - 6} more markers</p>}
             </div>
-            <div className="grid grid-cols-4 gap-2 border-t bg-secondary/30 p-3">
+<div className="grid grid-cols-4 gap-2 border-t bg-secondary/30 p-2.5">
               <Button variant="outline" size="sm" asChild><Link href={makeLabCompareHref(card.report.id)}>Compare</Link></Button>
               <Button variant="outline" size="sm">Notes</Button>
               <Button variant="outline" size="sm" onClick={() => props.onAnalyze(card.report.id)}>Analyze</Button>
