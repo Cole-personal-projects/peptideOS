@@ -1,22 +1,12 @@
 "use client";
 
-import { use, useEffect, useMemo, useState } from 'react';
+import { use, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Archive, Beaker, CalendarDays, CheckCircle2, Clock, Pause, Play, Plus, Settings, Trash2 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -53,23 +43,13 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
   } = useApp();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
   const [isDeletePending, setIsDeletePending] = useState(false);
-  const [openDeleteAfterActionsClose, setOpenDeleteAfterActionsClose] = useState(false);
   const stack = getStack(id);
   const [editName, setEditName] = useState(stack?.name ?? '');
   const [editDescription, setEditDescription] = useState(stack?.description ?? '');
   const [editDurationDays, setEditDurationDays] = useState(stack?.durationDays.toString() ?? '');
   const [editNotes, setEditNotes] = useState(stack?.notes ?? '');
-
-  useEffect(() => {
-    if (isActionsOpen || !openDeleteAfterActionsClose) return;
-    const timeoutId = window.setTimeout(() => {
-      setIsDeleteOpen(true);
-      setOpenDeleteAfterActionsClose(false);
-    }, 0);
-    return () => window.clearTimeout(timeoutId);
-  }, [isActionsOpen, openDeleteAfterActionsClose]);
 
   if (!stack) {
     if (isDeletePending) return null;
@@ -127,7 +107,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
 
   const handleDelete = async () => {
     setIsDeletePending(true);
-    setIsDeleteOpen(false);
+    setIsActionsOpen(false);
     await deleteStack(stack.id);
     window.location.assign('/stacks');
   };
@@ -314,7 +294,10 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
         </main>
       </div>
 
-      <Dialog open={isActionsOpen} onOpenChange={setIsActionsOpen}>
+      <Dialog open={isActionsOpen} onOpenChange={(open) => {
+        setIsActionsOpen(open);
+        if (!open) setIsDeleteConfirming(false);
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Protocol settings</DialogTitle>
@@ -344,9 +327,27 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             <Button variant="outline" className="w-full justify-start" onClick={openEditDialog}>
               <Settings className="mr-2 h-4 w-4" /> Edit protocol
             </Button>
-            <Button variant="destructive" className="w-full justify-start" onClick={() => { setOpenDeleteAfterActionsClose(true); setIsActionsOpen(false); }}>
-              <Trash2 className="mr-2 h-4 w-4" /> Delete protocol
-            </Button>
+            {isDeleteConfirming ? (
+              <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3">
+                <p className="text-sm font-semibold text-destructive">Delete this protocol?</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  This removes the saved protocol, generated schedule, and due-dose calendar entries.
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <Button variant="outline" onClick={() => setIsDeleteConfirming(false)} disabled={isDeletePending}>
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" onClick={() => void handleDelete()} disabled={isDeletePending}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {isDeletePending ? 'Deleting...' : 'Delete now'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button variant="destructive" className="w-full justify-start" onClick={() => setIsDeleteConfirming(true)}>
+                <Trash2 className="mr-2 h-4 w-4" /> Delete protocol
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -423,22 +424,6 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete protocol?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This removes the saved protocol, its generated schedule, and due-dose calendar entries. Dose logs created from that schedule are also removed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => void handleDelete()}>
-              Delete protocol
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </AppShell>
   );
 }
