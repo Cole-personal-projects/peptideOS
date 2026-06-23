@@ -129,7 +129,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             <Link href="/stacks" aria-label="Back to Stacks" className="grid h-9 w-9 shrink-0 place-items-center text-foreground">
               <ArrowLeft className="h-7 w-7" />
             </Link>
-            <h1 className="min-w-0 flex-1 truncate text-[19px] font-bold leading-none tracking-normal text-[#ffb596] min-[420px]:text-[27px]">
+<h1 className="min-w-0 flex-1 truncate text-xl font-bold leading-tight tracking-normal text-[#ffb596]">
               {stack.name}
             </h1>
             <button
@@ -143,9 +143,9 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
           </div>
         </header>
 
-        <main className="space-y-8 px-6 pb-10 pt-10">
+<main className="space-y-6 px-5 pb-36 pt-7 min-[420px]:px-6">
           <section className="flex flex-col items-center">
-            <div className="relative grid h-[210px] w-[210px] place-items-center">
+<div className="relative grid h-[184px] w-[184px] place-items-center">
               <svg viewBox="0 0 128 128" className="h-full w-full" aria-hidden="true">
                 <circle cx="64" cy="64" r="52" fill="none" stroke="#1b100a" strokeWidth="10" />
                 <circle
@@ -162,27 +162,27 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                 />
               </svg>
               <div className="absolute text-center">
-                <p className="text-[40px] font-extrabold leading-none text-primary">{adherence}%</p>
-                <p className="mt-4 text-sm font-bold uppercase tracking-[0.13em] text-muted-foreground">Adherence</p>
+<p className="text-4xl font-extrabold leading-none text-primary">{adherence}%</p>
+<p className="mt-3 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Adherence</p>
               </div>
             </div>
 
-            <div className="mt-6 grid w-full grid-cols-2 gap-2 min-[420px]:flex min-[420px]:w-auto min-[420px]:flex-wrap min-[420px]:justify-center min-[420px]:gap-3">
-              <div className="flex items-center justify-center gap-2 rounded-full border border-[#3a2012] bg-[#1d120c] px-3 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground min-[420px]:gap-3 min-[420px]:px-5 min-[420px]:text-sm">
+<div className="mt-5 grid w-full grid-cols-2 gap-2 min-[420px]:flex min-[420px]:w-auto min-[420px]:flex-wrap min-[420px]:justify-center min-[420px]:gap-3">
+<div className="flex items-center justify-center gap-2 rounded-full border border-[#3a2012] bg-[#1d120c] px-3 py-2.5 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground min-[420px]:gap-3 min-[420px]:px-4">
                 <CalendarDays className="h-4 w-4 text-primary" />
                 Week {Math.max(Math.ceil(currentDay / 7), 1)} of {Math.max(Math.ceil(stack.durationDays / 7), 1)}
               </div>
-              <div className="flex items-center justify-center gap-2 rounded-full border border-[#3a2012] bg-[#1d120c] px-3 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground min-[420px]:gap-3 min-[420px]:px-5 min-[420px]:text-sm">
+<div className="flex items-center justify-center gap-2 rounded-full border border-[#3a2012] bg-[#1d120c] px-3 py-2.5 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground min-[420px]:gap-3 min-[420px]:px-4">
                 <Archive className="h-4 w-4 text-emerald-400" />
                 {remainingDays} days left
               </div>
             </div>
           </section>
 
-          <section className="rounded-[6px] border border-[#332012] bg-card p-6">
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <h2 className="text-[21px] font-bold tracking-normal min-[420px]:text-[24px]">14-Day Trajectory</h2>
-              <p className="shrink-0 text-right text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground min-[420px]:text-sm">Last 14 days</p>
+<section className="rounded-[6px] border border-[#332012] bg-card p-5">
+<div className="mb-4 flex items-center justify-between gap-4">
+<h2 className="text-lg font-bold tracking-normal">14-Day Trajectory</h2>
+<p className="shrink-0 text-right text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">Last 14 days</p>
             </div>
             <div className="flex h-[58px] items-end justify-between gap-3">
               {trajectory.map((bar, index) => (
@@ -204,42 +204,42 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
           </section>
 
           <section className="overflow-hidden rounded-[6px] border border-[#332012] bg-[#211208]">
-            <div className="flex items-center justify-between gap-3 border-b border-[#332012] px-6 py-6">
-              <h2 className="shrink-0 text-[20px] font-bold tracking-normal min-[420px]:text-[24px]">Upcoming Doses</h2>
-              <Button type="button" variant="ghost" className="h-auto shrink-0 p-0 text-xs font-extrabold uppercase tracking-[0.08em] text-primary min-[420px]:text-sm" onClick={openEditDialog}>
+<div className="flex items-center justify-between gap-3 border-b border-[#332012] px-5 py-4">
+<h2 className="shrink-0 text-lg font-bold tracking-normal">Upcoming Doses</h2>
+<Button type="button" variant="ghost" className="h-auto shrink-0 p-0 text-xs font-extrabold uppercase tracking-[0.08em] text-primary" onClick={openEditDialog}>
                 Edit Protocol
               </Button>
             </div>
             <div>
               {upcomingRows.map((row, index) => (
-                <div key={row.id} className="flex items-center gap-3 border-b border-[#332012] bg-[#28170c] px-4 py-7 last:border-b-0 min-[420px]:gap-5 min-[420px]:px-7">
-                  <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[3px] bg-[#321f12] min-[420px]:h-16 min-[420px]:w-16">
-                    <Beaker className={cn('h-7 w-7 min-[420px]:h-8 min-[420px]:w-8', index === 0 ? 'text-primary' : 'text-foreground')} />
+<div key={row.id} className="flex items-center gap-3 border-b border-[#332012] bg-[#28170c] px-4 py-5 last:border-b-0 min-[420px]:gap-4 min-[420px]:px-5">
+<div className="grid h-12 w-12 shrink-0 place-items-center rounded-[3px] bg-[#321f12]">
+<Beaker className={cn('h-6 w-6', index === 0 ? 'text-primary' : 'text-foreground')} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[19px] font-medium leading-tight min-[420px]:text-[24px]">{row.name}</p>
-                    <p className="mt-2 text-base text-muted-foreground min-[420px]:text-lg">{row.detail}</p>
+<p className="truncate text-base font-semibold leading-tight">{row.name}</p>
+<p className="mt-1.5 text-sm text-muted-foreground">{row.detail}</p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className={cn('text-[23px] font-extrabold leading-none min-[420px]:text-[27px]', index === 0 ? 'text-primary' : 'text-foreground/75')}>
+<p className={cn('text-lg font-extrabold leading-none', index === 0 ? 'text-primary' : 'text-foreground/75')}>
                       {row.time}
                     </p>
-                    <p className="mt-4 text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground min-[420px]:text-sm">{row.when}</p>
+<p className="mt-2 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">{row.when}</p>
                   </div>
                 </div>
               ))}
             </div>
             <div className="bg-[#211208] px-4 py-4">
-              <Button asChild className="h-14 w-full rounded-[3px] bg-primary text-lg font-extrabold tracking-normal text-black hover:bg-primary/90">
-                <Link href="/log"><Plus className="mr-3 h-6 w-6" /> Log Dose Now</Link>
+<Button asChild className="h-12 w-full rounded-[3px] bg-primary text-base font-extrabold tracking-normal text-black hover:bg-primary/90">
+<Link href="/log"><Plus className="mr-2 h-5 w-5" /> Log Dose Now</Link>
               </Button>
             </div>
           </section>
 
-          <section className="rounded-[6px] border border-[#332012] bg-card p-6">
+<section className="rounded-[6px] border border-[#332012] bg-card p-5">
             <div className="mb-4 flex items-center justify-between gap-4">
-              <h2 className="text-[24px] font-bold tracking-normal">Protocol</h2>
-              <p className="text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">{statusLabels[stack.status]}</p>
+<h2 className="text-lg font-bold tracking-normal">Protocol</h2>
+<p className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">{statusLabels[stack.status]}</p>
             </div>
             <div className="space-y-3">
               {stack.peptides.map((peptide) => {
@@ -259,29 +259,29 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             {stack.notes && <p className="mt-3 text-sm text-muted-foreground">{stack.notes}</p>}
           </section>
 
-          <section className="space-y-4">
-            <h2 className="text-[24px] font-bold tracking-normal">Linked Labs</h2>
-            <div className="relative overflow-hidden rounded-[6px] border border-[#332012] bg-card p-7">
+<section className="space-y-3">
+<h2 className="text-lg font-bold tracking-normal">Linked Labs</h2>
+<div className="relative overflow-hidden rounded-[6px] border border-[#332012] bg-card p-5">
               {linkedLab ? (
                 <>
                   <div className="flex items-start justify-between gap-5">
                     <div className="min-w-0">
                       <div className="flex items-center gap-4">
-                        <p className="truncate text-[31px] font-medium leading-none">{linkedLab.name}</p>
+<p className="truncate text-lg font-semibold leading-tight">{linkedLab.name}</p>
                         {linkedLab.change && (
-                          <span className="rounded-[2px] border border-[#332012] bg-[#211208] px-3 py-1 text-sm font-bold text-emerald-400">
+<span className="rounded-[2px] border border-[#332012] bg-[#211208] px-2.5 py-1 text-xs font-bold text-emerald-400">
                             {linkedLab.change}
                           </span>
                         )}
                       </div>
-                      <p className="mt-4 truncate text-xl text-muted-foreground">{linkedLab.label}</p>
+<p className="mt-2 truncate text-sm text-muted-foreground">{linkedLab.label}</p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-[38px] font-extrabold leading-none">{linkedLab.value} <span className="text-lg font-medium text-muted-foreground">{linkedLab.unit}</span></p>
-                      <p className="mt-4 text-sm font-bold uppercase tracking-[0.08em] text-muted-foreground">Last test: {linkedLab.date}</p>
+<p className="text-2xl font-extrabold leading-none">{linkedLab.value} <span className="text-sm font-medium text-muted-foreground">{linkedLab.unit}</span></p>
+<p className="mt-2 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Last test: {linkedLab.date}</p>
                     </div>
                   </div>
-                  <Button asChild variant="outline" className="mt-8 h-16 w-full rounded-[2px] border-[#332012] bg-transparent text-xl font-medium uppercase tracking-normal">
+<Button asChild variant="outline" className="mt-5 h-12 w-full rounded-[2px] border-[#332012] bg-transparent text-sm font-semibold uppercase tracking-normal">
                     <Link href="/labs">View Trend Analysis</Link>
                   </Button>
                 </>
@@ -289,11 +289,11 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                 <>
                   <div className="flex items-start justify-between gap-5">
                     <div>
-                      <p className="text-[31px] font-medium leading-none">No linked labs</p>
-                      <p className="mt-4 text-xl text-muted-foreground">Import labs and link them to this stack.</p>
+<p className="text-lg font-semibold leading-tight">No linked labs</p>
+<p className="mt-2 text-sm text-muted-foreground">Import labs and link them to this stack.</p>
                     </div>
                   </div>
-                  <Button asChild variant="outline" className="mt-8 h-16 w-full rounded-[2px] border-[#332012] bg-transparent text-xl font-medium uppercase tracking-normal">
+<Button asChild variant="outline" className="mt-5 h-12 w-full rounded-[2px] border-[#332012] bg-transparent text-sm font-semibold uppercase tracking-normal">
                     <Link href="/labs">Open Labs</Link>
                   </Button>
                 </>
