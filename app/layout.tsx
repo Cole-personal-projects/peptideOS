@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Geist_Mono, Space_Grotesk } from 'next/font/google'
 import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register'
 import { ThemeSync } from '@/components/theme-sync'
 import { AuthProvider } from '@/lib/auth-context'
 import { AppProvider } from '@/lib/context'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: '--font-space-grotesk' });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -38,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark bg-background">
-      <body className="font-sans antialiased">
+      <body className={`${spaceGrotesk.className} ${spaceGrotesk.variable} font-sans antialiased`}>
         <AuthProvider>
           <AppProvider>
             <ThemeSync />

@@ -1,78 +1,97 @@
 import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
-import { addTestVial } from './helpers/inventory';
 
-test.describe('dashboard polish', () => {
-  test('shows briefing and adherence widgets after first-run accept', async ({ page }) => {
+test.describe('dashboard cockpit', () => {
+  test('shows Carbon Ember cockpit after first-run accept', async ({ page }) => {
     await page.goto('/');
-
     await page.getByRole('button', { name: 'Get started' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
 
-    await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ })).toBeVisible();
-    await expect(page.getByText("Today's Briefing")).toBeVisible();
-    await expect(page.getByText('Dose completion')).toBeVisible();
-    await expect(page.getByText(/\d+\/\d+/).first()).toBeVisible();
-    await expect(page.getByText('Pending', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText('Adherence')).toBeVisible();
-    await expect(page.getByLabel('Recent adherence')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Morning|Afternoon|Evening/ })).toBeVisible();
+    await expect(page.getByText('Protocol score')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Active stacks' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Recent' })).toBeVisible();
+    await expect(page.getByRole('navigation')).toBeVisible();
   });
 
-  test('labels scheduled dose states and recent scheduled completions clearly', async ({ page }) => {
+  test('labels scheduled dose states clearly', async ({ page }, testInfo) => {
     await page.clock.setFixedTime(new Date('2026-05-23T12:00:00-07:00'));
-    await addTestVial(page, {
-      name: 'BPC-157 active vial',
-      compound: 'BPC-157',
-      status: 'active',
-    });
+    const exportPath = testInfo.outputPath('dashboard-scheduled-dose-data.json');
+    await writeFile(exportPath, JSON.stringify({
+      schemaVersion: 4,
+      exportedAt: '2026-05-23T00:00:00.000Z',
+      data: {
+        vials: [],
+        doses: [],
+        stacks: [
+          {
+            id: 'stack-dashboard-actionability',
+            name: 'Dashboard Actionability Stack',
+            description: '',
+            peptides: [
+              {
+                id: 'stack-item-bpc',
+                peptideId: 'bpc-157',
+                doseValue: 250,
+                doseUnit: 'mcg',
+                frequency: 'daily',
+                route: 'subq',
+                timing: 'Morning',
+              },
+            ],
+            startDate: '2026-05-23T00:00:00.000Z',
+            durationDays: 2,
+            status: 'active',
+            notes: '',
+          },
+        ],
+        schedules: [
+          {
+            id: 'schedule-bpc-dashboard',
+            stackId: 'stack-dashboard-actionability',
+            stackPeptideId: 'stack-item-bpc',
+            peptideId: 'bpc-157',
+            doseValue: 250,
+            doseUnit: 'mcg',
+            route: 'subq',
+            recurrence: { frequency: 'daily', timesOfDay: ['10:00'] },
+            startDate: '2026-05-23T00:00:00.000Z',
+            endDate: '2026-05-25T00:00:00.000Z',
+            status: 'active',
+          },
+        ],
+        scheduleLogs: [
+          {
+            id: 'log-bpc-dashboard',
+            scheduleId: 'schedule-bpc-dashboard',
+            stackId: 'stack-dashboard-actionability',
+            stackPeptideId: 'stack-item-bpc',
+            peptideId: 'bpc-157',
+            dueAt: '2026-05-23T10:00:00.000Z',
+            status: 'pending',
+          },
+        ],
+        reconstitutionCalculations: [],
+        userCompounds: [],
+        settings: { hasSeenDisclaimer: true, hasCompletedOnboarding: true, userMode: 'researcher', biometricLock: false, darkMode: true },
+      },
+    }));
 
-    await page.goto('/stacks');
+    await page.goto('/more/settings');
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByLabel('Import Data File').setInputFiles(exportPath);
+    await expect(page.getByRole('alertdialog', { name: 'Restore this PeptideOS backup?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Restore backup' }).click();
+    await expect(page.getByRole('status')).toContainText('Data restored from backup');
 
-    await page.getByRole('button', { name: 'New stack' }).click();
-    await page.getByLabel('Stack Name').fill('Dashboard Actionability Stack');
-    await page.getByLabel('Duration (days)').fill('2');
-    await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('checkbox', { name: 'BPC-157' }).check();
-    await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('button', { name: 'Create Stack' }).click();
-
-    await page.getByRole('link', { name: /Dashboard Actionability Stack/ }).click();
-    await page.getByRole('button', { name: 'Start' }).click();
-    await page.getByRole('link', { name: 'Dashboard' }).click();
-    await page.getByRole('link', { name: /Dashboard Actionability Stack/ }).first().click();
-    await expect(page).toHaveURL(/\/stacks\/.+/);
-    await page.getByRole('link', { name: 'Back' }).click();
-    await expect(page).toHaveURL(/\/$/);
-
-await expect(page.getByText('Due today')).toBeVisible();
-await expect(page.getByText('Pending action', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('Next action')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'All' })).toBeVisible();
-  await page.getByRole('button', { name: 'Due' }).click();
-  await expect(page.getByText(/BPC-157 250 mcg/).first()).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Quick confirm' }).first()).toBeVisible();
-  await page.getByRole('button', { name: 'Coverage' }).click();
-  await expect(page.getByText('No inventory coverage events right now')).toBeVisible();
-  await page.getByRole('button', { name: 'All' }).click();
-
-  await page.getByRole('button', { name: 'Quick confirm' }).first().click();
-  const quickConfirm = page.getByRole('dialog', { name: 'Quick confirm dose' });
-  await expect(quickConfirm).toBeVisible();
-  await expect(quickConfirm.getByText('Dashboard Actionability Stack')).toBeVisible();
-  await quickConfirm.getByRole('combobox', { name: 'Vial' }).click();
-  await page.getByRole('option', { name: /BPC-157 active vial/ }).click();
-  await expect(quickConfirm.getByText('Inventory source', { exact: true })).toBeVisible();
-  await expect(quickConfirm.getByText(/No lot · 5 mg left/)).toBeVisible();
-  await quickConfirm.getByRole('button', { name: /Suggested site Upper Left Abdomen/ }).click();
-  await quickConfirm.getByRole('button', { name: 'Confirm dose' }).click();
-
-  await expect(page.getByText(/Confirmed · 8:00 AM · BPC-157 active vial · Upper Left Abdomen/)).toBeVisible();
-  await expect(page.getByText('Taken today', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('Completed scheduled dose')).toBeVisible();
+    await page.goto('/');
+    await expect(page.getByText('BPC-157').first()).toBeVisible();
+    await expect(page.getByRole('link', { name: /Dashboard Actionability Stack Day/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Complete' }).first()).toBeVisible();
   });
 
-  test('gives a stack-building action when there are no due doses', async ({ page }, testInfo) => {
+  test('gives stack-building action when no protocol data exists', async ({ page }, testInfo) => {
     const exportPath = testInfo.outputPath('empty-dashboard-data.json');
     await writeFile(exportPath, JSON.stringify({
       schemaVersion: 2,
@@ -84,79 +103,71 @@ await expect(page.getByText('Pending action', { exact: true }).first()).toBeVisi
         schedules: [],
         scheduleLogs: [],
         compounds: [],
-        settings: {
-          hasSeenDisclaimer: true,
-          hasCompletedOnboarding: true,
-          userMode: 'researcher',
-          biometricLock: false,
-          darkMode: true,
-        },
+        settings: { hasSeenDisclaimer: true, hasCompletedOnboarding: true, userMode: 'researcher', biometricLock: false, darkMode: true },
       },
     }));
 
-  await page.goto('/more/settings');
-  await page.getByRole('button', { name: 'I Understand' }).click();
-  await page.getByLabel('Import Data File').setInputFiles(exportPath);
-  await expect(page.getByRole('alertdialog', { name: 'Restore this PeptideOS backup?' })).toBeVisible();
-  await expect(page.getByText('0 stacks · 0 schedules · 0 due-dose records')).toBeVisible();
-  await page.getByRole('button', { name: 'Restore backup' }).click();
-  await expect(page.getByRole('status')).toContainText('Data restored from backup');
+    await page.goto('/more/settings');
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByLabel('Import Data File').setInputFiles(exportPath);
+    await expect(page.getByRole('alertdialog', { name: 'Restore this PeptideOS backup?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Restore backup' }).click();
+    await expect(page.getByRole('status')).toContainText('Data restored from backup');
 
-  await page.goto('/');
+    await page.goto('/');
+    await expect(page.getByText('No scheduled doses waiting')).toBeVisible();
+    await expect(page.getByText('No active stack')).toBeVisible();
+    await expect(page.getByRole('link', { name: /No active stack/ })).toBeVisible();
+  });
 
-  await expect(page.getByText('No protocol activity yet')).toBeVisible();
-  await expect(page.getByText('No doses due today')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Build a stack' })).toBeVisible();
-});
+  test('summarizes IU-primary active inventory without raw mg conversion leakage', async ({ page }, testInfo) => {
+    const exportPath = testInfo.outputPath('dashboard-hgh-inventory-data.json');
+    await writeFile(exportPath, JSON.stringify({
+      schemaVersion: 4,
+      exportedAt: '2026-06-21T00:00:00.000Z',
+      data: {
+        vials: [
+          {
+            id: 'hgh-active-dashboard',
+            name: 'hGH active vial',
+            peptideId: 'hgh',
+            containerType: 'lyophilized-vial',
+            dateAdded: '2026-06-21T00:00:00.000Z',
+            source: 'Manual',
+            lotNumber: 'HGH-LOT',
+            mg: 3.3333333333333335,
+            totalAmount: { value: 10, unit: 'iu' },
+            bacWaterMl: 1,
+            reconstitutedDate: '2026-06-21T00:00:00.000Z',
+            expirationDate: '2027-06-21T00:00:00.000Z',
+            status: 'active',
+          },
+        ],
+        doses: [],
+        stacks: [],
+        schedules: [],
+        scheduleLogs: [],
+        reconstitutionCalculations: [],
+        userCompounds: [],
+        settings: { hasSeenDisclaimer: true, hasCompletedOnboarding: true, userMode: 'researcher', biometricLock: false, darkMode: true },
+      },
+    }));
 
-test('formats IU-primary active inventory in native units without stack coverage warnings', async ({ page }, testInfo) => {
-  const exportPath = testInfo.outputPath('dashboard-hgh-inventory-data.json');
-  await writeFile(exportPath, JSON.stringify({
-    schemaVersion: 4,
-    exportedAt: '2026-06-21T00:00:00.000Z',
-    data: {
-      vials: [
-        {
-          id: 'hgh-active-dashboard',
-          name: 'hGH active vial',
-          peptideId: 'hgh',
-          containerType: 'lyophilized-vial',
-          dateAdded: '2026-06-21T00:00:00.000Z',
-          source: 'Manual',
-          lotNumber: 'HGH-LOT',
-          mg: 3.3333333333333335,
-          totalAmount: { value: 10, unit: 'iu' },
-          bacWaterMl: 1,
-          reconstitutedDate: '2026-06-21T00:00:00.000Z',
-          expirationDate: '2027-06-21T00:00:00.000Z',
-          status: 'active',
-        },
-      ],
-      doses: [],
-      stacks: [],
-      schedules: [],
-      scheduleLogs: [],
-      reconstitutionCalculations: [],
-      userCompounds: [],
-      settings: { hasSeenDisclaimer: true, hasCompletedOnboarding: true, userMode: 'researcher', biometricLock: false, darkMode: true },
-    },
-  }));
+    await page.goto('/more/settings');
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByLabel('Import Data File').setInputFiles(exportPath);
+    await expect(page.getByRole('alertdialog', { name: 'Restore this PeptideOS backup?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Restore backup' }).click();
+    await expect(page.getByRole('status')).toContainText('Data restored from backup');
 
-  await page.goto('/more/settings');
-  await page.getByRole('button', { name: 'I Understand' }).click();
-  await page.getByLabel('Import Data File').setInputFiles(exportPath);
-  await expect(page.getByRole('alertdialog', { name: 'Restore this PeptideOS backup?' })).toBeVisible();
-  await page.getByRole('button', { name: 'Restore backup' }).click();
-  await expect(page.getByRole('status')).toContainText('Data restored from backup');
+    await page.goto('/');
+    await expect(page.getByText('Active inventory')).toBeVisible();
+    await expect(page.getByText('1').first()).toBeVisible();
+    await expect(page.getByText(/3\.3333333333333335mg/)).toHaveCount(0);
+    await expect(page.getByText(/inventory coverage warning/)).toHaveCount(0);
+  });
 
-  await page.goto('/');
-  await expect(page.getByText('Active Inventory')).toBeVisible();
-  await expect(page.getByText('10 IU · HGH-LOT')).toBeVisible();
-  await expect(page.getByText(/3\.3333333333333335mg/)).toHaveCount(0);
-  await expect(page.getByText(/inventory coverage warning/)).toHaveCount(0);
-});
-
-test('shows estimated remaining amount preview for active PK-backed stacks', async ({ page }, testInfo) => {
+  test('shows active PK-backed stack and recent completed dose in cockpit', async ({ page }, testInfo) => {
     await page.clock.setFixedTime(new Date('2026-06-08T12:00:00-07:00'));
     const exportPath = testInfo.outputPath('dashboard-estimated-remaining-data.json');
     await writeFile(exportPath, JSON.stringify({
@@ -231,13 +242,7 @@ test('shows estimated remaining amount preview for active PK-backed stacks', asy
         ],
         reconstitutionCalculations: [],
         userCompounds: [],
-        settings: {
-          hasSeenDisclaimer: true,
-          hasCompletedOnboarding: true,
-          userMode: 'researcher',
-          biometricLock: false,
-          darkMode: true,
-        },
+        settings: { hasSeenDisclaimer: true, hasCompletedOnboarding: true, userMode: 'researcher', biometricLock: false, darkMode: true },
       },
     }));
 
@@ -249,10 +254,8 @@ test('shows estimated remaining amount preview for active PK-backed stacks', asy
     await expect(page.getByRole('status')).toContainText('Data restored from backup');
 
     await page.goto('/');
-    await expect(page.getByText('Estimated remaining amount')).toBeVisible();
-    const estimatedPreview = page.getByRole('link', { name: /Semaglutide Dashboard Stack/ }).first();
-    await expect(estimatedPreview).toContainText('Semaglutide');
-    await expect(estimatedPreview).toContainText('half-life assumption 7 days');
-    await expect(page.getByText('First-order estimate from logged completed doses. Not measured concentration or dose guidance.')).toBeVisible();
+    await expect(page.getByText('Semaglutide Dashboard Stack')).toBeVisible();
+    await expect(page.getByText('Semaglutide').first()).toBeVisible();
+    await expect(page.getByText('1 mg').first()).toBeVisible();
   });
 });

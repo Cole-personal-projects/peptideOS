@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Layers, CalendarDays, Library, MoreHorizontal, TestTube } from 'lucide-react';
+import { CalendarDays, LayoutDashboard, Layers, Library, MoreHorizontal, TestTube } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const tabs = [
@@ -18,26 +18,23 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/80 backdrop-blur-xl border-t border-border safe-bottom">
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-[var(--bg-deep)]/90 backdrop-blur-xl safe-bottom">
+      <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-2">
         {tabs.map((tab) => {
-          const isActive = pathname === tab.href || 
-            (tab.href !== '/' && pathname.startsWith(tab.href));
+          const isActive = pathname === tab.href || (tab.href !== '/' && pathname.startsWith(tab.href));
           const Icon = tab.icon;
-          
+
           return (
             <Link
               key={tab.href}
               href={tab.href}
               className={cn(
-                "flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-colors",
-                isActive 
-                  ? "text-primary" 
-                  : "text-muted-foreground hover:text-foreground"
+                'flex h-14 w-16 flex-col items-center justify-center rounded-[10px] transition-colors',
+                isActive ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:bg-secondary/70 hover:text-foreground',
               )}
             >
-              <Icon className={cn("w-5 h-5 mb-1", isActive && "stroke-[2.5]")} />
-              <span className="text-[10px] font-medium">{tab.label}</span>
+              <Icon className={cn('mb-1 h-5 w-5', isActive && 'stroke-[2.5]')} />
+              <span className="text-[10px] font-semibold leading-none">{tab.label}</span>
             </Link>
           );
         })}

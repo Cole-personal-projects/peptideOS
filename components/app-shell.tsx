@@ -12,10 +12,12 @@ interface AppShellProps {
 
 export function AppShell({ children, showDisclaimer = true }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-screen bg-background pb-32 text-foreground">
       <RouteHistory />
       {showDisclaimer && <DisclaimerDialog />}
-      {children}
+      <main className="mx-auto min-h-screen w-full max-w-lg">
+        {children}
+      </main>
       <FloatingActionButton />
       <BottomNav />
     </div>
