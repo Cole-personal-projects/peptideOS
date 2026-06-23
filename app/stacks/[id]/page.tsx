@@ -124,30 +124,30 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
   return (
     <AppShell showFloatingAction={false}>
       <div className="min-h-screen bg-background text-foreground">
-        <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-5 backdrop-blur min-[420px]:px-6">
-          <div className="flex items-center gap-3 min-[420px]:gap-4">
+      <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-3 backdrop-blur min-[420px]:px-5">
+        <div className="flex items-center gap-2.5">
             <Link href="/stacks" aria-label="Back to Stacks" className="grid h-9 w-9 shrink-0 place-items-center text-foreground">
-              <ArrowLeft className="h-7 w-7" />
+            <ArrowLeft className="h-4 w-4" />
             </Link>
-<h1 className="min-w-0 flex-1 truncate text-[17px] font-bold leading-tight tracking-normal text-[#ffb596]">
+          <h1 className="min-w-0 flex-1 truncate text-[15px] font-bold leading-tight tracking-normal text-foreground">
               {stack.name}
             </h1>
             <button
               type="button"
-              className="grid h-10 w-10 shrink-0 place-items-center text-foreground"
+            className="grid h-9 w-9 shrink-0 place-items-center text-foreground"
               aria-label="Protocol settings"
               onClick={() => setIsActionsOpen(true)}
             >
-              <Settings className="h-7 w-7" />
+            <Settings className="h-4 w-4" />
             </button>
           </div>
         </header>
 
-<main className="space-y-5 px-5 pb-36 pt-6 min-[420px]:px-6">
-          <section className="flex flex-col items-center">
-<div className="relative grid h-[140px] w-[140px] place-items-center">
+      <main className="space-y-3.5 px-4 pb-32 pt-4 min-[420px]:px-5">
+        <section className="grid grid-cols-[auto_1fr] items-center gap-3 rounded-[6px] border border-[#332012] bg-card p-3.5">
+          <div className="relative grid h-20 w-20 place-items-center">
               <svg viewBox="0 0 128 128" className="h-full w-full" aria-hidden="true">
-                <circle cx="64" cy="64" r="52" fill="none" stroke="#1b100a" strokeWidth="10" />
+              <circle cx="64" cy="64" r="52" fill="none" stroke="#1b100a" strokeWidth="9" />
                 <circle
                   cx="64"
                   cy="64"
@@ -155,36 +155,36 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                   fill="none"
                   stroke="#f87432"
                   strokeLinecap="round"
-                  strokeWidth="10"
+                strokeWidth="9"
                   strokeDasharray={circumference}
                   strokeDashoffset={dashOffset}
                   transform="rotate(-90 64 64)"
                 />
               </svg>
               <div className="absolute text-center">
-<p className="text-2xl font-extrabold leading-none text-primary">{adherence}%</p>
-<p className="mt-2 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Adherence</p>
+              <p className="text-lg font-extrabold leading-none text-primary">{adherence}%</p>
+              <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Done</p>
               </div>
             </div>
 
-<div className="mt-5 grid w-full grid-cols-2 gap-2 min-[420px]:flex min-[420px]:w-auto min-[420px]:flex-wrap min-[420px]:justify-center min-[420px]:gap-3">
-<div className="flex items-center justify-center gap-2 rounded-full border border-[#3a2012] bg-[#1d120c] px-3 py-2.5 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground min-[420px]:gap-3 min-[420px]:px-4">
-                <CalendarDays className="h-4 w-4 text-primary" />
+          <div className="grid gap-2">
+            <div className="flex items-center gap-2 rounded-[6px] border border-[#3a2012] bg-[#1d120c] px-3 py-2 text-xs font-bold text-muted-foreground">
+              <CalendarDays className="h-3.5 w-3.5 text-primary" />
                 Week {Math.max(Math.ceil(currentDay / 7), 1)} of {Math.max(Math.ceil(stack.durationDays / 7), 1)}
               </div>
-<div className="flex items-center justify-center gap-2 rounded-full border border-[#3a2012] bg-[#1d120c] px-3 py-2.5 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground min-[420px]:gap-3 min-[420px]:px-4">
-                <Archive className="h-4 w-4 text-emerald-400" />
+            <div className="flex items-center gap-2 rounded-[6px] border border-[#3a2012] bg-[#1d120c] px-3 py-2 text-xs font-bold text-muted-foreground">
+              <Archive className="h-3.5 w-3.5 text-emerald-400" />
                 {remainingDays} days left
               </div>
             </div>
           </section>
 
-<section className="rounded-[6px] border border-[#332012] bg-card p-4">
-<div className="mb-4 flex items-center justify-between gap-4">
+        <section className="rounded-[6px] border border-[#332012] bg-card p-3.5">
+          <div className="mb-3 flex items-center justify-between gap-4">
 <h2 className="text-sm font-bold tracking-normal">14-Day Trajectory</h2>
 <p className="shrink-0 text-right text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">Last 14 days</p>
             </div>
-<div className="flex h-10 items-end justify-between gap-2">
+          <div className="flex h-9 items-end justify-between gap-2">
               {trajectory.map((bar, index) => (
                 <div
                   key={`${bar.date}-${index}`}
@@ -204,7 +204,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
           </section>
 
           <section className="overflow-hidden rounded-[6px] border border-[#332012] bg-[#211208]">
-<div className="flex items-center justify-between gap-3 border-b border-[#332012] px-4 py-3.5">
+          <div className="flex items-center justify-between gap-3 border-b border-[#332012] px-3.5 py-3">
 <h2 className="shrink-0 text-sm font-bold tracking-normal">Upcoming Doses</h2>
 <Button type="button" variant="ghost" className="h-auto shrink-0 p-0 text-xs font-extrabold uppercase tracking-[0.08em] text-primary" onClick={openEditDialog}>
                 Edit Protocol
@@ -212,8 +212,8 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             </div>
             <div>
               {upcomingRows.map((row, index) => (
-<div key={row.id} className="flex items-center gap-3 border-b border-[#332012] bg-[#28170c] px-4 py-3 last:border-b-0">
-<div className="grid h-9 w-9 shrink-0 place-items-center rounded-[3px] bg-[#321f12]">
+            <div key={row.id} className="flex items-center gap-3 border-b border-[#332012] bg-[#28170c] px-3.5 py-2.5 last:border-b-0">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-[3px] bg-[#321f12]">
 <Beaker className={cn('h-4 w-4', index === 0 ? 'text-primary' : 'text-foreground')} />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -229,15 +229,15 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
               ))}
             </div>
-<div className="bg-[#211208] px-4 py-3.5">
-<Button asChild className="h-10 w-full rounded-[3px] bg-primary text-sm font-bold tracking-normal text-black hover:bg-primary/90">
+          <div className="bg-[#211208] px-3.5 py-3">
+            <Button asChild className="h-9 w-full rounded-[3px] bg-primary text-sm font-bold tracking-normal text-black hover:bg-primary/90">
 <Link href="/log"><Plus className="mr-2 h-5 w-5" /> Log Dose Now</Link>
               </Button>
             </div>
           </section>
 
-<section className="rounded-[6px] border border-[#332012] bg-card p-4">
-            <div className="mb-4 flex items-center justify-between gap-4">
+        <section className="rounded-[6px] border border-[#332012] bg-card p-3.5">
+          <div className="mb-3 flex items-center justify-between gap-4">
 <h2 className="text-sm font-bold tracking-normal">Protocol</h2>
 <p className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">{statusLabels[stack.status]}</p>
             </div>
@@ -245,7 +245,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
               {stack.peptides.map((peptide) => {
                 const compound = trackableCompounds.find((candidate) => candidate.id === peptide.peptideId);
                 return (
-<div key={peptide.id ?? peptide.peptideId} className="flex items-center justify-between gap-4 rounded-[4px] bg-[#211208] px-4 py-3">
+              <div key={peptide.id ?? peptide.peptideId} className="flex items-center justify-between gap-4 rounded-[4px] bg-[#211208] px-3.5 py-2.5">
                     <div className="min-w-0">
 <p className="truncate text-sm font-semibold">{compound?.name ?? peptide.peptideId}</p>
 <p className="mt-1 text-[13px] text-muted-foreground">{formatDose(peptide.doseValue, peptide.doseUnit)} · {formatRoute(peptide.route)}</p>
@@ -259,9 +259,9 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             {stack.notes && <p className="mt-3 text-sm text-muted-foreground">{stack.notes}</p>}
           </section>
 
-<section className="space-y-3">
+        <section className="space-y-2.5">
 <h2 className="text-sm font-bold tracking-normal">Linked Labs</h2>
-<div className="relative overflow-hidden rounded-[6px] border border-[#332012] bg-card p-4">
+          <div className="relative overflow-hidden rounded-[6px] border border-[#332012] bg-card p-3.5">
               {linkedLab ? (
                 <>
                   <div className="flex items-start justify-between gap-5">
@@ -281,7 +281,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
 <p className="mt-2 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Last test: {linkedLab.date}</p>
                     </div>
                   </div>
-<Button asChild variant="outline" className="mt-5 h-12 w-full rounded-[2px] border-[#332012] bg-transparent text-sm font-semibold uppercase tracking-normal">
+              <Button asChild variant="outline" className="mt-4 h-10 w-full rounded-[2px] border-[#332012] bg-transparent text-sm font-semibold tracking-normal">
                     <Link href="/labs">View Trend Analysis</Link>
                   </Button>
                 </>
@@ -293,7 +293,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
 <p className="mt-2 text-sm text-muted-foreground">Import labs and link them to this stack.</p>
                     </div>
                   </div>
-<Button asChild variant="outline" className="mt-5 h-12 w-full rounded-[2px] border-[#332012] bg-transparent text-sm font-semibold uppercase tracking-normal">
+              <Button asChild variant="outline" className="mt-4 h-10 w-full rounded-[2px] border-[#332012] bg-transparent text-sm font-semibold tracking-normal">
                     <Link href="/labs">Open Labs</Link>
                   </Button>
                 </>
