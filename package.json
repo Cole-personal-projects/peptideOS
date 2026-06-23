@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node tools/copy-ocr-assets.mjs",
     "dev": "next dev",
+    "prebuild": "node tools/copy-ocr-assets.mjs",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
@@ -21,7 +23,9 @@
     "library:build-records": "node tools/reference-library/build-records.mjs --input reference-library/compounds --output app/generated/reference-library.snapshot.json",
     "test:e2e": "pnpm build && playwright test",
     "test:e2e:ci": "playwright test",
+    "prepreview": "node tools/copy-ocr-assets.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "predeploy": "node tools/copy-ocr-assets.mjs",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
@@ -65,6 +69,7 @@
     "@radix-ui/react-toggle-group": "1.1.11",
     "@radix-ui/react-tooltip": "1.2.8",
     "@supabase/supabase-js": "^2.108.2",
+    "@tesseract.js-data/eng": "^1.0.0",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

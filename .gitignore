@@ -10,6 +10,7 @@
 # production
 /build
 /coverage
+/public/ocr/
 
 # debug
 npm-debug.log*
