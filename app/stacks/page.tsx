@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Plus, Play, Pause, Clock, CheckCircle2, Sparkles } from 'lucide-react';
+import { AlertTriangle, ChevronRight, Plus, Play, Pause, Clock, CheckCircle2, Sparkles } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { NewStackSheet } from '@/components/navigation/new-stack-sheet';
@@ -17,13 +17,20 @@ import { isAssistantAction, PEPPI_PROTOCOL_DRAFT_STORAGE_KEY } from '@/lib/assis
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { getEmptyStateContent } from '@/lib/empty-states';
 import { cn } from '@/lib/utils';
-import type { Stack } from '@/lib/types';
+import type { AppData, Stack } from '@/lib/types';
 
 const statusConfig = {
   active: { icon: Play, label: 'Active', className: 'bg-primary/20 text-primary' },
   planned: { icon: Clock, label: 'Planned', className: 'bg-chart-4/20 text-chart-4' },
   completed: { icon: CheckCircle2, label: 'Completed', className: 'bg-chart-3/20 text-chart-3' },
   paused: { icon: Pause, label: 'Paused', className: 'bg-muted text-muted-foreground' },
+};
+
+type StackOperationalSummary = {
+  nextLabel: string;
+  completionLabel: string;
+  inventoryLabel: string;
+  hasInventoryGap: boolean;
 };
 
 export default function StacksPage() {
@@ -72,9 +79,13 @@ const elapsed = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 *
 return `Day ${Math.min(Math.max(elapsed, 1), stack.durationDays)}`;
 };
 
-const getCompoundName = (compoundId: string) => (
-trackableCompounds.find((candidate) => candidate.id === compoundId)?.name ?? compoundId
-);
+  const getCompoundName = (compoundId: string) => (
+    trackableCompounds.find((candidate) => candidate.id === compoundId)?.name ?? compoundId
+  );
+
+  const getOperationalSummary = (stack: Stack): StackOperationalSummary => (
+    getStackOperationalSummary(stack, data)
+  );
 
   return (
 <AppShell>
@@ -127,6 +138,7 @@ trackableCompounds.find((candidate) => candidate.id === compoundId)?.name ?? com
             const circumference = 2 * Math.PI * 22;
             const dashOffset = circumference - (progress / 100) * circumference;
             const isPlanned = stack.status === 'planned';
+            const summary = getOperationalSummary(stack);
 
             return (
               <Link key={stack.id} href={`/stacks/${stack.id}`} className="block">
@@ -134,14 +146,14 @@ trackableCompounds.find((candidate) => candidate.id === compoundId)?.name ?? com
                   "overflow-hidden rounded-[22px] border-border bg-card transition-colors hover:bg-secondary/30",
                   isPlanned && "border-dashed opacity-70",
                 )}>
-                  <CardContent className="flex items-center gap-3.5 p-3.5">
-                    <div className="relative grid h-[52px] w-[52px] shrink-0 place-items-center">
+                  <CardContent className="flex items-start gap-3.5 p-3.5">
+                    <div className="relative mt-0.5 grid h-11 w-11 shrink-0 place-items-center">
                       {isPlanned ? (
-                        <div className="grid h-[52px] w-[52px] place-items-center rounded-full border border-dashed border-muted-foreground/45 bg-background/50">
-                          <Clock className="h-5 w-5 text-muted-foreground" />
+                        <div className="grid h-11 w-11 place-items-center rounded-full border border-dashed border-muted-foreground/45 bg-background/50">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
                         </div>
                       ) : (
-                        <svg viewBox="0 0 52 52" className="h-[52px] w-[52px]" aria-hidden="true">
+                        <svg viewBox="0 0 52 52" className="h-11 w-11" aria-hidden="true">
                           <circle cx="26" cy="26" r="22" fill="none" stroke="hsl(var(--secondary))" strokeWidth="4.5" />
                           <circle
                             cx="26"
@@ -157,7 +169,7 @@ trackableCompounds.find((candidate) => candidate.id === compoundId)?.name ?? com
                           />
                         </svg>
                       )}
-                      {!isPlanned && <span className="absolute text-[11px] font-bold text-foreground">{Math.round(progress)}</span>}
+                      {!isPlanned && <span className="absolute text-[10px] font-bold text-foreground">{Math.round(progress)}</span>}
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -174,7 +186,16 @@ trackableCompounds.find((candidate) => candidate.id === compoundId)?.name ?? com
                         </Badge>
                       </div>
 
-                      <div className="mt-2.5 flex flex-wrap gap-1.5">
+                      <div className="mt-2 grid grid-cols-3 gap-1.5 text-[11px]">
+                        <span className="truncate rounded-[6px] bg-secondary/55 px-2 py-1 text-muted-foreground">{summary.nextLabel}</span>
+                        <span className="truncate rounded-[6px] bg-secondary/55 px-2 py-1 text-muted-foreground">{summary.completionLabel}</span>
+                        <span className={cn('truncate rounded-[6px] px-2 py-1', summary.hasInventoryGap ? 'bg-destructive/10 text-destructive' : 'bg-secondary/55 text-muted-foreground')}>
+                          {summary.hasInventoryGap && <AlertTriangle className="mr-1 inline h-3 w-3 align-[-2px]" />}
+                          {summary.inventoryLabel}
+                        </span>
+                      </div>
+
+                      <div className="mt-2 flex flex-wrap gap-1.5">
                         {stack.peptides.slice(0, 4).map((sp) => (
                           <Badge key={sp.id ?? sp.peptideId} variant="outline" className="border-border bg-background/70 px-2 py-0.5 text-[11px] text-muted-foreground">
                             {getCompoundName(sp.peptideId)}
@@ -187,6 +208,7 @@ trackableCompounds.find((candidate) => candidate.id === compoundId)?.name ?? com
                         )}
                       </div>
                     </div>
+                    <ChevronRight className="mt-3 h-4 w-4 shrink-0 text-muted-foreground" />
                   </CardContent>
                 </Card>
               </Link>
@@ -204,4 +226,46 @@ trackableCompounds.find((candidate) => candidate.id === compoundId)?.name ?? com
       <AiStackSheet open={aiStackOpen} onOpenChange={setAiStackOpen} />
     </AppShell>
   );
+}
+
+function getStackOperationalSummary(stack: Stack, data: AppData): StackOperationalSummary {
+  const now = new Date();
+  const todayKey = now.toISOString().slice(0, 10);
+  const stackLogs = data.scheduleLogs.filter((log) => log.stackId === stack.id);
+  const pendingLogs = stackLogs
+    .filter((log) => log.status === 'pending')
+    .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
+  const overdueCount = pendingLogs.filter((log) => new Date(log.dueAt).getTime() < now.getTime()).length;
+  const nextLog = pendingLogs[0];
+  const todayLogs = stackLogs.filter((log) => log.dueAt.slice(0, 10) === todayKey);
+  const completedToday = todayLogs.filter((log) => log.status === 'taken').length;
+  const decidedToday = todayLogs.filter((log) => log.status === 'taken' || log.status === 'skipped' || log.status === 'missed').length;
+  const stackCompoundIds = new Set(stack.peptides.map((peptide) => peptide.peptideId));
+  const coveredCompoundIds = new Set(
+    data.inventoryBatches
+      .filter((batch) => stackCompoundIds.has(batch.peptideId) && batch.vialCount > 0)
+      .map((batch) => batch.peptideId),
+  );
+  const missingInventory = stack.peptides.filter((peptide) => !coveredCompoundIds.has(peptide.peptideId)).length;
+
+  return {
+    nextLabel: overdueCount > 0
+      ? `${overdueCount} overdue`
+      : nextLog
+        ? `Next ${formatShortTime(nextLog.dueAt)}`
+        : stack.status === 'planned'
+          ? 'Not scheduled'
+          : 'No pending doses',
+    completionLabel: todayLogs.length > 0 ? `${completedToday}/${todayLogs.length} done today` : `${decidedToday} logged today`,
+    inventoryLabel: stack.peptides.length === 0
+      ? 'No compounds'
+      : missingInventory > 0
+        ? `${missingInventory} inventory gap${missingInventory === 1 ? '' : 's'}`
+        : 'Inventory linked',
+    hasInventoryGap: missingInventory > 0,
+  };
+}
+
+function formatShortTime(value: string) {
+  return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(value));
 }

@@ -469,7 +469,7 @@ export default function LibraryPage() {
                           key={compound.id}
                           href={`/library/${compound.id}`}
                           className="block"
-                          aria-label={`${compound.name} ${formatLabel(compound.category)} ${compound.source === 'user' ? 'Custom' : 'Reference'}`}
+                          aria-label={`${compound.name} ${formatLabel(compound.category)} ${compound.source === 'user' ? 'Custom' : 'Reference'} ${compound.aliases.join(' ')}`}
                         >
 <Card className="transition-colors hover:bg-secondary/30">
 <CardContent className="p-3.5">
