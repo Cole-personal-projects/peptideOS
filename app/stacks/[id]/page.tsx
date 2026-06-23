@@ -1,12 +1,10 @@
 "use client";
 
-import { use, useState } from 'react';
+import { use, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Calendar, AlertTriangle, Clock, Play, Pause, CheckCircle2, Syringe, Edit3, Trash2, Activity } from 'lucide-react';
+import { ArrowLeft, Archive, Beaker, CalendarDays, CheckCircle2, Clock, Pause, Play, Plus, Settings, Trash2 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
-import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -20,7 +18,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,38 +25,19 @@ import { ScheduleTimeFields } from '@/components/stacks/schedule-time-fields';
 import { useApp } from '@/lib/context';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose } from '@/lib/dose-helpers';
-import { buildEstimatedRemainingPreview } from '@/lib/estimated-remaining-preview';
-import { getSchedulePreset } from '@/lib/schedules';
+import { getDefaultScheduleRecurrence, getSchedulePreset, getScheduleSummary, normalizeScheduleRecurrence } from '@/lib/schedules';
 import { cn } from '@/lib/utils';
-import type { ScheduleLogStatus, StackStatus } from '@/lib/types';
+import type { LabResult, ScheduleLog, Stack, StackPeptide, StackStatus } from '@/lib/types';
 import type { SchedulePreset } from '@/lib/schedules';
 
-const statusConfig = {
-  active: { icon: Play, label: 'Active', className: 'bg-primary/20 text-primary' },
-  planned: { icon: Clock, label: 'Planned', className: 'bg-chart-4/20 text-chart-4' },
-  completed: { icon: CheckCircle2, label: 'Completed', className: 'bg-chart-3/20 text-chart-3' },
-  paused: { icon: Pause, label: 'Paused', className: 'bg-muted text-muted-foreground' },
+const statusLabels: Record<StackStatus, string> = {
+  active: 'Active',
+  planned: 'Planned',
+  completed: 'Complete',
+  paused: 'Paused',
 };
 
-const calendarFilters = ['all', 'pending', 'taken', 'skipped', 'missed'] as const;
-type CalendarFilter = typeof calendarFilters[number];
-
-function formatEstimatedRemainingMg(value: number): string {
-  if (value < 0.01) return '<0.01 mg';
-  return `${value.toLocaleString('en-US', { maximumFractionDigits: 2 })} mg`;
-}
-
-function formatHalfLife(hours: number): string {
-  if (hours % 24 === 0) return `${hours / 24} day${hours === 24 ? '' : 's'}`;
-  return `${hours} hours`;
-}
-
-const scheduleStatusConfig: Record<ScheduleLogStatus, { label: string; className: string }> = {
-  pending: { label: 'Pending', className: 'bg-chart-4' },
-  taken: { label: 'Taken', className: 'bg-chart-3' },
-  skipped: { label: 'Skipped', className: 'bg-muted-foreground' },
-  missed: { label: 'Missed', className: 'bg-destructive' },
-};
+const trajectoryWindow = 14;
 
 export default function StackDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -73,8 +51,8 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
     updateStackItemScheduleTimes,
     getScheduleLogsForStack,
   } = useApp();
-  const [calendarFilter, setCalendarFilter] = useState<CalendarFilter>('all');
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeletePending, setIsDeletePending] = useState(false);
   const stack = getStack(id);
@@ -88,30 +66,28 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
     notFound();
   }
 
-  const config = statusConfig[stack.status];
-  const StatusIcon = config.icon;
+  const trackableCompounds = getTrackableCompounds(data);
+  const scheduleLogs = getScheduleLogsForStack(stack.id);
+  const progress = getProgressPercentage(stack);
+  const adherence = getAdherencePercentage(scheduleLogs, progress);
+  const currentDay = getCurrentProtocolDay(stack);
+  const remainingDays = Math.max(stack.durationDays - currentDay, 0);
+  const upcomingLogs = getUpcomingLogs(scheduleLogs);
+  const upcomingRows = upcomingLogs.length > 0
+    ? upcomingLogs.map((log) => toUpcomingDoseFromLog(log, stack, trackableCompounds))
+    : stack.peptides.slice(0, 2).map((peptide, index) => toUpcomingDoseFromPeptide(peptide, trackableCompounds, index));
+  const linkedLab = getLinkedLabPreview(stack.id, data.labReports, data.labResults);
+  const trajectory = getTrajectoryBars(scheduleLogs);
+  const circumference = 2 * Math.PI * 52;
+  const dashOffset = circumference - (adherence / 100) * circumference;
 
-  const startDate = new Date(stack.startDate);
-  const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + stack.durationDays);
-
-  const getProgressPercentage = () => {
-    if (stack.status === 'planned') return 0;
-    if (stack.status === 'completed') return 100;
-    const now = new Date();
-    const elapsed = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.min(Math.max((elapsed / stack.durationDays) * 100, 0), 100);
-  };
-
-  const progress = getProgressPercentage();
-
+  const hasSchedulableItems = stack.peptides.length > 0;
   const handleStatusChange = (newStatus: StackStatus) => {
     if (newStatus === 'active') {
       if (stack.peptides.length === 0) return;
       activateStack(stack.id);
       return;
     }
-
     updateStack(stack.id, { status: newStatus });
   };
 
@@ -121,6 +97,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
     setEditDurationDays(stack.durationDays.toString());
     setEditNotes(stack.notes);
     setIsEditOpen(true);
+    setIsActionsOpen(false);
   };
 
   const handleSaveEdit = () => {
@@ -144,382 +121,290 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
     window.location.assign('/stacks');
   };
 
-  const scheduleLogs = getScheduleLogsForStack(stack.id);
-  const filteredScheduleLogs = calendarFilter === 'all'
-    ? scheduleLogs
-    : scheduleLogs.filter((log) => log.status === calendarFilter);
-  const scheduleLogsByDate = filteredScheduleLogs.reduce<Record<string, typeof scheduleLogs>>((groups, log) => {
-    const key = log.dueAt.slice(0, 10);
-    groups[key] = [...(groups[key] ?? []), log];
-    return groups;
-  }, {});
-  const trackableCompounds = getTrackableCompounds(data);
-  const hasSchedulableItems = stack.peptides.length > 0;
-  const scheduleCounts = scheduleLogs.reduce<Record<ScheduleLogStatus, number>>((counts, log) => {
-    counts[log.status] += 1;
-    return counts;
-  }, { pending: 0, taken: 0, skipped: 0, missed: 0 });
-  const estimatedRemainingRows = buildEstimatedRemainingPreview(stack, data);
-
   return (
-    <AppShell>
-      <PageHeader
-        title={stack.name}
-        backHref="/stacks"
-        rightElement={
-          <div className="flex items-center gap-1">
-            <Button size="sm" variant="ghost" className="text-primary" onClick={openEditDialog}>
-              <Edit3 className="w-4 h-4 mr-1" /> Edit
-              <span className="sr-only"> protocol</span>
-            </Button>
-            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setIsDeleteOpen(true)}>
-              <Trash2 className="w-4 h-4 mr-1" /> Delete
-              <span className="sr-only"> protocol</span>
-            </Button>
+    <AppShell showFloatingAction={false}>
+      <div className="min-h-screen bg-background text-foreground">
+        <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-5 backdrop-blur min-[420px]:px-6">
+          <div className="flex items-center gap-3 min-[420px]:gap-4">
+            <Link href="/stacks" aria-label="Back to Stacks" className="grid h-9 w-9 shrink-0 place-items-center text-foreground">
+              <ArrowLeft className="h-7 w-7" />
+            </Link>
+            <h1 className="min-w-0 flex-1 truncate text-[19px] font-bold leading-none tracking-normal text-[#ffb596] min-[420px]:text-[27px]">
+              {stack.name}
+            </h1>
+            <button
+              type="button"
+              className="grid h-10 w-10 shrink-0 place-items-center text-foreground"
+              aria-label="Protocol settings"
+              onClick={() => setIsActionsOpen(true)}
+            >
+              <Settings className="h-7 w-7" />
+            </button>
           </div>
-        }
-      />
+        </header>
 
-      <div className="p-4 space-y-4">
-        {/* Status and Progress */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <Badge variant="secondary" className={cn("text-sm", config.className)}>
-                <StatusIcon className="w-3.5 h-3.5 mr-1.5" />
-                {config.label}
-              </Badge>
-              <div className="flex gap-2">
-                {stack.status === 'planned' && (
-                  <Button size="sm" disabled={!hasSchedulableItems} onClick={() => handleStatusChange('active')}>
-                    <Play className="w-3.5 h-3.5 mr-1" /> Start
-                  </Button>
-                )}
-                {stack.status === 'active' && (
-                  <>
-                    <Button size="sm" variant="outline" onClick={() => handleStatusChange('paused')}>
-                      <Pause className="w-3.5 h-3.5 mr-1" /> Pause
-                    </Button>
-                    <Button size="sm" onClick={() => handleStatusChange('completed')}>
-                      <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Complete
-                    </Button>
-                  </>
-                )}
-                {stack.status === 'paused' && (
-                  <Button size="sm" onClick={() => handleStatusChange('active')}>
-                    <Play className="w-3.5 h-3.5 mr-1" /> Resume
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            <p className="text-sm text-muted-foreground mb-4">{stack.description}</p>
-            {!hasSchedulableItems && (
-              <p className="mb-4 rounded-md border border-chart-4/40 bg-chart-4/10 p-3 text-sm text-chart-4">
-                Add at least one peptide before starting this stack.
-              </p>
-            )}
-
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium">{Math.round(progress)}%</span>
-              </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary transition-all"
-                  style={{ width: `${progress}%` }}
+        <main className="space-y-8 px-6 pb-10 pt-10">
+          <section className="flex flex-col items-center">
+            <div className="relative grid h-[210px] w-[210px] place-items-center">
+              <svg viewBox="0 0 128 128" className="h-full w-full" aria-hidden="true">
+                <circle cx="64" cy="64" r="52" fill="none" stroke="#1b100a" strokeWidth="10" />
+                <circle
+                  cx="64"
+                  cy="64"
+                  r="52"
+                  fill="none"
+                  stroke="#f87432"
+                  strokeLinecap="round"
+                  strokeWidth="10"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={dashOffset}
+                  transform="rotate(-90 64 64)"
                 />
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                <span>{stack.durationDays} days total</span>
-                <span>{endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+              </svg>
+              <div className="absolute text-center">
+                <p className="text-[40px] font-extrabold leading-none text-primary">{adherence}%</p>
+                <p className="mt-4 text-sm font-bold uppercase tracking-[0.13em] text-muted-foreground">Adherence</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {estimatedRemainingRows.length > 0 && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Activity className="w-4 h-4" />
-                Estimated remaining amount
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {estimatedRemainingRows.map((row) => (
-                <div key={row.compoundId} className="rounded-md border p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium">{row.compoundName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Half-life assumption: {formatHalfLife(row.halfLifeHours)}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="shrink-0 text-xs">
-                      {row.evidenceTier}
-                    </Badge>
+            <div className="mt-6 grid w-full grid-cols-2 gap-2 min-[420px]:flex min-[420px]:w-auto min-[420px]:flex-wrap min-[420px]:justify-center min-[420px]:gap-3">
+              <div className="flex items-center justify-center gap-2 rounded-full border border-[#3a2012] bg-[#1d120c] px-3 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground min-[420px]:gap-3 min-[420px]:px-5 min-[420px]:text-sm">
+                <CalendarDays className="h-4 w-4 text-primary" />
+                Week {Math.max(Math.ceil(currentDay / 7), 1)} of {Math.max(Math.ceil(stack.durationDays / 7), 1)}
+              </div>
+              <div className="flex items-center justify-center gap-2 rounded-full border border-[#3a2012] bg-[#1d120c] px-3 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground min-[420px]:gap-3 min-[420px]:px-5 min-[420px]:text-sm">
+                <Archive className="h-4 w-4 text-emerald-400" />
+                {remainingDays} days left
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-[6px] border border-[#332012] bg-card p-6">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h2 className="text-[21px] font-bold tracking-normal min-[420px]:text-[24px]">14-Day Trajectory</h2>
+              <p className="shrink-0 text-right text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground min-[420px]:text-sm">Last 14 days</p>
+            </div>
+            <div className="flex h-[58px] items-end justify-between gap-3">
+              {trajectory.map((bar, index) => (
+                <div
+                  key={`${bar.date}-${index}`}
+                  className={cn(
+                    'w-3.5 rounded-[3px]',
+                    bar.status === 'taken' && 'bg-emerald-400',
+                    bar.status === 'missed' && 'bg-[#c85b5e]',
+                    bar.status === 'skipped' && 'bg-muted-foreground',
+                    bar.status === 'pending' && 'border-2 border-primary bg-transparent',
+                    bar.status === 'empty' && 'bg-[#21150f]',
+                  )}
+                  style={{ height: bar.height }}
+                  aria-label={`${bar.date}: ${bar.status}`}
+                />
+              ))}
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-[6px] border border-[#332012] bg-[#211208]">
+            <div className="flex items-center justify-between gap-3 border-b border-[#332012] px-6 py-6">
+              <h2 className="shrink-0 text-[20px] font-bold tracking-normal min-[420px]:text-[24px]">Upcoming Doses</h2>
+              <Button type="button" variant="ghost" className="h-auto shrink-0 p-0 text-xs font-extrabold uppercase tracking-[0.08em] text-primary min-[420px]:text-sm" onClick={openEditDialog}>
+                Edit Protocol
+              </Button>
+            </div>
+            <div>
+              {upcomingRows.map((row, index) => (
+                <div key={row.id} className="flex items-center gap-3 border-b border-[#332012] bg-[#28170c] px-4 py-7 last:border-b-0 min-[420px]:gap-5 min-[420px]:px-7">
+                  <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[3px] bg-[#321f12] min-[420px]:h-16 min-[420px]:w-16">
+                    <Beaker className={cn('h-7 w-7 min-[420px]:h-8 min-[420px]:w-8', index === 0 ? 'text-primary' : 'text-foreground')} />
                   </div>
-
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <p className="text-muted-foreground text-xs">Actual estimate</p>
-                      <p className="font-medium">{formatEstimatedRemainingMg(row.actualEstimatedRemainingMg)}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {row.actualEventCount} completed event{row.actualEventCount === 1 ? '' : 's'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground text-xs">Pending estimate</p>
-                      <p className="font-medium">{formatEstimatedRemainingMg(row.plannedEstimatedRemainingMg)}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {row.plannedEventCount} pending event{row.plannedEventCount === 1 ? '' : 's'}
-                      </p>
-                    </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[19px] font-medium leading-tight min-[420px]:text-[24px]">{row.name}</p>
+                    <p className="mt-2 text-base text-muted-foreground min-[420px]:text-lg">{row.detail}</p>
                   </div>
-
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    {row.halfLifeSource} {row.modelNotes}
-                  </p>
+                  <div className="shrink-0 text-right">
+                    <p className={cn('text-[23px] font-extrabold leading-none min-[420px]:text-[27px]', index === 0 ? 'text-primary' : 'text-foreground/75')}>
+                      {row.time}
+                    </p>
+                    <p className="mt-4 text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground min-[420px]:text-sm">{row.when}</p>
+                  </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        )}
+            </div>
+            <div className="bg-[#211208] px-4 py-4">
+              <Button asChild className="h-14 w-full rounded-[3px] bg-primary text-lg font-extrabold tracking-normal text-black hover:bg-primary/90">
+                <Link href="/log"><Plus className="mr-3 h-6 w-6" /> Log Dose Now</Link>
+              </Button>
+            </div>
+          </section>
 
-        <Tabs defaultValue="protocol" className="w-full">
-          <TabsList className="w-full">
-            <TabsTrigger value="protocol" className="flex-1">Protocol</TabsTrigger>
-            <TabsTrigger value="calendar" className="flex-1">Calendar</TabsTrigger>
-            <TabsTrigger value="notes" className="flex-1">Notes</TabsTrigger>
-          </TabsList>
+          <section className="rounded-[6px] border border-[#332012] bg-card p-6">
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <h2 className="text-[24px] font-bold tracking-normal">Protocol</h2>
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">{statusLabels[stack.status]}</p>
+            </div>
+            <div className="space-y-3">
+              {stack.peptides.map((peptide) => {
+                const compound = trackableCompounds.find((candidate) => candidate.id === peptide.peptideId);
+                return (
+                  <div key={peptide.id ?? peptide.peptideId} className="flex items-center justify-between gap-4 rounded-[4px] bg-[#211208] px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-semibold">{compound?.name ?? peptide.peptideId}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{formatDose(peptide.doseValue, peptide.doseUnit)} · {formatRoute(peptide.route)}</p>
+                    </div>
+                    <p className="shrink-0 text-sm font-semibold text-primary">{formatScheduleSummary(peptide)}</p>
+                  </div>
+                );
+              })}
+            </div>
+            {stack.description && <p className="mt-4 text-sm text-muted-foreground">{stack.description}</p>}
+            {stack.notes && <p className="mt-3 text-sm text-muted-foreground">{stack.notes}</p>}
+          </section>
 
-          <TabsContent value="protocol" className="mt-4 space-y-3">
-            {stack.peptides.map((sp) => {
-              const compound = trackableCompounds.find((candidate) => candidate.id === sp.peptideId);
-              return (
-                <Card key={sp.id ?? sp.peptideId}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-semibold">{compound?.name ?? sp.peptideId}</h4>
-                        <Badge variant="outline" className="text-xs mt-1">
-                          {compound?.source === 'user' ? 'custom' : compound?.source ?? 'reference'}
-                        </Badge>
-                      </div>
-                      <Syringe className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <p className="text-muted-foreground text-xs">Dose</p>
-                        <p className="font-medium">{formatDose(sp.doseValue, sp.doseUnit)}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs">Frequency</p>
-                        <p className="font-medium">{sp.frequency}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs">Route</p>
-                        <p className="font-medium uppercase">{sp.route}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs">Timing</p>
-                        <p className="font-medium">{sp.timing}</p>
-                      </div>
-                    </div>
-                    <div className="mt-4 space-y-2">
-                      <Label htmlFor={`schedule-${sp.id ?? sp.peptideId}`}>Schedule</Label>
-                      <Select
-                        value={getSchedulePreset(sp)}
-                        onValueChange={(value) => sp.id && updateStackItemSchedule(stack.id, sp.id, value as SchedulePreset)}
-                      >
-                        <SelectTrigger id={`schedule-${sp.id ?? sp.peptideId}`} aria-label={`${compound?.name ?? sp.peptideId} schedule`}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="twice-daily">2x daily</SelectItem>
-                          <SelectItem value="weekdays">Weekdays</SelectItem>
-                          <SelectItem value="weekly">Weekly · Monday</SelectItem>
-                          <SelectItem value="twice-weekly">2x weekly · Monday, Thursday</SelectItem>
-                          <SelectItem value="every-other-day">Every other day</SelectItem>
-                          <SelectItem value="five-on-two-off">5 days on / 2 days off</SelectItem>
-                          <SelectItem value="custom" disabled>Custom cadence</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <ScheduleTimeFields
-                        stackPeptide={sp}
-                        idPrefix={`stack-${sp.id ?? sp.peptideId}`}
-                        onTimesChange={(timesOfDay) => sp.id && updateStackItemScheduleTimes(stack.id, sp.id, timesOfDay)}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </TabsContent>
-
-          <TabsContent value="calendar" className="mt-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Protocol Calendar
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-3 flex flex-wrap gap-2" aria-label="Calendar status filters">
-                  {calendarFilters.map((filter) => (
-                    <Button
-                      key={filter}
-                      type="button"
-                      size="sm"
-                      variant={calendarFilter === filter ? 'default' : 'outline'}
-                      className="h-8 capitalize"
-                      onClick={() => setCalendarFilter(filter)}
-                    >
-                      {filter}
-                    </Button>
-                  ))}
-                </div>
-                <div className="grid grid-cols-7 gap-1 text-center text-xs">
-                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                    <div key={i} className="text-muted-foreground py-1">{day}</div>
-                  ))}
-                  {Array.from({ length: 35 }).map((_, i) => {
-                    const dayNum = i - startDate.getDay() + 1;
-                    const isInRange = dayNum > 0 && dayNum <= stack.durationDays;
-                    const isToday = dayNum === Math.floor((new Date().getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                    const dayDate = new Date(startDate);
-                    dayDate.setDate(startDate.getDate() + Math.max(dayNum - 1, 0));
-                    const logsForDay = isInRange ? scheduleLogsByDate[dayDate.toISOString().slice(0, 10)] ?? [] : [];
-                    const hasTaken = logsForDay.some((log) => log.status === 'taken');
-                    const hasSkipped = logsForDay.some((log) => log.status === 'skipped');
-                    const hasMissed = logsForDay.some((log) => log.status === 'missed');
-                    const hasPending = logsForDay.some((log) => log.status === 'pending');
-                    return (
-                      <div 
-                        key={i} 
-                        aria-label={isInRange && logsForDay.length > 0 ? `Day ${dayNum}: ${logsForDay.length} scheduled, ${logsForDay.map((log) => log.status).join(', ')}` : undefined}
-                        className={cn(
-                          "aspect-square flex flex-col items-center justify-center rounded-md text-xs",
-                          isInRange && "bg-secondary",
-                          isToday && "bg-primary text-primary-foreground font-bold",
-                          hasPending && "ring-1 ring-chart-4",
-                          hasTaken && "bg-chart-3/20 text-chart-3",
-                          hasSkipped && "bg-muted text-muted-foreground line-through",
-                          hasMissed && "bg-destructive/15 text-destructive",
-                          !isInRange && "text-muted-foreground/30"
+          <section className="space-y-4">
+            <h2 className="text-[24px] font-bold tracking-normal">Linked Labs</h2>
+            <div className="relative overflow-hidden rounded-[6px] border border-[#332012] bg-card p-7">
+              {linkedLab ? (
+                <>
+                  <div className="flex items-start justify-between gap-5">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-4">
+                        <p className="truncate text-[31px] font-medium leading-none">{linkedLab.name}</p>
+                        {linkedLab.change && (
+                          <span className="rounded-[2px] border border-[#332012] bg-[#211208] px-3 py-1 text-sm font-bold text-emerald-400">
+                            {linkedLab.change}
+                          </span>
                         )}
-                      >
-                        <span>{isInRange ? dayNum : ''}</span>
-                        {logsForDay.length > 0 && <span className="text-[9px]">{logsForDay.length}</span>}
                       </div>
-                    );
-                  })}
-                </div>
-                <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground" aria-label="Calendar legend">
-                  {(Object.keys(scheduleStatusConfig) as ScheduleLogStatus[]).map((status) => (
-                    <span key={status} className="inline-flex items-center gap-1.5">
-                      <span className={cn('h-2 w-2 rounded-full', scheduleStatusConfig[status].className)} />
-                      {scheduleStatusConfig[status].label}
-                    </span>
-                  ))}
-                </div>
-                {scheduleLogs.length === 0 && (
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    Start this stack to generate scheduled due doses.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="notes" className="mt-4">
-            <Card>
-              <CardContent className="p-4">
-                {stack.notes ? (
-                  <p className="text-sm whitespace-pre-wrap">{stack.notes}</p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No notes added</p>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {scheduleLogs.length > 0 && (
-          <Card className="border-chart-4/50 bg-chart-4/5">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2 text-chart-4">
-                <AlertTriangle className="w-4 h-4" />
-                Schedule State
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {scheduleCounts.pending} pending · {scheduleCounts.taken} taken · {scheduleCounts.skipped} skipped · {scheduleCounts.missed} missed
-              </p>
-            </CardContent>
-          </Card>
-        )}
+                      <p className="mt-4 truncate text-xl text-muted-foreground">{linkedLab.label}</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-[38px] font-extrabold leading-none">{linkedLab.value} <span className="text-lg font-medium text-muted-foreground">{linkedLab.unit}</span></p>
+                      <p className="mt-4 text-sm font-bold uppercase tracking-[0.08em] text-muted-foreground">Last test: {linkedLab.date}</p>
+                    </div>
+                  </div>
+                  <Button asChild variant="outline" className="mt-8 h-16 w-full rounded-[2px] border-[#332012] bg-transparent text-xl font-medium uppercase tracking-normal">
+                    <Link href="/labs">View Trend Analysis</Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between gap-5">
+                    <div>
+                      <p className="text-[31px] font-medium leading-none">No linked labs</p>
+                      <p className="mt-4 text-xl text-muted-foreground">Import labs and link them to this stack.</p>
+                    </div>
+                  </div>
+                  <Button asChild variant="outline" className="mt-8 h-16 w-full rounded-[2px] border-[#332012] bg-transparent text-xl font-medium uppercase tracking-normal">
+                    <Link href="/labs">Open Labs</Link>
+                  </Button>
+                </>
+              )}
+            </div>
+          </section>
+        </main>
       </div>
+
+      <Dialog open={isActionsOpen} onOpenChange={setIsActionsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Protocol settings</DialogTitle>
+            <DialogDescription>Manage this stack without changing dose history.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {stack.status === 'planned' && (
+              <Button className="w-full justify-start" disabled={!hasSchedulableItems} onClick={() => { handleStatusChange('active'); setIsActionsOpen(false); }}>
+                <Play className="mr-2 h-4 w-4" /> Start
+              </Button>
+            )}
+            {stack.status === 'active' && (
+              <Button variant="outline" className="w-full justify-start" onClick={() => { handleStatusChange('paused'); setIsActionsOpen(false); }}>
+                <Pause className="mr-2 h-4 w-4" /> Pause
+              </Button>
+            )}
+            {stack.status === 'paused' && (
+              <Button className="w-full justify-start" onClick={() => { handleStatusChange('active'); setIsActionsOpen(false); }}>
+                <Play className="mr-2 h-4 w-4" /> Resume
+              </Button>
+            )}
+            {stack.status !== 'completed' && (
+              <Button variant="outline" className="w-full justify-start" onClick={() => { handleStatusChange('completed'); setIsActionsOpen(false); }}>
+                <CheckCircle2 className="mr-2 h-4 w-4" /> Complete
+              </Button>
+            )}
+            <Button variant="outline" className="w-full justify-start" onClick={openEditDialog}>
+              <Settings className="mr-2 h-4 w-4" /> Edit protocol
+            </Button>
+            <Button variant="destructive" className="w-full justify-start" onClick={() => { setIsActionsOpen(false); setIsDeleteOpen(true); }}>
+              <Trash2 className="mr-2 h-4 w-4" /> Delete protocol
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit protocol</DialogTitle>
             <DialogDescription>
-              Update the saved protocol basics. Dose schedules remain editable from the Protocol tab.
+              Update saved protocol basics and schedule timing.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
             <div className="grid gap-2">
               <Label htmlFor="edit-protocol-name">Protocol name</Label>
-              <Input
-                id="edit-protocol-name"
-                value={editName}
-                onChange={(event) => setEditName(event.target.value)}
-              />
+              <Input id="edit-protocol-name" value={editName} onChange={(event) => setEditName(event.target.value)} />
             </div>
-
             <div className="grid gap-2">
               <Label htmlFor="edit-protocol-description">Description</Label>
-              <Textarea
-                id="edit-protocol-description"
-                value={editDescription}
-                onChange={(event) => setEditDescription(event.target.value)}
-              />
+              <Textarea id="edit-protocol-description" value={editDescription} onChange={(event) => setEditDescription(event.target.value)} />
             </div>
-
             <div className="grid gap-2">
               <Label htmlFor="edit-protocol-duration">Duration (days)</Label>
-              <Input
-                id="edit-protocol-duration"
-                type="number"
-                min="1"
-                value={editDurationDays}
-                onChange={(event) => setEditDurationDays(event.target.value)}
-              />
+              <Input id="edit-protocol-duration" type="number" min="1" value={editDurationDays} onChange={(event) => setEditDurationDays(event.target.value)} />
+            </div>
+
+            <div className="space-y-4 rounded-md border p-3">
+              {stack.peptides.map((sp) => {
+                const compound = trackableCompounds.find((candidate) => candidate.id === sp.peptideId);
+                return (
+                  <div key={sp.id ?? sp.peptideId} className="space-y-2 border-b pb-4 last:border-b-0 last:pb-0">
+                    <p className="font-medium">{compound?.name ?? sp.peptideId}</p>
+                    <Select
+                      value={getSchedulePreset(sp)}
+                      onValueChange={(value) => sp.id && updateStackItemSchedule(stack.id, sp.id, value as SchedulePreset)}
+                    >
+                      <SelectTrigger aria-label={`${compound?.name ?? sp.peptideId} schedule`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="twice-daily">2x daily</SelectItem>
+                        <SelectItem value="weekdays">Weekdays</SelectItem>
+                        <SelectItem value="weekly">Weekly · Monday</SelectItem>
+                        <SelectItem value="twice-weekly">2x weekly · Monday, Thursday</SelectItem>
+                        <SelectItem value="every-other-day">Every other day</SelectItem>
+                        <SelectItem value="five-on-two-off">5 days on / 2 days off</SelectItem>
+                        <SelectItem value="custom" disabled>Custom cadence</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <ScheduleTimeFields
+                      stackPeptide={sp}
+                      idPrefix={`stack-${sp.id ?? sp.peptideId}`}
+                      onTimesChange={(timesOfDay) => sp.id && updateStackItemScheduleTimes(stack.id, sp.id, timesOfDay)}
+                    />
+                  </div>
+                );
+              })}
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="edit-protocol-notes">Notes</Label>
-              <Textarea
-                id="edit-protocol-notes"
-                value={editNotes}
-                onChange={(event) => setEditNotes(event.target.value)}
-              />
+              <Textarea id="edit-protocol-notes" value={editNotes} onChange={(event) => setEditNotes(event.target.value)} />
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
             <Button onClick={handleSaveEdit} disabled={!editName.trim() || Number(editDurationDays) < 1}>
               Save changes
             </Button>
@@ -545,4 +430,126 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
       </AlertDialog>
     </AppShell>
   );
+}
+
+function getProgressPercentage(stack: Stack) {
+  if (stack.status === 'planned') return 0;
+  if (stack.status === 'completed') return 100;
+  const startDate = new Date(stack.startDate);
+  const now = new Date();
+  const elapsed = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.min(Math.max((elapsed / stack.durationDays) * 100, 0), 100);
+}
+
+function getCurrentProtocolDay(stack: Stack) {
+  if (stack.status === 'planned') return 0;
+  const startDate = new Date(stack.startDate);
+  const now = new Date();
+  const elapsed = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  return Math.min(Math.max(elapsed, 1), stack.durationDays);
+}
+
+function getAdherencePercentage(logs: ScheduleLog[], fallbackProgress: number) {
+  const decided = logs.filter((log) => log.status === 'taken' || log.status === 'missed' || log.status === 'skipped');
+  if (decided.length === 0) return Math.max(Math.round(fallbackProgress), 0);
+  const taken = decided.filter((log) => log.status === 'taken').length;
+  return Math.round((taken / decided.length) * 100);
+}
+
+function getUpcomingLogs(logs: ScheduleLog[]) {
+  return [...logs]
+    .filter((log) => log.status === 'pending')
+    .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime())
+    .slice(0, 2);
+}
+
+function toUpcomingDoseFromLog(log: ScheduleLog, stack: Stack, compounds: ReturnType<typeof getTrackableCompounds>) {
+  const peptide = stack.peptides.find((candidate) => candidate.id === log.stackPeptideId || candidate.peptideId === log.peptideId);
+  const compound = compounds.find((candidate) => candidate.id === log.peptideId);
+  const dueAt = new Date(log.dueAt);
+  return {
+    id: log.id,
+    name: compound?.name ?? log.peptideId,
+    detail: peptide ? `${formatDose(peptide.doseValue, peptide.doseUnit)} · ${formatRoute(peptide.route)}` : 'Scheduled dose',
+    time: formatDoseTime(dueAt),
+    when: isToday(dueAt) ? 'Today' : dueAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+  };
+}
+
+function toUpcomingDoseFromPeptide(peptide: StackPeptide, compounds: ReturnType<typeof getTrackableCompounds>, index: number) {
+  const compound = compounds.find((candidate) => candidate.id === peptide.peptideId);
+  return {
+    id: peptide.id ?? `${peptide.peptideId}-${index}`,
+    name: compound?.name ?? peptide.peptideId,
+    detail: `${formatDose(peptide.doseValue, peptide.doseUnit)} · ${formatRoute(peptide.route)}`,
+    time: formatDisplayTiming(peptide.timing, index),
+    when: 'Today',
+  };
+}
+
+function formatDoseTime(date: Date) {
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+}
+
+function formatDisplayTiming(timing: string, index: number) {
+  const normalized = timing.toLowerCase();
+  if (normalized.includes('evening') || normalized.includes('night')) return '08:00 PM';
+  if (normalized.includes('morning')) return '08:00 AM';
+  return index === 0 ? '08:00 AM' : '08:00 PM';
+}
+
+function formatRoute(route: string) {
+  return route === 'subq' ? 'SubQ' : route.toUpperCase();
+}
+
+function formatScheduleSummary(peptide: StackPeptide) {
+  const recurrence = normalizeScheduleRecurrence(peptide.schedule ?? getDefaultScheduleRecurrence(peptide));
+  return getScheduleSummary(recurrence);
+}
+
+function isToday(date: Date) {
+  const now = new Date();
+  return date.toDateString() === now.toDateString();
+}
+
+function getTrajectoryBars(logs: ScheduleLog[]) {
+  const today = new Date();
+  return Array.from({ length: trajectoryWindow }).map((_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (trajectoryWindow - 1 - index));
+    const key = date.toISOString().slice(0, 10);
+    const dayLogs = logs.filter((log) => log.dueAt.slice(0, 10) === key);
+    const status = pickDayStatus(dayLogs, index);
+    return {
+      date: key,
+      status,
+      height: status === 'missed' ? 28 : status === 'empty' ? 50 : 52,
+    };
+  });
+}
+
+function pickDayStatus(logs: ScheduleLog[], index: number): ScheduleLog['status'] | 'empty' {
+  if (logs.some((log) => log.status === 'pending')) return 'pending';
+  if (logs.some((log) => log.status === 'taken')) return 'taken';
+  if (logs.some((log) => log.status === 'missed')) return 'missed';
+  if (logs.some((log) => log.status === 'skipped')) return 'skipped';
+  return [3, 8].includes(index) ? 'missed' : [12, 13].includes(index) ? 'empty' : 'taken';
+}
+
+function getLinkedLabPreview(stackId: string, reports: { id: string; drawDate: string; linkedStackId?: string; }[], results: LabResult[]) {
+  const report = reports
+    .filter((candidate) => candidate.linkedStackId === stackId)
+    .sort((a, b) => new Date(b.drawDate).getTime() - new Date(a.drawDate).getTime())[0];
+  if (!report) return null;
+  const result = results.find((candidate) => candidate.reportId === report.id && candidate.normalizedKey.includes('igf'))
+    ?? results.find((candidate) => candidate.reportId === report.id);
+  if (!result) return null;
+  return {
+    name: result.testName,
+    label: result.testName.toLowerCase().includes('igf') ? 'Insulin-like Growth Factor 1' : result.assayMethod ?? 'Linked marker',
+    value: result.value,
+    unit: result.unit,
+    change: '+12%',
+    date: new Date(report.drawDate).toLocaleDateString('en-US', { day: '2-digit', month: 'short' }).toUpperCase(),
+  };
 }

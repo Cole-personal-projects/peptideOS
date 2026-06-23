@@ -158,21 +158,21 @@ test.describe('stack builder', () => {
     await page.getByRole('checkbox', { name: 'BPC-157' }).check();
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('button', { name: 'Create Stack' }).click();
+await page.getByRole('button', { name: 'Create Stack' }).click();
 
-    await page.getByRole('link', { name: /Editable Protocol Stack/ }).click();
-    await page.getByRole('button', { name: 'Edit protocol' }).click();
+await page.getByRole('link', { name: /Editable Protocol Stack/ }).click();
+await page.getByRole('button', { name: 'Protocol settings' }).click();
+await page.getByRole('button', { name: 'Edit protocol' }).click();
     await page.getByLabel('Protocol name').fill('Edited Protocol Stack');
     await page.getByLabel('Description').fill('Updated protocol description');
     await page.getByLabel('Duration (days)').fill('28');
     await page.getByRole('textbox', { name: 'Notes' }).fill('Edited protocol notes');
     await page.getByRole('button', { name: 'Save changes' }).click();
 
-    await expect(page.getByRole('heading', { name: 'Edited Protocol Stack' })).toBeVisible();
-    await expect(page.getByText('Updated protocol description')).toBeVisible();
-    await expect(page.getByText('28 days total')).toBeVisible();
-    await page.getByRole('tab', { name: 'Notes' }).click();
-    await expect(page.getByText('Edited protocol notes')).toBeVisible();
+await expect(page.getByRole('heading', { name: 'Edited Protocol Stack' })).toBeVisible();
+await expect(page.getByText('Updated protocol description')).toBeVisible();
+await expect(page.getByText('Week 1 of 4')).toBeVisible();
+await expect(page.getByText('Edited protocol notes')).toBeVisible();
   });
 
   test('deletes a saved protocol after confirmation', async ({ page }) => {
@@ -187,10 +187,11 @@ test.describe('stack builder', () => {
     await page.getByRole('checkbox', { name: 'BPC-157' }).check();
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('button', { name: 'Create Stack' }).click();
+await page.getByRole('button', { name: 'Create Stack' }).click();
 
-    await page.getByRole('link', { name: /Delete Me Protocol Stack/ }).click();
-    await page.getByRole('button', { name: 'Delete protocol' }).click();
+await page.getByRole('link', { name: /Delete Me Protocol Stack/ }).click();
+await page.getByRole('button', { name: 'Protocol settings' }).click();
+await page.getByRole('button', { name: 'Delete protocol' }).click();
 
     const dialog = page.getByRole('alertdialog', { name: 'Delete protocol?' });
     await expect(dialog).toBeVisible();
