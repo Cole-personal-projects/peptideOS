@@ -177,9 +177,8 @@ await page.getByRole('link', { name: /Delete Me Protocol Stack/ }).click();
 await page.getByRole('button', { name: 'Protocol settings' }).click();
 await page.getByRole('button', { name: 'Delete protocol' }).click();
 
-    const dialog = page.getByRole('alertdialog', { name: 'Delete protocol?' });
-    await expect(dialog).toBeVisible();
-    await dialog.getByRole('button', { name: 'Delete protocol' }).click();
+    await expect(page.getByText('Delete this protocol?')).toBeVisible();
+    await page.getByRole('button', { name: 'Delete now' }).click();
 
     await expect(page).toHaveURL(/\/stacks$/);
     await expect(page.getByRole('link', { name: /Delete Me Protocol Stack/ })).toHaveCount(0);
