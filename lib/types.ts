@@ -345,6 +345,7 @@ export interface Dose {
   site: SiteCode | '';
   notes: string;
   completed: boolean;
+  deletedAt?: string | null;
 }
 
 export interface StackPeptide {
@@ -367,6 +368,7 @@ export interface Stack {
   durationDays: number;
   status: StackStatus;
   notes: string;
+  deletedAt?: string | null;
 }
 
 export interface PlannedDose {
@@ -401,6 +403,7 @@ export interface Schedule {
   startDate: string;
   endDate: string;
   status: ScheduleStatus;
+  deletedAt?: string | null;
 }
 
 export interface ScheduleLog {
@@ -415,6 +418,7 @@ export interface ScheduleLog {
   takenAt?: string;
   skippedAt?: string;
   missedAt?: string;
+  deletedAt?: string | null;
 }
 
 export interface ReconstitutionCalculation {

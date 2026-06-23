@@ -64,7 +64,7 @@ describe('Supabase user-data sync contracts', () => {
       'settings:app-settings',
       'vials:vial-cloud',
     ]);
-    expect(rows[0]).toEqual({
+  expect(rows[0]).toEqual({
       user_id: 'user-amy',
       collection: 'settings',
       record_id: 'app-settings',
@@ -82,6 +82,38 @@ describe('Supabase user-data sync contracts', () => {
       deleted_at: null,
       schema_version: 7,
     }));
+  });
+
+  test('serializes stack tombstones so cloud sync deletes protocols across devices', () => {
+    const data: PersistedUserData = {
+      ...emptyData,
+      stacks: [
+        {
+          id: 'stack-deleted',
+          name: 'Deleted Stack',
+          description: 'Removed protocol',
+          peptides: [],
+          startDate: '2026-06-16',
+          durationDays: 14,
+          status: 'active',
+          notes: '',
+          deletedAt: '2026-06-16T12:05:00.000Z',
+        },
+      ],
+    };
+
+    const rows = buildSupabaseSyncRows({
+      userId: 'user-amy',
+      data,
+      syncedAt: new Date('2026-06-16T12:10:00.000Z'),
+    });
+
+    expect(rows.find((row) => row.collection === 'stacks' && row.record_id === 'stack-deleted')).toEqual(
+      expect.objectContaining({
+        deleted_at: '2026-06-16T12:05:00.000Z',
+        payload: expect.objectContaining({ id: 'stack-deleted', deletedAt: '2026-06-16T12:05:00.000Z' }),
+      }),
+    );
   });
 
   test('hydrates persisted data from active Supabase sync rows', () => {
