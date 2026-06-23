@@ -15,7 +15,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <AppShell>
+    <AppShell showFloatingAction={false}>
       <CarbonDashboard />
     </AppShell>
   );

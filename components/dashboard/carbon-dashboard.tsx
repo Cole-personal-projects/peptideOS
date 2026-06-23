@@ -1,24 +1,22 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   AlertTriangle,
-  Bell,
   CalendarClock,
   Check,
   ChevronRight,
   FlaskConical,
-  Layers,
-  MessageSquareText,
-  Plus,
+  Settings,
+  ShieldCheck,
   Syringe,
 } from 'lucide-react';
 import { QuickConfirmDoseDialog } from '@/components/dashboard/quick-confirm-dose-dialog';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
-import { formatDose } from '@/lib/dose-helpers';
 import { buildDashboardBriefing } from '@/lib/dashboard-summary';
+import { formatDose } from '@/lib/dose-helpers';
 import { buildProtocolCockpitSummary, type ProtocolTimelineEvent } from '@/lib/protocol-timeline';
 import { cn } from '@/lib/utils';
 
@@ -37,62 +35,18 @@ function formatShortDate(value: string) {
   });
 }
 
-function getProgressPercentage(startDate: string, durationDays: number, status: string) {
+function progressForStack(startDate: string, durationDays: number, status: string) {
   if (status === 'planned') return 0;
   if (status === 'completed') return 100;
   const start = new Date(startDate);
   const elapsed = Math.floor((Date.now() - start.getTime()) / 86_400_000);
-  return Math.min(Math.max((elapsed / durationDays) * 100, 0), 100);
+  return Math.min(Math.max(Math.round((elapsed / durationDays) * 100), 0), 100);
 }
 
-function getDaysRemaining(startDate: string, durationDays: number) {
+function daysRemaining(startDate: string, durationDays: number) {
   const end = new Date(startDate);
   end.setDate(end.getDate() + durationDays);
   return Math.max(Math.ceil((end.getTime() - Date.now()) / 86_400_000), 0);
-}
-
-function ScoreRing({ value }: { value: number }) {
-  const radius = 78;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (value / 100) * circumference;
-
-  return (
-    <div className="relative mx-auto flex h-[196px] w-[196px] items-center justify-center">
-      <svg viewBox="0 0 196 196" className="absolute inset-0 h-full w-full -rotate-90">
-        <defs>
-          <linearGradient id="protocol-score-gradient" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--accent-light)" />
-            <stop offset="55%" stopColor="var(--primary)" />
-            <stop offset="100%" stopColor="var(--accent-deep)" />
-          </linearGradient>
-          <filter id="protocol-score-glow">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-        <circle cx="98" cy="98" r={radius} fill="none" stroke="var(--secondary)" strokeWidth="9" />
-        <circle
-          cx="98"
-          cy="98"
-          r={radius}
-          fill="none"
-          filter="url(#protocol-score-glow)"
-          stroke="url(#protocol-score-gradient)"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          strokeWidth="9"
-        />
-      </svg>
-      <div className="text-center">
-        <p className="text-[54px] font-bold leading-none tracking-[-0.055em]">{value}</p>
-        <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Protocol score</p>
-      </div>
-    </div>
-  );
 }
 
 function statusClasses(event: ProtocolTimelineEvent) {
@@ -100,13 +54,6 @@ function statusClasses(event: ProtocolTimelineEvent) {
   if (event.status === 'taken' || event.status === 'completed') return 'border-chart-3/40 bg-chart-3/10 text-chart-3';
   if (event.status === 'skipped' || event.status === 'missed') return 'border-muted-foreground/30 bg-secondary text-muted-foreground';
   return 'border-primary/40 bg-primary/10 text-primary';
-}
-
-function eventIcon(event: ProtocolTimelineEvent) {
-  if (event.kind === 'inventory') return <FlaskConical className="h-4 w-4" />;
-  if (event.kind === 'signal') return <MessageSquareText className="h-4 w-4" />;
-  if (event.status === 'taken' || event.status === 'completed') return <Check className="h-4 w-4" />;
-  return <Syringe className="h-4 w-4" />;
 }
 
 function eventStatusLabel(event: ProtocolTimelineEvent) {
@@ -117,112 +64,209 @@ function eventStatusLabel(event: ProtocolTimelineEvent) {
   return 'Due';
 }
 
+function ScoreRing({ value }: { value: number }) {
+  const radius = 72;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (value / 100) * circumference;
+
+  return (
+    <div className="relative mx-auto flex h-44 w-44 items-center justify-center">
+      <svg viewBox="0 0 176 176" className="absolute inset-0 h-full w-full -rotate-90">
+        <defs>
+          <linearGradient id="dashboard-score-gradient" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stopColor="var(--accent-light)" />
+            <stop offset="55%" stopColor="var(--primary)" />
+            <stop offset="100%" stopColor="var(--accent-deep)" />
+          </linearGradient>
+          <filter id="dashboard-score-glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <circle cx="88" cy="88" r={radius} fill="none" stroke="var(--secondary)" strokeWidth="10" />
+        <circle
+          cx="88"
+          cy="88"
+          r={radius}
+          fill="none"
+          filter="url(#dashboard-score-glow)"
+          stroke="url(#dashboard-score-gradient)"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          strokeWidth="10"
+        />
+      </svg>
+      <div className="relative z-10 text-center">
+        <p className="text-[46px] font-bold leading-none tracking-[-0.06em]">{value}</p>
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Optimal</p>
+      </div>
+    </div>
+  );
+}
+
+function ProtocolChip({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-2 rounded-[12px] border border-border bg-secondary px-3 py-2 text-xs font-semibold">
+      <span className="h-2 w-2 rounded-full bg-chart-3" />
+      <span className="max-w-[150px] truncate">{label}</span>
+    </span>
+  );
+}
+
+function AdherenceBars({ completed, total }: { completed: number; total: number }) {
+  const percent = total === 0 ? 100 : Math.round((completed / total) * 100);
+
+  return (
+    <section className="rounded-[14px] border border-border bg-card p-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Weekly adherence</h3>
+        <span className="text-lg font-bold text-chart-3">{percent}%</span>
+      </div>
+      <div className="mt-3 flex h-2 gap-1">
+        {Array.from({ length: 7 }, (_, index) => (
+          <div
+            key={index}
+            className={cn(
+              'flex-1 rounded-sm',
+              index < Math.round((percent / 100) * 7) ? 'bg-chart-3' : 'border border-border bg-secondary',
+            )}
+          />
+        ))}
+      </div>
+      <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+        <span>{completed} completed today</span>
+        <span>{total} scheduled</span>
+      </div>
+    </section>
+  );
+}
+
 export function CarbonDashboard() {
   const { data, getPeptide, getRecentDoses } = useApp();
   const [activeLogId, setActiveLogId] = useState<string | null>(null);
   const briefing = useMemo(() => buildDashboardBriefing(data), [data]);
   const summary = useMemo(() => buildProtocolCockpitSummary(data), [data]);
-  const recentDoses = getRecentDoses(4);
   const activeStacks = data.stacks.filter((stack) => stack.status === 'active');
-  const todayEvents = summary.events
-    .filter((event) => event.kind === 'due-dose')
-    .slice(0, 3);
-  const score = briefing.scheduledToday === 0
-    ? Math.min(100, 72 + activeStacks.length * 6)
-    : Math.round(briefing.completionPercent);
-  const urgentSignal = summary.nextAction ?? summary.mostUrgentInventoryRisk ?? summary.latestSignal;
-  const now = new Date();
-  const dateLabel = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  const greeting = now.getHours() < 12 ? 'Morning' : now.getHours() < 18 ? 'Afternoon' : 'Evening';
+  const recentDoses = getRecentDoses(4);
+  const todayEvents = summary.events.filter((event) => event.kind === 'due-dose').slice(0, 3);
+  const score = briefing.scheduledToday === 0 ? Math.min(100, 72 + activeStacks.length * 6) : Math.round(briefing.completionPercent);
+  const insight = summary.mostUrgentInventoryRisk ?? summary.nextAction ?? summary.latestSignal;
+  const primaryStack = activeStacks[0];
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+  }, []);
 
   return (
     <>
-      <div className="px-5 pb-8 pt-5">
-        <header className="mb-5 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{dateLabel}</p>
-            <h1 className="mt-1 text-[28px] font-bold leading-none tracking-[-0.02em]">{greeting}</h1>
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur-xl">
+        <Link href="/" className="flex items-center gap-3" aria-label="Dashboard">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-primary/30 bg-primary/10 shadow-[0_0_18px_rgb(240_116_52_/_0.14)]">
+            <ShieldCheck className="h-4 w-4 text-primary" />
           </div>
-          <button
-            type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-[13px] border border-border bg-card text-muted-foreground"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5" />
-          </button>
-        </header>
+          <h1 className="text-2xl font-bold tracking-[-0.03em] text-primary">PeptideOS</h1>
+        </Link>
+        <Button asChild size="icon" variant="ghost" className="h-10 w-10 rounded-[10px] text-muted-foreground">
+          <Link href="/more/settings" aria-label="Settings">
+            <Settings className="h-5 w-5" />
+          </Link>
+        </Button>
+      </header>
 
-        <section className="carbon-panel rounded-[22px] px-5 py-6">
+      <div className="px-4 pb-8 pt-4">
+        <section className="flex flex-col items-center gap-3 py-4">
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Protocol score</h2>
           <ScoreRing value={score} />
-          <div className="mt-5 grid grid-cols-4 gap-2">
-            <Metric label="Due" value={summary.dueCount} tone={summary.overdueCount > 0 ? 'danger' : 'primary'} />
-            <Metric label="Done" value={summary.completedTodayCount} tone="success" />
-            <Metric label="Stacks" value={summary.activeStackCount} tone="neutral" />
-            <Metric label="Stock" value={summary.inventoryRiskCount} tone={summary.inventoryRiskCount > 0 ? 'warning' : 'neutral'} />
+          <div className="flex gap-8">
+            <Metric label="Due" value={summary.dueCount} tone={summary.overdueCount > 0 ? 'danger' : 'warning'} />
+            <div className="w-px bg-border" />
+            <Metric label="Completed" value={summary.completedTodayCount} tone="success" />
+          </div>
+          <div className="mt-1 flex max-w-full gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {activeStacks.length === 0 ? (
+              <ProtocolChip label="No active stack" />
+            ) : (
+              activeStacks.slice(0, 3).map((stack) => <ProtocolChip key={stack.id} label={stack.name} />)
+            )}
           </div>
         </section>
 
-        {urgentSignal && (
-          <Link
-            href={urgentSignal.href ?? '/log'}
-            className={cn(
-              'mt-3 flex items-start gap-3 rounded-[17px] border p-3 transition-colors',
-              urgentSignal.urgency === 'critical'
-                ? 'border-destructive/40 bg-destructive/10'
-                : urgentSignal.urgency === 'warning'
-                  ? 'border-chart-4/40 bg-chart-4/10'
-                  : 'border-primary/30 bg-primary/10',
-            )}
-          >
-            <div className="mt-0.5 text-primary">{urgentSignal.kind === 'inventory' ? <AlertTriangle className="h-4 w-4 text-chart-4" /> : eventIcon(urgentSignal)}</div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Next signal</p>
-              <p className="mt-0.5 truncate text-sm font-semibold">{urgentSignal.label}</p>
-              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{urgentSignal.detail}</p>
-            </div>
-            <ChevronRight className="mt-1 h-4 w-4 text-muted-foreground" />
-          </Link>
-        )}
+        <Link
+          href={insight?.href ?? '/more/inventory'}
+          className={cn(
+            'relative mt-2 flex items-start gap-3 overflow-hidden rounded-[14px] border border-border bg-card p-4',
+            insight?.urgency === 'critical' ? 'border-destructive/40 bg-destructive/10' : '',
+          )}
+        >
+          <div className={cn('absolute bottom-0 left-0 top-0 w-1', insight?.urgency === 'critical' ? 'bg-destructive' : 'bg-chart-4')} />
+          <AlertTriangle className={cn('mt-0.5 h-5 w-5 shrink-0', insight?.urgency === 'critical' ? 'text-destructive' : 'text-chart-4')} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-base font-bold">{insight?.label ?? 'No urgent protocol signals'}</p>
+            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+              {insight?.detail ?? 'Inventory, schedules, labs, and signals are quiet right now.'}
+            </p>
+            <span className="mt-3 inline-flex rounded-[10px] border border-border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
+              {insight ? 'Review' : 'View cockpit'}
+            </span>
+          </div>
+        </Link>
 
-        <section className="mt-6">
+        <Link
+          href="/log"
+          className="ember-gradient ember-glow mt-4 flex w-full items-center justify-center gap-2 rounded-[14px] py-3 text-base font-bold text-primary-foreground active:scale-[0.99]"
+        >
+          <Syringe className="h-5 w-5" />
+          Quick Log
+        </Link>
+
+        <section className="mt-5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-[15px] font-bold uppercase tracking-[0.08em]">Today</h2>
-            <Link href="/log" className="flex items-center text-xs font-semibold text-primary">
-              Log <ChevronRight className="h-4 w-4" />
+            <h2 className="text-[13px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Today</h2>
+            <Link href="/log" className="flex items-center text-xs font-bold text-primary">
+              Timeline <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
           <div className="space-y-2">
             {todayEvents.length === 0 ? (
-              <EmptyAction href="/stacks" title="No scheduled doses waiting" body="Create or activate a stack to populate today." />
+              <Link href="/stacks" className="flex items-center gap-3 rounded-[14px] border border-border bg-card p-4">
+                <div className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-primary/30 bg-primary/10 text-primary">
+                  <Syringe className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold">No scheduled doses waiting</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Create or activate a stack to populate today.</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </Link>
             ) : (
               todayEvents.map((event) => {
                 const scheduleLogId = event.id.startsWith('schedule-log:') ? event.id.replace('schedule-log:', '') : null;
-
                 return (
-                  <div key={event.id} className="carbon-panel rounded-[17px] p-3">
+                  <div key={event.id} className="rounded-[14px] border border-border bg-card p-3">
                     <div className="flex items-start gap-3">
-                      <div className={cn('flex h-8 w-8 items-center justify-center rounded-[10px] border', statusClasses(event))}>
-                        {eventIcon(event)}
+                      <div className={cn('flex h-9 w-9 items-center justify-center rounded-[10px] border', statusClasses(event))}>
+                        <Syringe className="h-4 w-4" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="truncate text-sm font-semibold">{event.label}</p>
-                              <span className={cn('rounded-[8px] border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em]', statusClasses(event))}>
-                                {eventStatusLabel(event)}
-                              </span>
-                            </div>
-                            <p className="mt-1 text-xs text-muted-foreground">{event.detail}</p>
+                            <p className="truncate text-sm font-bold">{event.label}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">{event.detail}</p>
                           </div>
-                          <p className="shrink-0 text-xs font-semibold text-muted-foreground">{formatTime(event.occurredAt)}</p>
+                          <span className={cn('shrink-0 rounded-[8px] border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em]', statusClasses(event))}>
+                            {eventStatusLabel(event)}
+                          </span>
                         </div>
                         {scheduleLogId && event.status !== 'taken' && event.status !== 'skipped' && event.status !== 'missed' && (
                           <div className="mt-3 grid grid-cols-2 gap-2">
-                            <Button asChild size="sm" variant="outline" className="h-9 rounded-[12px]">
+                            <Button asChild size="sm" variant="outline" className="h-9 rounded-[10px]">
                               <Link href={event.href ?? '/log'}>Details</Link>
                             </Button>
-                            <Button size="sm" className="h-9 rounded-[12px] ember-gradient text-primary-foreground" onClick={() => setActiveLogId(scheduleLogId)}>
+                            <Button size="sm" className="h-9 rounded-[10px] ember-gradient text-primary-foreground" onClick={() => setActiveLogId(scheduleLogId)}>
                               Complete
                             </Button>
                           </div>
@@ -236,84 +280,91 @@ export function CarbonDashboard() {
           </div>
         </section>
 
-        <section className="mt-6">
+        <section className="mt-5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-[15px] font-bold uppercase tracking-[0.08em]">Active stacks</h2>
-            <Link href="/stacks" className="flex items-center text-xs font-semibold text-primary">
+            <h2 className="text-[13px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Active stacks</h2>
+            <Link href="/stacks" className="flex items-center text-xs font-bold text-primary">
               View all <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
-          {activeStacks.length === 0 ? (
-            <EmptyAction href="/stacks" title="No active stack" body="Start with one protocol, then connect inventory and logs." />
-          ) : (
-            <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-              {activeStacks.slice(0, 4).map((stack) => {
-                const progress = getProgressPercentage(stack.startDate, stack.durationDays, stack.status);
-                const daysRemaining = getDaysRemaining(stack.startDate, stack.durationDays);
-
-                return (
-                  <Link key={stack.id} href={`/stacks/${stack.id}`} className="carbon-panel block min-w-[238px] rounded-[22px] p-4">
-                    <div className="flex items-start justify-between gap-3">
+          {primaryStack ? (
+            <Link href={`/stacks/${primaryStack.id}`} className="block rounded-[14px] border border-border bg-card p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="truncate text-base font-bold">{primaryStack.name}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Day {Math.max(primaryStack.durationDays - daysRemaining(primaryStack.startDate, primaryStack.durationDays), 0)} / {primaryStack.durationDays}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xl font-bold text-primary">{progressForStack(primaryStack.startDate, primaryStack.durationDays, primaryStack.status)}%</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Progress</p>
+                </div>
+              </div>
+              <div className="mt-4 flex h-7 items-end gap-1">
+                {Array.from({ length: 14 }, (_, index) => (
+                  <span
+                    key={index}
+                    className={cn(
+                      'flex-1 rounded-sm',
+                      index < 9 ? 'bg-chart-3' : index === 9 ? 'bg-primary shadow-[0_0_10px_rgb(240_116_52_/_0.5)]' : 'border border-border bg-secondary',
+                    )}
+                    style={{ height: `${index % 4 === 0 ? 28 : index % 3 === 0 ? 22 : 16}px` }}
+                  />
+                ))}
+              </div>
+              <div className="mt-4 grid gap-2">
+                {primaryStack.peptides.slice(0, 2).map((item) => {
+                  const peptide = getPeptide(item.peptideId);
+                  return (
+                    <div key={item.id ?? item.peptideId} className="flex items-center justify-between gap-3 rounded-[12px] border border-border bg-secondary px-3 py-2">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-bold">{stack.name}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">Day {Math.max(stack.durationDays - daysRemaining, 0)} / {stack.durationDays}</p>
+                        <p className="truncate text-xs font-bold">{peptide?.name ?? item.peptideId}</p>
+                        <p className="text-[11px] text-muted-foreground">{formatDose(item.doseValue, item.doseUnit)} · {item.timing}</p>
                       </div>
-                      <MiniRing value={progress} label={`${daysRemaining}d`} />
+                      <span className="rounded-[8px] border border-chart-3/40 bg-chart-3/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-chart-3">Active</span>
                     </div>
-                    <div className="mt-4 flex h-6 items-end gap-1">
-                      {Array.from({ length: 14 }, (_, index) => (
-                        <div
-                          key={index}
-                          className={cn(
-                            'flex-1 rounded-[3px]',
-                            index < 10 ? 'bg-chart-3' : index === 10 ? 'bg-primary shadow-[0_0_10px_rgb(240_116_52_/_0.55)]' : 'bg-[var(--text-faint)]',
-                          )}
-                          style={{ height: `${index % 3 === 0 ? 24 : index % 2 === 0 ? 18 : 12}px` }}
-                        />
-                      ))}
-                    </div>
-                    <div className="mt-4 space-y-2">
-                      {stack.peptides.slice(0, 2).map((item) => {
-                        const peptide = getPeptide(item.peptideId);
-                        return (
-                          <div key={item.id ?? item.peptideId} className="carbon-inset flex items-center justify-between gap-2 rounded-[12px] px-3 py-2">
-                            <div className="min-w-0">
-                              <p className="truncate text-xs font-semibold">{peptide?.name ?? item.peptideId}</p>
-                              <p className="text-[11px] text-muted-foreground">{formatDose(item.doseValue, item.doseUnit)} · {item.timing}</p>
-                            </div>
-                            <span className="rounded-[8px] border border-primary/30 bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">Active</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </Link>
+          ) : (
+            <Link href="/stacks" className="flex items-center gap-3 rounded-[14px] border border-border bg-card p-4">
+              <div className="h-2 w-2 rounded-full bg-muted-foreground" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold">No active stack</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Start with one protocol, then connect inventory and logs.</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
           )}
         </section>
 
-        <section className="mt-6 grid grid-cols-2 gap-3">
-          <Link href="/more/inventory" className="carbon-panel rounded-[17px] p-4">
+        <div className="mt-5">
+          <AdherenceBars completed={summary.completedTodayCount} total={Math.max(briefing.scheduledToday, summary.completedTodayCount)} />
+        </div>
+
+        <section className="mt-5 grid grid-cols-2 gap-3">
+          <Link href="/more/inventory" className="rounded-[14px] border border-border bg-card p-4">
             <FlaskConical className="h-5 w-5 text-chart-4" />
             <p className="mt-3 text-2xl font-bold leading-none">{data.vials.filter((vial) => vial.status === 'active').length}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Active inventory</p>
+            <p className="mt-1 text-xs text-muted-foreground">Inventory</p>
           </Link>
-          <Link href="/labs" className="carbon-panel rounded-[17px] p-4">
+          <Link href="/labs" className="rounded-[14px] border border-border bg-card p-4">
             <CalendarClock className="h-5 w-5 text-primary" />
             <p className="mt-3 text-2xl font-bold leading-none">{data.labReports.length}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Lab reports</p>
+            <p className="mt-1 text-xs text-muted-foreground">Labs</p>
           </Link>
         </section>
 
-        <section className="mt-6">
+        <section className="mt-5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-[15px] font-bold uppercase tracking-[0.08em]">Recent</h2>
-            <Link href="/log" className="flex items-center text-xs font-semibold text-primary">
-              Timeline <ChevronRight className="h-4 w-4" />
+            <h2 className="text-[13px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Recent activity</h2>
+            <Link href="/log" className="flex items-center text-xs font-bold text-primary">
+              Log <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="carbon-panel rounded-[17px] p-2">
+          <div className="rounded-[14px] border border-border bg-card p-2">
             {recentDoses.length === 0 ? (
               <div className="px-2 py-5 text-sm text-muted-foreground">No recent dose activity.</div>
             ) : (
@@ -322,10 +373,10 @@ export function CarbonDashboard() {
                 return (
                   <div key={dose.id} className="flex items-center justify-between gap-3 rounded-[12px] px-3 py-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{peptide?.name ?? dose.peptideId}</p>
+                      <p className="truncate text-sm font-bold">{peptide?.name ?? dose.peptideId}</p>
                       <p className="text-xs text-muted-foreground">{formatShortDate(dose.dateTime)} · {formatTime(dose.dateTime)}</p>
                     </div>
-                    <p className="shrink-0 text-sm font-semibold text-muted-foreground">{formatDose(dose.doseValue, dose.doseUnit)}</p>
+                    <p className="shrink-0 text-sm font-bold text-muted-foreground">{formatDose(dose.doseValue, dose.doseUnit)}</p>
                   </div>
                 );
               })
@@ -346,60 +397,17 @@ export function CarbonDashboard() {
   );
 }
 
-function Metric({ label, value, tone }: { label: string; value: number; tone: 'primary' | 'success' | 'warning' | 'danger' | 'neutral' }) {
+function Metric({ label, value, tone }: { label: string; value: number; tone: 'success' | 'warning' | 'danger' }) {
   const toneClass = {
-    primary: 'text-primary',
     success: 'text-chart-3',
     warning: 'text-chart-4',
     danger: 'text-destructive',
-    neutral: 'text-foreground',
   }[tone];
 
   return (
-    <div className="carbon-inset rounded-[13px] p-2 text-center">
-      <p className={cn('text-xl font-bold leading-none tracking-[-0.03em]', toneClass)}>{value}</p>
-      <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
+    <div className="flex flex-col items-center">
+      <span className={cn('text-xl font-bold leading-none', toneClass)}>{value}</span>
+      <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">{label}</span>
     </div>
-  );
-}
-
-function MiniRing({ value, label }: { value: number; label: string }) {
-  const radius = 19;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (value / 100) * circumference;
-
-  return (
-    <div className="relative flex h-[52px] w-[52px] items-center justify-center">
-      <svg viewBox="0 0 52 52" className="absolute inset-0 h-full w-full -rotate-90">
-        <circle cx="26" cy="26" r={radius} fill="none" stroke="var(--secondary)" strokeWidth="4.5" />
-        <circle
-          cx="26"
-          cy="26"
-          r={radius}
-          fill="none"
-          stroke="var(--primary)"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          strokeWidth="4.5"
-        />
-      </svg>
-      <span className="text-[10px] font-bold text-primary">{label}</span>
-    </div>
-  );
-}
-
-function EmptyAction({ href, title, body }: { href: string; title: string; body: string }) {
-  return (
-    <Link href={href} className="carbon-panel flex items-center gap-3 rounded-[17px] p-4">
-      <div className="flex h-9 w-9 items-center justify-center rounded-[12px] border border-primary/30 bg-primary/10 text-primary">
-        <Plus className="h-4 w-4" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold">{title}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{body}</p>
-      </div>
-      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-    </Link>
   );
 }

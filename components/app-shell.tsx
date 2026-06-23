@@ -8,9 +8,10 @@ import { DisclaimerDialog } from '@/components/disclaimer-dialog';
 interface AppShellProps {
   children: React.ReactNode;
   showDisclaimer?: boolean;
+  showFloatingAction?: boolean;
 }
 
-export function AppShell({ children, showDisclaimer = true }: AppShellProps) {
+export function AppShell({ children, showDisclaimer = true, showFloatingAction = true }: AppShellProps) {
   return (
     <div className="min-h-screen bg-background pb-32 text-foreground">
       <RouteHistory />
@@ -18,7 +19,7 @@ export function AppShell({ children, showDisclaimer = true }: AppShellProps) {
       <main className="mx-auto min-h-screen w-full max-w-lg">
         {children}
       </main>
-      <FloatingActionButton />
+      {showFloatingAction && <FloatingActionButton />}
       <BottomNav />
     </div>
   );

@@ -2,9 +2,8 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Peppi assistant entrypoints', () => {
   test('opens the full reconstitution calculator from quick actions', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/more');
 
-    await page.getByRole('button', { name: 'Get started' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
     await page.getByRole('button', { name: 'Quick actions' }).click();
     await page.getByRole('button', { name: 'Calculate Reconstitution' }).click();
@@ -16,9 +15,8 @@ test.describe('Peppi assistant entrypoints', () => {
   });
 
   test('opens Peppi from quick actions', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/more');
 
-    await page.getByRole('button', { name: 'Get started' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
     await page.getByRole('button', { name: 'Quick actions' }).click();
     await page.getByRole('button', { name: 'Peppi' }).click();
