@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useState } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Archive, Beaker, CalendarDays, CheckCircle2, Clock, Pause, Play, Plus, Settings, Trash2 } from 'lucide-react';
@@ -55,11 +55,21 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeletePending, setIsDeletePending] = useState(false);
+  const [openDeleteAfterActionsClose, setOpenDeleteAfterActionsClose] = useState(false);
   const stack = getStack(id);
   const [editName, setEditName] = useState(stack?.name ?? '');
   const [editDescription, setEditDescription] = useState(stack?.description ?? '');
   const [editDurationDays, setEditDurationDays] = useState(stack?.durationDays.toString() ?? '');
   const [editNotes, setEditNotes] = useState(stack?.notes ?? '');
+
+  useEffect(() => {
+    if (isActionsOpen || !openDeleteAfterActionsClose) return;
+    const timeoutId = window.setTimeout(() => {
+      setIsDeleteOpen(true);
+      setOpenDeleteAfterActionsClose(false);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [isActionsOpen, openDeleteAfterActionsClose]);
 
   if (!stack) {
     if (isDeletePending) return null;
@@ -82,6 +92,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
   const dashOffset = circumference - (adherence / 100) * circumference;
 
   const hasSchedulableItems = stack.peptides.length > 0;
+
   const handleStatusChange = (newStatus: StackStatus) => {
     if (newStatus === 'active') {
       if (stack.peptides.length === 0) return;
@@ -333,7 +344,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             <Button variant="outline" className="w-full justify-start" onClick={openEditDialog}>
               <Settings className="mr-2 h-4 w-4" /> Edit protocol
             </Button>
-            <Button variant="destructive" className="w-full justify-start" onClick={() => { setIsActionsOpen(false); setIsDeleteOpen(true); }}>
+            <Button variant="destructive" className="w-full justify-start" onClick={() => { setOpenDeleteAfterActionsClose(true); setIsActionsOpen(false); }}>
               <Trash2 className="mr-2 h-4 w-4" /> Delete protocol
             </Button>
           </div>
