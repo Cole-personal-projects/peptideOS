@@ -40,7 +40,7 @@ export default function StacksPage() {
   const [aiStackOpen, setAiStackOpen] = useState(false);
   const [peppiDraft, setPeppiDraft] = useState<Omit<Stack, 'id'> | null>(null);
   const initialCompoundId = searchParams.get('compound') ?? undefined;
-  const stacks = data.stacks;
+  const stacks = data.stacks.filter((stack) => !stack.deletedAt);
   const emptyState = getEmptyStateContent('stacks-empty');
   const trackableCompounds = getTrackableCompounds(data);
 
