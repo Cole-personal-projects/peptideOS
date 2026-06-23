@@ -32,6 +32,14 @@ describe('lab PDF OCR', () => {
         })),
       },
     });
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: {
+        location: {
+          origin: 'https://peptideos.test',
+        },
+      },
+    });
     renderMock.mockReturnValue({ promise: Promise.resolve() });
     getPageMock.mockResolvedValue({
       getViewport: vi.fn(() => ({ width: 100, height: 200 })),
@@ -68,6 +76,12 @@ describe('lab PDF OCR', () => {
     const result = await extractLabPdfTextWithOcr(new File(['pdf'], 'labs.pdf', { type: 'application/pdf' }), progress);
 
     expect(getDocumentMock).toHaveBeenCalledWith({ data: expect.any(Uint8Array) });
+    expect(createWorkerMock).toHaveBeenCalledWith('eng', 1, expect.objectContaining({
+      corePath: 'https://peptideos.test/ocr/',
+      gzip: true,
+      langPath: 'https://peptideos.test/ocr/',
+      workerPath: 'https://peptideos.test/ocr/tesseract-worker.min.js',
+    }));
     expect(getPageMock).toHaveBeenCalledTimes(2);
     expect(recognizeMock).toHaveBeenCalledTimes(2);
     expect(setParametersMock).toHaveBeenCalledWith({
@@ -87,6 +101,7 @@ describe('lab PDF OCR', () => {
 
   test('requires a browser document', async () => {
     Object.defineProperty(globalThis, 'document', { configurable: true, value: undefined });
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: undefined });
     const { extractLabPdfTextWithOcr } = await import('./lab-pdf-ocr');
 
     await expect(extractLabPdfTextWithOcr(new File(['pdf'], 'labs.pdf'))).rejects.toThrow('PDF OCR must run in the browser.');

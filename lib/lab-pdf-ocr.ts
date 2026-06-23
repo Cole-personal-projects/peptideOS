@@ -15,15 +15,16 @@ export interface LabPdfOcrResult {
 
 const MAX_OCR_PAGES = 8;
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url).toString();
-
 export async function extractLabPdfTextWithOcr(
   file: File,
   onProgress?: (progress: LabPdfOcrProgress) => void,
 ): Promise<LabPdfOcrResult> {
-  if (typeof document === 'undefined') {
+  if (typeof document === 'undefined' || typeof window === 'undefined') {
     throw new Error('PDF OCR must run in the browser.');
   }
+
+  const ocrBaseUrl = new URL('/ocr/', window.location.origin).href;
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdf.worker.min.mjs', ocrBaseUrl).href;
 
   const data = new Uint8Array(await file.arrayBuffer());
   const documentTask = pdfjs.getDocument({ data });
@@ -31,6 +32,10 @@ export async function extractLabPdfTextWithOcr(
   const pageCount = Math.min(pdf.numPages, MAX_OCR_PAGES);
   let currentPage = 1;
   const worker = await createWorker('eng', 1, {
+    workerPath: new URL('tesseract-worker.min.js', ocrBaseUrl).href,
+    corePath: ocrBaseUrl,
+    langPath: ocrBaseUrl,
+    gzip: true,
     logger: (message) => {
       if (typeof message.progress === 'number') {
         onProgress?.({
