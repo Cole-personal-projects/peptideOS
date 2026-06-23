@@ -595,9 +595,9 @@ describe('Dexie persistence', () => {
     expect(exported.data.scheduleLogs.map((log) => log.id)).toEqual(['schedule-log-export-active']);
   });
 
-  test('cloud sync export includes deleted stack tombstones', async () => {
-    await savePersistedAppData(db, {
-      ...clone(initialAppData),
+test('cloud sync export includes deleted stack tombstones', async () => {
+  await savePersistedAppData(db, {
+    ...clone(initialAppData),
       stacks: [
         {
           ...mockStacks[0],
@@ -617,10 +617,46 @@ describe('Dexie persistence', () => {
         id: 'stack-sync-deleted',
         deletedAt: '2026-05-23T01:00:00.000Z',
       }),
-    ]);
+  ]);
+});
+
+test('loaded deleted stack tombstones survive later saves for cloud sync', async () => {
+  await savePersistedAppData(db, {
+    ...clone(initialAppData),
+    stacks: [
+      {
+        ...mockStacks[0],
+        id: 'stack-reload-deleted',
+        name: 'Reload deleted stack',
+        deletedAt: '2026-05-23T01:00:00.000Z',
+      },
+    ],
   });
 
-  test('imports exported user data and reloads it with bundled reference peptides', async () => {
+  const loaded = await loadPersistedAppData(db, initialAppData);
+
+  expect(loaded.stacks).toEqual([
+    expect.objectContaining({
+      id: 'stack-reload-deleted',
+      deletedAt: '2026-05-23T01:00:00.000Z',
+    }),
+  ]);
+
+  await savePersistedAppData(db, { ...loaded, hasSeenDisclaimer: true }, new Date('2026-05-23T02:00:00.000Z'));
+
+  const userExport = await exportUserData(db, new Date('2026-05-23T02:00:00.000Z'));
+  const cloudExport = await exportUserDataForCloudSync(db);
+
+  expect(userExport.data.stacks).toEqual([]);
+  expect(cloudExport.stacks).toEqual([
+    expect.objectContaining({
+      id: 'stack-reload-deleted',
+      deletedAt: '2026-05-23T01:00:00.000Z',
+    }),
+  ]);
+});
+
+test('imports exported user data and reloads it with bundled reference peptides', async () => {
     const exported = {
       schemaVersion: 2,
       exportedAt: '2026-05-23T00:00:00.000Z',
