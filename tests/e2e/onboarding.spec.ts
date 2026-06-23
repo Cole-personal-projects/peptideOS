@@ -26,7 +26,7 @@ test.describe('first-launch onboarding', () => {
     await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
 
-    await page.getByRole('link', { name: 'Library' }).click();
+    await page.goto('/library');
     await expect(page.getByText('Researcher Mode: Showing detailed information')).toBeVisible();
     await expect(page.getByText(/stable gastric-derived peptide studied in tissue-repair.*inflammation models/i)).toBeVisible();
 

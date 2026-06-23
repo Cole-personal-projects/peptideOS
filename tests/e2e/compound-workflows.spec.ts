@@ -59,16 +59,14 @@ test.describe('compound workflows', () => {
     await expect(page.getByText('1.5 mg').first()).toBeVisible();
 
     await page.getByRole('link', { name: 'Stacks' }).click();
-    await page.getByRole('button', { name: 'New stack' }).click();
-    await page.getByLabel('Stack Name').fill('Custom Recovery Stack');
-    await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('checkbox', { name: 'Custom Recovery Blend' }).check();
-    await page.getByRole('button', { name: 'Next' }).click();
-    await expect(page.getByText('1 mg').first()).toBeVisible();
-    await page.getByRole('button', { name: 'Next' }).click();
-    await expect(page.getByText('Custom Recovery Stack')).toBeVisible();
-    await expect(page.getByText('Custom Recovery Blend').last()).toBeVisible();
-    await page.getByRole('button', { name: 'Create Stack' }).click();
+  await page.getByRole('button', { name: 'New stack' }).click();
+  await page.getByLabel('Stack Name').fill('Custom Recovery Stack');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('checkbox', { name: 'Custom Recovery Blend' }).check();
+  await expect(page.getByText('1 mg').first()).toBeVisible();
+  await expect(page.getByText('Custom Recovery Stack')).toBeVisible();
+  await expect(page.getByText('Custom Recovery Blend').last()).toBeVisible();
+  await page.getByRole('button', { name: 'Create Stack' }).click();
     await expect(page.getByText('Custom Recovery Stack')).toBeVisible();
   });
 });

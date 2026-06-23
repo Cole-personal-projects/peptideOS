@@ -40,6 +40,7 @@ const menuSections: MenuSection[] = [
     items: [
       { href: '/more/inventory', label: 'Inventory', icon: FlaskConical, description: 'Manage your vials' },
       { href: '/more/reconstitution', label: 'Reconstitution Calculator', icon: Calculator, description: 'Calculate dosing' },
+      { href: '/library', label: 'Library', icon: BookOpen, description: 'Reference compounds' },
       { href: '/more/compound-guide', label: 'Compound Guide', icon: BookOpen, description: 'Shared compound workflows' },
     ]
   },

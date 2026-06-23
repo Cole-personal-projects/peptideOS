@@ -30,12 +30,10 @@ test.describe('MVP tester walkthrough', () => {
     await page.getByRole('button', { name: 'New stack' }).click();
     await page.getByLabel('Stack Name').fill('MVP Walkthrough Stack');
     await page.getByLabel('Duration (days)').fill('2');
-    await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('checkbox', { name: 'BPC-157' }).check();
-    await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByLabel('Schedule').click();
-    await page.getByRole('option', { name: /Daily/ }).click();
-    await page.getByRole('button', { name: 'Next' }).click();
+await page.getByRole('button', { name: 'Next' }).click();
+await page.getByRole('checkbox', { name: 'BPC-157' }).check();
+await page.getByLabel('Schedule').click();
+await page.getByRole('option', { name: /Daily/ }).click();
 await page.getByRole('button', { name: 'Create Stack' }).click();
 
 await page.getByRole('link', { name: /MVP Walkthrough Stack/ }).click();

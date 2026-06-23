@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarDays, LayoutDashboard, Layers, Library, MoreHorizontal, TestTube } from 'lucide-react';
+import { CalendarDays, LayoutDashboard, Layers, MoreHorizontal, TestTube } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const tabs = [
@@ -10,7 +10,6 @@ const tabs = [
   { href: '/stacks', label: 'Stacks', icon: Layers },
   { href: '/labs', label: 'Labs', icon: TestTube },
   { href: '/log', label: 'Log', icon: CalendarDays },
-  { href: '/library', label: 'Library', icon: Library },
   { href: '/more', label: 'More', icon: MoreHorizontal },
 ];
 

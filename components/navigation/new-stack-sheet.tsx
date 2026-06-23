@@ -27,7 +27,7 @@ interface NewStackSheetProps {
   initialDraft?: Omit<Stack, 'id'>;
 }
 
-const steps = ['Basics', 'Compounds', 'Schedule', 'Review'] as const;
+const steps = ['Configure', 'Peptides'] as const;
 type BuilderStep = typeof steps[number];
 
 function getInitialName(initialDraft: Omit<Stack, 'id'> | undefined, initialCompound: { name: string } | undefined) {
@@ -166,9 +166,9 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
         <div className="space-y-5 pb-8">
           <div className="space-y-3">
             <p className="text-xs font-medium text-muted-foreground">
-              Step {currentStep + 1} of {steps.length}
+            Step {currentStep + 1} of {steps.length}
             </p>
-            <div className="grid grid-cols-4 gap-2" aria-label="Stack builder steps">
+          <div className="grid grid-cols-2 gap-2" aria-label="Stack builder steps">
               {steps.map((step, index) => (
                 <div key={step} className="space-y-1">
                   <div
@@ -188,9 +188,9 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
             </div>
           </div>
 
-          {currentStepName === 'Basics' && (
+        {currentStepName === 'Configure' && (
             <section className="space-y-4">
-              <h2 className="text-lg font-semibold">Basics</h2>
+            <h2 className="text-lg font-semibold">Configure</h2>
 
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold">Templates</h3>
@@ -253,9 +253,9 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
             </section>
           )}
 
-          {currentStepName === 'Compounds' && (
+        {currentStepName === 'Peptides' && (
             <section className="space-y-4">
-              <h2 className="text-lg font-semibold">Compounds</h2>
+            <h2 className="text-lg font-semibold">Add Peptides</h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[42vh] overflow-y-auto p-1">
                 {trackableCompounds.map((compound) => {
@@ -282,7 +282,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
             </section>
           )}
 
-          {currentStepName === 'Schedule' && (
+        {currentStepName === 'Peptides' && (
             <section className="space-y-4">
               <h2 className="text-lg font-semibold">Schedule</h2>
 
@@ -335,7 +335,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
             </section>
           )}
 
-          {currentStepName === 'Review' && (
+        {currentStepName === 'Peptides' && (
             <section className="space-y-4">
               <h2 className="text-lg font-semibold">Review</h2>
 
