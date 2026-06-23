@@ -250,7 +250,7 @@ export default function ReconstitutionPage() {
                       <div className="flex items-center gap-2">
                         {p.name}
                         {p.dosingMode === 'iu-primary' && (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">IU</Badge>
+                          <Badge variant="secondary" className="px-1.5 py-0 text-[11px]">IU</Badge>
                         )}
                       </div>
                     </SelectItem>
@@ -475,7 +475,7 @@ export default function ReconstitutionPage() {
                   <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
                     Draw to
                   </div>
-                  <div className="text-5xl font-bold text-primary font-mono">
+<div className="font-mono text-3xl font-bold text-primary">
                     {calculations.syringeUnits.toFixed(1)}
                   </div>
                   <div className="text-lg font-medium text-primary/80">
@@ -521,7 +521,7 @@ export default function ReconstitutionPage() {
               <Card>
                 <CardContent className="pt-4 pb-4">
                   <div className="text-xs text-muted-foreground mb-1">Doses per Vial</div>
-                  <div className="text-2xl font-bold font-mono">
+                  <div className="font-mono text-xl font-bold">
                     {calculations.totalDoses.toFixed(0)}
                   </div>
                   <div className="text-xs text-muted-foreground">

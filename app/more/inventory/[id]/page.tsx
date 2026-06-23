@@ -722,7 +722,7 @@ export default function VialDetailPage({ params }: { params: Promise<{ id: strin
             </CardHeader>
             <CardContent>
               <div className="text-center py-4">
-                <p className="text-3xl font-bold text-primary">
+                <p className="text-2xl font-bold text-primary">
                   {(vial.mg / vial.bacWaterMl).toFixed(2)}
                 </p>
                 <p className="text-sm text-muted-foreground">mg per mL</p>

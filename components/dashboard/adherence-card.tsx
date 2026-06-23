@@ -40,7 +40,7 @@ export function AdherenceCard() {
             />
           ))}
         </div>
-        <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
+<div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
           <span>14 days ago</span>
           <span>Today</span>
         </div>

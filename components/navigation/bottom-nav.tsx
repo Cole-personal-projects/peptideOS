@@ -33,7 +33,7 @@ export function BottomNav() {
               )}
             >
               <Icon className={cn('mb-1 h-5 w-5', isActive && 'stroke-[2.5]')} />
-              <span className="text-[10px] font-semibold leading-none">{tab.label}</span>
+<span className="text-[11px] font-semibold leading-none">{tab.label}</span>
             </Link>
           );
         })}

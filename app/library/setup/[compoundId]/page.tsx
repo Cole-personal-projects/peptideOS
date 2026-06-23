@@ -36,7 +36,7 @@ export default function CompoundProtocolSetupPage({ params }: { params: Promise<
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h2 className="truncate text-base font-semibold">{template.name}</h2>
-                    <Badge variant="outline" className="text-[10px] capitalize">{template.difficulty}</Badge>
+<Badge variant="outline" className="text-[11px] capitalize">{template.difficulty}</Badge>
                   </div>
                   <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{template.summary}</p>
                 </div>

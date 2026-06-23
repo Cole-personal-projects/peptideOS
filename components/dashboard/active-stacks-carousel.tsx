@@ -75,7 +75,7 @@ export function ActiveStacksCarousel() {
                     <Badge 
                       variant="secondary" 
                       className={cn(
-                        "text-[10px]",
+                        "text-[11px]",
                         stack.status === 'active' && "bg-primary/20 text-primary"
                       )}
                     >
@@ -107,13 +107,13 @@ export function ActiveStacksCarousel() {
                     {stack.peptides.slice(0, 3).map((sp) => {
                       const peptide = getPeptide(sp.peptideId);
                       return (
-                        <Badge key={sp.peptideId} variant="outline" className="text-[10px] px-1.5">
+<Badge key={sp.peptideId} variant="outline" className="px-1.5 text-[11px]">
                           {peptide?.name}
                         </Badge>
                       );
                     })}
                     {stack.peptides.length > 3 && (
-                      <Badge variant="outline" className="text-[10px] px-1.5">
+<Badge variant="outline" className="px-1.5 text-[11px]">
                         +{stack.peptides.length - 3}
                       </Badge>
                     )}

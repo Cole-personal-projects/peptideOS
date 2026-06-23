@@ -876,7 +876,7 @@ function MarkerDetailView({ detail, onCompare, onShare }: { detail: ReturnType<t
                 <p className="text-sm text-muted-foreground">{detail.result.unit || 'unit not specified'} · Ref: {detail.result.referenceRange?.text ?? 'not specified'}</p>
               </div>
               <div className="text-right">
-                <p className={cn('text-2xl font-bold leading-none', flagClass(detail.result.flag))}>{detail.result.value}</p>
+<p className={cn('text-xl font-bold leading-none', flagClass(detail.result.flag))}>{detail.result.value}</p>
                 {detail.latestTrend && <TrendBadge direction={detail.latestTrend.direction} percent={detail.latestTrend.percent} />}
               </div>
             </div>
@@ -884,7 +884,7 @@ function MarkerDetailView({ detail, onCompare, onShare }: { detail: ReturnType<t
               <div className="h-2 overflow-hidden rounded-full bg-secondary">
                 <div className="h-full rounded-full bg-gradient-to-r from-accent to-primary" style={{ width: `${rangePercent}%` }} />
               </div>
-              <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+<div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
                 <span>{rangeLow ?? 'Low'}</span>
                 <span>Reference range</span>
                 <span>{rangeHigh ?? 'High'}</span>
@@ -930,7 +930,7 @@ function CompareView({ reports, firstReportId, secondReportId, rows, onSelect, o
         <DateSelect label="Test 2" value={secondReportId} reports={reports} onChange={(value) => onSelect(firstReportId, value)} />
       </div>
       <Card className="overflow-hidden">
-        <div className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-2 border-b bg-secondary/70 px-3 py-2 text-[11px] font-semibold text-muted-foreground">
+<div className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-2 border-b bg-secondary/70 px-3 py-2 text-xs font-semibold text-muted-foreground">
           <span>Marker</span><span className="text-right">Test 1</span><span className="text-right">Test 2</span><span className="text-right">Delta</span>
         </div>
         {rows.map((row) => (
@@ -1048,7 +1048,7 @@ function TrendBars({ points, compact }: { points: Array<{ numericValue?: number;
           <div key={`${point.drawDate}-${index}`} className="flex-1 rounded-t bg-primary/35 last:bg-primary" style={{ height: `${Math.max(10, ((point.numericValue as number) / max) * 100)}%` }} />
         ))}
       </div>
-      {!compact && <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">{numeric.map((point) => <span key={point.drawDate}>{formatMonth(point.drawDate)}</span>)}</div>}
+{!compact && <div className="mt-1 flex justify-between text-[11px] text-muted-foreground">{numeric.map((point) => <span key={point.drawDate}>{formatMonth(point.drawDate)}</span>)}</div>}
     </div>
   );
 }
