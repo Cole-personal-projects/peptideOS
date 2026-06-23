@@ -7,11 +7,11 @@ test.describe('dashboard cockpit', () => {
     await page.getByRole('button', { name: 'Get started' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
 
-    await expect(page.getByRole('heading', { name: /Morning|Afternoon|Evening/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
     await expect(page.getByText('Protocol score')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Active stacks' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Recent' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Recent activity' })).toBeVisible();
     await expect(page.getByRole('navigation')).toBeVisible();
   });
 
@@ -116,7 +116,7 @@ test.describe('dashboard cockpit', () => {
 
     await page.goto('/');
     await expect(page.getByText('No scheduled doses waiting')).toBeVisible();
-    await expect(page.getByText('No active stack')).toBeVisible();
+    await expect(page.getByText('No active stack').first()).toBeVisible();
     await expect(page.getByRole('link', { name: /No active stack/ })).toBeVisible();
   });
 
@@ -161,7 +161,7 @@ test.describe('dashboard cockpit', () => {
     await expect(page.getByRole('status')).toContainText('Data restored from backup');
 
     await page.goto('/');
-    await expect(page.getByText('Active inventory')).toBeVisible();
+    await expect(page.getByRole('link', { name: /1 Inventory/ })).toBeVisible();
     await expect(page.getByText('1').first()).toBeVisible();
     await expect(page.getByText(/3\.3333333333333335mg/)).toHaveCount(0);
     await expect(page.getByText(/inventory coverage warning/)).toHaveCount(0);
@@ -254,7 +254,7 @@ test.describe('dashboard cockpit', () => {
     await expect(page.getByRole('status')).toContainText('Data restored from backup');
 
     await page.goto('/');
-    await expect(page.getByText('Semaglutide Dashboard Stack')).toBeVisible();
+    await expect(page.getByRole('link', { name: /Semaglutide Dashboard Stack/ })).toBeVisible();
     await expect(page.getByText('Semaglutide').first()).toBeVisible();
     await expect(page.getByText('1 mg').first()).toBeVisible();
   });

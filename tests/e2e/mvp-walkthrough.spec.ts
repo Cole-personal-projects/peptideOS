@@ -11,7 +11,7 @@ test.describe('MVP tester walkthrough', () => {
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Enter PeptideOS' }).click();
-    await expect(page.getByRole('heading', { name: /Morning|Afternoon|Evening/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
 
     await page.goto('/more/inventory');
     await page.getByRole('button', { name: 'Add', exact: true }).click();

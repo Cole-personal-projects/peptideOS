@@ -23,7 +23,7 @@ test.describe('first-launch onboarding', () => {
     await expect(page.getByRole('heading', { name: 'Ready to track' })).toBeVisible();
     await page.getByRole('button', { name: 'Enter PeptideOS' }).click();
 
-    await expect(page.getByRole('heading', { name: /Morning|Afternoon|Evening/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
 
     await page.getByRole('link', { name: 'Library' }).click();

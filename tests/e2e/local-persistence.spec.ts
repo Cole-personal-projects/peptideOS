@@ -7,11 +7,11 @@ test.describe('local persistence', () => {
 
     await page.getByRole('button', { name: 'Get started' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await expect(page.getByRole('heading', { name: /Morning|Afternoon|Evening/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
 
     await page.reload();
 
-    await expect(page.getByRole('heading', { name: /Morning|Afternoon|Evening/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
   });
 
