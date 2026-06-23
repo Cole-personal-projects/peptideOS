@@ -10,7 +10,7 @@ test.describe('welcome screen', () => {
     await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible();
     await expect(page.getByLabel('Animated Peppi science graphic')).toHaveCount(1);
     await expect(page.getByText('For research tracking only. Not medical advice.')).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: /Morning|Afternoon|Evening/ })).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Get started' }).click();
 
@@ -23,11 +23,11 @@ test.describe('welcome screen', () => {
 
     await page.getByRole('button', { name: 'Get started' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Morning|Afternoon|Evening/ })).toBeVisible();
 
     await page.reload();
 
-    await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Morning|Afternoon|Evening/ })).toBeVisible();
     await expect(page.getByText('Your peptide research operating system.')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Get started' })).toHaveCount(0);
   });

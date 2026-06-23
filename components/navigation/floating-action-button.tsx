@@ -49,8 +49,8 @@ export function FloatingActionButton() {
             size="icon"
             className={cn(
               "fixed bottom-20 left-1/2 -translate-x-1/2 z-50",
-              "w-14 h-14 rounded-full shadow-lg shadow-primary/25",
-              "bg-primary hover:bg-primary/90 text-primary-foreground",
+              "h-14 w-14 rounded-full ember-gradient ember-glow",
+              "text-primary-foreground hover:brightness-110",
               "transition-transform active:scale-95"
             )}
           >
@@ -58,7 +58,7 @@ export function FloatingActionButton() {
             <span className="sr-only">Quick actions</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="bottom" className="rounded-t-3xl pb-8">
+        <SheetContent side="bottom" className="rounded-t-[20px] border-border bg-card pb-8">
           <SheetHeader className="pb-4">
             <SheetTitle>Quick Actions</SheetTitle>
           </SheetHeader>
@@ -69,9 +69,9 @@ export function FloatingActionButton() {
                 <button
                   key={action.id}
                   onClick={() => handleActionClick(action)}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors text-left"
+                  className="flex items-center gap-3 rounded-[14px] border border-border bg-secondary p-4 text-left transition-colors hover:bg-accent"
                 >
-                  <div className={cn("p-2 rounded-lg bg-background", action.color)}>
+                  <div className={cn("rounded-[10px] bg-background p-2", action.color)}>
                     <Icon className="w-5 h-5" />
                   </div>
                   <span className="font-medium text-sm">{action.label}</span>

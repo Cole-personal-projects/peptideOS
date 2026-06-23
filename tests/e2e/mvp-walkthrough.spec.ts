@@ -11,7 +11,7 @@ test.describe('MVP tester walkthrough', () => {
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Enter PeptideOS' }).click();
-    await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Morning|Afternoon|Evening/ })).toBeVisible();
 
     await page.goto('/more/inventory');
     await page.getByRole('button', { name: 'Add', exact: true }).click();
@@ -44,7 +44,8 @@ test.describe('MVP tester walkthrough', () => {
     await expect(page.getByText(/pending/).first()).toBeVisible();
 
     await page.goto('/');
-    await expect(page.getByText(/BPC-157 - 250 mcg/).first()).toBeVisible();
+    await expect(page.getByText('BPC-157').first()).toBeVisible();
+    await expect(page.getByText('250 mcg').first()).toBeVisible();
     await page.getByRole('button', { name: 'Complete' }).first().click();
     const completeDialog = page.getByRole('dialog', { name: 'Complete scheduled dose' });
     await expect(completeDialog).toBeVisible();

@@ -30,7 +30,7 @@ test.describe('PWA readiness', () => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Get started' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Morning|Afternoon|Evening/ })).toBeVisible();
 
     await page.evaluate(async () => {
       const registration = await navigator.serviceWorker.ready;
@@ -44,7 +44,7 @@ test.describe('PWA readiness', () => {
     });
 
     const coreRoutes = [
-      { path: '/', heading: /Good (morning|afternoon|evening)/ },
+      { path: '/', heading: /Morning|Afternoon|Evening/ },
       { path: '/library', heading: 'Library' },
       { path: '/stacks', heading: 'Stacks' },
       { path: '/log', heading: 'Dose Log' },
