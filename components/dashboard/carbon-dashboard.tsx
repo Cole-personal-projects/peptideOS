@@ -198,15 +198,15 @@ export function CarbonDashboard() {
         <Link
           href={insight?.href ?? '/more/inventory'}
           className={cn(
-            'relative mt-2 flex items-start gap-3 overflow-hidden rounded-[14px] border border-border bg-card p-4',
+'relative mt-2 flex items-start gap-3 overflow-hidden rounded-[14px] border border-border bg-card p-3.5',
             insight?.urgency === 'critical' ? 'border-destructive/40 bg-destructive/10' : '',
           )}
         >
           <div className={cn('absolute bottom-0 left-0 top-0 w-1', insight?.urgency === 'critical' ? 'bg-destructive' : 'bg-chart-4')} />
-          <AlertTriangle className={cn('mt-0.5 h-5 w-5 shrink-0', insight?.urgency === 'critical' ? 'text-destructive' : 'text-chart-4')} />
+<AlertTriangle className={cn('mt-0.5 h-4 w-4 shrink-0', insight?.urgency === 'critical' ? 'text-destructive' : 'text-chart-4')} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-bold">{insight?.label ?? 'No urgent protocol signals'}</p>
-            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+<p className="truncate text-sm font-bold">{insight?.label ?? 'No urgent protocol signals'}</p>
+<p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
               {insight?.detail ?? 'Inventory, schedules, labs, and signals are quiet right now.'}
             </p>
 <span className="mt-3 inline-flex rounded-[10px] border border-border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-primary">

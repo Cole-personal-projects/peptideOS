@@ -464,32 +464,31 @@ export default function LibraryPage() {
             filteredCompounds.map((compound) => {
               const evidence = getLibraryEvidenceDisplay(compound);
 
-              return (
-                <Link key={compound.id} href={`/library/${compound.id}`} className="block">
-                  <Card className="hover:bg-secondary/30 transition-colors">
-                    <CardContent className="p-4">
+                      return (
+                        <Link
+                          key={compound.id}
+                          href={`/library/${compound.id}`}
+                          className="block"
+                          aria-label={`${compound.name} ${formatLabel(compound.category)} ${compound.source === 'user' ? 'Custom' : 'Reference'}`}
+                        >
+<Card className="transition-colors hover:bg-secondary/30">
+<CardContent className="p-3.5">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0 pr-3">
-                          <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <h3 className="font-semibold">{compound.name}</h3>
-                            <Badge variant="outline" className={cn("text-[11px] capitalize", categoryColors[compound.category])}>
+<div className="mb-1.5 flex min-w-0 items-start justify-between gap-3">
+<h3 className="min-w-0 truncate text-sm font-semibold">{compound.name}</h3>
+<Badge variant="outline" className={cn("shrink-0 text-[11px] capitalize", categoryColors[compound.category])}>
                               {formatLabel(compound.category)}
                             </Badge>
-                            <Badge variant={compound.source === 'user' ? 'default' : 'secondary'} className="text-[11px]">
-                              {compound.source === 'user' ? 'Custom' : 'Reference'}
-                            </Badge>
-                            <Badge variant="outline" className="border-primary/30 bg-primary/5 text-[11px] text-primary">
-                              {evidence.tierLabel}
-                            </Badge>
-                            <Badge variant="outline" className="text-[11px]">
-                              {evidence.statusLabel}
-                            </Badge>
-                          </div>
+                            </div>
                           <p className="text-sm text-muted-foreground line-clamp-2">
                             {getCompoundCardSummary(compound, researcherMode)}
                           </p>
-                          <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted-foreground">
-                            <span>{formatLabel(compound.compoundType)}</span>
+<div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+<span>{compound.source === 'user' ? 'Custom' : 'Reference'}</span>
+<span>{evidence.tierLabel}</span>
+<span>{evidence.statusLabel}</span>
+<span>{formatLabel(compound.compoundType)}</span>
                             <span>{evidence.mechanismClass}</span>
                             <span>Route: {compound.defaultRoute.toUpperCase()}</span>
                             <span>Unit: {compound.defaultDoseUnit.toUpperCase()}</span>
