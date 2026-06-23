@@ -289,17 +289,17 @@ export async function loadPersistedAppData(
   if (!settings) return defaults;
 
   const persistedUserData: PersistedUserData = {
-    vials: active(vials) as Vial[],
-    inventoryBatches: active(inventoryBatches) as InventoryBatch[],
-    doses: active(doses) as Dose[],
-    stacks: active(stacks) as Stack[],
-    schedules: active(schedules) as Schedule[],
-    scheduleLogs: active(scheduleLogs) as ScheduleLog[],
-    reconstitutionCalculations: active(reconstitutionCalculations) as ReconstitutionCalculation[],
-    signalCheckIns: active(signalCheckIns) as SignalCheckIn[],
-    labReports: active(labReports) as LabReport[],
-    labResults: active(labResults) as LabResult[],
-    labImportAudits: active(labImportAudits) as LabImportAudit[],
+    vials: vials.map(stripPersistenceMetadataKeepDeletedAt) as Vial[],
+    inventoryBatches: inventoryBatches.map(stripPersistenceMetadataKeepDeletedAt) as InventoryBatch[],
+    doses: doses.map(stripPersistenceMetadataKeepDeletedAt) as Dose[],
+    stacks: stacks.map(stripPersistenceMetadataKeepDeletedAt) as Stack[],
+    schedules: schedules.map(stripPersistenceMetadataKeepDeletedAt) as Schedule[],
+    scheduleLogs: scheduleLogs.map(stripPersistenceMetadataKeepDeletedAt) as ScheduleLog[],
+    reconstitutionCalculations: reconstitutionCalculations.map(stripPersistenceMetadataKeepDeletedAt) as ReconstitutionCalculation[],
+    signalCheckIns: signalCheckIns.map(stripPersistenceMetadataKeepDeletedAt) as SignalCheckIn[],
+    labReports: labReports.map(stripPersistenceMetadataKeepDeletedAt) as LabReport[],
+    labResults: labResults.map(stripPersistenceMetadataKeepDeletedAt) as LabResult[],
+    labImportAudits: labImportAudits.map(stripPersistenceMetadataKeepDeletedAt) as LabImportAudit[],
     userCompounds: userCompounds.filter((compound) => !compound.deletedAt) as unknown as Compound[],
     settings: stripPersistenceMetadata(settings) as AppSettings,
   };
