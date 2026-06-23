@@ -168,7 +168,7 @@ trackableCompounds.find((candidate) => candidate.id === compoundId)?.name ?? com
                             {getStackDay(stack)} · {stack.durationDays} days
                           </p>
                         </div>
-                        <Badge variant="secondary" className={cn("shrink-0 text-[10px]", config.className)}>
+                        <Badge variant="secondary" className={cn("shrink-0 text-[11px]", config.className)}>
                           <StatusIcon className="mr-1 h-3 w-3" />
                           {config.label}
                         </Badge>
@@ -176,12 +176,12 @@ trackableCompounds.find((candidate) => candidate.id === compoundId)?.name ?? com
 
                       <div className="mt-2.5 flex flex-wrap gap-1.5">
                         {stack.peptides.slice(0, 4).map((sp) => (
-                          <Badge key={sp.id ?? sp.peptideId} variant="outline" className="border-border bg-background/70 px-2 py-0.5 text-[10px] text-muted-foreground">
+                          <Badge key={sp.id ?? sp.peptideId} variant="outline" className="border-border bg-background/70 px-2 py-0.5 text-[11px] text-muted-foreground">
                             {getCompoundName(sp.peptideId)}
                           </Badge>
                         ))}
                         {stack.peptides.length > 4 && (
-                          <Badge variant="outline" className="border-border bg-background/70 px-2 py-0.5 text-[10px] text-muted-foreground">
+                          <Badge variant="outline" className="border-border bg-background/70 px-2 py-0.5 text-[11px] text-muted-foreground">
                             +{stack.peptides.length - 4}
                           </Badge>
                         )}

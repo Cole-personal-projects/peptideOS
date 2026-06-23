@@ -41,14 +41,14 @@ export function DisclaimerDialog() {
           <>
             <AlertDialogHeader>
               <div className="relative overflow-hidden rounded-lg border bg-secondary/30 p-5 text-left">
-                <div className="absolute right-4 top-4 rounded-full border border-primary/30 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-primary">
+<div className="absolute right-4 top-4 rounded-full border border-primary/30 px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-primary">
                   Research
                 </div>
                 <div className="mb-5 flex size-12 items-center justify-center rounded-md bg-primary text-primary-foreground">
                   <FlaskConical className="w-6 h-6" />
                 </div>
                 <p className="text-sm text-muted-foreground">Welcome to</p>
-                <h2 className="mt-1 text-3xl font-bold tracking-tight">PeptideOS</h2>
+<h2 className="mt-1 text-2xl font-bold tracking-normal">PeptideOS</h2>
                 <p className="mt-3 max-w-sm text-sm text-muted-foreground">
                   A private operating surface for peptide research logs, stack planning, site rotation, and vial records.
                 </p>

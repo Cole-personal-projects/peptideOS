@@ -50,7 +50,7 @@ export default function ProtocolPreviewPage({ params }: { params: Promise<{ temp
               <Badge variant="outline" className="capitalize">{template.difficulty}</Badge>
               <Badge variant="outline">Single Medication</Badge>
             </div>
-            <h2 className="text-2xl font-semibold leading-none">{template.name}</h2>
+            <h2 className="text-xl font-semibold leading-tight">{template.name}</h2>
           </CardHeader>
           <CardContent>
             <p className="text-sm leading-relaxed text-muted-foreground">{template.summary}</p>

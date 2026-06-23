@@ -178,7 +178,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
                     )}
                   />
                   <p className={cn(
-                    "text-[10px] font-medium text-muted-foreground truncate",
+                    "truncate text-[11px] font-medium text-muted-foreground",
                     index === currentStep && "text-foreground"
                   )}>
                     {step}
@@ -347,7 +347,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
                       <div key={warning.id} className="rounded-md bg-background/70 p-3">
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-sm font-medium">{warning.title}</p>
-                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
                             {warning.severity}
                           </span>
                         </div>

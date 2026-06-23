@@ -70,7 +70,7 @@ function ScoreRing({ value }: { value: number }) {
   const offset = circumference - (value / 100) * circumference;
 
   return (
-    <div className="relative mx-auto flex h-44 w-44 items-center justify-center">
+<div className="relative mx-auto flex h-40 w-40 items-center justify-center">
       <svg viewBox="0 0 176 176" className="absolute inset-0 h-full w-full -rotate-90">
         <defs>
           <linearGradient id="dashboard-score-gradient" x1="0" x2="1" y1="0" y2="1">
@@ -101,8 +101,8 @@ function ScoreRing({ value }: { value: number }) {
         />
       </svg>
       <div className="relative z-10 text-center">
-        <p className="text-[46px] font-bold leading-none tracking-[-0.06em]">{value}</p>
-        <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Optimal</p>
+<p className="text-3xl font-bold leading-none tracking-normal">{value}</p>
+<p className="mt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Optimal</p>
       </div>
     </div>
   );
@@ -168,7 +168,7 @@ export function CarbonDashboard() {
           <div className="flex h-8 w-8 items-center justify-center rounded-full border border-primary/30 bg-primary/10 shadow-[0_0_18px_rgb(240_116_52_/_0.14)]">
             <ShieldCheck className="h-4 w-4 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold tracking-[-0.03em] text-primary">PeptideOS</h1>
+<h1 className="text-xl font-bold tracking-normal text-primary">PeptideOS</h1>
         </Link>
         <Button asChild size="icon" variant="ghost" className="h-10 w-10 rounded-[10px] text-muted-foreground">
           <Link href="/more/settings" aria-label="Settings">
@@ -209,7 +209,7 @@ export function CarbonDashboard() {
             <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
               {insight?.detail ?? 'Inventory, schedules, labs, and signals are quiet right now.'}
             </p>
-            <span className="mt-3 inline-flex rounded-[10px] border border-border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
+<span className="mt-3 inline-flex rounded-[10px] border border-border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-primary">
               {insight ? 'Review' : 'View cockpit'}
             </span>
           </div>
@@ -217,7 +217,7 @@ export function CarbonDashboard() {
 
         <Link
           href="/log"
-          className="ember-gradient ember-glow mt-4 flex w-full items-center justify-center gap-2 rounded-[14px] py-3 text-base font-bold text-primary-foreground active:scale-[0.99]"
+className="ember-gradient ember-glow mt-4 flex w-full items-center justify-center gap-2 rounded-[14px] py-3 text-sm font-bold text-primary-foreground active:scale-[0.99]"
         >
           <Syringe className="h-5 w-5" />
           Quick Log
@@ -225,7 +225,7 @@ export function CarbonDashboard() {
 
         <section className="mt-5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-[13px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Today</h2>
+<h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Today</h2>
             <Link href="/log" className="flex items-center text-xs font-bold text-primary">
               Timeline <ChevronRight className="h-4 w-4" />
             </Link>
@@ -257,7 +257,7 @@ export function CarbonDashboard() {
                             <p className="truncate text-sm font-bold">{event.label}</p>
                             <p className="mt-0.5 text-xs text-muted-foreground">{event.detail}</p>
                           </div>
-                          <span className={cn('shrink-0 rounded-[8px] border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em]', statusClasses(event))}>
+<span className={cn('shrink-0 rounded-[8px] border px-2 py-1 text-[11px] font-bold uppercase tracking-[0.08em]', statusClasses(event))}>
                             {eventStatusLabel(event)}
                           </span>
                         </div>
@@ -282,7 +282,7 @@ export function CarbonDashboard() {
 
         <section className="mt-5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-[13px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Active stacks</h2>
+<h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Active stacks</h2>
             <Link href="/stacks" className="flex items-center text-xs font-bold text-primary">
               View all <ChevronRight className="h-4 w-4" />
             </Link>
@@ -298,7 +298,7 @@ export function CarbonDashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-bold text-primary">{progressForStack(primaryStack.startDate, primaryStack.durationDays, primaryStack.status)}%</p>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Progress</p>
+<p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Progress</p>
                 </div>
               </div>
               <div className="mt-4 flex h-7 items-end gap-1">
@@ -320,9 +320,9 @@ export function CarbonDashboard() {
                     <div key={item.id ?? item.peptideId} className="flex items-center justify-between gap-3 rounded-[12px] border border-border bg-secondary px-3 py-2">
                       <div className="min-w-0">
                         <p className="truncate text-xs font-bold">{peptide?.name ?? item.peptideId}</p>
-                        <p className="text-[11px] text-muted-foreground">{formatDose(item.doseValue, item.doseUnit)} · {item.timing}</p>
+<p className="text-xs text-muted-foreground">{formatDose(item.doseValue, item.doseUnit)} · {item.timing}</p>
                       </div>
-                      <span className="rounded-[8px] border border-chart-3/40 bg-chart-3/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-chart-3">Active</span>
+<span className="rounded-[8px] border border-chart-3/40 bg-chart-3/10 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-chart-3">Active</span>
                     </div>
                   );
                 })}
@@ -347,19 +347,19 @@ export function CarbonDashboard() {
         <section className="mt-5 grid grid-cols-2 gap-3">
           <Link href="/more/inventory" className="rounded-[14px] border border-border bg-card p-4">
             <FlaskConical className="h-5 w-5 text-chart-4" />
-            <p className="mt-3 text-2xl font-bold leading-none">{data.vials.filter((vial) => vial.status === 'active').length}</p>
+<p className="mt-3 text-xl font-bold leading-none">{data.vials.filter((vial) => vial.status === 'active').length}</p>
             <p className="mt-1 text-xs text-muted-foreground">Inventory</p>
           </Link>
           <Link href="/labs" className="rounded-[14px] border border-border bg-card p-4">
             <CalendarClock className="h-5 w-5 text-primary" />
-            <p className="mt-3 text-2xl font-bold leading-none">{data.labReports.length}</p>
+<p className="mt-3 text-xl font-bold leading-none">{data.labReports.length}</p>
             <p className="mt-1 text-xs text-muted-foreground">Labs</p>
           </Link>
         </section>
 
         <section className="mt-5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-[13px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Recent activity</h2>
+<h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Recent activity</h2>
             <Link href="/log" className="flex items-center text-xs font-bold text-primary">
               Log <ChevronRight className="h-4 w-4" />
             </Link>
@@ -407,7 +407,7 @@ function Metric({ label, value, tone }: { label: string; value: number; tone: 's
   return (
     <div className="flex flex-col items-center">
       <span className={cn('text-xl font-bold leading-none', toneClass)}>{value}</span>
-      <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">{label}</span>
+<span className="mt-1 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
     </div>
   );
 }

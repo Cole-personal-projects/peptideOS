@@ -65,7 +65,7 @@ export default function IntegrationsPage() {
                     <p className="text-xs text-muted-foreground">{integration.description}</p>
                   </div>
                 </div>
-                <Badge variant="secondary" className="text-[10px]">
+                <Badge variant="secondary" className="text-[11px]">
                   Soon
                 </Badge>
               </div>

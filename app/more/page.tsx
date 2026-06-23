@@ -97,7 +97,7 @@ export default function MorePage() {
                           <div className="flex items-center gap-2">
                             <p className="font-medium text-sm">{item.label}</p>
                             {item.badge && (
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                              <Badge variant="secondary" className="px-1.5 py-0 text-[11px]">
                                 {item.badge}
                               </Badge>
                             )}

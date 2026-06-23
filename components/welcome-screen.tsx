@@ -99,10 +99,10 @@ export function WelcomeScreen({ onGetStarted, completedOnboarding = false }: Wel
         <section className="grid flex-1 items-center gap-8 py-8 md:grid-cols-[1fr_360px] md:py-12">
           <div className="space-y-4 md:self-end">
             <p className="text-xs font-medium uppercase tracking-[0.24em] text-primary">Private research tracking</p>
-            <h1 className="max-w-xl text-5xl font-bold leading-none tracking-normal sm:text-6xl">
+<h1 className="max-w-xl text-3xl font-bold leading-tight tracking-normal sm:text-4xl">
               PeptideOS
             </h1>
-            <p className="max-w-lg text-lg text-muted-foreground">
+<p className="max-w-lg text-base text-muted-foreground">
               Your peptide research operating system.
             </p>
           </div>

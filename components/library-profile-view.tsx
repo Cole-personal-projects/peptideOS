@@ -20,7 +20,7 @@ export function LibraryProfileView({ children, model }: { children?: ReactNode; 
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-base font-semibold leading-none">At a glance</h2>
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-[11px]">
               {model.modeLabel}
             </Badge>
           </div>

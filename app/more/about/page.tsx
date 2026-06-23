@@ -13,7 +13,7 @@ export default function AboutPage() {
       <div className="p-4 space-y-4">
         {/* App Info */}
         <div className="text-center py-6">
-          <h1 className="text-2xl font-bold">PeptideOS</h1>
+          <h1 className="text-xl font-bold">PeptideOS</h1>
           <p className="text-muted-foreground text-sm mt-1">Version 1.0.0</p>
           <p className="text-xs text-muted-foreground mt-0.5">Personal Peptide Research Tracking</p>
         </div>

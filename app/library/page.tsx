@@ -472,16 +472,16 @@ export default function LibraryPage() {
                         <div className="flex-1 min-w-0 pr-3">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
                             <h3 className="font-semibold">{compound.name}</h3>
-                            <Badge variant="outline" className={cn("text-[10px] capitalize", categoryColors[compound.category])}>
+                            <Badge variant="outline" className={cn("text-[11px] capitalize", categoryColors[compound.category])}>
                               {formatLabel(compound.category)}
                             </Badge>
-                            <Badge variant={compound.source === 'user' ? 'default' : 'secondary'} className="text-[10px]">
+                            <Badge variant={compound.source === 'user' ? 'default' : 'secondary'} className="text-[11px]">
                               {compound.source === 'user' ? 'Custom' : 'Reference'}
                             </Badge>
-                            <Badge variant="outline" className="border-primary/30 bg-primary/5 text-[10px] text-primary">
+                            <Badge variant="outline" className="border-primary/30 bg-primary/5 text-[11px] text-primary">
                               {evidence.tierLabel}
                             </Badge>
-                            <Badge variant="outline" className="text-[10px]">
+                            <Badge variant="outline" className="text-[11px]">
                               {evidence.statusLabel}
                             </Badge>
                           </div>
