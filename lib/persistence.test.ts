@@ -9,6 +9,7 @@ import {
 import {
   downloadUserData,
   exportUserData,
+  exportUserDataForCloudSync,
   importUserData,
   loadPersistedAppData,
   resetPersistedAppData,
@@ -592,6 +593,31 @@ describe('Dexie persistence', () => {
 
     expect(exported.data.schedules.map((schedule) => schedule.id)).toEqual(['schedule-export-active']);
     expect(exported.data.scheduleLogs.map((log) => log.id)).toEqual(['schedule-log-export-active']);
+  });
+
+  test('cloud sync export includes deleted stack tombstones', async () => {
+    await savePersistedAppData(db, {
+      ...clone(initialAppData),
+      stacks: [
+        {
+          ...mockStacks[0],
+          id: 'stack-sync-deleted',
+          name: 'Deleted cloud stack',
+          deletedAt: '2026-05-23T01:00:00.000Z',
+        },
+      ],
+    });
+
+    const userExport = await exportUserData(db, new Date('2026-05-23T00:00:00.000Z'));
+    const cloudExport = await exportUserDataForCloudSync(db);
+
+    expect(userExport.data.stacks).toEqual([]);
+    expect(cloudExport.stacks).toEqual([
+      expect.objectContaining({
+        id: 'stack-sync-deleted',
+        deletedAt: '2026-05-23T01:00:00.000Z',
+      }),
+    ]);
   });
 
   test('imports exported user data and reloads it with bundled reference peptides', async () => {

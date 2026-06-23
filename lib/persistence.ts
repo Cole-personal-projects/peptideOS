@@ -211,6 +211,13 @@ function withPersistenceMetadata<T extends { id: string }>(value: T, now: string
   };
 }
 
+function stripPersistenceMetadataKeepDeletedAt<T extends { createdAt?: string; updatedAt?: string; deletedAt?: string | null; syncState?: string }>(
+  value: T,
+): Omit<T, 'createdAt' | 'updatedAt' | 'syncState'> {
+  const { createdAt: _createdAt, updatedAt: _updatedAt, syncState: _syncState, ...rest } = value;
+  return rest;
+}
+
 async function hasValidSchemaMetadata(database: PeptideOSDatabase) {
   const schemaVersion = await database.metadata.get('schemaVersion');
   return typeof schemaVersion?.value === 'number'
@@ -467,6 +474,55 @@ export async function exportUserData(database: PeptideOSDatabase = defaultDb, ex
       userCompounds: active(userCompounds) as Compound[],
       settings: normalizeSettings(settings ? stripPersistenceMetadata(settings) as AppSettings : undefined, fallbackSettings),
     },
+  };
+}
+
+export async function exportUserDataForCloudSync(database: PeptideOSDatabase = defaultDb): Promise<PersistedUserData> {
+  const fallbackSettings = DEFAULT_APP_SETTINGS;
+  const [
+    vials,
+    inventoryBatches,
+    doses,
+    stacks,
+    schedules,
+    scheduleLogs,
+    reconstitutionCalculations,
+    signalCheckIns,
+    labReports,
+    labResults,
+    labImportAudits,
+    userCompounds,
+    settings,
+  ] = await Promise.all([
+    database.vials.toArray(),
+    database.inventoryBatches.toArray(),
+    database.doses.toArray(),
+    database.stacks.toArray(),
+    database.schedules.toArray(),
+    database.scheduleLogs.toArray(),
+    database.reconstitutionCalculations.toArray(),
+    database.signalCheckIns.toArray(),
+    database.labReports.toArray(),
+    database.labResults.toArray(),
+    database.labImportAudits.toArray(),
+    database.userCompounds.toArray(),
+    database.settings.get('app-settings'),
+  ]);
+
+  return {
+    vials: vials.map(stripPersistenceMetadataKeepDeletedAt) as Vial[],
+    inventoryBatches: inventoryBatches.map(stripPersistenceMetadataKeepDeletedAt) as InventoryBatch[],
+    doses: doses.map(stripPersistenceMetadataKeepDeletedAt) as Dose[],
+    stacks: stacks.map(stripPersistenceMetadataKeepDeletedAt) as Stack[],
+    schedules: schedules.map(stripPersistenceMetadataKeepDeletedAt) as Schedule[],
+    scheduleLogs: scheduleLogs.map(stripPersistenceMetadataKeepDeletedAt) as ScheduleLog[],
+    reconstitutionCalculations: reconstitutionCalculations.map(stripPersistenceMetadataKeepDeletedAt) as ReconstitutionCalculation[],
+    signalCheckIns: signalCheckIns.map(stripPersistenceMetadataKeepDeletedAt) as SignalCheckIn[],
+    labReports: labReports.map(stripPersistenceMetadataKeepDeletedAt) as LabReport[],
+    labResults: labResults.map(stripPersistenceMetadataKeepDeletedAt) as LabResult[],
+    labImportAudits: labImportAudits.map(stripPersistenceMetadataKeepDeletedAt) as LabImportAudit[],
+    userCompounds: userCompounds.map(stripPersistenceMetadataKeepDeletedAt) as Compound[],
+    settings: normalizeSettings(settings ? stripPersistenceMetadata(settings) : fallbackSettings, fallbackSettings),
   };
 }
 

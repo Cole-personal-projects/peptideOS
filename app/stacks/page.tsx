@@ -55,44 +55,55 @@ export default function StacksPage() {
     }
   }, [searchParams]);
 
-  const getProgressPercentage = (startDate: string, durationDays: number, status: string) => {
-    if (status === 'planned') return 0;
-    if (status === 'completed') return 100;
-    const start = new Date(startDate);
-    const now = new Date();
-    const elapsed = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.min(Math.max((elapsed / durationDays) * 100, 0), 100);
-  };
+const getProgressPercentage = (startDate: string, durationDays: number, status: string) => {
+if (status === 'planned') return 0;
+if (status === 'completed') return 100;
+const start = new Date(startDate);
+const now = new Date();
+const elapsed = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+return Math.min(Math.max((elapsed / durationDays) * 100, 0), 100);
+};
+
+const getStackDay = (stack: Stack) => {
+if (stack.status === 'planned') return 'Not started';
+const start = new Date(stack.startDate);
+const now = new Date();
+const elapsed = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+return `Day ${Math.min(Math.max(elapsed, 1), stack.durationDays)}`;
+};
+
+const getCompoundName = (compoundId: string) => (
+trackableCompounds.find((candidate) => candidate.id === compoundId)?.name ?? compoundId
+);
 
   return (
-    <AppShell>
-      <PageHeader 
-        title="Stacks" 
+<AppShell>
+      <PageHeader
+        title="Stacks"
         rightElement={
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <Button
-              size="sm"
-              variant="ghost"
-              className="text-primary"
+              size="icon"
+              variant="outline"
+              className="h-9 w-9 rounded-[10px] border-border bg-card text-primary"
               onClick={() => setAiStackOpen(true)}
               aria-label="Peppi protocol assistant"
             >
-              <Sparkles className="w-4 h-4 mr-1" /> AI
+              <Sparkles className="h-4 w-4" />
             </Button>
             <Button
-              size="sm"
-              variant="ghost"
-              className="text-primary"
+              size="icon"
+              className="h-9 w-9 rounded-[10px] bg-gradient-to-br from-primary to-[hsl(var(--chart-5))] text-primary-foreground shadow-[0_4px_14px_hsl(var(--primary)/0.28)]"
               onClick={() => setNewStackOpen(true)}
               aria-label="New stack"
             >
-              <Plus className="w-4 h-4 mr-1" /> New
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
         }
       />
 
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-2.5">
         {stacks.length === 0 ? (
           <Empty className="bg-secondary/40">
             <EmptyHeader>
@@ -113,45 +124,67 @@ export default function StacksPage() {
             const config = statusConfig[stack.status];
             const StatusIcon = config.icon;
             const progress = getProgressPercentage(stack.startDate, stack.durationDays, stack.status);
+            const circumference = 2 * Math.PI * 22;
+            const dashOffset = circumference - (progress / 100) * circumference;
+            const isPlanned = stack.status === 'planned';
 
             return (
-              <Link key={stack.id} href={`/stacks/${stack.id}`}>
-                <Card className="hover:bg-secondary/30 transition-colors">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1 min-w-0 pr-3">
-                        <h3 className="font-semibold truncate">{stack.name}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">
-                          {stack.description}
-                        </p>
-                      </div>
-                      <Badge variant="secondary" className={cn("flex-shrink-0 text-xs", config.className)}>
-                        <StatusIcon className="w-3 h-3 mr-1" />
-                        {config.label}
-                      </Badge>
+              <Link key={stack.id} href={`/stacks/${stack.id}`} className="block">
+                <Card className={cn(
+                  "overflow-hidden rounded-[22px] border-border bg-card transition-colors hover:bg-secondary/30",
+                  isPlanned && "border-dashed opacity-70",
+                )}>
+                  <CardContent className="flex items-center gap-3.5 p-3.5">
+                    <div className="relative grid h-[52px] w-[52px] shrink-0 place-items-center">
+                      {isPlanned ? (
+                        <div className="grid h-[52px] w-[52px] place-items-center rounded-full border border-dashed border-muted-foreground/45 bg-background/50">
+                          <Clock className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      ) : (
+                        <svg viewBox="0 0 52 52" className="h-[52px] w-[52px]" aria-hidden="true">
+                          <circle cx="26" cy="26" r="22" fill="none" stroke="hsl(var(--secondary))" strokeWidth="4.5" />
+                          <circle
+                            cx="26"
+                            cy="26"
+                            r="22"
+                            fill="none"
+                            stroke="hsl(var(--primary))"
+                            strokeLinecap="round"
+                            strokeWidth="4.5"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={dashOffset}
+                            transform="rotate(-90 26 26)"
+                          />
+                        </svg>
+                      )}
+                      {!isPlanned && <span className="absolute text-[11px] font-bold text-foreground">{Math.round(progress)}</span>}
                     </div>
 
-                    <div className="flex flex-wrap gap-1.5 my-3">
-                      {stack.peptides.map((sp) => {
-                        const compound = trackableCompounds.find((candidate) => candidate.id === sp.peptideId);
-                        return (
-                          <Badge key={sp.peptideId} variant="outline" className="text-xs">
-                            {compound?.name ?? sp.peptideId}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="truncate text-[15px] font-bold leading-tight text-foreground">{stack.name}</h3>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {getStackDay(stack)} · {stack.durationDays} days
+                          </p>
+                        </div>
+                        <Badge variant="secondary" className={cn("shrink-0 text-[10px]", config.className)}>
+                          <StatusIcon className="mr-1 h-3 w-3" />
+                          {config.label}
+                        </Badge>
+                      </div>
+
+                      <div className="mt-2.5 flex flex-wrap gap-1.5">
+                        {stack.peptides.slice(0, 4).map((sp) => (
+                          <Badge key={sp.id ?? sp.peptideId} variant="outline" className="border-border bg-background/70 px-2 py-0.5 text-[10px] text-muted-foreground">
+                            {getCompoundName(sp.peptideId)}
                           </Badge>
-                        );
-                      })}
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary transition-all"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{stack.durationDays} days total</span>
-                        <span>{Math.round(progress)}% complete</span>
+                        ))}
+                        {stack.peptides.length > 4 && (
+                          <Badge variant="outline" className="border-border bg-background/70 px-2 py-0.5 text-[10px] text-muted-foreground">
+                            +{stack.peptides.length - 4}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </CardContent>

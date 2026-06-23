@@ -13,7 +13,8 @@ import type { SchedulePreset } from './schedules';
 import {
   downloadUserData,
   exportUserData,
-importUserData,
+  exportUserDataForCloudSync,
+  importUserData,
 loadPersistedAppData,
 resetPersistedAppData,
 restorePersistedUserData,
@@ -35,6 +36,20 @@ const bundledReferenceLibraryStatus: ReferenceLibraryStatus = {
   loadedAt: bundledReferenceLibrarySnapshot.exportedAt,
   fallbackReason: 'Supabase reference library is not configured.',
 };
+
+function omitDeletedRecords<T extends { deletedAt?: string | null }>(records: T[]) {
+  return records.filter((record) => !record.deletedAt);
+}
+
+function getVisibleAppData(data: AppData): AppData {
+  return {
+    ...data,
+    doses: omitDeletedRecords(data.doses),
+    stacks: omitDeletedRecords(data.stacks),
+    schedules: omitDeletedRecords(data.schedules),
+    scheduleLogs: omitDeletedRecords(data.scheduleLogs),
+  };
+}
 
 interface AppContextType {
   data: AppData;
@@ -137,6 +152,7 @@ const referenceLibraryReader = useMemo(() => {
     return client ? createSupabaseReferenceLibraryReader(client as unknown as SupabaseReferenceLibraryClient) : null;
   }, [authConfig]);
 const [data, setData] = useState<AppData>(initialAppData);
+const visibleData = useMemo(() => getVisibleAppData(data), [data]);
 const [referenceLibraryStatus, setReferenceLibraryStatus] = useState<ReferenceLibraryStatus>(bundledReferenceLibraryStatus);
 const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
 const [cloudLastSavedAt, setCloudLastSavedAt] = useState<string | null>(null);
@@ -254,10 +270,10 @@ if (skipNextCloudPush.current) {
 skipNextCloudPush.current = false;
 } else if (nextData.cloudSyncEnabled && authStatus === 'signed-in' && authUser && cloudSyncAdapter) {
 try {
-const exported = await exportUserData(persistenceDb);
+const exported = await exportUserDataForCloudSync(persistenceDb);
 const result = await cloudSyncAdapter.pushUserData({
 userId: authUser.id,
-data: exported.data,
+data: exported,
 syncedAt: savedAt,
 });
 setCloudLastSavedAt(savedAt.toISOString());
@@ -555,9 +571,9 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed
   }, [setAndPersistData]);
 
   // Stacks
-  const getStack = useCallback((id: string) => {
-    return data.stacks.find(s => s.id === id);
-  }, [data.stacks]);
+ const getStack = useCallback((id: string) => {
+ return visibleData.stacks.find(s => s.id === id);
+ }, [visibleData.stacks]);
 
   const addStack = useCallback((stack: Omit<Stack, 'id'>) => {
     const id = `stack-${Date.now()}`;
@@ -572,11 +588,12 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed
     }));
   }, [setAndPersistData]);
 
-  const deleteStack = useCallback((id: string) => {
-    return setAndPersistData(prev => {
-      const scheduleIdsToDelete = new Set(
-        prev.schedules
-          .filter((schedule) => schedule.stackId === id)
+ const deleteStack = useCallback((id: string) => {
+ return setAndPersistData(prev => {
+ const deletedAt = new Date().toISOString();
+ const scheduleIdsToDelete = new Set(
+ prev.schedules
+ .filter((schedule) => schedule.stackId === id)
           .map((schedule) => schedule.id),
       );
       const scheduleLogIdsToDelete = new Set(
@@ -585,19 +602,21 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed
           .map((log) => log.id),
       );
 
-      return {
-        ...prev,
-        stacks: prev.stacks.filter((stack) => stack.id !== id),
-        schedules: prev.schedules.filter((schedule) => schedule.stackId !== id),
-        scheduleLogs: prev.scheduleLogs.filter((log) => (
-          log.stackId !== id && !scheduleIdsToDelete.has(log.scheduleId)
-        )),
-        doses: prev.doses.filter((dose) => (
-          !dose.scheduleLogId || !scheduleLogIdsToDelete.has(dose.scheduleLogId)
-        )),
-      };
-    });
-  }, [setAndPersistData]);
+ return {
+ ...prev,
+ stacks: prev.stacks.map((stack) => stack.id === id ? { ...stack, deletedAt } : stack),
+ schedules: prev.schedules.map((schedule) =>
+ schedule.stackId === id ? { ...schedule, deletedAt } : schedule
+ ),
+ scheduleLogs: prev.scheduleLogs.map((log) =>
+ log.stackId === id || scheduleIdsToDelete.has(log.scheduleId) ? { ...log, deletedAt } : log
+ ),
+ doses: prev.doses.map((dose) =>
+ dose.scheduleLogId && scheduleLogIdsToDelete.has(dose.scheduleLogId) ? { ...dose, deletedAt } : dose
+ ),
+ };
+ });
+ }, [setAndPersistData]);
 
   const activateStack = useCallback((id: string) => {
     void setAndPersistData(prev => {
@@ -696,9 +715,9 @@ console.error('Failed to persist PeptideOS data', error);
     setData(nextData);
   }, [enqueuePersistenceOperation, hydrated, persistenceDb, persistenceOwnerId]);
 
-  const getActiveStacks = useCallback(() => {
-    return data.stacks.filter(s => s.status === 'active');
-  }, [data.stacks]);
+const getActiveStacks = useCallback(() => {
+return visibleData.stacks.filter(s => s.status === 'active');
+}, [visibleData.stacks]);
 
   // Settings
   const setHasSeenDisclaimer = useCallback((seen: boolean) => {
@@ -760,11 +779,11 @@ setCloudStatus('saving');
 setCloudMessage(null);
 try {
 await persistenceQueue.current;
-const exported = await exportUserData(persistenceDb);
+const exported = await exportUserDataForCloudSync(persistenceDb);
 const syncedAt = new Date();
 const result = await cloudSyncAdapter.pushUserData({
 userId: authUser.id,
-data: exported.data,
+data: exported,
 syncedAt,
 });
 setCloudLastSavedAt(syncedAt.toISOString());
@@ -864,7 +883,7 @@ const effectiveCloudMessage = authStatus === 'signed-in' && !cloudSyncAdapter
 
 return (
     <AppContext.Provider value={{
-      data,
+      data: visibleData,
       referenceLibraryStatus,
 persistenceStatus: {
 mode: authStatus === 'signed-in' ? 'signed-in' : 'local-only',
