@@ -129,7 +129,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             <Link href="/stacks" aria-label="Back to Stacks" className="grid h-9 w-9 shrink-0 place-items-center text-foreground">
               <ArrowLeft className="h-7 w-7" />
             </Link>
-<h1 className="min-w-0 flex-1 truncate text-xl font-bold leading-tight tracking-normal text-[#ffb596]">
+<h1 className="min-w-0 flex-1 truncate text-[17px] font-bold leading-tight tracking-normal text-[#ffb596]">
               {stack.name}
             </h1>
             <button
@@ -143,9 +143,9 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
           </div>
         </header>
 
-<main className="space-y-6 px-5 pb-36 pt-7 min-[420px]:px-6">
+<main className="space-y-5 px-5 pb-36 pt-6 min-[420px]:px-6">
           <section className="flex flex-col items-center">
-<div className="relative grid h-[184px] w-[184px] place-items-center">
+<div className="relative grid h-[140px] w-[140px] place-items-center">
               <svg viewBox="0 0 128 128" className="h-full w-full" aria-hidden="true">
                 <circle cx="64" cy="64" r="52" fill="none" stroke="#1b100a" strokeWidth="10" />
                 <circle
@@ -162,8 +162,8 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                 />
               </svg>
               <div className="absolute text-center">
-<p className="text-4xl font-extrabold leading-none text-primary">{adherence}%</p>
-<p className="mt-3 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Adherence</p>
+<p className="text-2xl font-extrabold leading-none text-primary">{adherence}%</p>
+<p className="mt-2 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Adherence</p>
               </div>
             </div>
 
@@ -179,17 +179,17 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             </div>
           </section>
 
-<section className="rounded-[6px] border border-[#332012] bg-card p-5">
+<section className="rounded-[6px] border border-[#332012] bg-card p-4">
 <div className="mb-4 flex items-center justify-between gap-4">
-<h2 className="text-lg font-bold tracking-normal">14-Day Trajectory</h2>
+<h2 className="text-sm font-bold tracking-normal">14-Day Trajectory</h2>
 <p className="shrink-0 text-right text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">Last 14 days</p>
             </div>
-            <div className="flex h-[58px] items-end justify-between gap-3">
+<div className="flex h-10 items-end justify-between gap-2">
               {trajectory.map((bar, index) => (
                 <div
                   key={`${bar.date}-${index}`}
                   className={cn(
-                    'w-3.5 rounded-[3px]',
+'w-2.5 rounded-[3px]',
                     bar.status === 'taken' && 'bg-emerald-400',
                     bar.status === 'missed' && 'bg-[#c85b5e]',
                     bar.status === 'skipped' && 'bg-muted-foreground',
@@ -204,53 +204,53 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
           </section>
 
           <section className="overflow-hidden rounded-[6px] border border-[#332012] bg-[#211208]">
-<div className="flex items-center justify-between gap-3 border-b border-[#332012] px-5 py-4">
-<h2 className="shrink-0 text-lg font-bold tracking-normal">Upcoming Doses</h2>
+<div className="flex items-center justify-between gap-3 border-b border-[#332012] px-4 py-3.5">
+<h2 className="shrink-0 text-sm font-bold tracking-normal">Upcoming Doses</h2>
 <Button type="button" variant="ghost" className="h-auto shrink-0 p-0 text-xs font-extrabold uppercase tracking-[0.08em] text-primary" onClick={openEditDialog}>
                 Edit Protocol
               </Button>
             </div>
             <div>
               {upcomingRows.map((row, index) => (
-<div key={row.id} className="flex items-center gap-3 border-b border-[#332012] bg-[#28170c] px-4 py-5 last:border-b-0 min-[420px]:gap-4 min-[420px]:px-5">
-<div className="grid h-12 w-12 shrink-0 place-items-center rounded-[3px] bg-[#321f12]">
-<Beaker className={cn('h-6 w-6', index === 0 ? 'text-primary' : 'text-foreground')} />
+<div key={row.id} className="flex items-center gap-3 border-b border-[#332012] bg-[#28170c] px-4 py-3 last:border-b-0">
+<div className="grid h-9 w-9 shrink-0 place-items-center rounded-[3px] bg-[#321f12]">
+<Beaker className={cn('h-4 w-4', index === 0 ? 'text-primary' : 'text-foreground')} />
                   </div>
                   <div className="min-w-0 flex-1">
-<p className="truncate text-base font-semibold leading-tight">{row.name}</p>
-<p className="mt-1.5 text-sm text-muted-foreground">{row.detail}</p>
+<p className="truncate text-[13px] font-semibold leading-tight">{row.name}</p>
+<p className="mt-1 text-xs leading-snug text-muted-foreground">{row.detail}</p>
                   </div>
                   <div className="shrink-0 text-right">
-<p className={cn('text-lg font-extrabold leading-none', index === 0 ? 'text-primary' : 'text-foreground/75')}>
+<p className={cn('text-[15px] font-bold leading-none', index === 0 ? 'text-primary' : 'text-foreground/75')}>
                       {row.time}
                     </p>
-<p className="mt-2 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">{row.when}</p>
+<p className="mt-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">{row.when}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="bg-[#211208] px-4 py-4">
-<Button asChild className="h-12 w-full rounded-[3px] bg-primary text-base font-extrabold tracking-normal text-black hover:bg-primary/90">
+<div className="bg-[#211208] px-4 py-3.5">
+<Button asChild className="h-10 w-full rounded-[3px] bg-primary text-sm font-bold tracking-normal text-black hover:bg-primary/90">
 <Link href="/log"><Plus className="mr-2 h-5 w-5" /> Log Dose Now</Link>
               </Button>
             </div>
           </section>
 
-<section className="rounded-[6px] border border-[#332012] bg-card p-5">
+<section className="rounded-[6px] border border-[#332012] bg-card p-4">
             <div className="mb-4 flex items-center justify-between gap-4">
-<h2 className="text-lg font-bold tracking-normal">Protocol</h2>
+<h2 className="text-sm font-bold tracking-normal">Protocol</h2>
 <p className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">{statusLabels[stack.status]}</p>
             </div>
             <div className="space-y-3">
               {stack.peptides.map((peptide) => {
                 const compound = trackableCompounds.find((candidate) => candidate.id === peptide.peptideId);
                 return (
-                  <div key={peptide.id ?? peptide.peptideId} className="flex items-center justify-between gap-4 rounded-[4px] bg-[#211208] px-4 py-3">
+<div key={peptide.id ?? peptide.peptideId} className="flex items-center justify-between gap-4 rounded-[4px] bg-[#211208] px-4 py-3">
                     <div className="min-w-0">
-                      <p className="truncate text-base font-semibold">{compound?.name ?? peptide.peptideId}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">{formatDose(peptide.doseValue, peptide.doseUnit)} · {formatRoute(peptide.route)}</p>
+<p className="truncate text-sm font-semibold">{compound?.name ?? peptide.peptideId}</p>
+<p className="mt-1 text-[13px] text-muted-foreground">{formatDose(peptide.doseValue, peptide.doseUnit)} · {formatRoute(peptide.route)}</p>
                     </div>
-                    <p className="shrink-0 text-sm font-semibold text-primary">{formatScheduleSummary(peptide)}</p>
+<p className="shrink-0 text-[13px] font-semibold text-primary">{formatScheduleSummary(peptide)}</p>
                   </div>
                 );
               })}
@@ -260,14 +260,14 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
           </section>
 
 <section className="space-y-3">
-<h2 className="text-lg font-bold tracking-normal">Linked Labs</h2>
-<div className="relative overflow-hidden rounded-[6px] border border-[#332012] bg-card p-5">
+<h2 className="text-sm font-bold tracking-normal">Linked Labs</h2>
+<div className="relative overflow-hidden rounded-[6px] border border-[#332012] bg-card p-4">
               {linkedLab ? (
                 <>
                   <div className="flex items-start justify-between gap-5">
                     <div className="min-w-0">
                       <div className="flex items-center gap-4">
-<p className="truncate text-lg font-semibold leading-tight">{linkedLab.name}</p>
+<p className="truncate text-sm font-semibold leading-tight">{linkedLab.name}</p>
                         {linkedLab.change && (
 <span className="rounded-[2px] border border-[#332012] bg-[#211208] px-2.5 py-1 text-xs font-bold text-emerald-400">
                             {linkedLab.change}
@@ -277,7 +277,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
 <p className="mt-2 truncate text-sm text-muted-foreground">{linkedLab.label}</p>
                     </div>
                     <div className="shrink-0 text-right">
-<p className="text-2xl font-extrabold leading-none">{linkedLab.value} <span className="text-sm font-medium text-muted-foreground">{linkedLab.unit}</span></p>
+<p className="text-lg font-extrabold leading-none">{linkedLab.value} <span className="text-xs font-medium text-muted-foreground">{linkedLab.unit}</span></p>
 <p className="mt-2 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Last test: {linkedLab.date}</p>
                     </div>
                   </div>
@@ -289,7 +289,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                 <>
                   <div className="flex items-start justify-between gap-5">
                     <div>
-<p className="text-lg font-semibold leading-tight">No linked labs</p>
+<p className="text-sm font-semibold leading-tight">No linked labs</p>
 <p className="mt-2 text-sm text-muted-foreground">Import labs and link them to this stack.</p>
                     </div>
                   </div>
