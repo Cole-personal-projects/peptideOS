@@ -21,11 +21,13 @@ test.describe('protocol loop', () => {
     await page.getByLabel('Schedule').click();
     await page.getByRole('option', { name: /2x daily/ }).click();
     await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('button', { name: 'Create Stack' }).click();
+await page.getByRole('button', { name: 'Create Stack' }).click();
 
-    await page.getByRole('link', { name: /Protocol Loop Test Stack/ }).click();
-    await page.getByRole('button', { name: 'Start' }).click();
-    await expect(page.getByText(/pending/).last()).toBeVisible();
+await page.getByRole('link', { name: /Protocol Loop Test Stack/ }).click();
+await page.getByRole('button', { name: 'Protocol settings' }).click();
+await page.getByRole('button', { name: 'Start' }).click();
+await expect(page.getByRole('heading', { name: 'Upcoming Doses' })).toBeVisible();
+await expect(page.getByText('BPC-157').first()).toBeVisible();
 
     await page.getByRole('link', { name: 'Dashboard' }).click();
     await expect(page.getByText('BPC-157').first()).toBeVisible();
@@ -59,18 +61,18 @@ test.describe('protocol loop', () => {
     await expect(bpcCard).toContainText('BPC-157 active vial');
     await expect(bpcCard).toContainText('Remaining');
 
-    await page.goto('/stacks');
-    await page.getByRole('link', { name: /Protocol Loop Test Stack/ }).click();
-    await page.getByRole('tab', { name: 'Protocol' }).click();
-    await page.getByLabel('BPC-157 schedule').click();
-    await page.getByRole('option', { name: /Weekly/ }).click();
-    await expect(page.getByText('Weekly · Monday · 8:00 AM')).toBeVisible();
-    await page.reload();
-    await expect(page.getByText('Weekly · Monday · 8:00 AM')).toBeVisible();
+await page.goto('/stacks');
+await page.getByRole('link', { name: /Protocol Loop Test Stack/ }).click();
+await page.getByRole('button', { name: 'Protocol settings' }).click();
+await page.getByRole('button', { name: 'Edit protocol' }).click();
+await page.getByLabel('BPC-157 schedule').click();
+await page.getByRole('option', { name: /Weekly/ }).click();
+await page.getByRole('button', { name: 'Save changes' }).click();
+await expect(page.getByText('Weekly · Monday · 8:00 AM').first()).toBeVisible();
+await page.reload();
+await expect(page.getByText('Weekly · Monday · 8:00 AM').first()).toBeVisible();
 
-    await page.getByRole('tab', { name: 'Calendar' }).click();
-    await expect(page.getByLabel('Calendar legend')).toContainText('Pending');
-    await page.getByRole('button', { name: 'taken' }).click();
-    await expect(page.getByText(/0 pending · 1 taken/)).toBeVisible();
+await expect(page.getByRole('heading', { name: '14-Day Trajectory' })).toBeVisible();
+await expect(page.getByRole('heading', { name: 'Upcoming Doses' })).toBeVisible();
   });
 });

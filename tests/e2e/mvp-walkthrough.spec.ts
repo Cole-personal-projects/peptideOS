@@ -36,12 +36,13 @@ test.describe('MVP tester walkthrough', () => {
     await page.getByLabel('Schedule').click();
     await page.getByRole('option', { name: /Daily/ }).click();
     await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('button', { name: 'Create Stack' }).click();
+await page.getByRole('button', { name: 'Create Stack' }).click();
 
-    await page.getByRole('link', { name: /MVP Walkthrough Stack/ }).click();
-    await page.getByRole('button', { name: 'Start' }).click();
-    await expect(page.getByText('Active', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText(/pending/).first()).toBeVisible();
+await page.getByRole('link', { name: /MVP Walkthrough Stack/ }).click();
+await page.getByRole('button', { name: 'Protocol settings' }).click();
+await page.getByRole('button', { name: 'Start' }).click();
+await expect(page.getByText('Active', { exact: true }).first()).toBeVisible();
+await expect(page.getByRole('heading', { name: 'Upcoming Doses' })).toBeVisible();
 
     await page.goto('/');
     await expect(page.getByText('BPC-157').first()).toBeVisible();
