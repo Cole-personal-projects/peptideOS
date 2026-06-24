@@ -1,28 +1,28 @@
 import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 
-test.describe('stack builder', () => {
-  test('applies a stack template and still allows editing before save', async ({ page }) => {
+test.describe('protocol builder', () => {
+  test('applies a protocol template and still allows editing before save', async ({ page }) => {
     await page.goto('/stacks');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await page.getByRole('button', { name: 'New stack' }).click();
+    await page.getByRole('button', { name: 'New protocol' }).click();
 
     await expect(page.getByRole('heading', { name: 'Templates' })).toBeVisible();
     await page.getByRole('button', { name: /Use Healing Recovery Demo/ }).click();
 
-    await expect(page.getByLabel('Stack Name')).toHaveValue('Healing Recovery Demo');
+    await expect(page.getByLabel('Protocol Name')).toHaveValue('Healing Recovery Demo');
     await expect(page.getByLabel('Duration (days)')).toHaveValue('42');
-    await page.getByLabel('Stack Name').fill('Edited Template Stack');
+    await page.getByLabel('Protocol Name').fill('Edited Template Protocol');
 await page.getByRole('button', { name: 'Next' }).click();
 
 await expect(page.getByRole('checkbox', { name: 'BPC-157' })).toBeChecked();
 await expect(page.getByRole('checkbox', { name: 'TB-500' })).toBeChecked();
 await expect(page.getByText('250 mcg').first()).toBeVisible();
 await expect(page.getByText('2.5 mg').first()).toBeVisible();
-await expect(page.getByText('Edited Template Stack')).toBeVisible();
-await page.getByRole('button', { name: 'Create Stack' }).click();
-    await expect(page.getByText('Edited Template Stack')).toBeVisible();
+await expect(page.getByText('Edited Template Protocol')).toBeVisible();
+await page.getByRole('button', { name: 'Create Protocol' }).click();
+    await expect(page.getByText('Edited Template Protocol')).toBeVisible();
   });
 
   test('shows non-blocking conflict warnings before saving a stack', async ({ page }, testInfo) => {
@@ -36,7 +36,7 @@ await page.getByRole('button', { name: 'Create Stack' }).click();
         stacks: [
           {
             id: 'existing-bpc-stack',
-            name: 'Existing BPC Stack',
+            name: 'Existing BPC Protocol',
             description: '',
             peptides: [
               {
@@ -75,31 +75,31 @@ await page.getByRole('button', { name: 'Create Stack' }).click();
     await page.getByRole('button', { name: 'Restore backup' }).click();
     await expect(page.getByRole('status')).toContainText('Data restored from backup');
     await page.goto('/stacks');
-    await page.getByRole('button', { name: 'New stack' }).click();
+    await page.getByRole('button', { name: 'New protocol' }).click();
 
-    await page.getByLabel('Stack Name').fill('Overlap Review Stack');
+    await page.getByLabel('Protocol Name').fill('Overlap Review Protocol');
 await page.getByRole('button', { name: 'Next' }).click();
 await page.getByRole('checkbox', { name: 'BPC-157' }).check();
 
 await expect(page.getByRole('heading', { name: 'Review warnings' })).toBeVisible();
-    await expect(page.getByText('Review active stack overlap')).toBeVisible();
-    await expect(page.getByText(/BPC-157 is already present in active stack/)).toBeVisible();
+    await expect(page.getByText('Review active protocol overlap')).toBeVisible();
+    await expect(page.getByText(/BPC-157 is already present in active protocol/)).toBeVisible();
 
-    await page.getByRole('button', { name: 'Create Stack' }).click();
-    await expect(page.getByText('Overlap Review Stack')).toBeVisible();
+    await page.getByRole('button', { name: 'Create Protocol' }).click();
+    await expect(page.getByText('Overlap Review Protocol')).toBeVisible();
   });
 
   test('creates a stack through the multi-step builder while preserving draft state', async ({ page }) => {
     await page.goto('/stacks');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-await page.getByRole('button', { name: 'New stack' }).click();
+await page.getByRole('button', { name: 'New protocol' }).click();
 
-await expect(page.getByRole('heading', { name: 'New Stack' })).toBeVisible();
+await expect(page.getByRole('heading', { name: 'New Protocol' })).toBeVisible();
 await expect(page.getByText('Step 1 of 2')).toBeVisible();
 await expect(page.getByRole('heading', { name: 'Configure' })).toBeVisible();
 
-    await page.getByLabel('Stack Name').fill('Cut Recovery Stack');
+    await page.getByLabel('Protocol Name').fill('Cut Recovery Protocol');
     await page.getByLabel('Description').fill('Short recovery protocol');
 await page.getByLabel('Duration (days)').fill('42');
 await page.getByRole('button', { name: 'Next' }).click();
@@ -129,7 +129,7 @@ await expect(page.getByText('1 mg').first()).toBeVisible();
 await page.locator('input[type="time"]').first().fill('10:30');
 
 await expect(page.getByRole('heading', { name: 'Review', exact: true })).toBeVisible();
-    await expect(page.getByText('Cut Recovery Stack')).toBeVisible();
+    await expect(page.getByText('Cut Recovery Protocol')).toBeVisible();
     await expect(page.getByText('42 days', { exact: true })).toBeVisible();
     await expect(page.getByText('BPC-157').last()).toBeVisible();
     await expect(page.getByText('TB-500').last()).toBeVisible();
@@ -141,10 +141,10 @@ await expect(page.locator('input[type="time"]').first()).toHaveValue('10:30');
 await expect(page.getByRole('checkbox', { name: 'BPC-157' })).toBeChecked();
 await expect(page.getByRole('checkbox', { name: 'TB-500' })).toBeChecked();
 
-    await page.getByRole('button', { name: 'Create Stack' }).click();
-    await expect(page.getByRole('heading', { name: 'New Stack' })).toHaveCount(0);
-    await expect(page.getByText('Cut Recovery Stack')).toBeVisible();
-    await page.getByRole('link', { name: /Cut Recovery Stack/ }).click();
+    await page.getByRole('button', { name: 'Create Protocol' }).click();
+    await expect(page.getByRole('heading', { name: 'New Protocol' })).toHaveCount(0);
+    await expect(page.getByText('Cut Recovery Protocol')).toBeVisible();
+    await page.getByRole('link', { name: /Cut Recovery Protocol/ }).click();
     await expect(page.getByText('Daily · 10:30 AM')).toBeVisible();
   });
 
@@ -152,24 +152,24 @@ await expect(page.getByRole('checkbox', { name: 'TB-500' })).toBeChecked();
     await page.goto('/stacks');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await page.getByRole('button', { name: 'New stack' }).click();
-    await page.getByLabel('Stack Name').fill('Editable Protocol Stack');
+    await page.getByRole('button', { name: 'New protocol' }).click();
+    await page.getByLabel('Protocol Name').fill('Editable Protocol Protocol');
     await page.getByLabel('Description').fill('Original protocol description');
     await page.getByLabel('Duration (days)').fill('21');
 await page.getByRole('button', { name: 'Next' }).click();
 await page.getByRole('checkbox', { name: 'BPC-157' }).check();
-await page.getByRole('button', { name: 'Create Stack' }).click();
+await page.getByRole('button', { name: 'Create Protocol' }).click();
 
-await page.getByRole('link', { name: /Editable Protocol Stack/ }).click();
+await page.getByRole('link', { name: /Editable Protocol Protocol/ }).click();
 await page.getByRole('button', { name: 'Protocol settings' }).click();
 await page.getByRole('button', { name: 'Edit protocol' }).click();
-    await page.getByLabel('Protocol name').fill('Edited Protocol Stack');
+    await page.getByLabel('Protocol name').fill('Edited Protocol Protocol');
     await page.getByLabel('Description').fill('Updated protocol description');
     await page.getByLabel('Duration (days)').fill('28');
     await page.getByRole('textbox', { name: 'Notes' }).fill('Edited protocol notes');
     await page.getByRole('button', { name: 'Save changes' }).click();
 
-await expect(page.getByRole('heading', { name: 'Edited Protocol Stack' })).toBeVisible();
+await expect(page.getByRole('heading', { name: 'Edited Protocol Protocol' })).toBeVisible();
 await expect(page.getByText('Updated protocol description')).toBeVisible();
 await expect(page.getByText('Week 1 of 4')).toBeVisible();
 await expect(page.getByText('Edited protocol notes')).toBeVisible();
@@ -179,15 +179,15 @@ await expect(page.getByText('Edited protocol notes')).toBeVisible();
     await page.goto('/stacks');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await page.getByRole('button', { name: 'New stack' }).click();
-    await page.getByLabel('Stack Name').fill('Delete Me Protocol Stack');
+    await page.getByRole('button', { name: 'New protocol' }).click();
+    await page.getByLabel('Protocol Name').fill('Delete Me Protocol Protocol');
     await page.getByLabel('Description').fill('Temporary protocol');
     await page.getByLabel('Duration (days)').fill('14');
 await page.getByRole('button', { name: 'Next' }).click();
 await page.getByRole('checkbox', { name: 'BPC-157' }).check();
-await page.getByRole('button', { name: 'Create Stack' }).click();
+await page.getByRole('button', { name: 'Create Protocol' }).click();
 
-await page.getByRole('link', { name: /Delete Me Protocol Stack/ }).click();
+await page.getByRole('link', { name: /Delete Me Protocol Protocol/ }).click();
 await page.getByRole('button', { name: 'Protocol settings' }).click();
 await page.getByRole('button', { name: 'Delete protocol' }).click();
 
@@ -195,9 +195,9 @@ await page.getByRole('button', { name: 'Delete protocol' }).click();
     await page.getByRole('button', { name: 'Delete now' }).click();
 
     await expect(page).toHaveURL(/\/stacks$/);
-    await expect(page.getByRole('link', { name: /Delete Me Protocol Stack/ })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Delete Me Protocol Protocol/ })).toHaveCount(0);
 
     await page.reload();
-    await expect(page.getByRole('link', { name: /Delete Me Protocol Stack/ })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Delete Me Protocol Protocol/ })).toHaveCount(0);
   });
 });

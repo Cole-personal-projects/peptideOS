@@ -78,11 +78,11 @@ export function TodayCard() {
           <div>
             <p className="text-sm font-medium">No doses due today</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Start a stack to generate scheduled due doses on the dashboard.
+              Start a protocol to generate scheduled due doses on the dashboard.
             </p>
           </div>
           <Button asChild size="sm" variant="outline">
-            <Link href="/stacks">Build a stack</Link>
+            <Link href="/stacks">Build a protocol</Link>
           </Button>
         </CardContent>
       </Card>

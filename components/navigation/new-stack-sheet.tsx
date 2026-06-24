@@ -160,7 +160,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
   <Sheet open={open} onOpenChange={handleOpenChange}>
     <SheetContent side="bottom" className="inset-x-0 bottom-0 h-[85svh] w-screen max-w-none overflow-hidden rounded-t-3xl border-x-0 px-0">
       <SheetHeader className="shrink-0 px-4 pb-4">
-        <SheetTitle>New Stack</SheetTitle>
+        <SheetTitle>New Protocol</SheetTitle>
       </SheetHeader>
 
       <div className="min-w-0 flex-1 space-y-5 overflow-y-auto overflow-x-hidden px-4 pb-24">
@@ -168,7 +168,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
             <p className="text-xs font-medium text-muted-foreground">
             Step {currentStep + 1} of {steps.length}
             </p>
-          <div className="grid grid-cols-2 gap-2" aria-label="Stack builder steps">
+          <div className="grid grid-cols-2 gap-2" aria-label="Protocol builder steps">
               {steps.map((step, index) => (
                 <div key={step} className="space-y-1">
                   <div
@@ -220,7 +220,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="stack-name">Stack Name</Label>
+                <Label htmlFor="stack-name">Protocol Name</Label>
                 <Input
                   id="stack-name"
                   placeholder="e.g., Healing Protocol"
@@ -233,7 +233,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
                 <Label htmlFor="stack-description">Description</Label>
                 <Textarea
                   id="stack-description"
-                  placeholder="Brief description of this stack's purpose..."
+                  placeholder="Brief description of this protocol's purpose..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
@@ -360,7 +360,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
 
               <div className="rounded-lg border border-border p-4 space-y-3">
                 <div>
-                  <p className="text-xs text-muted-foreground">Stack</p>
+                  <p className="text-xs text-muted-foreground">Protocol</p>
                   <p className="font-semibold">{name}</p>
                   {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
                 </div>
@@ -413,7 +413,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
                 disabled={!name || selectedPeptides.length === 0}
               >
                 <Check className="w-4 h-4 mr-1" />
-                Create Stack
+                Create Protocol
               </Button>
             )}
           </div>

@@ -179,7 +179,7 @@ export function QuickConfirmDoseDialog({
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt>Stack</dt>
-                  <dd className="text-right text-foreground">{activeStack?.name ?? 'Active stack'}</dd>
+                  <dd className="text-right text-foreground">{activeStack?.name ?? 'Active protocol'}</dd>
                 </div>
               </dl>
             </div>

@@ -55,7 +55,7 @@ export default function CompoundProtocolSetupPage({ params }: { params: Promise<
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="text-base font-semibold">Custom Setup</h2>
-                <p className="text-sm text-muted-foreground">Use the full stack builder for custom schedules.</p>
+                <p className="text-sm text-muted-foreground">Use the full protocol builder for custom schedules.</p>
               </div>
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </CardContent>

@@ -488,7 +488,7 @@ function EmptyLabs({ onImport }: { onImport: () => void }) {
           </EmptyMedia>
           <EmptyTitle>No lab results yet</EmptyTitle>
           <EmptyDescription>
-            Import test results to track marker trends, connect them to active stacks, and compare changes over time.
+            Import test results to track marker trends, connect them to active protocols, and compare changes over time.
           </EmptyDescription>
           <Button onClick={onImport}>Import Lab Results</Button>
         </EmptyHeader>
@@ -648,12 +648,12 @@ function ImportMetaFields(props: Parameters<typeof ImportWizard>[0]) {
           <Input aria-label="Panel name" placeholder="Panel name" value={props.panelName} onChange={(event) => props.onPanelNameChange(event.target.value)} />
         </div>
         <select
-          aria-label="Active Stack"
+          aria-label="Active Protocol"
           className="h-10 rounded-md border border-input bg-secondary px-3 text-sm"
           value={props.linkedStackId}
           onChange={(event) => props.onLinkedStackIdChange(event.target.value)}
         >
-          <option value="">Baseline / no linked stack</option>
+          <option value="">Baseline / no linked protocol</option>
           {props.activeStacks.map((stack) => <option key={stack.id} value={stack.id}>{stack.name}</option>)}
         </select>
         <Textarea value={props.notes} onChange={(event) => props.onNotesChange(event.target.value)} placeholder="Report notes without patient identifiers" />
@@ -897,7 +897,7 @@ function MarkerDetailView({ detail, onCompare, onShare }: { detail: ReturnType<t
             {detail.mixedAssays && <p className="rounded-md border border-chart-4/40 bg-chart-4/10 px-3 py-2 text-xs text-muted-foreground">Assay or unit changed across this trend. Compare cautiously.</p>}
           </div>
           <div className="border-t bg-secondary/40 p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Active stack during test</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Active protocol during test</p>
             <p className="text-sm font-medium">{detail.stackLabel}</p>
             <p className="text-xs text-muted-foreground">{formatDate(detail.report.drawDate)}</p>
           </div>
@@ -990,9 +990,9 @@ function TrendsView({ dashboard }: { dashboard: ReturnType<typeof buildLabTrends
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">Stack performance</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-base">Protocol performance</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          {dashboard.stackPerformance.length === 0 ? <p className="text-sm text-muted-foreground">Link a lab import to a stack to see stack-level summaries.</p> : dashboard.stackPerformance.map((item) => (
+          {dashboard.stackPerformance.length === 0 ? <p className="text-sm text-muted-foreground">Link a lab import to a protocol to see protocol-level summaries.</p> : dashboard.stackPerformance.map((item) => (
             <div key={item.stackId} className="border-l-2 border-accent pl-3 text-sm">
               <p className="font-semibold">{item.stackName}</p>
               <p className="text-xs text-muted-foreground">{formatDate(item.latestDate)} · {item.reportCount} report{item.reportCount === 1 ? '' : 's'}</p>

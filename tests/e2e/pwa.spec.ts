@@ -46,7 +46,7 @@ test.describe('PWA readiness', () => {
     const coreRoutes = [
       { path: '/', heading: 'PeptideOS' },
       { path: '/library', heading: 'Library' },
-      { path: '/stacks', heading: 'Stacks' },
+      { path: '/stacks', heading: 'Protocols' },
       { path: '/log', heading: 'Dose Log' },
       { path: '/more', heading: 'More' },
     ];

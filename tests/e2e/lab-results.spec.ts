@@ -105,7 +105,7 @@ test.describe('lab results workspace', () => {
     await expect(page.getByRole('button', { name: 'Analyze' }).first()).toBeVisible();
     await page.getByRole('link', { name: /Estradiol Sensitive/ }).click();
     await expect(page).toHaveURL(/view=detail/);
-    await expect(page.getByText('Active stack during test')).toBeVisible();
+    await expect(page.getByText('Active protocol during test')).toBeVisible();
     await expect(page.getByText(/Assay or unit changed.*Compare cautiously/).first()).toBeVisible();
 
     await page.getByRole('button', { name: 'Compare Tests' }).click();

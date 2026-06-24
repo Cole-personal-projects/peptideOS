@@ -7,12 +7,12 @@ async function acceptDisclaimer(page: Page) {
 async function createStack(page: Page) {
   await page.goto('/stacks');
   await acceptDisclaimer(page);
-  await page.getByRole('button', { name: 'New stack' }).click();
-  await page.getByLabel('Stack Name').fill('Layout Smoke Stack');
+  await page.getByRole('button', { name: 'New protocol' }).click();
+  await page.getByLabel('Protocol Name').fill('Layout Smoke Stack');
   await page.getByLabel('Duration (days)').fill('28');
   await page.getByRole('button', { name: 'Next', exact: true }).click();
   await page.getByRole('checkbox', { name: 'BPC-157' }).check();
-  await page.getByRole('button', { name: 'Create Stack' }).click();
+  await page.getByRole('button', { name: 'Create Protocol' }).click();
   const href = await page.getByRole('link', { name: /Layout Smoke Stack/ }).first().getAttribute('href');
   if (!href) throw new Error('Expected created stack link to expose a detail href.');
   return href;

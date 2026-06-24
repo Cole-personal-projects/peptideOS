@@ -387,7 +387,7 @@ test.describe('Peppi action approvals', () => {
 
     await page.getByRole('link', { name: 'Edit in builder' }).click();
   await expect(page.getByRole('heading', { name: 'Configure' })).toBeVisible();
-    await expect(page.getByLabel('Stack Name')).toHaveValue('AI BPC Schedule');
+    await expect(page.getByLabel('Protocol Name')).toHaveValue('AI BPC Schedule');
     await expect(page.getByLabel('Duration (days)')).toHaveValue('28');
   });
 

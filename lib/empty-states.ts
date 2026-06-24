@@ -20,9 +20,9 @@ const emptyStateContent: Record<EmptyStateKey, EmptyStateContent> = {
     actionLabel: 'Clear filters',
   },
   'stacks-empty': {
-    title: 'No stacks planned',
-    description: 'Create a research stack to group compounds, schedules, duration, and review notes in one place.',
-    actionLabel: 'Create stack',
+    title: 'No protocols planned',
+    description: 'Create a protocol to group one or more compounds, schedules, duration, and review notes in one place.',
+    actionLabel: 'Create protocol',
   },
   'log-day-empty': {
     title: 'No doses on this day',

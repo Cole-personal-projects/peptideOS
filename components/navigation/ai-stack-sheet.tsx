@@ -112,9 +112,9 @@ export function AiStackSheet({ open, onOpenChange }: AiStackSheetProps) {
               <div className="mx-auto w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                 <Check className="w-5 h-5 text-primary" />
               </div>
-              <p className="font-semibold">Stack created</p>
+              <p className="font-semibold">Protocol created</p>
               <p className="text-sm text-muted-foreground">
-                &ldquo;{result?.draft?.name}&rdquo; was added as a planned stack. Open it to review and activate the schedules.
+                &ldquo;{result?.draft?.name}&rdquo; was added as a planned protocol. Open it to review and activate the schedules.
               </p>
               <div className="flex gap-2 justify-center pt-1">
                 <Button variant="outline" size="sm" onClick={resetState}>
@@ -192,7 +192,7 @@ export function AiStackSheet({ open, onOpenChange }: AiStackSheetProps) {
                   {result.draft ? (
                     <div className="rounded-lg border border-border p-4 space-y-3">
                       <div>
-                        <p className="text-xs text-muted-foreground">Stack</p>
+                        <p className="text-xs text-muted-foreground">Protocol</p>
                         <p className="font-semibold">{result.draft.name}</p>
                         {result.draft.description && (
                           <p className="text-sm text-muted-foreground mt-1">{result.draft.description}</p>
@@ -219,7 +219,7 @@ export function AiStackSheet({ open, onOpenChange }: AiStackSheetProps) {
                         ))}
                       </div>
                       <Button type="button" className="w-full" onClick={handleCreate}>
-                        <Check className="w-4 h-4 mr-1" /> Create stack
+                        <Check className="w-4 h-4 mr-1" /> Create protocol
                       </Button>
                       <p className="text-[11px] text-muted-foreground text-center">
                         Review every dose and schedule before activating. Peppi only structures what you wrote — it does not give dosing advice.

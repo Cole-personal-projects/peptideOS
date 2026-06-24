@@ -1,16 +1,16 @@
 import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 
-test.describe('dashboard cockpit', () => {
+test.describe('dashboard workspace', () => {
   test('shows Carbon Ember cockpit after first-run accept', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Get started' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
 
     await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
-    await expect(page.getByText('Protocol score')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Active stacks' })).toBeVisible();
+    await expect(page.getByText('No data yet')).toBeVisible();
+    await expect(page.getByText('Build your first protocol')).toBeVisible();
+    await expect(page.getByText('Build your first protocol')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Recent activity' })).toBeVisible();
     await expect(page.getByRole('navigation')).toBeVisible();
   });
@@ -91,7 +91,7 @@ test.describe('dashboard cockpit', () => {
     await expect(page.getByRole('button', { name: 'Complete' }).first()).toBeVisible();
   });
 
-  test('gives stack-building action when no protocol data exists', async ({ page }, testInfo) => {
+  test('gives protocol-building action when no protocol data exists', async ({ page }, testInfo) => {
     const exportPath = testInfo.outputPath('empty-dashboard-data.json');
     await writeFile(exportPath, JSON.stringify({
       schemaVersion: 2,
@@ -115,9 +115,9 @@ test.describe('dashboard cockpit', () => {
     await expect(page.getByRole('status')).toContainText('Data restored from backup');
 
     await page.goto('/');
-    await expect(page.getByText('No scheduled doses waiting')).toBeVisible();
-    await expect(page.getByText('No active stack').first()).toBeVisible();
-    await expect(page.getByRole('link', { name: /No active stack/ })).toBeVisible();
+    await expect(page.getByText('No data yet')).toBeVisible();
+    await expect(page.getByText('Build your first protocol')).toBeVisible();
+    await expect(page.getByRole('link', { name: /Build your first protocol/ })).toHaveAttribute('href', '/stacks?add=protocol');
   });
 
   test('summarizes IU-primary active inventory without raw mg conversion leakage', async ({ page }, testInfo) => {
@@ -161,7 +161,7 @@ test.describe('dashboard cockpit', () => {
     await expect(page.getByRole('status')).toContainText('Data restored from backup');
 
     await page.goto('/');
-    await expect(page.getByRole('link', { name: /1 Inventory/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /1 Stock Room/ })).toBeVisible();
     await expect(page.getByText('1').first()).toBeVisible();
     await expect(page.getByText(/3\.3333333333333335mg/)).toHaveCount(0);
     await expect(page.getByText(/inventory coverage warning/)).toHaveCount(0);

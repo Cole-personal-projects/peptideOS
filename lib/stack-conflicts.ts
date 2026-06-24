@@ -57,8 +57,8 @@ export function getStackConflictWarnings(input: StackConflictInput): StackConfli
         id: `active-overlap:${draftPeptide.peptideId}:${stack.id}`,
         severity: 'review',
         blocking: false,
-        title: 'Review active stack overlap',
-        message: `${peptideName(draftPeptide.peptideId, peptideNameById)} is already present in active stack "${stack.name}". Review overlap before saving this draft.`,
+        title: 'Review active protocol overlap',
+        message: `${peptideName(draftPeptide.peptideId, peptideNameById)} is already present in active protocol "${stack.name}". Review overlap before saving this draft.`,
       });
     });
   });

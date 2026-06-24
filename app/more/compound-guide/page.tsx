@@ -48,7 +48,7 @@ const workflowSections = [
     title: 'Review',
     icon: ClipboardCheck,
     items: [
-      'Check route, form, storage, contraindication flags, negative stack flags, citations, and evidence gaps.',
+      'Check route, form, storage, contraindication flags, negative protocol-combination flags, citations, and evidence gaps.',
       'Treat research-use entries as structured tracking references, not prescribing or treatment guidance.',
       'Prefer compound-specific source-backed details over generic peptide assumptions.',
     ],

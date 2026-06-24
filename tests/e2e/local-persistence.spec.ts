@@ -128,10 +128,10 @@ test.describe('local persistence', () => {
     await page.goto('/more/settings');
     await page.getByRole('button', { name: 'I Understand' }).click();
     await expect(page.getByText('Data ownership', { exact: true })).toBeVisible();
-    await expect(page.getByText('Exports include saved containers, doses, stacks, schedules, reconstitution calculations, signals, custom compounds, and settings.')).toBeVisible();
+    await expect(page.getByText('Exports include saved containers, doses, protocols, schedules, reconstitution calculations, signals, custom compounds, and settings.')).toBeVisible();
     await page.getByLabel('Import Data File').setInputFiles(exportPath);
     await expect(page.getByRole('alertdialog', { name: 'Restore this PeptideOS backup?' })).toBeVisible();
-    await expect(page.getByText('0 stacks · 0 schedules · 0 due-dose records · 0 logged doses · 1 containers')).toBeVisible();
+    await expect(page.getByText('0 protocols · 0 schedules · 0 due-dose records · 0 logged doses · 1 containers')).toBeVisible();
     await page.getByRole('button', { name: 'Restore backup' }).click();
     await expect(page.getByRole('status')).toContainText('Data restored from backup');
 

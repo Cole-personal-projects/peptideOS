@@ -142,7 +142,7 @@ export function ProtocolCockpitCard() {
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <ClipboardList className="h-4 w-4 text-primary" />
-            Protocol Cockpit
+            Protocol Overview
           </CardTitle>
           <Button asChild size="sm" variant="ghost" className="h-8 px-2">
             <Link href="/log">
@@ -167,7 +167,7 @@ export function ProtocolCockpitCard() {
           </div>
           <div className="rounded-md border bg-secondary/30 p-2">
             <p className="text-lg font-semibold">{summary.activeStackCount}</p>
-            <p className="text-[11px] text-muted-foreground">Stacks</p>
+            <p className="text-[11px] text-muted-foreground">Protocols</p>
           </div>
         </div>
 
@@ -186,7 +186,7 @@ export function ProtocolCockpitCard() {
             <div className="flex items-start gap-3">
               <FlaskConical className="mt-0.5 h-4 w-4 text-chart-4" />
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium uppercase tracking-wide text-chart-4">Inventory coverage</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-chart-4">Stock room</p>
                 <p className="mt-0.5 truncate text-sm font-semibold">{summary.mostUrgentInventoryRisk.label}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{summary.mostUrgentInventoryRisk.detail}</p>
               </div>
@@ -274,12 +274,12 @@ export function ProtocolCockpitCard() {
             <div>
               <p className="text-sm font-medium">No protocol activity yet</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Build a stack, add inventory, or log a signal to turn the dashboard into your daily protocol cockpit.
+                Build a protocol, add stock, or log a signal to turn the dashboard into your daily protocol workspace.
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-3">
               <Button asChild size="sm" variant="outline">
-                <Link href="/stacks?add=protocol">Build stack</Link>
+                <Link href="/stacks?add=protocol">Build protocol</Link>
               </Button>
               <Button asChild size="sm" variant="outline">
                 <Link href="/more/inventory?add=inventory">Add inventory</Link>
