@@ -47,13 +47,20 @@ export default function InventoryPage() {
   const activeVials = data.vials.filter(v => v.status === 'active');
   const sealedVials = data.vials.filter(v => v.status === 'sealed');
   const finishedVials = data.vials.filter(v => v.status === 'finished' || v.status === 'expired');
-  const stockHealth = getInventoryStockHealthSummary({
-    vials: data.vials,
-    doses: data.doses,
-    schedules: data.schedules,
-    scheduleLogs: data.scheduleLogs,
-  });
-  const batchesById = new Map(data.inventoryBatches.map((batch) => [batch.id, batch]));
+const stockHealth = getInventoryStockHealthSummary({
+vials: data.vials,
+doses: data.doses,
+schedules: data.schedules,
+scheduleLogs: data.scheduleLogs,
+});
+const stockRiskLabel = stockHealth.runoutCount > 0
+  ? `${stockHealth.runoutCount} runout`
+  : stockHealth.lowStockCount > 0
+    ? `${stockHealth.lowStockCount} low`
+    : stockHealth.expiringSoonCount > 0
+      ? `${stockHealth.expiringSoonCount} expiring`
+      : 'Clear';
+const batchesById = new Map(data.inventoryBatches.map((batch) => [batch.id, batch]));
 
   const formatDate = (date: string) => new Date(`${date.slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', {
     month: 'short',
@@ -282,7 +289,29 @@ export default function InventoryPage() {
         }
       />
 
-      <div className="p-4">
+      <div className="space-y-4 p-4">
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            ['Active', activeVials.length, 'text-chart-3'],
+            ['Sealed', sealedVials.length, 'text-primary'],
+            ['History', finishedVials.length, 'text-muted-foreground'],
+            [
+              'Risk',
+              stockRiskLabel,
+              stockHealth.runoutCount > 0
+                ? 'text-destructive'
+                : stockHealth.lowStockCount > 0 || stockHealth.expiringSoonCount > 0
+                  ? 'text-chart-4'
+                  : 'text-chart-3',
+            ],
+          ].map(([label, value, className]) => (
+            <div key={label} className="rounded-[12px] border border-border bg-card p-3">
+              <p className={cn('text-lg font-bold leading-none', className)}>{value}</p>
+              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
+            </div>
+          ))}
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full grid grid-cols-3">
             <TabsTrigger value="active">
@@ -303,7 +332,7 @@ export default function InventoryPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold">Stock health</p>
-                      <p className="text-xs text-muted-foreground">Active inventory coverage based on remaining quantity, pending schedules, and expiration timing.</p>
+                      <p className="text-xs text-muted-foreground">{stockHealth.healthyCount} healthy · {stockHealth.unscheduledCount} unscheduled</p>
                     </div>
                     <Badge variant={stockHealth.runoutCount > 0 || stockHealth.lowStockCount > 0 ? 'destructive' : 'secondary'}>
                       {stockHealth.runoutCount > 0
@@ -333,9 +362,6 @@ export default function InventoryPage() {
                     </div>
                   </div>
 
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    {stockHealth.healthyCount} healthy · {stockHealth.unscheduledCount} unscheduled
-                  </p>
                 </CardContent>
               </Card>
             ) : null}
