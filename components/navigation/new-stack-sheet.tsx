@@ -157,14 +157,14 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
   });
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-3xl h-[85vh] overflow-y-auto">
-        <SheetHeader className="pb-4">
-          <SheetTitle>New Stack</SheetTitle>
-        </SheetHeader>
+  <Sheet open={open} onOpenChange={handleOpenChange}>
+    <SheetContent side="bottom" className="inset-x-0 bottom-0 h-[85svh] w-screen max-w-none overflow-hidden rounded-t-3xl border-x-0 px-0">
+      <SheetHeader className="shrink-0 px-4 pb-4">
+        <SheetTitle>New Stack</SheetTitle>
+      </SheetHeader>
 
-        <div className="space-y-5 pb-8">
-          <div className="space-y-3">
+      <div className="min-w-0 flex-1 space-y-5 overflow-y-auto overflow-x-hidden px-4 pb-24">
+        <div className="min-w-0 space-y-3">
             <p className="text-xs font-medium text-muted-foreground">
             Step {currentStep + 1} of {steps.length}
             </p>
@@ -189,7 +189,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
           </div>
 
         {currentStepName === 'Configure' && (
-            <section className="space-y-4">
+          <section className="min-w-0 space-y-4 overflow-hidden">
             <h2 className="text-lg font-semibold">Configure</h2>
 
               <div className="space-y-2">
@@ -254,26 +254,26 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
           )}
 
         {currentStepName === 'Peptides' && (
-            <section className="space-y-4">
+          <section className="min-w-0 space-y-4 overflow-hidden">
             <h2 className="text-lg font-semibold">Add Peptides</h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[42vh] overflow-y-auto p-1">
+            <div className="grid max-h-[42vh] min-w-0 grid-cols-1 gap-2 overflow-y-auto overflow-x-hidden pr-1 sm:grid-cols-2">
                 {trackableCompounds.map((compound) => {
                   const checkboxId = `stack-peptide-${compound.id}`;
                   return (
                     <label
                       key={compound.id}
                       htmlFor={checkboxId}
-                      className="flex items-start gap-3 p-3 rounded-lg bg-secondary cursor-pointer hover:bg-secondary/80"
-                    >
+                    className="flex min-w-0 items-start gap-3 rounded-lg bg-secondary p-3 hover:bg-secondary/80"
+                  >
                       <Checkbox
                         id={checkboxId}
                         checked={selectedPeptides.includes(compound.id)}
                         onCheckedChange={() => handlePeptideToggle(compound.id)}
                       />
-                      <span>
-                        <span className="block text-sm font-medium">{compound.name}</span>
-                        <span className="block text-xs text-muted-foreground capitalize">{compound.defaultRoute}</span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium">{compound.name}</span>
+                      <span className="block text-xs text-muted-foreground capitalize">{compound.defaultRoute}</span>
                       </span>
                     </label>
                   );
@@ -283,22 +283,22 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
           )}
 
         {currentStepName === 'Peptides' && (
-            <section className="space-y-4">
+          <section className="min-w-0 space-y-4 overflow-hidden">
               <h2 className="text-lg font-semibold">Schedule</h2>
 
               <div className="space-y-2">
-                {draftPeptides.map((stackPeptide) => {
-                  const compound = trackableCompounds.find(p => p.id === stackPeptide.peptideId);
-                  return (
-                    <div key={stackPeptide.peptideId} className="rounded-lg border border-border p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-medium text-sm">{compound?.name}</p>
-                          <p className="text-xs text-muted-foreground">
+              {draftPeptides.map((stackPeptide) => {
+                const compound = trackableCompounds.find(p => p.id === stackPeptide.peptideId);
+                return (
+                  <div key={stackPeptide.peptideId} className="min-w-0 overflow-hidden rounded-lg border border-border p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm">{compound?.name}</p>
+                        <p className="text-xs text-muted-foreground">
                             {stackPeptide.frequency} · {stackPeptide.timing} · {stackPeptide.route.toUpperCase()}
                           </p>
                         </div>
-                        <span className="text-sm font-medium">
+                      <span className="shrink-0 text-sm font-medium">
                           {formatDose(stackPeptide.doseValue, stackPeptide.doseUnit)}
                         </span>
                       </div>

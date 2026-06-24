@@ -106,6 +106,20 @@ await page.getByRole('button', { name: 'Next' }).click();
 
 await expect(page.getByText('Step 2 of 2')).toBeVisible();
 await expect(page.getByRole('heading', { name: 'Add Peptides' })).toBeVisible();
+const stepTwoBounds = await page.evaluate(() => {
+  const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+  const addPeptidesHeading = Array.from(document.querySelectorAll<HTMLElement>('h2')).find((heading) => heading.textContent?.trim() === 'Add Peptides');
+  const scheduleHeading = Array.from(document.querySelectorAll<HTMLElement>('h2')).find((heading) => heading.textContent?.trim() === 'Schedule');
+  const elements = [dialog, addPeptidesHeading, scheduleHeading].filter(Boolean) as HTMLElement[];
+  return elements.map((element) => {
+    const rect = element.getBoundingClientRect();
+    return { left: rect.left, right: rect.right, viewportWidth: window.innerWidth };
+  });
+});
+for (const bounds of stepTwoBounds) {
+  expect(bounds.left, `builder element should not drift left: ${JSON.stringify(bounds)}`).toBeGreaterThanOrEqual(0);
+  expect(bounds.right, `builder element should not overflow right: ${JSON.stringify(bounds)}`).toBeLessThanOrEqual(bounds.viewportWidth);
+}
 await page.getByRole('checkbox', { name: 'BPC-157' }).check();
 await page.getByRole('checkbox', { name: 'TB-500' }).check();
 
