@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { AdherenceStrip, MiniProgressRing } from '@/components/ui/visual-primitives';
 import { useApp } from '@/lib/context';
 import { isAssistantAction, PEPPI_PROTOCOL_DRAFT_STORAGE_KEY } from '@/lib/assistant-actions';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
@@ -135,10 +136,9 @@ return `Day ${Math.min(Math.max(elapsed, 1), stack.durationDays)}`;
             const config = statusConfig[stack.status];
             const StatusIcon = config.icon;
             const progress = getProgressPercentage(stack.startDate, stack.durationDays, stack.status);
-            const circumference = 2 * Math.PI * 22;
-            const dashOffset = circumference - (progress / 100) * circumference;
             const isPlanned = stack.status === 'planned';
             const summary = getOperationalSummary(stack);
+            const stripStates = getProtocolStripStates(stack.id, data);
 
             return (
               <Link key={stack.id} href={`/stacks/${stack.id}`} className="block">
@@ -147,30 +147,15 @@ return `Day ${Math.min(Math.max(elapsed, 1), stack.durationDays)}`;
                   isPlanned && "border-dashed opacity-70",
                 )}>
                   <CardContent className="flex items-start gap-3.5 p-3.5">
-                    <div className="relative mt-0.5 grid h-11 w-11 shrink-0 place-items-center">
-                      {isPlanned ? (
-                        <div className="grid h-11 w-11 place-items-center rounded-full border border-dashed border-muted-foreground/45 bg-background/50">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      ) : (
-                        <svg viewBox="0 0 52 52" className="h-11 w-11" aria-hidden="true">
-                          <circle cx="26" cy="26" r="22" fill="none" stroke="hsl(var(--secondary))" strokeWidth="4.5" />
-                          <circle
-                            cx="26"
-                            cy="26"
-                            r="22"
-                            fill="none"
-                            stroke="hsl(var(--primary))"
-                            strokeLinecap="round"
-                            strokeWidth="4.5"
-                            strokeDasharray={circumference}
-                            strokeDashoffset={dashOffset}
-                            transform="rotate(-90 26 26)"
-                          />
-                        </svg>
-                      )}
-                      {!isPlanned && <span className="absolute text-[10px] font-bold text-foreground">{Math.round(progress)}</span>}
-                    </div>
+	                    <div className="relative mt-0.5 grid h-11 w-11 shrink-0 place-items-center">
+	                      {isPlanned ? (
+	                        <div className="grid h-11 w-11 place-items-center rounded-full border border-dashed border-muted-foreground/45 bg-background/50">
+	                          <Clock className="h-4 w-4 text-muted-foreground" />
+	                        </div>
+	                      ) : (
+	                        <MiniProgressRing value={progress} size={44} />
+	                      )}
+	                    </div>
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
@@ -186,14 +171,17 @@ return `Day ${Math.min(Math.max(elapsed, 1), stack.durationDays)}`;
                         </Badge>
                       </div>
 
-                      <div className="mt-2 grid grid-cols-3 gap-1.5 text-[11px]">
+	                      <div className="mt-2 grid grid-cols-3 gap-1.5 text-[11px]">
                         <span className="truncate rounded-[6px] bg-secondary/55 px-2 py-1 text-muted-foreground">{summary.nextLabel}</span>
                         <span className="truncate rounded-[6px] bg-secondary/55 px-2 py-1 text-muted-foreground">{summary.completionLabel}</span>
                         <span className={cn('truncate rounded-[6px] px-2 py-1', summary.hasInventoryGap ? 'bg-destructive/10 text-destructive' : 'bg-secondary/55 text-muted-foreground')}>
                           {summary.hasInventoryGap && <AlertTriangle className="mr-1 inline h-3 w-3 align-[-2px]" />}
                           {summary.inventoryLabel}
                         </span>
-                      </div>
+	                      </div>
+                        <div className="mt-3">
+                          <AdherenceStrip states={stripStates} />
+                        </div>
 
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {stack.peptides.slice(0, 4).map((sp) => (
@@ -267,5 +255,19 @@ function getStackOperationalSummary(stack: Stack, data: AppData): StackOperation
 }
 
 function formatShortTime(value: string) {
-  return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(value));
+return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(value));
+}
+
+function getProtocolStripStates(stackId: string, data: AppData): Array<'done' | 'due' | 'missed' | 'skipped' | 'empty'> {
+return data.scheduleLogs
+.filter((log) => log.stackId === stackId)
+.sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime())
+.slice(-14)
+.map((log) => {
+if (log.status === 'taken') return 'done';
+if (log.status === 'skipped') return 'skipped';
+if (log.status === 'missed') return 'missed';
+if (new Date(log.dueAt).getTime() < Date.now()) return 'missed';
+return 'due';
+});
 }

@@ -32,6 +32,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { RangeBar, StatusDot } from '@/components/ui/visual-primitives';
 import { useApp } from '@/lib/context';
 import {
   buildLabProtocolContext,
@@ -829,13 +830,18 @@ function TimelineView(props: {
             </div>
 <div className="space-y-1.5 p-2.5">
               {card.markers.slice(0, 6).map((marker) => (
-                <Link key={marker.id} href={makeLabMarkerHref(card.report.id, { id: marker.id, normalizedKey: marker.normalizedKey })} className="flex items-center justify-between gap-3 rounded-md bg-secondary/60 px-3 py-2">
+                <Link key={marker.id} href={makeLabMarkerHref(card.report.id, { id: marker.id, normalizedKey: marker.normalizedKey })} className="grid grid-cols-[1fr_auto] gap-3 rounded-[14px] bg-secondary/60 px-3 py-2">
                   <span className="min-w-0">
-                    <span className="block text-sm font-medium">{marker.name}</span>
-                    <span className="block truncate text-xs text-muted-foreground">{marker.rangeLabel}</span>
+                    <span className="flex items-center gap-2">
+                      <StatusDot tone={marker.flag === 'high' || marker.flag === 'low' || marker.flag === 'critical' ? 'danger' : 'success'} className="h-2 w-2" />
+                      <span className="block truncate text-sm font-bold">{marker.name}</span>
+                    </span>
+                    <span className="mt-2 block">
+                      <RangeBar percent={marker.flag === 'high' || marker.flag === 'critical' ? 92 : marker.flag === 'low' ? 18 : 56} label={marker.rangeLabel} tone={marker.flag === 'high' || marker.flag === 'low' || marker.flag === 'critical' ? 'danger' : 'primary'} />
+                    </span>
                   </span>
                   <span className="text-right">
-                    <span className={cn('block text-sm font-semibold', flagClass(marker.flag))}>{marker.valueLabel}</span>
+                    <span className={cn('block text-sm font-bold', flagClass(marker.flag))}>{marker.valueLabel}</span>
                     {marker.trend && <TrendBadge direction={marker.trend.direction} percent={marker.trend.percent} />}
                   </span>
                 </Link>

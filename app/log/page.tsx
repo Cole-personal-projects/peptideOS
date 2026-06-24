@@ -1,22 +1,34 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { CalendarDays, List, ChevronLeft, ChevronRight, Filter, Map } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Filter, List, Map } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useApp } from '@/lib/context';
+import { StatusDot } from '@/components/ui/visual-primitives';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
+import { useApp } from '@/lib/context';
 import { formatDose } from '@/lib/dose-helpers';
 import { buildDoseTimelineGroups } from '@/lib/dose-timeline';
 import { getEmptyStateContent } from '@/lib/empty-states';
 import { cn } from '@/lib/utils';
+import type { Dose, Schedule, ScheduleLog } from '@/lib/types';
+
+type DaySignal = 'planned' | 'done' | 'skipped' | 'missed' | 'overdue';
+
+const signalTone: Record<DaySignal, 'primary' | 'success' | 'warning' | 'danger' | 'muted'> = {
+  planned: 'primary',
+  done: 'success',
+  skipped: 'warning',
+  missed: 'danger',
+  overdue: 'danger',
+};
 
 export default function LogPage() {
   const { data, getDosesByDate } = useApp();
@@ -24,101 +36,80 @@ export default function LogPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [filterPeptide, setFilterPeptide] = useState<string>('all');
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const trackableCompounds = getTrackableCompounds(data);
+  const [nowMs] = useState(() => Date.now());
 
-  // Generate calendar days
   const calendarDays = useMemo(() => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const startPadding = firstDay.getDay();
     const days: (Date | null)[] = [];
-
-    // Add padding for days before the first of the month
-    for (let i = 0; i < startPadding; i++) {
-      days.push(null);
-    }
-
-    // Add all days of the month
-    for (let i = 1; i <= lastDay.getDate(); i++) {
-      days.push(new Date(year, month, i));
-    }
-
+    for (let i = 0; i < firstDay.getDay(); i++) days.push(null);
+    for (let day = 1; day <= lastDay.getDate(); day++) days.push(new Date(year, month, day));
     return days;
   }, [currentMonth]);
 
-  // Get dose counts per day for the current month
-  const doseCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    data.doses.forEach(dose => {
-      if (!dose.completed) return;
-      if (filterPeptide !== 'all' && dose.peptideId !== filterPeptide) return;
-      const dateKey = new Date(dose.dateTime).toDateString();
-      counts[dateKey] = (counts[dateKey] || 0) + 1;
-    });
-    return counts;
-  }, [data.doses, filterPeptide]);
+  const daySignals = useMemo(() => {
+    const signals: Record<string, Set<DaySignal>> = {};
+    const add = (dateValue: string, signal: DaySignal) => {
+      const key = new Date(dateValue).toDateString();
+      signals[key] ??= new Set<DaySignal>();
+      signals[key].add(signal);
+    };
+
+    data.doses
+      .filter((dose) => filterPeptide === 'all' || dose.peptideId === filterPeptide)
+      .forEach((dose) => add(dose.dateTime, dose.completed ? 'done' : 'planned'));
+
+    data.scheduleLogs
+      .filter((log) => filterPeptide === 'all' || log.peptideId === filterPeptide)
+      .forEach((log) => {
+        if (log.status === 'taken') add(log.takenAt ?? log.dueAt, 'done');
+        else if (log.status === 'skipped') add(log.skippedAt ?? log.dueAt, 'skipped');
+        else if (log.status === 'missed') add(log.missedAt ?? log.dueAt, 'missed');
+        else add(log.dueAt, new Date(log.dueAt).getTime() < nowMs ? 'overdue' : 'planned');
+      });
+
+    return signals;
+  }, [data.doses, data.scheduleLogs, filterPeptide, nowMs]);
 
   const selectedDoses = useMemo(() => {
     let doses = getDosesByDate(selectedDate);
-    if (filterPeptide !== 'all') {
-      doses = doses.filter(d => d.peptideId === filterPeptide);
-    }
+    if (filterPeptide !== 'all') doses = doses.filter((dose) => dose.peptideId === filterPeptide);
     return doses;
   }, [selectedDate, filterPeptide, getDosesByDate]);
 
-  const prevMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
-  };
+  const selectedScheduleLogs = useMemo(() => {
+    return data.scheduleLogs
+      .filter((log) => filterPeptide === 'all' || log.peptideId === filterPeptide)
+      .filter((log) => isSameDay(new Date(log.takenAt ?? log.skippedAt ?? log.missedAt ?? log.dueAt), selectedDate))
+      .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
+  }, [data.scheduleLogs, filterPeptide, selectedDate]);
 
-  const nextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
-  };
-
-  const formatTime = (dateTime: string) => {
-    return new Date(dateTime).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
-  };
-
-  const isSelected = (date: Date) => {
-    return date.toDateString() === selectedDate.toDateString();
-  };
-
-  const timelineGroups = useMemo(
-    () => buildDoseTimelineGroups(data.doses, filterPeptide),
-    [data.doses, filterPeptide],
-  );
+  const timelineGroups = useMemo(() => buildDoseTimelineGroups(data.doses, filterPeptide), [data.doses, filterPeptide]);
   const dayEmptyState = getEmptyStateContent('log-day-empty');
   const timelineEmptyState = getEmptyStateContent('log-timeline-empty');
-  const trackableCompounds = getTrackableCompounds(data);
 
   return (
     <AppShell>
-      <PageHeader 
-        title="Dose Log" 
+      <PageHeader
+        title="Dose Log"
         rightElement={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" asChild className="h-8 w-8">
               <Link href="/log/site-map">
-                <Map className="w-4 h-4" />
+                <Map className="h-4 w-4" />
                 <span className="sr-only">Site map</span>
               </Link>
             </Button>
-            <Tabs value={view} onValueChange={(v) => setView(v as 'calendar' | 'list')}>
+            <Tabs value={view} onValueChange={(value) => setView(value as 'calendar' | 'list')}>
               <TabsList className="h-8">
                 <TabsTrigger value="calendar" className="h-6 px-2" aria-label="Calendar view">
-                  <CalendarDays className="w-4 h-4" />
+                  <CalendarDays className="h-4 w-4" />
                 </TabsTrigger>
                 <TabsTrigger value="list" className="h-6 px-2" aria-label="List view">
-                  <List className="w-4 h-4" />
+                  <List className="h-4 w-4" />
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -126,10 +117,9 @@ export default function LogPage() {
         }
       />
 
-      <div className="p-4 space-y-4">
-        {/* Filter */}
+      <div className="space-y-4 p-4">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-muted-foreground" />
+          <Filter className="h-4 w-4 text-muted-foreground" />
           <Select value={filterPeptide} onValueChange={setFilterPeptide}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="All compounds" />
@@ -145,81 +135,81 @@ export default function LogPage() {
 
         {view === 'calendar' ? (
           <>
-            {/* Calendar */}
-            <Card>
+            <Card className="rounded-[20px]">
               <CardContent className="p-4">
-                {/* Month navigation */}
-                <div className="flex items-center justify-between mb-4">
-                  <Button variant="ghost" size="icon" onClick={prevMonth}>
-                    <ChevronLeft className="w-4 h-4" />
+                <div className="mb-4 flex items-center justify-between">
+                  <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}>
+                    <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <h3 className="font-semibold">
-                    {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                  </h3>
-                  <Button variant="ghost" size="icon" onClick={nextMonth}>
-                    <ChevronRight className="w-4 h-4" />
+                  <h3 className="text-sm font-bold">{currentMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</h3>
+                  <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}>
+                    <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
 
-                {/* Day headers */}
-                <div className="grid grid-cols-7 gap-1 mb-2 text-center">
-                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                    <div key={i} className="text-xs text-muted-foreground py-1">{day}</div>
+                <div className="mb-2 grid grid-cols-7 gap-1 text-center">
+                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day) => (
+                    <div key={day} className="py-1 text-[11px] font-bold uppercase text-muted-foreground">{day}</div>
                   ))}
                 </div>
 
-                {/* Calendar grid */}
                 <div className="grid grid-cols-7 gap-1">
-                  {calendarDays.map((date, i) => {
-                    if (!date) {
-                      return <div key={i} className="aspect-square" />;
-                    }
-                    const count = doseCounts[date.toDateString()] || 0;
+                  {calendarDays.map((date, index) => {
+                    if (!date) return <div key={`empty-${index}`} className="aspect-square" />;
+                    const signals = Array.from(daySignals[date.toDateString()] ?? []);
+                    const selected = isSameDay(date, selectedDate);
                     return (
                       <button
-                        key={i}
+                        key={date.toISOString()}
                         onClick={() => setSelectedDate(date)}
                         className={cn(
-                          "aspect-square flex flex-col items-center justify-center rounded-lg text-sm relative transition-colors",
-                          isSelected(date) && "bg-primary text-primary-foreground",
-                          isToday(date) && !isSelected(date) && "border-2 border-primary",
-                          !isSelected(date) && "hover:bg-secondary"
+                          'relative flex aspect-square flex-col items-center justify-center rounded-[12px] border text-sm transition-colors',
+                          selected ? 'border-primary bg-primary text-primary-foreground' : 'border-transparent hover:bg-secondary',
+                          isSameDay(date, new Date()) && !selected && 'border-primary/50',
                         )}
                       >
-                        {date.getDate()}
-                        {count > 0 && (
-                          <div className={cn(
-                            "flex gap-0.5 mt-0.5",
-                            isSelected(date) && "opacity-80"
-                          )}>
-                            {Array.from({ length: Math.min(count, 4) }).map((_, j) => (
-                              <div 
-                                key={j} 
+                        <span>{date.getDate()}</span>
+                        {signals.length > 0 && (
+                          <span className="mt-1 flex gap-0.5">
+                            {signals.slice(0, 4).map((signal) => (
+                              <span
+                                key={signal}
                                 className={cn(
-                                  "w-1 h-1 rounded-full",
-                                  isSelected(date) ? "bg-primary-foreground" : "bg-primary"
+                                  'h-1.5 w-1.5 rounded-full',
+                                  selected && 'bg-primary-foreground',
+                                  !selected && signal === 'done' && 'bg-chart-3',
+                                  !selected && signal === 'planned' && 'bg-primary',
+                                  !selected && signal === 'skipped' && 'bg-chart-4',
+                                  !selected && (signal === 'missed' || signal === 'overdue') && 'bg-destructive',
                                 )}
                               />
                             ))}
-                          </div>
+                          </span>
                         )}
                       </button>
                     );
                   })}
                 </div>
+
+                <div className="mt-4 grid grid-cols-4 gap-2 text-[10px] font-semibold text-muted-foreground">
+                  {(['planned', 'done', 'skipped', 'missed'] as DaySignal[]).map((signal) => (
+                    <span key={signal} className="inline-flex items-center gap-1 capitalize">
+                      <StatusDot tone={signalTone[signal]} className="h-2 w-2" /> {signal === 'done' ? 'Done' : signal}
+                    </span>
+                  ))}
+                </div>
               </CardContent>
             </Card>
 
-            {/* Selected day doses */}
-            <div>
-              <h3 className="font-semibold mb-2">
-                {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            <section>
+              <h3 className="mb-2 text-sm font-bold">
+                {selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
               </h3>
-              {selectedDoses.length === 0 ? (
+              {selectedScheduleLogs.length === 0 && selectedDoses.length === 0 ? (
                 <Empty className="bg-secondary/40 py-8">
                   <EmptyHeader>
                     <EmptyMedia variant="icon">
-                      <CalendarDays className="w-5 h-5" />
+                      <CalendarDays className="h-5 w-5" />
                     </EmptyMedia>
                     <EmptyTitle>{dayEmptyState.title}</EmptyTitle>
                     <EmptyDescription>{dayEmptyState.description}</EmptyDescription>
@@ -227,37 +217,23 @@ export default function LogPage() {
                 </Empty>
               ) : (
                 <div className="space-y-2">
-                  {selectedDoses.map((dose) => {
-                    const compound = trackableCompounds.find((candidate) => candidate.id === dose.peptideId);
-                    return (
-                      <Card key={dose.id}>
-                        <CardContent className="p-3 flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-sm">{compound?.name ?? dose.peptideId}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatTime(dose.dateTime)} · {dose.route.toUpperCase()} · {dose.site.replace(/-/g, ' ')}
-                            </p>
-                            <Badge variant={dose.completed ? 'secondary' : 'outline'} className="mt-1">
-                              {dose.completed ? 'Completed' : 'Planned'}
-                            </Badge>
-                          </div>
-                          <Badge variant="secondary">{formatDose(dose.doseValue, dose.doseUnit)}</Badge>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                  {selectedScheduleLogs.map((log) => (
+                    <ScheduleLogRow key={log.id} log={log} compounds={trackableCompounds} schedules={data.schedules} nowMs={nowMs} />
+                  ))}
+                  {selectedDoses.filter((dose) => !dose.scheduleLogId).map((dose) => (
+                    <DoseRow key={dose.id} dose={dose} compounds={trackableCompounds} />
+                  ))}
                 </div>
               )}
-            </div>
+            </section>
           </>
         ) : (
-          /* List view */
           <div className="space-y-4">
             {timelineGroups.length === 0 ? (
               <Empty className="bg-secondary/40">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
-                    <List className="w-5 h-5" />
+                    <List className="h-5 w-5" />
                   </EmptyMedia>
                   <EmptyTitle>{timelineEmptyState.title}</EmptyTitle>
                   <EmptyDescription>{timelineEmptyState.description}</EmptyDescription>
@@ -266,29 +242,11 @@ export default function LogPage() {
             ) : (
               timelineGroups.slice(0, 30).map((group) => (
                 <div key={group.dateKey}>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                    {group.dateLabel}
-                  </h3>
+                  <h3 className="mb-2 text-sm font-medium text-muted-foreground">{group.dateLabel}</h3>
                   <div className="space-y-2">
-                    {group.doses.map((dose) => {
-                      const compound = trackableCompounds.find((candidate) => candidate.id === dose.peptideId);
-                      return (
-                        <Card key={dose.id}>
-                          <CardContent className="p-3 flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-sm">{compound?.name ?? dose.peptideId}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {dose.timeLabel} · {dose.route.toUpperCase()} · {dose.siteLabel}
-                              </p>
-                              <Badge variant={dose.completed ? 'secondary' : 'outline'} className="mt-1">
-                                {dose.statusLabel}
-                              </Badge>
-                            </div>
-                            <Badge variant="secondary">{dose.doseLabel}</Badge>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
+                    {group.doses.map((dose) => (
+                      <DoseRow key={dose.id} dose={dose} compounds={trackableCompounds} />
+                    ))}
                   </div>
                 </div>
               ))
@@ -298,4 +256,63 @@ export default function LogPage() {
       </div>
     </AppShell>
   );
+}
+
+function DoseRow({ dose, compounds }: { dose: Dose; compounds: ReturnType<typeof getTrackableCompounds> }) {
+  const compound = compounds.find((candidate) => candidate.id === dose.peptideId);
+  return (
+    <Card className="rounded-[16px]">
+      <CardContent className="flex items-center justify-between gap-3 p-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <StatusDot tone="success" />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold">{compound?.name ?? dose.peptideId}</p>
+            <p className="text-xs text-muted-foreground">{formatTime(dose.dateTime)} · {dose.route.toUpperCase()} · {dose.site ? dose.site.replace(/-/g, ' ') : 'site not set'}</p>
+          </div>
+        </div>
+        <div className="shrink-0 text-right">
+          <Badge variant="secondary">{formatDose(dose.doseValue, dose.doseUnit)}</Badge>
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">{dose.completed ? 'Completed' : 'Planned'}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ScheduleLogRow({ log, compounds, schedules, nowMs }: { log: ScheduleLog; compounds: ReturnType<typeof getTrackableCompounds>; schedules: Schedule[]; nowMs: number }) {
+  const compound = compounds.find((candidate) => candidate.id === log.peptideId);
+  const schedule = schedules.find((candidate) => candidate.id === log.scheduleId);
+  const status = getLogSignal(log, nowMs);
+  return (
+    <Card className="rounded-[16px]">
+      <CardContent className="flex items-center justify-between gap-3 p-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <StatusDot tone={signalTone[status]} />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold">{compound?.name ?? log.peptideId}</p>
+            <p className="text-xs text-muted-foreground">{formatTime(log.dueAt)} · scheduled</p>
+          </div>
+        </div>
+        <div className="shrink-0 text-right">
+          {schedule && <Badge variant="secondary">{formatDose(schedule.doseValue, schedule.doseUnit)}</Badge>}
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">{status === 'done' ? 'Completed' : status}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function getLogSignal(log: ScheduleLog, nowMs: number): DaySignal {
+  if (log.status === 'taken') return 'done';
+  if (log.status === 'skipped') return 'skipped';
+  if (log.status === 'missed') return 'missed';
+  return new Date(log.dueAt).getTime() < nowMs ? 'overdue' : 'planned';
+}
+
+function formatTime(dateTime: string) {
+  return new Date(dateTime).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
+function isSameDay(a: Date, b: Date) {
+  return a.toDateString() === b.toDateString();
 }
