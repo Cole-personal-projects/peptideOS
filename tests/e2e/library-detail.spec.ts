@@ -252,7 +252,7 @@ test.describe('library detail pages', () => {
     await page.getByRole('link', { name: 'Create Retatrutide protocol' }).click();
     await expect(page).toHaveURL(/\/stacks\?compound=retatrutide&add=protocol/);
     await expect(page.getByRole('dialog', { name: 'New Protocol' })).toBeVisible();
-    await expect(page.getByLabel('Protocol Name')).toHaveValue('Retatrutide research plan');
+    await expect(page.getByLabel('Protocol Name')).toHaveValue('Retatrutide protocol');
 
     await page.goto('/library/retatrutide');
     await page.getByRole('link', { name: 'Ask Peppi about Retatrutide' }).click();
