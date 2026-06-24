@@ -34,36 +34,39 @@ type MenuSection = {
   items: MenuItem[];
 };
 
+const primaryItems: MenuItem[] = [
+  { href: '/more/inventory', label: 'Stock Room', icon: FlaskConical, description: 'Vials' },
+  { href: '/more/reconstitution', label: 'Mix', icon: Calculator, description: 'Draw volume' },
+  { href: '/labs', label: 'Labs', icon: TestTube, description: 'Markers' },
+  { href: '/more/ai-assistant', label: 'Peppi', icon: Bot, description: 'Actions' },
+];
+
 const menuSections: MenuSection[] = [
   {
-    title: 'Management',
+    title: 'Build',
     items: [
-      { href: '/more/inventory', label: 'Inventory', icon: FlaskConical, description: 'Manage your vials' },
-      { href: '/more/reconstitution', label: 'Reconstitution Calculator', icon: Calculator, description: 'Calculate dosing' },
-      { href: '/library', label: 'Library', icon: BookOpen, description: 'Reference compounds' },
-      { href: '/more/compound-guide', label: 'Compound Guide', icon: BookOpen, description: 'Shared compound workflows' },
+      { href: '/library', label: 'Library', icon: BookOpen, description: 'Compounds' },
+      { href: '/more/compound-guide', label: 'Guide', icon: BookOpen, description: 'Workflows' },
     ]
   },
   {
-    title: 'Health Data',
+    title: 'Track',
     items: [
-      { href: '/more/signals', label: 'Signals', icon: Activity, description: 'Capture check-ins' },
-      { href: '/labs', label: 'Lab Results', icon: TestTube, description: 'Track bloodwork' },
-      { href: '/more/integrations', label: 'Health Integrations', icon: Heart, description: 'Connect devices', badge: 'Soon' },
+      { href: '/more/signals', label: 'Signals', icon: Activity, description: 'Check-ins' },
+      { href: '/more/integrations', label: 'Integrations', icon: Heart, description: 'Devices', badge: 'Soon' },
     ]
   },
   {
     title: 'Community',
     items: [
-      { href: '/more/community', label: 'Community', icon: Users, description: 'Connect with researchers', badge: 'Soon' },
-      { href: '/more/ai-assistant', label: 'Peppi', icon: Bot, description: 'AI helper' },
+      { href: '/more/community', label: 'Community', icon: Users, description: 'People', badge: 'Soon' },
     ]
   },
   {
     title: 'App',
     items: [
-      { href: '/more/settings', label: 'Settings', icon: Settings, description: 'Preferences & privacy' },
-      { href: '/more/about', label: 'About', icon: Info, description: 'Disclaimers & info' },
+      { href: '/more/settings', label: 'Settings', icon: Settings, description: 'Sync' },
+      { href: '/more/about', label: 'About', icon: Info, description: 'Info' },
     ]
   }
 ];
@@ -73,39 +76,59 @@ export default function MorePage() {
     <AppShell>
       <PageHeader title="More" />
 
-      <div className="space-y-5 p-4">
+      <div className="space-y-5 p-4 pb-32">
+        <div className="grid grid-cols-2 gap-3">
+          {primaryItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-label={item.href === '/more/inventory' ? 'Stock Room Inventory' : undefined}
+                className="group min-h-[112px] rounded-[14px] border border-border bg-card p-4 transition-colors hover:bg-secondary/50"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="grid h-11 w-11 place-items-center rounded-[12px] border border-primary/25 bg-primary/10 text-primary">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                </div>
+                <p className="mt-4 text-base font-bold leading-tight">{item.label}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{item.description}</p>
+              </Link>
+            );
+          })}
+        </div>
+
         {menuSections.map((section) => (
           <div key={section.title}>
             <h2 className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               {section.title}
             </h2>
-            <Card>
-              <CardContent className="p-0 divide-y divide-border">
+            <Card className="overflow-hidden">
+              <CardContent className="grid grid-cols-2 gap-px bg-border p-0">
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   return (
                     <Link 
                       key={item.href} 
                       href={item.href}
-                      className="flex items-center justify-between px-3.5 py-3 transition-colors hover:bg-secondary/50"
+                      className="flex min-h-[76px] items-center gap-3 bg-card px-3.5 py-3 transition-colors hover:bg-secondary/50"
                     >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="rounded-lg bg-secondary p-2">
-                          <Icon className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="truncate text-sm font-medium">{item.label}</p>
-                            {item.badge && (
-                              <Badge variant="secondary" className="px-1.5 py-0 text-[11px]">
-                                {item.badge}
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="truncate text-xs text-muted-foreground">{item.description}</p>
-                        </div>
+                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-secondary">
+                        <Icon className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-semibold">{item.label}</p>
+                          {item.badge && (
+                            <Badge variant="secondary" className="px-1.5 py-0 text-[11px]">
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="truncate text-xs text-muted-foreground">{item.description}</p>
+                      </div>
                     </Link>
                   );
                 })}
