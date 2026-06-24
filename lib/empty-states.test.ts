@@ -23,7 +23,7 @@ describe('empty state content', () => {
   });
 
   test('only actionable empty states expose CTA labels', () => {
-    expect(getEmptyStateContent('stacks-empty').actionLabel).toBe('Create stack');
+    expect(getEmptyStateContent('stacks-empty').actionLabel).toBe('Create protocol');
     expect(getEmptyStateContent('inventory-sealed-empty').actionLabel).toBe('Add vial');
     expect(getEmptyStateContent('inventory-history-empty').actionLabel).toBeUndefined();
   });

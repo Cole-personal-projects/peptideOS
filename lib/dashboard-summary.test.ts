@@ -73,6 +73,17 @@ describe('dashboard summary', () => {
     }));
   });
 
+  test('does not award completion when nothing is scheduled', () => {
+    const briefing = buildDashboardBriefing(baseData, now);
+
+    expect(briefing).toEqual(expect.objectContaining({
+      scheduledToday: 0,
+      completedToday: 0,
+      pendingToday: 0,
+      completionPercent: 0,
+    }));
+  });
+
   test('builds a recent adherence grid with completed dose counts', () => {
     const grid = buildAdherenceGrid([
       { id: 'today-1', peptideId: 'bpc-157', vialId: 'active', dateTime: '2026-05-22T08:00:00.000Z', doseValue: 250, doseUnit: 'mcg', route: 'subq', site: '', notes: '', completed: true },

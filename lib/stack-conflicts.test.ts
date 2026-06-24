@@ -78,7 +78,7 @@ describe('stack conflict warnings', () => {
       expect.objectContaining({
         id: 'active-overlap:tb-500:stack-1',
         severity: 'review',
-        title: 'Review active stack overlap',
+        title: 'Review active protocol overlap',
       }),
     ]);
   });

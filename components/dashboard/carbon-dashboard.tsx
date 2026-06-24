@@ -64,10 +64,11 @@ function eventStatusLabel(event: ProtocolTimelineEvent) {
   return 'Due';
 }
 
-function ScoreRing({ value }: { value: number }) {
-  const radius = 72;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (value / 100) * circumference;
+function ScoreRing({ value }: { value: number | null }) {
+ const radius = 72;
+ const circumference = 2 * Math.PI * radius;
+ const normalizedValue = value ?? 0;
+ const offset = circumference - (normalizedValue / 100) * circumference;
 
   return (
 <div className="relative mx-auto flex h-40 w-40 items-center justify-center">
@@ -101,8 +102,8 @@ function ScoreRing({ value }: { value: number }) {
         />
       </svg>
       <div className="relative z-10 text-center">
-<p className="text-3xl font-bold leading-none tracking-normal">{value}</p>
-<p className="mt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Optimal</p>
+<p className="text-3xl font-bold leading-none tracking-normal">{value === null ? '--' : value}</p>
+<p className="mt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{value === null ? 'No data yet' : 'Today'}</p>
       </div>
     </div>
   );
@@ -118,13 +119,16 @@ function ProtocolChip({ label }: { label: string }) {
 }
 
 function AdherenceBars({ completed, total }: { completed: number; total: number }) {
-  const percent = total === 0 ? 100 : Math.round((completed / total) * 100);
+  const percent = total === 0 ? null : Math.round((completed / total) * 100);
+  const filledBars = percent === null ? 0 : Math.round((percent / 100) * 7);
 
   return (
     <section className="rounded-[14px] border border-border bg-card p-4">
       <div className="flex items-center justify-between">
         <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Weekly adherence</h3>
-        <span className="text-lg font-bold text-chart-3">{percent}%</span>
+        <span className={cn('text-lg font-bold', percent === null ? 'text-muted-foreground' : 'text-chart-3')}>
+          {percent === null ? '--' : `${percent}%`}
+        </span>
       </div>
       <div className="mt-3 flex h-2 gap-1">
         {Array.from({ length: 7 }, (_, index) => (
@@ -132,14 +136,14 @@ function AdherenceBars({ completed, total }: { completed: number; total: number 
             key={index}
             className={cn(
               'flex-1 rounded-sm',
-              index < Math.round((percent / 100) * 7) ? 'bg-chart-3' : 'border border-border bg-secondary',
+              index < filledBars ? 'bg-chart-3' : 'border border-border bg-secondary',
             )}
           />
         ))}
       </div>
       <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
         <span>{completed} completed today</span>
-        <span>{total} scheduled</span>
+        <span>{total === 0 ? 'No scheduled doses' : `${total} scheduled`}</span>
       </div>
     </section>
   );
@@ -153,8 +157,9 @@ export function CarbonDashboard() {
   const activeStacks = data.stacks.filter((stack) => stack.status === 'active');
   const recentDoses = getRecentDoses(4);
   const todayEvents = summary.events.filter((event) => event.kind === 'due-dose').slice(0, 3);
-  const score = briefing.scheduledToday === 0 ? Math.min(100, 72 + activeStacks.length * 6) : Math.round(briefing.completionPercent);
+  const score = briefing.scheduledToday === 0 ? null : Math.round(briefing.completionPercent);
   const insight = summary.mostUrgentInventoryRisk ?? summary.nextAction ?? summary.latestSignal;
+  const insightHref = insight?.href ?? '/stacks?add=protocol';
   const primaryStack = activeStacks[0];
 
   useEffect(() => {
@@ -179,7 +184,7 @@ export function CarbonDashboard() {
 
       <div className="px-4 pb-8 pt-4">
         <section className="flex flex-col items-center gap-3 py-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Protocol score</h2>
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Today</h2>
           <ScoreRing value={score} />
           <div className="flex gap-8">
             <Metric label="Due" value={summary.dueCount} tone={summary.overdueCount > 0 ? 'danger' : 'warning'} />
@@ -188,7 +193,7 @@ export function CarbonDashboard() {
           </div>
           <div className="mt-1 flex max-w-full gap-2 overflow-x-auto pb-1 no-scrollbar">
             {activeStacks.length === 0 ? (
-              <ProtocolChip label="No active stack" />
+              <ProtocolChip label="No active protocol" />
             ) : (
               activeStacks.slice(0, 3).map((stack) => <ProtocolChip key={stack.id} label={stack.name} />)
             )}
@@ -196,7 +201,7 @@ export function CarbonDashboard() {
         </section>
 
         <Link
-          href={insight?.href ?? '/more/inventory'}
+          href={insightHref}
           className={cn(
 'relative mt-2 flex items-start gap-3 overflow-hidden rounded-[14px] border border-border bg-card p-3.5',
             insight?.urgency === 'critical' ? 'border-destructive/40 bg-destructive/10' : '',
@@ -207,10 +212,10 @@ export function CarbonDashboard() {
           <div className="min-w-0 flex-1">
 <p className="truncate text-sm font-bold">{insight?.label ?? 'No urgent protocol signals'}</p>
 <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-              {insight?.detail ?? 'Inventory, schedules, labs, and signals are quiet right now.'}
+              {insight?.detail ?? 'Start with one protocol, then connect stock, labs, and logs.'}
             </p>
 <span className="mt-3 inline-flex rounded-[10px] border border-border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-primary">
-              {insight ? 'Review' : 'View cockpit'}
+              {insight ? 'Review' : 'Build protocol'}
             </span>
           </div>
         </Link>
@@ -232,13 +237,13 @@ className="ember-gradient ember-glow mt-4 flex w-full items-center justify-cente
           </div>
           <div className="space-y-2">
             {todayEvents.length === 0 ? (
-              <Link href="/stacks" className="flex items-center gap-3 rounded-[14px] border border-border bg-card p-4">
+            <Link href="/stacks?add=protocol" className="flex items-center gap-3 rounded-[14px] border border-border bg-card p-4">
                 <div className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-primary/30 bg-primary/10 text-primary">
                   <Syringe className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold">No scheduled doses waiting</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">Create or activate a stack to populate today.</p>
+              <p className="text-sm font-bold">Build your first protocol</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Add peptides and dosing times in one guided flow.</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </Link>
@@ -280,14 +285,14 @@ className="ember-gradient ember-glow mt-4 flex w-full items-center justify-cente
           </div>
         </section>
 
-        <section className="mt-5">
-          <div className="mb-3 flex items-center justify-between">
-<h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Active stacks</h2>
-            <Link href="/stacks" className="flex items-center text-xs font-bold text-primary">
-              View all <ChevronRight className="h-4 w-4" />
-            </Link>
-          </div>
-          {primaryStack ? (
+        {primaryStack && (
+          <section className="mt-5">
+            <div className="mb-3 flex items-center justify-between">
+<h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Active protocol</h2>
+              <Link href="/stacks" className="flex items-center text-xs font-bold text-primary">
+                View all <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
             <Link href={`/stacks/${primaryStack.id}`} className="block rounded-[14px] border border-border bg-card p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -328,17 +333,8 @@ className="ember-gradient ember-glow mt-4 flex w-full items-center justify-cente
                 })}
               </div>
             </Link>
-          ) : (
-            <Link href="/stacks" className="flex items-center gap-3 rounded-[14px] border border-border bg-card p-4">
-              <div className="h-2 w-2 rounded-full bg-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold">No active stack</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Start with one protocol, then connect inventory and logs.</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </Link>
-          )}
-        </section>
+          </section>
+        )}
 
         <div className="mt-5">
           <AdherenceBars completed={summary.completedTodayCount} total={Math.max(briefing.scheduledToday, summary.completedTodayCount)} />
@@ -348,7 +344,7 @@ className="ember-gradient ember-glow mt-4 flex w-full items-center justify-cente
           <Link href="/more/inventory" className="rounded-[14px] border border-border bg-card p-4">
             <FlaskConical className="h-5 w-5 text-chart-4" />
 <p className="mt-3 text-xl font-bold leading-none">{data.vials.filter((vial) => vial.status === 'active').length}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Inventory</p>
+          <p className="mt-1 text-xs text-muted-foreground">Stock Room</p>
           </Link>
           <Link href="/labs" className="rounded-[14px] border border-border bg-card p-4">
             <CalendarClock className="h-5 w-5 text-primary" />

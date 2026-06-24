@@ -38,7 +38,7 @@ export function BriefingCard() {
           <div className="rounded-md border bg-secondary/30 p-3">
             <Layers className="mb-2 w-4 h-4 text-chart-3" />
             <p className="text-lg font-semibold">{briefing.activeStacks}</p>
-            <p className="text-[11px] text-muted-foreground">Stacks</p>
+            <p className="text-[11px] text-muted-foreground">Protocols</p>
           </div>
           <div className="rounded-md border bg-secondary/30 p-3">
             <FlaskConical className="mb-2 w-4 h-4 text-chart-4" />

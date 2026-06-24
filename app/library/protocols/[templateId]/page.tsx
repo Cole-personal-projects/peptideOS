@@ -147,7 +147,7 @@ export default function ProtocolPreviewPage({ params }: { params: Promise<{ temp
         </Card>
 
         <Button type="button" className="w-full" onClick={saveStack}>
-          Save planned stack
+          Save planned protocol
         </Button>
       </div>
     </AppShell>

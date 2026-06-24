@@ -22,7 +22,7 @@ type QuickAction = {
 const actions: QuickAction[] = [
   { id: 'log-dose', label: 'Log Dose', icon: Syringe, color: 'text-primary' },
   { id: 'add-vial', label: 'Add Vial', icon: FlaskConical, color: 'text-accent' },
-  { id: 'new-stack', label: 'New Stack', icon: Layers, color: 'text-chart-3' },
+  { id: 'new-stack', label: 'New Protocol', icon: Layers, color: 'text-chart-3' },
   { id: 'reconstitution', label: 'Calculate Reconstitution', icon: Calculator, color: 'text-chart-4', href: '/more/reconstitution' },
   { id: 'ai-assistant', label: 'Peppi', icon: Bot, color: 'text-chart-5', href: '/more/ai-assistant' },
 ];

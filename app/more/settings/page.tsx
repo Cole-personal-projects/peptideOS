@@ -32,7 +32,7 @@ function formatDateTime(value: string | null) {
 
 function formatImportCounts(preview: UserDataImportPreview) {
   return [
-    `${preview.counts.stacks} stacks`,
+    `${preview.counts.stacks} protocols`,
     `${preview.counts.schedules} schedules`,
     `${preview.counts.scheduleLogs} due-dose records`,
     `${preview.counts.doses} logged doses`,
@@ -271,7 +271,7 @@ const biometricLockEnabled = isFeatureEnabled('biometric-lock');
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Exports include saved containers, doses, stacks, schedules, reconstitution calculations, signals, custom compounds, and settings.
+              Exports include saved containers, doses, protocols, schedules, reconstitution calculations, signals, custom compounds, and settings.
               Bundled reference compounds stay app-owned.
             </p>
 
@@ -399,7 +399,7 @@ void retrieveFromCloud();
                 <AlertDialogHeader>
                   <AlertDialogTitle>Clear all local data?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This removes saved containers, doses, stacks, schedules, reconstitution calculations, signals, custom compounds, and settings from this device.
+                    This removes saved containers, doses, protocols, schedules, reconstitution calculations, signals, custom compounds, and settings from this device.
                     Bundled reference compounds stay available after reset.
                   </AlertDialogDescription>
                 </AlertDialogHeader>

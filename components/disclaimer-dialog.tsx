@@ -50,7 +50,7 @@ export function DisclaimerDialog() {
                 <p className="text-sm text-muted-foreground">Welcome to</p>
 <h2 className="mt-1 text-2xl font-bold tracking-normal">PeptideOS</h2>
                 <p className="mt-3 max-w-sm text-sm text-muted-foreground">
-                  A private operating surface for peptide research logs, stack planning, site rotation, and vial records.
+                  A private operating surface for peptide research logs, protocol planning, site rotation, and vial records.
                 </p>
                 <div className="mt-5 grid grid-cols-3 gap-2 text-center text-xs">
                   <div className="rounded-md border bg-background/60 p-2">
@@ -159,11 +159,11 @@ export function DisclaimerDialog() {
               </p>
               <AlertDialogTitle className="text-center">Core workflows</AlertDialogTitle>
               <AlertDialogDescription className="text-center">
-                PeptideOS centers on dose logging, stack planning, reference review, and vial records.
+                PeptideOS centers on dose logging, protocol planning, reference review, and vial records.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="grid grid-cols-2 gap-2 text-sm">
-              {['Log', 'Stacks', 'Library', 'Inventory'].map((item) => (
+              {['Log', 'Protocols', 'Library', 'Inventory'].map((item) => (
                 <div key={item} className="rounded-md border bg-secondary/40 p-3 text-center font-medium">
                   {item}
                 </div>

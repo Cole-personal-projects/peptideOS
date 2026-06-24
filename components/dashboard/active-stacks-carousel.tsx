@@ -31,16 +31,16 @@ export function ActiveStacksCarousel() {
     return (
       <div className="px-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold">Active Stacks</h2>
+<h2 className="text-base font-semibold">Active Protocols</h2>
           <Link href="/stacks" className="text-sm text-primary flex items-center">
             View all <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
         <Card className="bg-secondary/50 border-dashed">
           <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground text-sm">No active stacks</p>
+<p className="text-muted-foreground text-sm">No active protocols</p>
             <Link href="/stacks" className="text-primary text-sm mt-1 inline-block">
-              Create your first stack
+              Create your first protocol
             </Link>
           </CardContent>
         </Card>
@@ -51,7 +51,7 @@ export function ActiveStacksCarousel() {
   return (
     <div>
       <div className="flex items-center justify-between mb-3 px-4">
-        <h2 className="text-base font-semibold">Active Stacks</h2>
+<h2 className="text-base font-semibold">Active Protocols</h2>
         <Link href="/stacks" className="text-sm text-primary flex items-center">
           View all <ChevronRight className="w-4 h-4" />
         </Link>

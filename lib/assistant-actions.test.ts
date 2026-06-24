@@ -123,7 +123,7 @@ describe('assistant action proposals', () => {
  expect.objectContaining({
  id: 'today',
  title: 'Today',
- eyebrow: '1 active stack',
+      eyebrow: '1 active protocol',
  body: '1 due later today · 0 overdue · 1 completed · 1 skipped or missed',
  href: '/log',
  }),

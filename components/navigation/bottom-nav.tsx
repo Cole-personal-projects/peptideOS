@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 const tabs = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/stacks', label: 'Stacks', icon: Layers },
+  { href: '/stacks', label: 'Protocols', icon: Layers },
   { href: '/labs', label: 'Labs', icon: TestTube },
   { href: '/log', label: 'Log', icon: CalendarDays },
   { href: '/more', label: 'More', icon: MoreHorizontal },

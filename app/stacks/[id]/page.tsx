@@ -117,7 +117,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
       <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-3 backdrop-blur min-[420px]:px-5">
         <div className="flex items-center gap-2.5">
-            <Link href="/stacks" aria-label="Back to Stacks" className="grid h-9 w-9 shrink-0 place-items-center text-foreground">
+            <Link href="/stacks" aria-label="Back to Protocols" className="grid h-9 w-9 shrink-0 place-items-center text-foreground">
             <ArrowLeft className="h-4 w-4" />
             </Link>
           <h1 className="min-w-0 flex-1 truncate text-[15px] font-bold leading-tight tracking-normal text-foreground">
@@ -171,9 +171,9 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
           </section>
 
         <section className="rounded-[6px] border border-[#332012] bg-card p-3.5">
-          <div className="mb-3 flex items-center justify-between gap-4">
-<h2 className="text-sm font-bold tracking-normal">14-Day Trajectory</h2>
-<p className="shrink-0 text-right text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">Last 14 days</p>
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <h2 className="text-sm font-bold tracking-normal">14-Day Log</h2>
+            <p className="shrink-0 text-right text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Recent</p>
             </div>
           <div className="flex h-9 items-end justify-between gap-2">
               {trajectory.map((bar, index) => (
@@ -281,7 +281,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                   <div className="flex items-start justify-between gap-5">
                     <div>
 <p className="text-sm font-semibold leading-tight">No linked labs</p>
-<p className="mt-2 text-sm text-muted-foreground">Import labs and link them to this stack.</p>
+                      <p className="mt-2 text-sm text-muted-foreground">Import labs and link them to this protocol.</p>
                     </div>
                   </div>
               <Button asChild variant="outline" className="mt-4 h-10 w-full rounded-[2px] border-[#332012] bg-transparent text-sm font-semibold tracking-normal">
@@ -301,7 +301,7 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Protocol settings</DialogTitle>
-            <DialogDescription>Manage this stack without changing dose history.</DialogDescription>
+            <DialogDescription>Manage this protocol without changing dose history.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             {stack.status === 'planned' && (
@@ -515,7 +515,7 @@ function getTrajectoryBars(logs: ScheduleLog[]) {
     date.setDate(today.getDate() - (trajectoryWindow - 1 - index));
     const key = date.toISOString().slice(0, 10);
     const dayLogs = logs.filter((log) => log.dueAt.slice(0, 10) === key);
-    const status = pickDayStatus(dayLogs, index);
+    const status = pickDayStatus(dayLogs);
     return {
       date: key,
       status,
@@ -524,12 +524,12 @@ function getTrajectoryBars(logs: ScheduleLog[]) {
   });
 }
 
-function pickDayStatus(logs: ScheduleLog[], index: number): ScheduleLog['status'] | 'empty' {
+function pickDayStatus(logs: ScheduleLog[]): ScheduleLog['status'] | 'empty' {
   if (logs.some((log) => log.status === 'pending')) return 'pending';
   if (logs.some((log) => log.status === 'taken')) return 'taken';
   if (logs.some((log) => log.status === 'missed')) return 'missed';
   if (logs.some((log) => log.status === 'skipped')) return 'skipped';
-  return [3, 8].includes(index) ? 'missed' : [12, 13].includes(index) ? 'empty' : 'taken';
+  return 'empty';
 }
 
 function getLinkedLabPreview(stackId: string, reports: { id: string; drawDate: string; linkedStackId?: string; }[], results: LabResult[]) {

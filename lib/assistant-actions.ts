@@ -112,7 +112,7 @@ export function buildAssistantTodaySummary(data: AppData, now = new Date()): Ass
     {
       id: 'today',
       title: 'Today',
-      eyebrow: `${summary.activeStackCount} active stack${summary.activeStackCount === 1 ? '' : 's'}`,
+      eyebrow: `${summary.activeStackCount} active protocol${summary.activeStackCount === 1 ? '' : 's'}`,
       body: [
         `${pendingTodayEvents.length} due later today`,
         `${overdueDoseEvents.length} overdue`,
@@ -232,7 +232,7 @@ function findScheduledDoseConfirmationCandidates(data: AppData, message: string,
         log,
         schedule,
         compoundName,
-        stackName: stackDisplayName(data, log.stackId) ?? 'Active stack',
+        stackName: stackDisplayName(data, log.stackId) ?? 'Active protocol',
       };
     })
     .filter((candidate): candidate is NonNullable<typeof candidate> => Boolean(candidate));

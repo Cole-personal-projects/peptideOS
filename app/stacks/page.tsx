@@ -90,7 +90,7 @@ return `Day ${Math.min(Math.max(elapsed, 1), stack.durationDays)}`;
   return (
 <AppShell>
       <PageHeader
-        title="Stacks"
+        title="Protocols"
         rightElement={
           <div className="flex items-center gap-2">
             <Button
@@ -106,7 +106,7 @@ return `Day ${Math.min(Math.max(elapsed, 1), stack.durationDays)}`;
               size="icon"
               className="h-9 w-9 rounded-[10px] bg-gradient-to-br from-primary to-[hsl(var(--chart-5))] text-primary-foreground shadow-[0_4px_14px_hsl(var(--primary)/0.28)]"
               onClick={() => setNewStackOpen(true)}
-              aria-label="New stack"
+              aria-label="New protocol"
             >
               <Plus className="h-4 w-4" />
             </Button>

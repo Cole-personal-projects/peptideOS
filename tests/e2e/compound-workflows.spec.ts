@@ -7,7 +7,7 @@ async function chooseAddCompoundOption(page: Page, name: string, optionName: str
 }
 
 test.describe('compound workflows', () => {
-  test('uses a custom compound in vial, dose, and stack flows', async ({ page }) => {
+  test('uses a custom compound in vial, dose, and protocol flows', async ({ page }) => {
     await page.goto('/library');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
@@ -58,15 +58,15 @@ test.describe('compound workflows', () => {
     await expect(page.getByText('Custom Recovery Blend').first()).toBeVisible();
     await expect(page.getByText('1.5 mg').first()).toBeVisible();
 
-    await page.getByRole('link', { name: 'Stacks' }).click();
-  await page.getByRole('button', { name: 'New stack' }).click();
-  await page.getByLabel('Stack Name').fill('Custom Recovery Stack');
+    await page.getByRole('link', { name: 'Protocols' }).click();
+  await page.getByRole('button', { name: 'New protocol' }).click();
+  await page.getByLabel('Protocol Name').fill('Custom Recovery Stack');
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('checkbox', { name: 'Custom Recovery Blend' }).check();
   await expect(page.getByText('1 mg').first()).toBeVisible();
   await expect(page.getByText('Custom Recovery Stack')).toBeVisible();
   await expect(page.getByText('Custom Recovery Blend').last()).toBeVisible();
-  await page.getByRole('button', { name: 'Create Stack' }).click();
+  await page.getByRole('button', { name: 'Create Protocol' }).click();
     await expect(page.getByText('Custom Recovery Stack')).toBeVisible();
   });
 });
