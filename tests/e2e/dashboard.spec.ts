@@ -91,6 +91,111 @@ test.describe('dashboard workspace', () => {
     await expect(page.getByRole('button', { name: 'Complete' }).first()).toBeVisible();
   });
 
+  test('completes a due protocol dose from the dashboard card', async ({ page }, testInfo) => {
+    await page.clock.setFixedTime(new Date('2026-06-24T10:30:00-07:00'));
+    const exportPath = testInfo.outputPath('dashboard-protocol-dose-complete.json');
+    await writeFile(exportPath, JSON.stringify({
+      schemaVersion: 7,
+      exportedAt: '2026-06-24T17:30:00.000Z',
+      data: {
+        vials: [
+          {
+            id: 'vial-bpc-active-dashboard-log',
+            name: 'BPC active vial',
+            peptideId: 'bpc-157',
+            containerType: 'lyophilized-vial',
+            dateAdded: '2026-06-24',
+            source: 'Test inventory',
+            lotNumber: 'BPC-LOG-001',
+            mg: 5,
+            totalAmount: { value: 5, unit: 'mg' },
+            bacWaterMl: 2,
+            reconstitutedDate: '2026-06-24',
+            expirationDate: '2026-12-24',
+            status: 'active',
+          },
+        ],
+        inventoryBatches: [],
+        doses: [],
+        stacks: [
+          {
+            id: 'stack-dashboard-log',
+            name: 'BPC Log Protocol',
+            description: '',
+            peptides: [
+              {
+                id: 'stack-item-bpc-log',
+                peptideId: 'bpc-157',
+                doseValue: 250,
+                doseUnit: 'mcg',
+                frequency: 'daily',
+                route: 'subq',
+                timing: 'Morning',
+              },
+            ],
+            startDate: '2026-06-24T00:00:00.000Z',
+            durationDays: 14,
+            status: 'active',
+            notes: '',
+          },
+        ],
+        schedules: [
+          {
+            id: 'schedule-bpc-dashboard-log',
+            stackId: 'stack-dashboard-log',
+            stackPeptideId: 'stack-item-bpc-log',
+            peptideId: 'bpc-157',
+            doseValue: 250,
+            doseUnit: 'mcg',
+            route: 'subq',
+            recurrence: { frequency: 'daily', timesOfDay: ['10:00'] },
+            startDate: '2026-06-24T00:00:00.000Z',
+            endDate: '2026-07-08T00:00:00.000Z',
+            status: 'active',
+          },
+        ],
+        scheduleLogs: [
+          {
+            id: 'log-bpc-dashboard-complete',
+            scheduleId: 'schedule-bpc-dashboard-log',
+            stackId: 'stack-dashboard-log',
+            stackPeptideId: 'stack-item-bpc-log',
+            peptideId: 'bpc-157',
+            dueAt: '2026-06-24T17:00:00.000Z',
+            status: 'pending',
+          },
+        ],
+        reconstitutionCalculations: [],
+        signalCheckIns: [],
+        labReports: [],
+        labResults: [],
+        labImportAudits: [],
+        userCompounds: [],
+        settings: { hasSeenDisclaimer: true, hasCompletedOnboarding: true, userMode: 'researcher', biometricLock: false, darkMode: true },
+      },
+    }));
+
+    await page.goto('/more/settings');
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await page.getByLabel('Import Data File').setInputFiles(exportPath);
+    await expect(page.getByRole('alertdialog', { name: 'Restore this PeptideOS backup?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Restore backup' }).click();
+    await expect(page.getByRole('status')).toContainText('Data restored from backup');
+
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Complete' }).first().click();
+    await expect(page.getByRole('dialog', { name: 'Complete scheduled dose' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Complete dose' })).toBeVisible();
+    await page.getByRole('button', { name: 'Upper Left Abdomen', exact: true }).click();
+    await page.getByRole('button', { name: 'Complete dose' }).click();
+
+    await expect(page.getByRole('dialog', { name: 'Complete scheduled dose' })).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Complete' })).toHaveCount(0);
+    await page.goto('/log');
+    await expect(page.getByText('BPC-157').first()).toBeVisible();
+    await expect(page.getByText('250 mcg').first()).toBeVisible();
+  });
+
   test('gives protocol-building action when no protocol data exists', async ({ page }, testInfo) => {
     const exportPath = testInfo.outputPath('empty-dashboard-data.json');
     await writeFile(exportPath, JSON.stringify({
