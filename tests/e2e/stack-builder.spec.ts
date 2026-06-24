@@ -2,30 +2,29 @@ import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 
 test.describe('protocol builder', () => {
-  test('applies a protocol template and still allows editing before save', async ({ page }) => {
-    await page.goto('/stacks');
-
-    await page.getByRole('button', { name: 'I Understand' }).click();
-    await page.getByRole('button', { name: 'New protocol' }).click();
-
-    await expect(page.getByRole('heading', { name: 'Templates' })).toBeVisible();
-    await page.getByRole('button', { name: /Use Healing Recovery Demo/ }).click();
-
-    await expect(page.getByLabel('Protocol Name')).toHaveValue('Healing Recovery Demo');
-    await expect(page.getByLabel('Duration (days)')).toHaveValue('42');
-    await page.getByLabel('Protocol Name').fill('Edited Template Protocol');
-await page.getByRole('button', { name: 'Next' }).click();
-
-await expect(page.getByRole('checkbox', { name: 'BPC-157' })).toBeChecked();
-await expect(page.getByRole('checkbox', { name: 'TB-500' })).toBeChecked();
-await expect(page.getByText('250 mcg').first()).toBeVisible();
-await expect(page.getByText('2.5 mg').first()).toBeVisible();
-await expect(page.getByText('Edited Template Protocol')).toBeVisible();
-await page.getByRole('button', { name: 'Create Protocol' }).click();
-    await expect(page.getByText('Edited Template Protocol')).toBeVisible();
-  });
-
-  test('shows non-blocking conflict warnings before saving a stack', async ({ page }, testInfo) => {
+  test('builds a protocol from visual setup and compound cards', async ({ page }) => {
+  await page.goto('/stacks');
+  await page.getByRole('button', { name: 'I Understand' }).click();
+  await page.getByRole('button', { name: 'New protocol' }).click();
+  await expect(page.getByRole('heading', { name: 'Configure' })).toBeVisible();
+  await expect(page.getByText('Days', { exact: true })).toBeVisible();
+  await expect(page.getByText('Doses', { exact: true })).toBeVisible();
+  await expect(page.getByText('Stock', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Templates' })).toHaveCount(0);
+  await page.getByLabel('Protocol Name').fill('Visual Builder Protocol');
+  await page.getByLabel('Duration (days)').fill('42');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await expect(page.getByRole('heading', { name: 'Compounds' })).toBeVisible();
+  await page.getByRole('checkbox', { name: 'BPC-157' }).check();
+  await page.getByRole('checkbox', { name: 'TB-500' }).check();
+  await expect(page.getByText('250 mcg').first()).toBeVisible();
+  await expect(page.getByText('1 mg').first()).toBeVisible();
+  await expect(page.getByText('Visual Builder Protocol')).toBeVisible();
+  await expect(page.getByLabel('7-day cadence preview').first()).toBeVisible();
+  await page.getByRole('button', { name: 'Create Protocol' }).click();
+  await expect(page.getByText('Visual Builder Protocol')).toBeVisible();
+});
+test('shows non-blocking conflict warnings before saving a stack', async ({ page }, testInfo) => {
     const exportPath = testInfo.outputPath('active-stack-conflict-data.json');
     await writeFile(exportPath, JSON.stringify({
       schemaVersion: 4,
@@ -105,12 +104,12 @@ await page.getByLabel('Duration (days)').fill('42');
 await page.getByRole('button', { name: 'Next' }).click();
 
 await expect(page.getByText('Step 2 of 2')).toBeVisible();
-await expect(page.getByRole('heading', { name: 'Add Peptides' })).toBeVisible();
+await expect(page.getByRole('heading', { name: 'Compounds' })).toBeVisible();
 const stepTwoBounds = await page.evaluate(() => {
   const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
-  const addPeptidesHeading = Array.from(document.querySelectorAll<HTMLElement>('h2')).find((heading) => heading.textContent?.trim() === 'Add Peptides');
+  const compoundsHeading = Array.from(document.querySelectorAll<HTMLElement>('h2')).find((heading) => heading.textContent?.trim() === 'Compounds');
   const scheduleHeading = Array.from(document.querySelectorAll<HTMLElement>('h2')).find((heading) => heading.textContent?.trim() === 'Schedule');
-  const elements = [dialog, addPeptidesHeading, scheduleHeading].filter(Boolean) as HTMLElement[];
+  const elements = [dialog, compoundsHeading, scheduleHeading].filter(Boolean) as HTMLElement[];
   return elements.map((element) => {
     const rect = element.getBoundingClientRect();
     return { left: rect.left, right: rect.right, viewportWidth: window.innerWidth };
@@ -128,9 +127,8 @@ await expect(page.getByText('250 mcg').first()).toBeVisible();
 await expect(page.getByText('1 mg').first()).toBeVisible();
 await page.locator('input[type="time"]').first().fill('10:30');
 
-await expect(page.getByRole('heading', { name: 'Review', exact: true })).toBeVisible();
-    await expect(page.getByText('Cut Recovery Protocol')).toBeVisible();
-    await expect(page.getByText('42 days', { exact: true })).toBeVisible();
+await expect(page.getByText('Cut Recovery Protocol')).toBeVisible();
+await expect(page.getByText(/42 days · 2 compounds/)).toBeVisible();
     await expect(page.getByText('BPC-157').last()).toBeVisible();
     await expect(page.getByText('TB-500').last()).toBeVisible();
 
