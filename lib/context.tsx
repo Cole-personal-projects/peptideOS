@@ -28,6 +28,7 @@ import { createSupabaseReferenceLibraryReader, getReleasedReferenceLibrary, type
 import { applyReleasedReferenceLibrarySnapshot } from './reference-library-state';
 import { buildReferenceLibraryStatus, type ReferenceLibraryStatus } from './reference-library-status';
 import { createSupabaseUserDataSyncAdapter, type SupabaseSyncClient } from './supabase-sync';
+import { countPersistedUserRecords, shouldRestoreCloudData } from './cloud-sync-safety';
 
 const bundledReferenceLibrarySnapshot = buildBundledReferenceSnapshot(referenceCompounds);
 const bundledReferenceLibraryStatus: ReferenceLibraryStatus = {
@@ -795,7 +796,7 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud save failed.');
 }
 }, [authStatus, authUser, cloudSyncAdapter, persistenceDb]);
 
-const retrieveFromCloud = useCallback(async () => {
+const retrieveFromCloud = useCallback(async (options?: { automatic?: boolean }) => {
 if (authStatus !== 'signed-in' || !authUser || !cloudSyncAdapter) {
 setCloudStatus('unavailable');
 setCloudMessage('Sign in with cloud sync configured before retrieving cloud data.');
@@ -809,6 +810,21 @@ const result = await cloudSyncAdapter.pullUserData({ userId: authUser.id });
 if (result.pulledRows === 0) {
 setCloudStatus('ready');
 setCloudMessage('No cloud records found for this account. Local data was not changed.');
+return;
+}
+
+const exportedLocalData = await exportUserDataForCloudSync(persistenceDb);
+const restoreDecision = shouldRestoreCloudData({
+automatic: options?.automatic ?? false,
+cloudData: result.data,
+cloudPulledAt: result.pulledAt,
+localData: exportedLocalData,
+localLastSavedAt: lastSavedAt,
+});
+if (!restoreDecision.restore) {
+setCloudLastRetrievedAt(result.pulledAt ?? new Date().toISOString());
+setCloudStatus('ready');
+setCloudMessage('Cloud copy is not newer than this device. Local data was kept.');
 return;
 }
 
@@ -839,7 +855,7 @@ setCloudMessage(`Retrieved ${result.pulledRows} records from cloud.`);
 setCloudStatus('error');
 setCloudMessage(error instanceof Error ? error.message : 'Cloud retrieve failed.');
 }
-}, [authStatus, authUser, cloudSyncAdapter, enqueuePersistenceOperation, persistenceDb, persistenceOwnerId]);
+}, [authStatus, authUser, cloudSyncAdapter, enqueuePersistenceOperation, lastSavedAt, persistenceDb, persistenceOwnerId]);
 
 const setCloudSyncEnabled = useCallback(async (enabled: boolean) => {
 if (enabled && authStatus !== 'signed-in') {
@@ -858,16 +874,22 @@ setCloudMessage('Cloud mode is off. Data stays on this device until you manually
 return;
 }
 
-await retrieveFromCloud();
+const localData = await exportUserDataForCloudSync(persistenceDb);
+if (countPersistedUserRecords(localData) > 0) {
 await saveToCloud();
-}, [authStatus, retrieveFromCloud, saveToCloud, setAndPersistData]);
+return;
+}
+
+await retrieveFromCloud({ automatic: true });
+await saveToCloud();
+}, [authStatus, persistenceDb, retrieveFromCloud, saveToCloud, setAndPersistData]);
 
 useEffect(() => {
 if (!hydrated || authStatus !== 'signed-in' || !authUser || !data.cloudSyncEnabled || !cloudSyncAdapter) return;
 const syncKey = `${authUser.id}:${persistenceOwnerId}`;
 if (autoCloudRetrieveKey.current === syncKey) return;
 autoCloudRetrieveKey.current = syncKey;
-void retrieveFromCloud();
+void retrieveFromCloud({ automatic: true });
 }, [authStatus, authUser, cloudSyncAdapter, data.cloudSyncEnabled, hydrated, persistenceOwnerId, retrieveFromCloud]);
 
 if (!hydrated) {
