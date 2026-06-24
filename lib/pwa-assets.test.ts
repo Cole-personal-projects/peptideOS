@@ -32,9 +32,12 @@ describe('PWA public assets', () => {
     const serviceWorker = readFileSync(publicPath('sw.js'), 'utf8');
     const offlinePage = readFileSync(publicPath('offline.html'), 'utf8');
 
-    expect(serviceWorker).toContain('/offline.html');
-    expect(serviceWorker).toContain('event.request.mode === \'navigate\'');
-    expect(offlinePage).toContain('PeptideOS');
+expect(serviceWorker).toContain('/offline.html');
+expect(serviceWorker).toContain('event.request.mode === \'navigate\'');
+expect(serviceWorker).toContain('peptideos-shell-v2');
+expect(serviceWorker).not.toContain("  '/',");
+expect(serviceWorker).toContain("url.pathname.startsWith('/_next/')");
+expect(offlinePage).toContain('PeptideOS');
     expect(offlinePage).toContain('offline');
     expect(offlinePage).toContain('stored locally');
   });

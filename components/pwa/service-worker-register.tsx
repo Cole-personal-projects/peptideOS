@@ -9,19 +9,33 @@ export function ServiceWorkerRegister() {
       return;
     }
 
+    let refreshing = false;
+    const handleControllerChange = () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    };
+
     const register = () => {
-      navigator.serviceWorker.register('/sw.js').catch((error) => {
+      navigator.serviceWorker.register('/sw.js').then((registration) => {
+        void registration.update();
+      }).catch((error) => {
         console.error('Failed to register PeptideOS service worker', error);
       });
     };
 
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+
     if (document.readyState === 'complete') {
       register();
-      return;
+      return () => navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
     }
 
     window.addEventListener('load', register, { once: true });
-    return () => window.removeEventListener('load', register);
+    return () => {
+      window.removeEventListener('load', register);
+      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+    };
   }, []);
 
   return null;

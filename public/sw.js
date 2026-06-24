@@ -1,6 +1,5 @@
-const CACHE_NAME = 'peptideos-shell-v1';
+const CACHE_NAME = 'peptideos-shell-v2';
 const APP_SHELL = [
-  '/',
   '/offline.html',
   '/manifest.json',
   '/icon-192.png',
@@ -32,11 +31,31 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
           return response;
         })
         .catch(() => caches.match(event.request).then((cached) => cached ?? caches.match('/offline.html'))),
+    );
+    return;
+  }
+
+  const url = new URL(event.request.url);
+  const shouldNetworkFirst = url.pathname.startsWith('/_next/') || url.pathname === '/sw.js';
+
+  if (shouldNetworkFirst) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request)),
     );
     return;
   }
