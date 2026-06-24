@@ -283,7 +283,7 @@ export function QuickConfirmDoseDialog({
           </div>
         )}
 
-        <DialogFooter>
+<DialogFooter className="sticky bottom-0 -mx-6 -mb-6 border-t border-border bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
