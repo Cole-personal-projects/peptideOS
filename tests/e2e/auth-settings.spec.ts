@@ -19,6 +19,10 @@ test.describe('account settings', () => {
     await expect(page.getByRole('switch').first()).toBeDisabled();
     await expect(page.getByText('Cloud save')).toBeVisible();
     await expect(page.getByText('Cloud retrieve')).toBeVisible();
+    await expect(page.getByText('App version')).toBeVisible();
+    await expect(page.getByText('v1.0.0')).toBeVisible();
+    await expect(page.getByText('Build')).toBeVisible();
+    await expect(page.getByText('peptideos-shell-v3')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Save to cloud' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Retrieve from cloud' })).toBeDisabled();
     await expect(page.getByText('Content mode')).toBeVisible();
