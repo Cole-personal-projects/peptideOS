@@ -34,9 +34,11 @@ describe('PWA public assets', () => {
 
 expect(serviceWorker).toContain('/offline.html');
 expect(serviceWorker).toContain('event.request.mode === \'navigate\'');
-expect(serviceWorker).toContain('peptideos-shell-v2');
+expect(serviceWorker).toContain('peptideos-shell-v3');
 expect(serviceWorker).not.toContain("  '/',");
 expect(serviceWorker).toContain("url.pathname.startsWith('/_next/')");
+expect(serviceWorker).toContain("url.searchParams.has('_rsc')");
+expect(serviceWorker).toContain("accept.includes('text/x-component')");
 expect(offlinePage).toContain('PeptideOS');
     expect(offlinePage).toContain('offline');
     expect(offlinePage).toContain('stored locally');

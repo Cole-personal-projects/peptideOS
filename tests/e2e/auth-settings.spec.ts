@@ -42,6 +42,21 @@ test.describe('account settings', () => {
     await expect(page.getByRole('switch', { name: 'Use dark theme' })).toBeChecked();
   });
 
+  test('navigates from settings to dashboard without route error', async ({ page }) => {
+    const pageErrors: string[] = [];
+    page.on('pageerror', (error) => pageErrors.push(error.message));
+
+    await page.goto('/more/settings');
+    await page.getByRole('button', { name: 'I Understand' }).click({ timeout: 5_000 }).catch(() => {});
+    await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+
+    await page.getByRole('link', { name: 'Dashboard' }).click();
+
+    await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
+    await expect(page.getByText("This page couldn't load")).toHaveCount(0);
+    expect(pageErrors).toEqual([]);
+  });
+
   test('anchors settings content in a stable readable column on full-screen iPad', async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 1366 });
     await page.goto('/more/settings');
