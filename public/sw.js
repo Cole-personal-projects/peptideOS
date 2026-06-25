@@ -1,4 +1,4 @@
-const CACHE_NAME = 'peptideos-shell-v2';
+const CACHE_NAME = 'peptideos-shell-v3';
 const APP_SHELL = [
   '/offline.html',
   '/manifest.json',
@@ -43,7 +43,10 @@ self.addEventListener('fetch', (event) => {
   }
 
   const url = new URL(event.request.url);
-  const shouldNetworkFirst = url.pathname.startsWith('/_next/') || url.pathname === '/sw.js';
+  const shouldNetworkFirst =
+    url.pathname.startsWith('/_next/') ||
+    url.pathname === '/sw.js' ||
+    isNextRouteDataRequest(event.request, url);
 
   if (shouldNetworkFirst) {
     event.respondWith(
@@ -74,3 +77,13 @@ self.addEventListener('fetch', (event) => {
     }),
   );
 });
+
+function isNextRouteDataRequest(request, url) {
+  if (url.origin !== self.location.origin) return false;
+  if (url.searchParams.has('_rsc')) return true;
+
+  const accept = request.headers.get('accept') ?? '';
+  if (accept.includes('text/x-component')) return true;
+
+  return request.headers.has('next-router-state-tree') || request.headers.has('next-url');
+}
