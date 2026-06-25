@@ -388,7 +388,7 @@ test.describe('Peppi action approvals', () => {
     await page.getByRole('link', { name: 'Edit in builder' }).click();
   await expect(page.getByRole('heading', { name: 'Configure' })).toBeVisible();
     await expect(page.getByLabel('Protocol Name')).toHaveValue('AI BPC Schedule');
-    await expect(page.getByLabel('Duration (days)')).toHaveValue('28');
+    await expect(page.getByText(/28 days · 1 compound/)).toBeVisible();
   });
 
   test('prefers structured AI Signal proposal over local fallback parsing', async ({ page }) => {

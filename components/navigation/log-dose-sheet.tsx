@@ -1,16 +1,20 @@
 "use client";
 
 import { useMemo, useState } from 'react';
+
 import { BodyMannequin } from '@/components/site-picker/body-mannequin';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
+import { StatusDot } from '@/components/ui/visual-primitives';
 import { getAllowedWorkflowDoseUnits, getTrackableCompounds, getWorkflowDosePresets } from '@/lib/compound-workflows';
 import { useApp } from '@/lib/context';
 import { formatDose, getDoseUnitLabel } from '@/lib/dose-helpers';
+import { getVialInventoryMetrics } from '@/lib/inventory-metrics';
 import type { DoseUnit, Route, Schedule, ScheduleLog, SiteCode } from '@/lib/types';
 
 interface LogDoseSheetProps {
@@ -28,6 +32,10 @@ const routes: { value: Route; label: string }[] = [
 
 const injectableRoutes: Route[] = ['subq', 'im'];
 
+function formatDueTime(value: string) {
+  return new Date(value).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
 export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
   const { data, addDose, completeScheduleLog, getPeptide } = useApp();
   const [peptideId, setPeptideId] = useState('');
@@ -44,6 +52,7 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
   const activeVials = data.vials.filter((vial) => vial.status === 'active');
   const selectedCompound = trackableCompounds.find((compound) => compound.id === peptideId);
   const filteredVials = activeVials.filter((vial) => vial.peptideId === peptideId);
+  const selectedVial = filteredVials.find((vial) => vial.id === vialId) ?? null;
   const allowedDoseUnits: DoseUnit[] = getAllowedWorkflowDoseUnits(selectedCompound);
   const dosePresets = getWorkflowDosePresets(selectedCompound);
   const requiresSite = injectableRoutes.includes(route);
@@ -76,6 +85,12 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
     setRoute('subq');
     setSite('');
     setNotes('');
+    setSaving(false);
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) resetForm();
+    onOpenChange(nextOpen);
   };
 
   const handlePeptideChange = (value: string) => {
@@ -107,48 +122,72 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
   };
 
   const handleSubmit = async () => {
-    const parsedDoseValue = parseFloat(doseValue);
+    const parsedDoseValue = Number.parseFloat(doseValue);
     if (saving || !peptideId || !vialId || Number.isNaN(parsedDoseValue) || parsedDoseValue <= 0) return;
     if (requiresSite && !site) return;
 
-    if (selectedScheduleLog) {
-      setSaving(true);
-      try {
+    setSaving(true);
+    try {
+      if (selectedScheduleLog) {
         await completeScheduleLog(selectedScheduleLog.log.id, { vialId, site, notes });
-        resetForm();
-        onOpenChange(false);
-      } finally {
-        setSaving(false);
+      } else {
+        addDose({
+          peptideId,
+          vialId,
+          dateTime: new Date().toISOString(),
+          doseValue: parsedDoseValue,
+          doseUnit,
+          route,
+          site,
+          notes,
+          completed: true,
+        });
       }
-      return;
+
+      resetForm();
+      onOpenChange(false);
+    } finally {
+      setSaving(false);
     }
-
-    addDose({
-      peptideId,
-      vialId,
-      dateTime: new Date().toISOString(),
-      doseValue: parsedDoseValue,
-      doseUnit,
-      route,
-      site,
-      notes,
-      completed: true,
-    });
-
-    resetForm();
-    onOpenChange(false);
   };
 
+  const canSubmit = Boolean(peptideId && vialId && doseValue && (!requiresSite || site));
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[85vh] overflow-hidden rounded-t-3xl">
-        <SheetHeader className="pb-4">
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetContent side="bottom" className="flex h-[88vh] flex-col overflow-hidden rounded-t-3xl px-0">
+        <SheetHeader className="shrink-0 px-4 pb-3">
           <SheetTitle>Log Dose</SheetTitle>
         </SheetHeader>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
+          <div className="rounded-[18px] border border-border bg-card p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                  {selectedScheduleLog ? 'Scheduled' : 'Manual'}
+                </p>
+                <h2 className="mt-1 truncate text-base font-bold">{selectedCompound?.name ?? 'Select compound'}</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {doseValue ? formatDose(Number.parseFloat(doseValue) || 0, doseUnit) : 'Dose not set'} - {route.toUpperCase()}
+                </p>
+              </div>
+              <Badge variant={selectedScheduleLog ? 'secondary' : 'outline'}>{selectedScheduleLog ? 'Due dose' : 'Manual log'}</Badge>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-[12px] bg-secondary/60 p-2">
+                <p className="font-bold text-muted-foreground">Vial</p>
+                <p className="mt-1 truncate font-semibold">{selectedVial?.name ?? 'Not selected'}</p>
+              </div>
+              <div className="rounded-[12px] bg-secondary/60 p-2">
+                <p className="font-bold text-muted-foreground">Site</p>
+                <p className="mt-1 truncate font-semibold">{requiresSite ? site || 'Required' : 'Not needed'}</p>
+              </div>
+            </div>
+          </div>
+
           {dueProtocolLogs.length > 0 && (
-            <div className="space-y-2 rounded-[14px] border border-border bg-card p-3">
+            <div className="space-y-2 rounded-[18px] border border-border bg-card p-3">
               <div className="flex items-center justify-between gap-3">
                 <Label className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Due protocol doses</Label>
                 {selectedScheduleLog && (
@@ -166,16 +205,14 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
                       key={log.id}
                       type="button"
                       variant={selected ? 'default' : 'outline'}
-                      className="h-auto w-full justify-between gap-3 rounded-[12px] px-3 py-2 text-left"
+                      className="h-auto w-full justify-between gap-3 rounded-[14px] px-3 py-2 text-left"
                       onClick={() => handleScheduledLogSelect(log, schedule)}
                     >
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold">{peptide?.name ?? log.peptideId}</span>
-                        <span className="block text-xs opacity-80">{formatDose(schedule.doseValue, schedule.doseUnit)} · {schedule.route.toUpperCase()}</span>
+                        <span className="block text-xs opacity-80">{formatDose(schedule.doseValue, schedule.doseUnit)} - {schedule.route.toUpperCase()}</span>
                       </span>
-                      <span className="text-xs font-semibold">
-                        {new Date(log.dueAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
-                      </span>
+                      <span className="text-xs font-semibold">{formatDueTime(log.dueAt)}</span>
                     </Button>
                   );
                 })}
@@ -184,8 +221,8 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
           )}
 
           {selectedScheduleLog && (
-            <div className="rounded-[12px] border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary">
-              Completing this protocol dose. The log will clear from today after submission.
+            <div className="rounded-[14px] border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary">
+              Completing this protocol dose. This will clear the scheduled item after submission.
             </div>
           )}
 
@@ -216,7 +253,7 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
                   {filteredVials.length > 0 ? (
                     filteredVials.map((vial) => (
                       <SelectItem key={vial.id} value={vial.id}>
-                        {vial.lotNumber} ({vial.mg}mg)
+                        {vial.name} - {vial.lotNumber || 'no lot'} ({vial.mg}mg)
                       </SelectItem>
                     ))
                   ) : (
@@ -229,16 +266,38 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
             </div>
           )}
 
+          {peptideId && filteredVials.length > 0 && (
+            <div className="grid gap-2">
+              {filteredVials.map((vial) => {
+                const metrics = getVialInventoryMetrics(vial, data.doses);
+                const selected = vial.id === vialId;
+                return (
+                  <button
+                    key={vial.id}
+                    type="button"
+                    className={`rounded-[16px] border p-3 text-left transition-colors ${selected ? 'border-primary bg-primary/10' : 'border-border bg-card hover:bg-secondary/40'}`}
+                    onClick={() => setVialId(vial.id)}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <StatusDot tone={selected ? 'primary' : 'success'} />
+                          <p className="truncate text-sm font-bold">{vial.name}</p>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">{vial.lotNumber || 'no lot'} - {metrics.remainingLabel} left</p>
+                      </div>
+                      <Badge variant={selected ? 'default' : 'secondary'}>{vial.status}</Badge>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Dose</Label>
             <div className="grid grid-cols-[1fr_104px] gap-2">
-              <Input
-                type="number"
-                step="any"
-                placeholder="e.g., 250"
-                value={doseValue}
-                onChange={(event) => setDoseValue(event.target.value)}
-              />
+              <Input type="number" step="any" placeholder="e.g., 250" value={doseValue} onChange={(event) => setDoseValue(event.target.value)} />
               <Select value={doseUnit} onValueChange={(value) => setDoseUnit(value as DoseUnit)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -270,11 +329,6 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
                 ))}
               </div>
             )}
-            {selectedCompound && (
-              <p className="text-xs text-muted-foreground">
-                Default: {selectedCompound.defaultRoute.toUpperCase()} · {selectedCompound.defaultDoseUnit.toUpperCase()}
-              </p>
-            )}
           </div>
 
           <div className="space-y-2">
@@ -296,15 +350,7 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
           {requiresSite ? (
             <div className="space-y-2">
               <Label>Injection Site</Label>
-              <BodyMannequin
-                compact
-                doses={data.doses}
-                route={route}
-                selectedSite={site}
-                onSiteChange={setSite}
-                onRouteChange={handleRouteChange}
-                getPeptide={getPeptide}
-              />
+              <BodyMannequin compact doses={data.doses} route={route} selectedSite={site} onSiteChange={setSite} onRouteChange={handleRouteChange} getPeptide={getPeptide} />
             </div>
           ) : (
             <div className="space-y-2">
@@ -324,21 +370,12 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
 
           <div className="space-y-2">
             <Label>Notes (optional)</Label>
-            <Textarea
-              placeholder="Any observations or notes..."
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-            />
+            <Textarea placeholder="Any observations or notes..." value={notes} onChange={(event) => setNotes(event.target.value)} />
           </div>
         </div>
 
-        <SheetFooter className="sticky bottom-0 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-          <Button
-            className="w-full"
-            size="lg"
-            onClick={() => void handleSubmit()}
-            disabled={saving || !peptideId || !vialId || !doseValue || (requiresSite && !site)}
-          >
+        <SheetFooter className="shrink-0 border-t border-border bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+          <Button className="w-full" size="lg" onClick={() => void handleSubmit()} disabled={saving || !canSubmit}>
             {selectedScheduleLog ? 'Complete Scheduled Dose' : 'Log Dose'}
           </Button>
         </SheetFooter>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from 'react';
-import { CalendarDays, Check, ChevronLeft, ChevronRight, Clock3, PackageCheck } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Clock3, PackageCheck } from 'lucide-react';
 
 import { ScheduleTimeFields } from '@/components/stacks/schedule-time-fields';
 import { Badge } from '@/components/ui/badge';
@@ -49,7 +49,15 @@ const scheduleOptions: Array<{ value: SchedulePreset; label: string; shortLabel:
   { value: 'five-on-two-off', label: '5 on / 2 off', shortLabel: '5/2' },
 ];
 
-const weekPreview = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const weekPreview = [
+  { label: 'M', name: 'Monday', value: 1 },
+  { label: 'T', name: 'Tuesday', value: 2 },
+  { label: 'W', name: 'Wednesday', value: 3 },
+  { label: 'T', name: 'Thursday', value: 4 },
+  { label: 'F', name: 'Friday', value: 5 },
+  { label: 'S', name: 'Saturday', value: 6 },
+  { label: 'S', name: 'Sunday', value: 0 },
+];
 
 function getInitialName(initialDraft: Omit<Stack, 'id'> | undefined, initialCompound: { name: string } | undefined) {
   return initialDraft?.name ?? (initialCompound ? `${initialCompound.name} protocol` : '');
@@ -60,7 +68,7 @@ function getInitialDescription(initialDraft: Omit<Stack, 'id'> | undefined, init
 }
 
 function getInitialDurationDays(initialDraft: Omit<Stack, 'id'> | undefined) {
-  return (initialDraft?.durationDays ?? 28).toString();
+  return (initialDraft?.durationDays ?? 1).toString();
 }
 
 function getInitialSelectedPeptides(initialDraft: Omit<Stack, 'id'> | undefined, initialCompound: { id: string } | undefined) {
@@ -80,6 +88,23 @@ function getDefaultDraftPeptide(peptideId: string, compounds: TrackableCompound[
     route: compound?.defaultRoute || 'subq',
     timing: 'Morning',
     schedule: { frequency: 'daily', timesOfDay: ['08:00'] },
+  };
+}
+
+function applyScheduleWeekdays(stackPeptide: StackPeptide, weekdays: number[]): StackPeptide {
+  const recurrence = normalizeScheduleRecurrence(stackPeptide.schedule ?? getDefaultScheduleRecurrence(stackPeptide));
+  const nextWeekdays = weekdays.length > 0 ? [...weekdays].sort((a, b) => a - b) : [1];
+  const weekdayLabel = nextWeekdays.length === 1 ? 'Custom day' : `${nextWeekdays.length} custom days`;
+
+  return {
+    ...stackPeptide,
+    frequency: 'custom weekly',
+    timing: weekdayLabel,
+    schedule: {
+      frequency: 'weekly',
+      timesOfDay: recurrence.timesOfDay.length > 0 ? recurrence.timesOfDay : ['08:00'],
+      weekdays: nextWeekdays,
+    },
   };
 }
 
@@ -121,6 +146,10 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
 
   const updateDraftPeptideScheduleTimes = (peptideId: string, timesOfDay: string[]) => {
     patchDraftPeptide(peptideId, (stackPeptide) => applyScheduleTimes(stackPeptide, timesOfDay));
+  };
+
+  const updateDraftPeptideWeekdays = (peptideId: string, weekdays: number[]) => {
+    patchDraftPeptide(peptideId, (stackPeptide) => applyScheduleWeekdays(stackPeptide, weekdays));
   };
 
   const handlePeptideToggle = (peptideId: string) => {
@@ -198,8 +227,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
           <div className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-28 pt-4">
             {currentStepName === 'Setup' && (
               <section className="space-y-4">
-                <div className="grid grid-cols-3 gap-2">
-                  <BuilderMetric icon={<CalendarDays className="h-4 w-4" />} label="Days" value={Number.parseInt(durationDays) || 0} />
+                <div className="grid grid-cols-2 gap-2">
                   <BuilderMetric icon={<Clock3 className="h-4 w-4" />} label="Doses" value={plannedDoseCount} />
                   <BuilderMetric icon={<PackageCheck className="h-4 w-4" />} label="Stock" value={`${inventoryCoverage.covered}/${inventoryCoverage.total}`} />
                 </div>
@@ -211,7 +239,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
                       <Label htmlFor="stack-name">Protocol Name</Label>
                       <Input id="stack-name" placeholder="e.g., Cut Recovery Protocol" value={name} onChange={(event) => setName(event.target.value)} />
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
+                    <div className="grid gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="stack-description">Description</Label>
                         <Textarea
@@ -220,17 +248,6 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
                           placeholder="Optional note"
                           value={description}
                           onChange={(event) => setDescription(event.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="stack-duration">Duration (days)</Label>
-                        <Input
-                          id="stack-duration"
-                          type="number"
-                          min="1"
-                          placeholder="28"
-                          value={durationDays}
-                          onChange={(event) => setDurationDays(event.target.value)}
                         />
                       </div>
                     </div>
@@ -278,6 +295,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
                         compound={trackableCompounds.find((compound) => compound.id === stackPeptide.peptideId)}
                         onScheduleChange={(preset) => updateDraftPeptideSchedule(stackPeptide.peptideId, preset)}
                         onTimesChange={(times) => updateDraftPeptideScheduleTimes(stackPeptide.peptideId, times)}
+                        onWeekdaysChange={(weekdays) => updateDraftPeptideWeekdays(stackPeptide.peptideId, weekdays)}
                         onDoseValueChange={(doseValue) => patchDraftPeptide(stackPeptide.peptideId, (current) => ({ ...current, doseValue }))}
                         onDoseUnitChange={(doseUnit) => patchDraftPeptide(stackPeptide.peptideId, (current) => ({ ...current, doseUnit }))}
                       />
@@ -388,6 +406,7 @@ function ScheduleCard({
   compound,
   onScheduleChange,
   onTimesChange,
+  onWeekdaysChange,
   onDoseValueChange,
   onDoseUnitChange,
 }: {
@@ -395,6 +414,7 @@ function ScheduleCard({
   compound: TrackableCompound | undefined;
   onScheduleChange: (preset: SchedulePreset) => void;
   onTimesChange: (timesOfDay: string[]) => void;
+  onWeekdaysChange: (weekdays: number[]) => void;
   onDoseValueChange: (doseValue: number) => void;
   onDoseUnitChange: (doseUnit: DoseUnit) => void;
 }) {
@@ -469,7 +489,7 @@ function ScheduleCard({
         <ScheduleTimeFields stackPeptide={stackPeptide} idPrefix={`new-stack-${stackPeptide.peptideId}`} onTimesChange={onTimesChange} />
       </div>
 
-      <WeekStrip recurrence={recurrence} />
+      <WeekStrip recurrence={recurrence} onWeekdayToggle={onWeekdaysChange} />
     </div>
   );
 }
@@ -489,13 +509,14 @@ function ProtocolPreview({
   compounds: TrackableCompound[];
   inventoryCoverage: { covered: number; total: number };
 }) {
+  const parsedDurationDays = Number.parseInt(durationDays) || 0;
   return (
     <section className="rounded-[20px] border border-border bg-secondary/45 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="truncate text-base font-bold">{name.trim() || 'Protocol preview'}</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            {Number.parseInt(durationDays) || 0} days · {draftPeptides.length} compound{draftPeptides.length === 1 ? '' : 's'} · {plannedDoseCount} planned dose{plannedDoseCount === 1 ? '' : 's'}
+            {parsedDurationDays} day{parsedDurationDays === 1 ? '' : 's'} · {draftPeptides.length} compound{draftPeptides.length === 1 ? '' : 's'} · {plannedDoseCount} planned dose{plannedDoseCount === 1 ? '' : 's'}
           </p>
         </div>
         <Badge variant={inventoryCoverage.total > 0 && inventoryCoverage.covered === inventoryCoverage.total ? 'secondary' : 'outline'}>
@@ -521,21 +542,49 @@ function ProtocolPreview({
   );
 }
 
-function WeekStrip({ recurrence }: { recurrence: ReturnType<typeof normalizeScheduleRecurrence> }) {
+function WeekStrip({
+  recurrence,
+  onWeekdayToggle,
+}: {
+  recurrence: ReturnType<typeof normalizeScheduleRecurrence>;
+  onWeekdayToggle?: (weekdays: number[]) => void;
+}) {
   const activeWeekdays = recurrence.frequency === 'weekly' ? new Set(recurrence.weekdays ?? [1]) : null;
 
   return (
     <div className="mt-4 grid grid-cols-7 gap-1" aria-label="7-day cadence preview">
       {weekPreview.map((day, index) => {
-        const weekday = index + 1 > 6 ? 0 : index + 1;
+        const weekday = day.value;
         const active = activeWeekdays ? activeWeekdays.has(weekday) : recurrence.frequency !== 'interval' || index % (recurrence.intervalDays ?? 1) === 0;
+        const handleClick = () => {
+          if (!onWeekdayToggle) return;
+          if (!activeWeekdays) {
+            onWeekdayToggle([weekday]);
+            return;
+          }
+          const nextWeekdays = new Set(activeWeekdays);
+          if (nextWeekdays.has(weekday) && nextWeekdays.size > 1) {
+            nextWeekdays.delete(weekday);
+          } else {
+            nextWeekdays.add(weekday);
+          }
+          onWeekdayToggle(Array.from(nextWeekdays));
+        };
+
         return (
-          <div key={`${day}-${index}`} className={cn('rounded-[12px] border p-2 text-center', active ? 'border-primary bg-primary/10' : 'border-border bg-secondary/45')}>
-            <p className="text-[10px] font-bold text-muted-foreground">{day}</p>
+          <button
+            key={day.name}
+            type="button"
+            aria-pressed={active}
+            aria-label={`${day.name} dosing day`}
+            className={cn('rounded-[12px] border p-2 text-center transition-colors', active ? 'border-primary bg-primary/10' : 'border-border bg-secondary/45')}
+            onClick={handleClick}
+          >
+            <p className="text-[10px] font-bold text-muted-foreground">{day.label}</p>
             <div className="mt-1 flex justify-center gap-0.5">
               {active ? recurrence.timesOfDay.map((time) => <span key={time} className="h-1.5 w-1.5 rounded-full bg-primary" />) : <span className="h-1.5 w-1.5 rounded-full bg-border" />}
             </div>
-          </div>
+          </button>
         );
       })}
     </div>
