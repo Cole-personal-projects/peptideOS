@@ -227,32 +227,45 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             </div>
           </section>
 
-<section className="rounded-[20px] border border-[#332012] bg-card p-3.5">
-          <div className="mb-3 flex items-center justify-between gap-4">
-<h2 className="text-sm font-bold tracking-normal">Protocol</h2>
-<p className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">{statusLabels[stack.status]}</p>
-            </div>
-            <div className="space-y-3">
-              {stack.peptides.map((peptide) => {
-                const compound = trackableCompounds.find((candidate) => candidate.id === peptide.peptideId);
-                return (
-<div key={peptide.id ?? peptide.peptideId} className="flex items-center justify-between gap-4 rounded-[14px] bg-[#211208] px-3.5 py-2.5">
-                    <div className="min-w-0">
-<p className="truncate text-sm font-semibold">{compound?.name ?? peptide.peptideId}</p>
-<p className="mt-1 text-[13px] text-muted-foreground">{formatDose(peptide.doseValue, peptide.doseUnit)} · {formatRoute(peptide.route)}</p>
-                    </div>
-<p className="shrink-0 text-[13px] font-semibold text-primary">{formatScheduleSummary(peptide)}</p>
-                  </div>
-                );
-              })}
-            </div>
-            {stack.description && <p className="mt-4 text-sm text-muted-foreground">{stack.description}</p>}
-            {stack.notes && <p className="mt-3 text-sm text-muted-foreground">{stack.notes}</p>}
-          </section>
+	<section className="rounded-[22px] border border-[#332012] bg-card p-4">
+	          <div className="mb-4 flex items-center justify-between gap-4">
+	<h2 className="text-base font-bold tracking-normal">Protocol</h2>
+	<span className="rounded-full border border-[#3a2012] bg-[#211208] px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-muted-foreground">{statusLabels[stack.status]}</span>
+	            </div>
+	            <div className="space-y-3">
+	              {stack.peptides.map((peptide) => {
+	                const compound = trackableCompounds.find((candidate) => candidate.id === peptide.peptideId);
+	                return (
+	<div key={peptide.id ?? peptide.peptideId} className="rounded-[18px] border border-[#332012] bg-[#211208] p-3.5">
+	                    <div className="flex items-start justify-between gap-3">
+	                      <div className="min-w-0">
+	<p className="truncate text-base font-extrabold leading-tight">{compound?.name ?? peptide.peptideId}</p>
+	<p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{formatRoute(peptide.route)}</p>
+	                      </div>
+	                      <div className="shrink-0 rounded-[14px] bg-[#2b180d] px-3 py-2 text-right">
+	<p className="text-sm font-extrabold text-primary">{formatDose(peptide.doseValue, peptide.doseUnit)}</p>
+	<p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Dose</p>
+	                      </div>
+	                    </div>
+	                    <div className="mt-3 rounded-[14px] border border-[#3a2012] bg-[#1b100a] px-3 py-2">
+	<p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Schedule</p>
+	<p className="mt-1 text-sm font-semibold leading-snug text-primary">{formatScheduleSummary(peptide)}</p>
+	                    </div>
+	                  </div>
+	                );
+	              })}
+	            </div>
+	            {(stack.description || stack.notes) && (
+	              <div className="mt-4 space-y-2 border-t border-[#332012] pt-3">
+	                {stack.description && <p className="text-sm leading-relaxed text-muted-foreground">{stack.description}</p>}
+	                {stack.notes && <p className="text-sm leading-relaxed text-muted-foreground">{stack.notes}</p>}
+	              </div>
+	            )}
+	          </section>
 
         <section className="space-y-2.5">
 <h2 className="text-sm font-bold tracking-normal">Linked Labs</h2>
-<div className="relative overflow-hidden rounded-[20px] border border-[#332012] bg-card p-3.5">
+	<div className="relative overflow-hidden rounded-[22px] border border-[#332012] bg-card p-4">
               {linkedLab ? (
                 <>
                   <div className="flex items-start justify-between gap-5">
@@ -281,12 +294,12 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                   <div className="flex items-start justify-between gap-5">
                     <div>
 <p className="text-sm font-semibold leading-tight">No linked labs</p>
-                      <p className="mt-2 text-sm text-muted-foreground">Import labs and link them to this protocol.</p>
-                    </div>
-                  </div>
-              <Button asChild variant="outline" className="mt-4 h-10 w-full rounded-[2px] border-[#332012] bg-transparent text-sm font-semibold tracking-normal">
-                    <Link href="/labs">Open Labs</Link>
-                  </Button>
+	                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Import labs and link them to this protocol.</p>
+	                    </div>
+	                  </div>
+	              <Button asChild variant="outline" className="mt-4 h-11 w-full rounded-[14px] border-[#332012] bg-[#211208] text-sm font-semibold tracking-normal">
+	                    <Link href="/labs">Open Labs</Link>
+	                  </Button>
                 </>
               )}
             </div>
