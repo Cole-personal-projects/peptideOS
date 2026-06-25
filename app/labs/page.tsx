@@ -107,10 +107,33 @@ const importMethods: Array<{
   { id: 'csv', label: 'CSV / Spreadsheet', subtitle: 'Bulk import multiple tests', icon: Table2, tone: 'primary' },
 ];
 
+interface PdfImportPayload {
+  draft?: LabImportDraft;
+  error?: string;
+  pageCount?: number;
+  mode?: string;
+}
+
 function shouldUsePdfOcrFallback(draft: LabImportDraft) {
   return draft.rows.length === 0
     || draft.parserConfidence < 0.65
     || draft.unresolvedRows.length > draft.rows.length;
+}
+
+async function readPdfImportPayload(response: Response): Promise<PdfImportPayload> {
+  const contentType = response.headers.get('content-type') ?? '';
+  const responseText = await response.text();
+  if (!responseText) return {};
+
+  if (contentType.includes('application/json')) {
+    try {
+      return JSON.parse(responseText) as PdfImportPayload;
+    } catch {
+      return { error: 'PDF parser returned an invalid response.' };
+    }
+  }
+
+  return { error: response.ok ? undefined : responseText || `PDF parser failed with HTTP ${response.status}` };
 }
 
 function inferLabSourceLabel(text: string) {
@@ -205,13 +228,15 @@ export default function LabsPage() {
     setImportStep(2);
   };
 
-  const applyPdfDraft = (nextDraft: LabImportDraft, pageCount: number, mode: 'text' | 'ocr') => {
-    setDraft(nextDraft);
-    setSourceLabel(nextDraft.sourceLabel ?? sourceLabel);
-    setPanelName(nextDraft.panelName ?? panelName);
-    setPdfImportMessage(`${mode === 'ocr' ? 'OCR parsed' : 'Parsed'} ${nextDraft.rows.length} marker${nextDraft.rows.length === 1 ? '' : 's'} from ${pageCount} page${pageCount === 1 ? '' : 's'}. Review before saving.`);
-    setImportStep(2);
-  };
+const applyPdfDraft = (nextDraft: LabImportDraft, pageCount: number | undefined, mode: 'text' | 'ai' | 'ocr') => {
+setDraft(nextDraft);
+setSourceLabel(nextDraft.sourceLabel ?? sourceLabel);
+setPanelName(nextDraft.panelName ?? panelName);
+const pageLabel = pageCount ? ` from ${pageCount} page${pageCount === 1 ? '' : 's'}` : '';
+const modeLabel = mode === 'ai' ? 'Peppi extracted' : mode === 'ocr' ? 'OCR parsed' : 'Parsed';
+setPdfImportMessage(`${modeLabel} ${nextDraft.rows.length} marker${nextDraft.rows.length === 1 ? '' : 's'}${pageLabel}. Review before saving.`);
+setImportStep(2);
+};
 
   const saveDraft = async () => {
     if (!draft || draft.rows.length === 0) return;
@@ -280,13 +305,27 @@ export default function LabsPage() {
         method: 'POST',
         body: formData,
       });
-      const payload = await response.json() as { draft?: LabImportDraft; error?: string; pageCount?: number };
+const payload = await readPdfImportPayload(response);
       if (response.ok && payload.draft && !shouldUsePdfOcrFallback(payload.draft)) {
         applyPdfDraft(payload.draft, payload.pageCount ?? 1, 'text');
         return;
       }
 
-      setPdfImportMessage(payload.error ? `${payload.error} Running local OCR...` : 'Running local OCR for this PDF...');
+setPdfImportMessage(payload.error ? `${payload.error} Asking Peppi to extract the PDF...` : 'Asking Peppi to extract this PDF...');
+const aiFormData = new FormData();
+aiFormData.append('file', file);
+aiFormData.append('metadata', JSON.stringify(baseImportOptions));
+const aiResponse = await fetch('/api/ai/parse-lab-pdf', {
+method: 'POST',
+body: aiFormData,
+});
+const aiPayload = await readPdfImportPayload(aiResponse);
+if (aiResponse.ok && aiPayload.draft && aiPayload.draft.rows.length > 0) {
+applyPdfDraft(aiPayload.draft, aiPayload.pageCount, 'ai');
+return;
+}
+
+setPdfImportMessage(aiPayload.error ? `${aiPayload.error} Running local OCR...` : 'Running local OCR for this PDF...');
       const { extractLabPdfTextWithOcr } = await import('@/lib/lab-pdf-ocr');
       const ocrResult = await extractLabPdfTextWithOcr(file, (progress) => {
         const percent = typeof progress.progress === 'number' ? ` ${Math.round(progress.progress * 100)}%` : '';

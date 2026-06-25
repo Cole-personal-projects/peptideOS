@@ -159,6 +159,13 @@ export function parseLabText(input: string, options: LabImportOptions): LabImpor
   return buildDraft(rows, unresolvedRows, 'text', options);
 }
 
+export function createAiLabPdfDraft(
+  rows: LabImportRow[],
+  options: LabImportOptions & { unresolvedRows?: string[] },
+): LabImportDraft {
+  return buildDraft(rows, options.unresolvedRows ?? [], 'pdf', options);
+}
+
 export function createManualLabDraft(input: LabImportOptions & { rows: LabImportRow[] }): LabImportDraft {
   return buildDraft(input.rows.map(normalizeRow), [], 'manual', input);
 }

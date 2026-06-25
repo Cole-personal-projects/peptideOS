@@ -8,6 +8,7 @@ import {
   normalizeLabTestKey,
   parseLabCsv,
   parseLabText,
+  createAiLabPdfDraft,
   persistLabImportDraft,
 } from './lab-results';
 import { initialAppData } from './mock-data';
@@ -33,13 +34,56 @@ expect(persistLabImportDraft(draft).report).toMatchObject({
 linkedStackId: 'stack-1',
 sourceMethod: 'csv',
 });
+const duplicate = parseLabCsv(
+'Test,Value,Unit,Reference Range,Flag,Assay\nEstradiol Sensitive,22,pg/mL,8-35,normal,LC/MS/MS',
+{ drawDate: '2026-06-01', existingReports: [{ ...persistLabImportDraft(draft).report }] },
+);
+expect(duplicate.duplicateStatus).toBe('possible-duplicate');
+});
 
-    const duplicate = parseLabCsv(
-      'Test,Value,Unit,Reference Range,Flag,Assay\nEstradiol Sensitive,22,pg/mL,8-35,normal,LC/MS/MS',
-      { drawDate: '2026-06-01', existingReports: [{ ...persistLabImportDraft(draft).report }] },
-    );
-    expect(duplicate.duplicateStatus).toBe('possible-duplicate');
+test('creates reviewable PDF drafts from Peppi-extracted lab rows', () => {
+  const draft = createAiLabPdfDraft(
+    [
+      {
+        testName: 'Estradiol Sensitive',
+        assayMethod: 'LC/MS/MS',
+        value: '22',
+        unit: 'pg/mL',
+        referenceRange: { text: '8-35', low: 8, high: 35 },
+        flag: 'normal',
+        panelName: 'Hormones',
+      },
+      {
+        testName: 'Testosterone Total',
+        value: '640',
+        unit: 'ng/dL',
+        referenceRange: { text: '250-1100' },
+        flag: 'normal',
+      },
+    ],
+    {
+      drawDate: '2026-06-01',
+      sourceLabel: 'Quest Diagnostics',
+      panelName: 'Hormones',
+      unresolvedRows: ['Caveat: page footer ignored'],
+    },
+  );
+
+  expect(draft).toMatchObject({
+    method: 'pdf',
+    sourceLabel: 'Quest Diagnostics',
+    panelName: 'Hormones',
+    parserConfidence: 2 / 3,
+    unresolvedRows: ['Caveat: page footer ignored'],
   });
+  expect(draft.rows[0]).toMatchObject({
+    testName: 'Estradiol Sensitive',
+    assayMethod: 'LC/MS/MS',
+    numericValue: 22,
+    referenceRange: { text: '8-35', low: 8, high: 35 },
+  });
+  expect(persistLabImportDraft(draft).report.sourceMethod).toBe('pdf');
+});
 
   test('stores date-only draw dates at noon UTC to preserve local calendar date', () => {
     const draft = createManualLabDraft({
