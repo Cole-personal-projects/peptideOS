@@ -14,8 +14,7 @@ test.describe('protocol loop', () => {
 
     await page.getByRole('button', { name: 'New protocol' }).click();
     await page.getByLabel('Protocol Name').fill('Protocol Loop Test Stack');
-    await page.getByLabel('Duration (days)').fill('2');
-await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('button', { name: 'Next' }).click();
 await page.getByRole('checkbox', { name: 'BPC-157' }).check();
 await page.getByLabel('Schedule').click();
 await page.getByRole('option', { name: /2x daily/ }).click();

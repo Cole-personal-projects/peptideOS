@@ -7,12 +7,11 @@ test.describe('protocol builder', () => {
   await page.getByRole('button', { name: 'I Understand' }).click();
   await page.getByRole('button', { name: 'New protocol' }).click();
   await expect(page.getByRole('heading', { name: 'Configure' })).toBeVisible();
-  await expect(page.getByText('Days', { exact: true })).toBeVisible();
-  await expect(page.getByText('Doses', { exact: true })).toBeVisible();
+    await expect(page.getByText('Doses', { exact: true })).toBeVisible();
   await expect(page.getByText('Stock', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Templates' })).toHaveCount(0);
   await page.getByLabel('Protocol Name').fill('Visual Builder Protocol');
-  await page.getByLabel('Duration (days)').fill('42');
+ 
   await page.getByRole('button', { name: 'Next' }).click();
   await expect(page.getByRole('heading', { name: 'Compounds' })).toBeVisible();
   await page.getByRole('checkbox', { name: 'BPC-157' }).check();
@@ -98,9 +97,8 @@ await expect(page.getByRole('heading', { name: 'New Protocol' })).toBeVisible();
 await expect(page.getByText('Step 1 of 2')).toBeVisible();
 await expect(page.getByRole('heading', { name: 'Configure' })).toBeVisible();
 
-    await page.getByLabel('Protocol Name').fill('Cut Recovery Protocol');
-    await page.getByLabel('Description').fill('Short recovery protocol');
-await page.getByLabel('Duration (days)').fill('42');
+await page.getByLabel('Protocol Name').fill('Cut Recovery Protocol');
+await page.getByLabel('Description').fill('Short recovery protocol');
 await page.getByRole('button', { name: 'Next' }).click();
 
 await expect(page.getByText('Step 2 of 2')).toBeVisible();
@@ -128,7 +126,7 @@ await expect(page.getByText('1 mg').first()).toBeVisible();
 await page.locator('input[type="time"]').first().fill('10:30');
 
 await expect(page.getByText('Cut Recovery Protocol')).toBeVisible();
-await expect(page.getByText(/42 days · 2 compounds/)).toBeVisible();
+await expect(page.getByText(/1 day · 2 compounds/)).toBeVisible();
     await expect(page.getByText('BPC-157').last()).toBeVisible();
     await expect(page.getByText('TB-500').last()).toBeVisible();
 
@@ -153,7 +151,7 @@ await expect(page.getByRole('checkbox', { name: 'TB-500' })).toBeChecked();
     await page.getByRole('button', { name: 'New protocol' }).click();
     await page.getByLabel('Protocol Name').fill('Editable Protocol Protocol');
     await page.getByLabel('Description').fill('Original protocol description');
-    await page.getByLabel('Duration (days)').fill('21');
+   
 await page.getByRole('button', { name: 'Next' }).click();
 await page.getByRole('checkbox', { name: 'BPC-157' }).check();
 await page.getByRole('button', { name: 'Create Protocol' }).click();
@@ -163,13 +161,11 @@ await page.getByRole('button', { name: 'Protocol settings' }).click();
 await page.getByRole('button', { name: 'Edit protocol' }).click();
     await page.getByLabel('Protocol name').fill('Edited Protocol Protocol');
     await page.getByLabel('Description').fill('Updated protocol description');
-    await page.getByLabel('Duration (days)').fill('28');
-    await page.getByRole('textbox', { name: 'Notes' }).fill('Edited protocol notes');
+        await page.getByRole('textbox', { name: 'Notes' }).fill('Edited protocol notes');
     await page.getByRole('button', { name: 'Save changes' }).click();
 
 await expect(page.getByRole('heading', { name: 'Edited Protocol Protocol' })).toBeVisible();
 await expect(page.getByText('Updated protocol description')).toBeVisible();
-await expect(page.getByText('Week 1 of 4')).toBeVisible();
 await expect(page.getByText('Edited protocol notes')).toBeVisible();
   });
 
@@ -180,8 +176,7 @@ await expect(page.getByText('Edited protocol notes')).toBeVisible();
     await page.getByRole('button', { name: 'New protocol' }).click();
     await page.getByLabel('Protocol Name').fill('Delete Me Protocol Protocol');
     await page.getByLabel('Description').fill('Temporary protocol');
-    await page.getByLabel('Duration (days)').fill('14');
-await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('button', { name: 'Next' }).click();
 await page.getByRole('checkbox', { name: 'BPC-157' }).check();
 await page.getByRole('button', { name: 'Create Protocol' }).click();
 
@@ -198,4 +193,24 @@ await page.getByRole('button', { name: 'Delete protocol' }).click();
     await page.reload();
     await expect(page.getByRole('link', { name: /Delete Me Protocol Protocol/ })).toHaveCount(0);
   });
+
+test('supports custom weekday schedule selection in the protocol builder', async ({ page }) => {
+  await page.goto('/stacks');
+  await page.getByRole('button', { name: 'I Understand' }).click();
+  await page.getByRole('button', { name: 'New protocol' }).click();
+  await page.getByLabel('Protocol Name').fill('Custom Days Protocol');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('checkbox', { name: 'BPC-157' }).check();
+
+  await page.getByRole('button', { name: 'Tuesday dosing day' }).click();
+  await page.getByRole('button', { name: 'Thursday dosing day' }).click();
+  await expect(page.getByRole('button', { name: 'Tuesday dosing day' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Thursday dosing day' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Monday dosing day' })).toHaveAttribute('aria-pressed', 'false');
+
+  await page.getByRole('button', { name: 'Create Protocol' }).click();
+  await page.getByRole('link', { name: /Custom Days Protocol/ }).click();
+  await expect(page.getByText('2x weekly · Tuesday, Thursday · 8:00 AM')).toBeVisible();
+});
+
 });

@@ -9,8 +9,7 @@ async function createStack(page: Page) {
   await acceptDisclaimer(page);
   await page.getByRole('button', { name: 'New protocol' }).click();
   await page.getByLabel('Protocol Name').fill('Layout Smoke Stack');
-  await page.getByLabel('Duration (days)').fill('28');
-  await page.getByRole('button', { name: 'Next', exact: true }).click();
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
   await page.getByRole('checkbox', { name: 'BPC-157' }).check();
   await page.getByRole('button', { name: 'Create Protocol' }).click();
   const href = await page.getByRole('link', { name: /Layout Smoke Stack/ }).first().getAttribute('href');
