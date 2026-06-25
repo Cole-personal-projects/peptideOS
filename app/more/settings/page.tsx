@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/lib/auth-context';
+import { APP_BUILD_ID, APP_VERSION, SERVICE_WORKER_CACHE_NAME } from '@/lib/app-build-info';
 import { useApp } from '@/lib/context';
 import { isFeatureEnabled } from '@/lib/feature-gates';
 import { validateUserDataExport, type UserDataImportPreview } from '@/lib/persistence';
@@ -255,11 +256,23 @@ const biometricLockEnabled = isFeatureEnabled('biometric-lock');
 </div>
 <div className="rounded-md border bg-secondary/20 p-3">
 <p className="text-xs text-muted-foreground">Cloud retrieve</p>
-<p className="mt-1 text-sm font-medium">
-{persistenceStatus.mode === 'signed-in' ? formatDateTime(persistenceStatus.cloudLastRetrievedAt) : 'Sign in to enable'}
-</p>
-</div>
-</div>
+                <p className="mt-1 text-sm font-medium">
+                  {persistenceStatus.mode === 'signed-in' ? formatDateTime(persistenceStatus.cloudLastRetrievedAt) : 'Sign in to enable'}
+                </p>
+              </div>
+              <div className="rounded-md border bg-secondary/20 p-3">
+                <p className="text-xs text-muted-foreground">App version</p>
+                <p className="mt-1 text-sm font-medium">v{APP_VERSION}</p>
+              </div>
+              <div className="rounded-md border bg-secondary/20 p-3">
+                <p className="text-xs text-muted-foreground">Build</p>
+                <p className="mt-1 text-sm font-medium">{APP_BUILD_ID}</p>
+              </div>
+              <div className="rounded-md border bg-secondary/20 p-3 sm:col-span-2">
+                <p className="text-xs text-muted-foreground">Offline shell</p>
+                <p className="mt-1 text-sm font-medium">{SERVICE_WORKER_CACHE_NAME}</p>
+              </div>
+            </div>
 
             <div className="flex items-start gap-3 rounded-md border bg-secondary/20 p-3">
               <Database className="mt-0.5 h-5 w-5 text-muted-foreground" />

@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { SERVICE_WORKER_CACHE_NAME } from './app-build-info';
 
 const root = process.cwd();
 const publicPath = (...parts: string[]) => join(root, 'public', ...parts);
@@ -34,11 +35,13 @@ describe('PWA public assets', () => {
 
 expect(serviceWorker).toContain('/offline.html');
 expect(serviceWorker).toContain('event.request.mode === \'navigate\'');
-expect(serviceWorker).toContain('peptideos-shell-v3');
+expect(serviceWorker).toContain(SERVICE_WORKER_CACHE_NAME);
 expect(serviceWorker).not.toContain("  '/',");
 expect(serviceWorker).toContain("url.pathname.startsWith('/_next/')");
 expect(serviceWorker).toContain("url.searchParams.has('_rsc')");
 expect(serviceWorker).toContain("accept.includes('text/x-component')");
+expect(serviceWorker).toContain("event.data?.type === 'SKIP_WAITING'");
+expect(serviceWorker).toContain('self.skipWaiting()');
 expect(offlinePage).toContain('PeptideOS');
     expect(offlinePage).toContain('offline');
     expect(offlinePage).toContain('stored locally');

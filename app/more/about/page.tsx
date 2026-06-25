@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { APP_BUILD_ID, APP_VERSION } from '@/lib/app-build-info';
 
 export default function AboutPage() {
   return (
@@ -14,7 +15,8 @@ export default function AboutPage() {
         {/* App Info */}
         <div className="text-center py-6">
           <h1 className="text-xl font-bold">PeptideOS</h1>
-          <p className="text-muted-foreground text-sm mt-1">Version 1.0.0</p>
+          <p className="text-muted-foreground text-sm mt-1">Version {APP_VERSION}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Build {APP_BUILD_ID}</p>
           <p className="text-xs text-muted-foreground mt-0.5">Personal Peptide Research Tracking</p>
         </div>
 
