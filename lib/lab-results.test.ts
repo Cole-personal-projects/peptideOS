@@ -104,7 +104,7 @@ test('creates reviewable PDF drafts from Peppi-extracted lab rows', () => {
     expect(draft.unresolvedRows).toEqual(['Patient: Jane Doe']);
   });
 
-  test('handles empty and loose CSV imports without inventing rows', () => {
+test('handles empty and loose CSV imports without inventing rows', () => {
     expect(parseLabCsv('', { drawDate: '2026-06-01' })).toMatchObject({
       rows: [],
       unresolvedRows: [],
@@ -125,9 +125,46 @@ test('creates reviewable PDF drafts from Peppi-extracted lab rows', () => {
       referenceRange: { text: '100-250', low: 100, high: 250 },
     });
     expect(draft.unresolvedRows).toEqual(['bad-row']);
-  });
+});
 
-  test('parses quoted CSV fields, status flags, panels, and one-sided ranges', () => {
+test('parses LabCorp PDF text-layer rows with trailing lab codes', () => {
+  const draft = parseLabText(
+    [
+      '11312919310 111627629',
+      '2105 5th Ave APt 909',
+      'Robertson, C 1598297327',
+      'Glucose 89 mg/dL 70-99 01',
+      'Creatinine 1.14 mg/dL 0.76-1.27 01',
+      'BUN/Creatinine Ratio 12 9-20 01',
+      'Potassium 4.7 mmol/L 3.5-5.2 01',
+      'Protein,Total,Urine 10.9 mg/dL Not Estab. 01',
+    ].join('\n'),
+    { drawDate: '2026-04-23', panelName: 'Metabolic' },
+  );
+
+  expect(draft.rows).toHaveLength(5);
+  expect(draft.unresolvedRows).toEqual([]);
+  expect(draft.rows[0]).toMatchObject({
+    testName: 'Glucose',
+    value: '89',
+    unit: 'mg/dL',
+    referenceRange: { text: '70-99', low: 70, high: 99 },
+  });
+  expect(draft.rows[2]).toMatchObject({
+    testName: 'BUN/Creatinine Ratio',
+    value: '12',
+    unit: '',
+    referenceRange: { text: '9-20', low: 9, high: 20 },
+  });
+  expect(draft.rows[4]).toMatchObject({
+    testName: 'Protein,Total,Urine',
+    value: '10.9',
+    unit: 'mg/dL',
+    referenceRange: { text: 'Not Estab.' },
+  });
+});
+
+test('parses quoted CSV fields, status flags, panels, and one-sided ranges', () => {
     const draft = parseLabCsv(
       'Component,Result,Units,Ref Range,Status,Panel\n"Free Testosterone",12.5,pg/mL,"> 5",H,Hormones\nALT,42,U/L,"< 45",L,CMP',
       { drawDate: '2026-06-01' },

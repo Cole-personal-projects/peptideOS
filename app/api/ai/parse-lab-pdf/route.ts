@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod/v4';
 
+import { inferLabResultDate } from '@/lib/lab-date-extraction';
 import { createAiLabPdfDraft } from '@/lib/lab-results';
 import type { LabReport } from '@/lib/types';
 
@@ -105,9 +106,52 @@ export async function POST(request: Request) {
   if (!isPdf(bytes)) {
     return NextResponse.json({ error: 'Only PDF files can use PDF extraction.' }, { status: 415 });
   }
+  const extractedText = formData.get('extractedText');
+  const extractedTextValue = typeof extractedText === 'string' ? extractedText.trim().slice(0, 60_000) : '';
+  const textLayerDate = extractedTextValue ? inferLabResultDate(extractedTextValue) : undefined;
 
   const client = new Anthropic();
   try {
+    const userContent = extractedTextValue
+      ? [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              task: 'Extract lab marker rows for review in PeptideOS from the text layer of a PDF.',
+              fileName: file.name,
+              metadata: parsedMetadata.data,
+              extractedText: extractedTextValue,
+            }),
+          },
+        ]
+      : [
+          {
+            type: 'document' as const,
+            source: {
+              type: 'base64' as const,
+              media_type: 'application/pdf' as const,
+              data: Buffer.from(bytes).toString('base64'),
+            },
+          },
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              task: 'Extract lab marker rows for review in PeptideOS.',
+              fileName: file.name,
+              metadata: parsedMetadata.data,
+              expectedFields: [
+                'testName',
+                'assayMethod',
+                'value',
+                'unit',
+                'referenceRangeText',
+                'flag',
+                'panelName',
+              ],
+            }),
+          },
+        ];
+
     const response = await client.messages.parse({
       model: MODEL,
       max_tokens: 3200,
@@ -115,33 +159,7 @@ export async function POST(request: Request) {
       messages: [
         {
           role: 'user',
-          content: [
-            {
-              type: 'document',
-              source: {
-                type: 'base64',
-                media_type: 'application/pdf',
-                data: Buffer.from(bytes).toString('base64'),
-              },
-            },
-            {
-              type: 'text',
-              text: JSON.stringify({
-                task: 'Extract lab marker rows for review in PeptideOS.',
-                fileName: file.name,
-                metadata: parsedMetadata.data,
-                expectedFields: [
-                  'testName',
-                  'assayMethod',
-                  'value',
-                  'unit',
-                  'referenceRangeText',
-                  'flag',
-                  'panelName',
-                ],
-              }),
-            },
-          ],
+          content: userContent,
         },
       ],
       output_config: {
@@ -175,7 +193,7 @@ export async function POST(request: Request) {
       ...parsedMetadata.data,
       sourceLabel: parsedMetadata.data.sourceLabel || parsed.sourceLabel,
       panelName: parsedMetadata.data.panelName || parsed.panelName,
-      drawDate: parsedMetadata.data.drawDate || parsed.drawDate || new Date().toISOString().slice(0, 10),
+      drawDate: textLayerDate || parsed.drawDate || parsedMetadata.data.drawDate || new Date().toISOString().slice(0, 10),
       resultedDate: parsedMetadata.data.resultedDate || parsed.resultedDate,
       existingReports: parsedMetadata.data.existingReports as LabReport[] | undefined,
       unresolvedRows: [...parsed.unresolvedRows, ...parsed.caveats.map((caveat) => `Caveat: ${caveat}`)],
