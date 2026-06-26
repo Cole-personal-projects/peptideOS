@@ -10,16 +10,15 @@ test.describe('bottom navigation diagnostics', () => {
       await route.fulfill({ status: 204, body: '' });
     });
 
-    await page.goto('/');
-    await page.getByRole('button', { name: 'Start local setup' }).click();
+    await page.goto('/more');
     await page.getByRole('button', { name: 'I Understand' }).click({ timeout: 5_000 }).catch(() => undefined);
     await expect(page.getByRole('navigation')).toBeVisible();
 
-    await page.getByRole('navigation').getByRole('link', { name: 'More' }).click();
-    await expect(page).toHaveURL(/\/more$/);
+    await page.getByRole('navigation').getByRole('link', { name: 'Dashboard' }).click();
+    await expect(page).toHaveURL(/\/$/);
 
     await expect
       .poll(() => diagnosticEvents)
-      .toEqual(expect.arrayContaining(['bottom_nav_pointer_down:More', 'bottom_nav_click:More']));
+      .toEqual(expect.arrayContaining(['bottom_nav_pointer_down:Dashboard', 'bottom_nav_click:Dashboard']));
   });
 });

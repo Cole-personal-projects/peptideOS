@@ -1,24 +1,23 @@
 "use client";
 
 import Link from 'next/link';
-import { 
-  FlaskConical, 
-  Calculator, 
-  TestTube, 
+import {
   Activity,
   BookOpen,
-  Heart, 
-  Users, 
-  Bot, 
-  Settings, 
+  Bot,
+  Calculator,
+  ChevronRight,
+  FlaskConical,
+  Heart,
   Info,
-  ChevronRight
+  Settings,
+  TestTube,
+  Users,
 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
 import type { LucideIcon } from 'lucide-react';
 
 type MenuItem = {
@@ -47,35 +46,32 @@ const menuSections: MenuSection[] = [
     items: [
       { href: '/library', label: 'Library', icon: BookOpen, description: 'Compounds' },
       { href: '/more/compound-guide', label: 'Guide', icon: BookOpen, description: 'Workflows' },
-    ]
+    ],
   },
   {
     title: 'Track',
     items: [
       { href: '/more/signals', label: 'Signals', icon: Activity, description: 'Check-ins' },
       { href: '/more/integrations', label: 'Integrations', icon: Heart, description: 'Devices', badge: 'Soon' },
-    ]
+    ],
   },
   {
     title: 'Community',
-    items: [
-      { href: '/more/community', label: 'Community', icon: Users, description: 'People', badge: 'Soon' },
-    ]
+    items: [{ href: '/more/community', label: 'Community', icon: Users, description: 'People', badge: 'Soon' }],
   },
   {
     title: 'App',
     items: [
       { href: '/more/settings', label: 'Settings', icon: Settings, description: 'Sync' },
       { href: '/more/about', label: 'About', icon: Info, description: 'Info' },
-    ]
-  }
+    ],
+  },
 ];
 
 export default function MorePage() {
   return (
     <AppShell>
       <PageHeader title="More" />
-
       <div className="space-y-5 p-4 pb-32">
         <div className="grid grid-cols-2 gap-3">
           {primaryItems.map((item) => {
@@ -110,8 +106,8 @@ export default function MorePage() {
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <Link 
-                      key={item.href} 
+                    <Link
+                      key={item.href}
                       href={item.href}
                       className="flex min-h-[76px] items-center gap-3 bg-card px-3.5 py-3 transition-colors hover:bg-secondary/50"
                     >
@@ -121,11 +117,11 @@ export default function MorePage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="truncate text-sm font-semibold">{item.label}</p>
-                          {item.badge && (
+                          {item.badge ? (
                             <Badge variant="secondary" className="px-1.5 py-0 text-[11px]">
                               {item.badge}
                             </Badge>
-                          )}
+                          ) : null}
                         </div>
                         <p className="truncate text-xs text-muted-foreground">{item.description}</p>
                       </div>

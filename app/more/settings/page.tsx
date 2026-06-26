@@ -95,7 +95,7 @@ saveToCloud,
 retrieveFromCloud,
 setCloudSyncEnabled,
 } = useApp();
-const activeTheme = data.theme ?? (data.darkMode ? 'graphite-dark' : 'clinical-light');
+  const activeTheme = data.theme ?? (data.darkMode ? 'graphite-dark' : 'clinical-light');
   const { config: authConfig, status: authStatus, user, signInWithEmail, verifyEmailCode, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [email, setEmail] = useState('');
@@ -567,8 +567,8 @@ void retrieveFromCloud();
         </Card>
 
         
-        )}
-        <Card>
+)} 
+<Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Privacy</CardTitle>
           </CardHeader>
