@@ -90,6 +90,14 @@ tracking:
     - flag_not_fda_approved
     - require_lab_baseline_before_logging
 
+pharmacokinetics:
+  half_life_hours: 10
+  half_life_source: "Published human pharmacodynamic and pharmacokinetic study reports enclomiphene was rapidly absorbed with an elimination half-life about 10 hours."
+  source_ids:
+    - pub-wiehle-2013
+  evidence_tier: human_limited
+  model_notes: "First-order estimated remaining amount only; investigational enclomiphene PK does not establish compounded product behavior, clinical response, fertility response, or dose guidance."
+
 app_profile:
   headline: Oral SERM with phase II evidence for raising testosterone in secondary hypogonadism while preserving fertility; not FDA-approved.
   summary: "Enclomiphene is the trans-isomer SERM used to stimulate endogenous LH and FSH signaling in male hormone contexts. Useful tracking connects dose schedule, fertility goals, testosterone and gonadotropin labs, mood, libido, vision symptoms, and side effects."

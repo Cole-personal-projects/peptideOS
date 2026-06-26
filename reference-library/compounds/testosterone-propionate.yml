@@ -94,6 +94,14 @@ tracking:
     - "calculate-injection-volume"
     - "summarize-tracking"
 
+pharmacokinetics:
+  half_life_hours: 19
+  half_life_source: "Peer-reviewed testosterone therapy review describes terminal half-life of testosterone propionate as approximately 19 hours."
+  source_ids:
+    - pmc-short-acting-testosterone
+  evidence_tier: human_limited
+  model_notes: "First-order estimated remaining amount only; testosterone propionate kinetics vary by product, route, oil vehicle, and source quality and do not represent measured concentration, clinical response, or dose guidance."
+
 app_profile:
   headline: "Identity-backed testosterone ester with no bundled label source."
   summary: "Testosterone propionate is a short-acting injectable testosterone ester where frequent dosing makes timing especially important. Useful tracking captures concentration, injection volume, schedule accuracy, site rotation, labs, and symptom swings between injections."
@@ -117,6 +125,12 @@ sources:
     source_type: database
     publisher: "PubChem"
     year: 2026
+  - id: pmc-short-acting-testosterone
+    title: "Short-acting testosterone appears to have lesser effect on male reproductive potential"
+    url: "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7480784/"
+    source_type: review
+    publisher: PMC
+    year: 2020
 
 claims:
   - id: identity

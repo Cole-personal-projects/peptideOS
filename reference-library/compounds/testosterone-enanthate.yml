@@ -102,6 +102,14 @@ tracking:
     - "summarize-tracking"
     - "flag-source-quality"
 
+pharmacokinetics:
+  half_life_hours: 120
+  half_life_source: "Published pharmacokinetic/pharmacodynamic study reports mean half-life estimate for testosterone enanthate of 5 days after injection."
+  source_ids:
+    - pubmed-testosterone-enanthate-pk
+  evidence_tier: human_limited
+  model_notes: "First-order estimated remaining amount only; testosterone enanthate depot kinetics vary by route, oil vehicle, product, and lab context and do not represent measured concentration, clinical response, or dose guidance."
+
 app_profile:
   headline: "Label-backed testosterone ester with route-specific tracking."
   summary: "Testosterone enanthate is a long-acting injectable testosterone ester used in testosterone replacement and hormone protocols. Useful tracking keeps ester, concentration, injection volume, schedule, site rotation, labs, and symptom patterns distinct from other forms."
@@ -131,6 +139,12 @@ sources:
     source_type: database
     publisher: "PubChem"
     year: 2026
+  - id: pubmed-testosterone-enanthate-pk
+    title: "Pharmacokinetics and pharmacodynamics of testosterone enanthate"
+    url: "https://pubmed.ncbi.nlm.nih.gov/2333732/"
+    source_type: publication
+    publisher: PubMed
+    year: 1990
 
 claims:
   - id: identity

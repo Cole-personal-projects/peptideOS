@@ -96,6 +96,14 @@ tracking:
     - "summarize-tracking"
     - "flag-source-quality"
 
+pharmacokinetics:
+  half_life_hours: 2
+  half_life_source: "Published thymosin alpha-1 clinical pharmacology summary describes serum half-life approximately 2 hours, with levels returning to baseline within 24 hours."
+  source_ids:
+    - pubmed-thymosin-alpha-1
+  evidence_tier: human_limited
+  model_notes: "First-order estimated remaining amount only; thymosin alpha-1 product availability and formulations vary by jurisdiction and source, and this does not represent measured concentration, immune response, clinical response, or dose guidance."
+
 app_profile:
   headline: "Immune peptide with thymosin-family naming ambiguity."
   summary: "Thymosin alpha-1 is an immune-modulating peptide used clinically in some regions and studied in infection, immune, and recovery contexts. Useful tracking captures cycle timing, route, illness context, labs when available, tolerability, and clinician-directed markers."
@@ -119,6 +127,12 @@ sources:
     source_type: database
     publisher: "PubChem"
     year: 2026
+  - id: pubmed-thymosin-alpha-1
+    title: "Thymosin alpha-1"
+    url: "https://pubmed.ncbi.nlm.nih.gov/11381492/"
+    source_type: review
+    publisher: PubMed
+    year: 2001
 
 claims:
   - id: identity

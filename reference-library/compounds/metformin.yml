@@ -98,6 +98,14 @@ tracking:
     - prompt-b12-check
     - prompt-egfr-check
 
+pharmacokinetics:
+  half_life_hours: 6.2
+  half_life_source: "DailyMed metformin labeling describes a plasma elimination half-life of approximately 6.2 hours after oral administration."
+  source_ids:
+    - dailymed-metformin
+  evidence_tier: approved_label
+  model_notes: "First-order estimated remaining amount uses the plasma elimination half-life only; blood compartment half-life is longer and this estimate does not represent measured concentration, clinical response, or dose guidance."
+
 app_profile:
   headline: The cheapest, most-studied longevity bet — and still the gold-standard first-line drug for type 2 diabetes.
   summary: "Metformin is an oral biguanide used for glucose control and often tracked in metabolic and longevity-oriented routines. Useful tracking distinguishes IR versus ER, meal timing, GI tolerance, fasting glucose, A1c, appetite, training, and B12 monitoring."
@@ -116,6 +124,12 @@ app_profile:
   reality_check: The longevity case is plausible and well-mechanistically grounded, but not yet proven in humans. Until TAME reports, the longevity use is a calculated bet, not a settled answer.
 
 sources:
+  - id: dailymed-metformin
+    title: "METFORMIN HYDROCHLORIDE tablet label"
+    url: "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=0ff1ba75-3c86-4baf-a6b1-1bb883839866"
+    source_type: label
+    publisher: "DailyMed"
+    year: 2026
   - id: mdpi-metformin-antiaging-2025
     title: The Anti-Aging Mechanism of Metformin
     url: https://www.mdpi.com/1420-3049/30/4/816
@@ -144,6 +158,7 @@ claims:
       - oral
     source_ids:
       - mdpi-metformin-antiaging-2025
+      - dailymed-metformin
     confidence: high
     limitations: []
   - id: metformin-ampk-mechanism

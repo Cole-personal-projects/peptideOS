@@ -95,6 +95,14 @@ tracking:
   - "summarize-tracking"
   - "flag-source-quality"
 
+pharmacokinetics:
+  half_life_hours: 192
+  half_life_source: "DailyMed testosterone cypionate labeling describes the half-life after intramuscular injection as approximately 8 days."
+  source_ids:
+    - dailymed-testosterone-cypionate
+  evidence_tier: approved_label
+  model_notes: "First-order estimated remaining amount only; intramuscular depot kinetics do not represent measured concentration, clinical response, or dose guidance."
+
 app_profile:
   headline: "Label-backed testosterone ester with concentration-based tracking."
   summary: "Testosterone cypionate is a long-acting injectable testosterone ester commonly used in TRT protocols. Useful tracking focuses on concentration, injection volume, schedule, site rotation, labs, and symptom patterns across peak and trough periods."

@@ -92,6 +92,14 @@ tracking:
   - flag-prescription-required
   - prompt-source-verification
 
+pharmacokinetics:
+  half_life_hours: 0.083
+  half_life_source: "DailyMed oxytocin injection labeling describes plasma half-life about 3 to 5 minutes after parenteral administration."
+  source_ids:
+    - dailymed-oxytocin
+  evidence_tier: approved_label
+  model_notes: "First-order estimated remaining amount only; parenteral oxytocin label PK does not model intranasal, compounded, behavioral, obstetric, or clinical response and is not dose guidance."
+
 app_profile:
   headline: FDA-approved obstetric hormone with extensive off-label and research interest in social and mood effects via intranasal use.
   summary: "Oxytocin is a short-acting peptide hormone used clinically in obstetric contexts and explored in social, stress, and bonding research. Useful tracking separates route, timing, context, mood or social effects, headache, blood pressure, and tolerability."
@@ -108,6 +116,12 @@ app_profile:
   reality_check: Obstetric use is well established. Intranasal social-effect literature is mixed and methodologically contested; do not assume large or reliable prosocial effects from over-the-counter use.
 
 sources:
+- id: dailymed-oxytocin
+  title: Oxytocin injection label
+  url: https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=a9b62187-4141-487c-a9da-f42ad7f9b408
+  source_type: label
+  publisher: DailyMed
+  year: 2026
 - id: statpearls-oxytocin
   title: Oxytocin (StatPearls)
   url: https://www.ncbi.nlm.nih.gov/books/NBK507848/
