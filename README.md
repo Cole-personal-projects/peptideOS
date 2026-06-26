@@ -25,6 +25,14 @@ pnpm exec wrangler secret put ANTHROPIC_API_KEY
 
 Manual deploy from a machine with Cloudflare credentials: `pnpm run deploy`. Local preview in the Workers runtime: `pnpm preview`.
 
+Production diagnostics are emitted as sanitized `client-diagnostic` log lines from the Worker. For live triage:
+
+```bash
+pnpm diagnostics:tail
+```
+
+See `docs/developer-diagnostics-logging.md` for JSON capture, retention, and alerting options.
+
 ## Installing on iPhone
 
 1. Open the deployed URL (`https://peptideos.<your-subdomain>.workers.dev` or a custom domain) in Safari.
