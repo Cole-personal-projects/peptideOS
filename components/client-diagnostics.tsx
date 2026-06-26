@@ -42,7 +42,7 @@ export function ClientDiagnostics() {
       const url = getFetchUrl(input);
       try {
         const response = await originalFetch(input, init);
-        if (url && isSameOriginApi(url) && !response.ok) {
+        if (url && isInstrumentedApi(url) && !response.ok) {
           emitClientDiagnostic(
             'client_fetch_http_error',
             {
@@ -55,7 +55,7 @@ export function ClientDiagnostics() {
         }
         return response;
       } catch (error) {
-        if (url && isSameOriginApi(url)) {
+        if (url && isInstrumentedApi(url)) {
           emitClientDiagnostic(
             'client_fetch_network_error',
             {
@@ -197,7 +197,11 @@ function getFetchUrl(input: RequestInfo | URL) {
   return input.url;
 }
 
-function isSameOriginApi(url: string) {
+function isInstrumentedApi(url: string) {
   const parsed = new URL(url, window.location.href);
-  return parsed.origin === window.location.origin && parsed.pathname.startsWith('/api/');
+  return (
+    parsed.origin === window.location.origin &&
+    parsed.pathname.startsWith('/api/') &&
+    parsed.pathname !== '/api/client-diagnostics'
+  );
 }
