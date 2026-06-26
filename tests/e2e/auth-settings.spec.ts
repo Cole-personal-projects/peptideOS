@@ -22,7 +22,7 @@ test.describe('account settings', () => {
     await expect(page.getByText('App version')).toBeVisible();
     await expect(page.getByText('v1.0.0')).toBeVisible();
     await expect(page.getByText('Build')).toBeVisible();
-    await expect(page.getByText('peptideos-shell-v3')).toBeVisible();
+    await expect(page.getByText('peptideos-shell-v4')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Save to cloud' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Retrieve from cloud' })).toBeDisabled();
     await expect(page.getByText('Content mode')).toBeVisible();

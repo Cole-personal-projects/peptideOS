@@ -47,8 +47,10 @@ export interface LabCompareRow {
   marker: string;
   first?: LabResult;
   second?: LabResult;
+  deltaValue?: number;
   deltaPercent?: number;
-  status: 'matched' | 'missing' | 'unit-mismatch' | 'non-numeric';
+  status: 'matched' | 'missing' | 'unit-mismatch' | 'assay-mismatch' | 'non-numeric';
+  issue?: string;
 }
 
 export interface LabTrendsDashboard {
@@ -128,23 +130,40 @@ export function buildLabComparison(data: AppData, firstReportId: string, secondR
   const secondResults = data.labResults.filter((result) => result.reportId === secondReportId);
   const keys = Array.from(new Set([...firstResults, ...secondResults].map((result) => result.normalizedKey))).sort();
 
-  return keys.map((key) => {
-    const first = firstResults.find((result) => result.normalizedKey === key);
-    const second = secondResults.find((result) => result.normalizedKey === key);
-    if (!first || !second) return { key, marker: first?.testName ?? second?.testName ?? key, first, second, status: 'missing' };
-    if (first.unit.toLowerCase() !== second.unit.toLowerCase()) return { key, marker: first.testName, first, second, status: 'unit-mismatch' };
-    if (typeof first.numericValue !== 'number' || typeof second.numericValue !== 'number' || second.numericValue === 0) {
-      return { key, marker: first.testName, first, second, status: 'non-numeric' };
+  return keys.map((key): LabCompareRow => {
+    const firstCandidates = firstResults.filter((result) => result.normalizedKey === key);
+    const secondCandidates = secondResults.filter((result) => result.normalizedKey === key);
+    const { first, second } = pickBestComparisonPair(firstCandidates, secondCandidates);
+    if (!first || !second) {
+      return {
+        key,
+        marker: first?.testName ?? second?.testName ?? key,
+        first,
+        second,
+        status: 'missing',
+        issue: first ? 'Missing from second report' : 'Missing from first report',
+      };
     }
+    if (first.unit.trim().toLowerCase() !== second.unit.trim().toLowerCase()) {
+      return { key, marker: first.testName, first, second, status: 'unit-mismatch', issue: 'Units differ' };
+    }
+    if (!sameAssay(first, second)) {
+      return { key, marker: first.testName, first, second, status: 'assay-mismatch', issue: 'Assay or method differs' };
+    }
+    if (typeof first.numericValue !== 'number' || typeof second.numericValue !== 'number' || second.numericValue === 0) {
+      return { key, marker: first.testName, first, second, status: 'non-numeric', issue: 'Needs numeric values' };
+    }
+    const deltaValue = first.numericValue - second.numericValue;
     return {
       key,
       marker: first.testName,
       first,
       second,
-      deltaPercent: ((first.numericValue - second.numericValue) / Math.abs(second.numericValue)) * 100,
+      deltaValue,
+      deltaPercent: (deltaValue / Math.abs(second.numericValue)) * 100,
       status: 'matched',
     };
-  });
+  }).sort(compareRowsByUsefulness);
 }
 
 export function buildLabTrendsDashboard(data: AppData): LabTrendsDashboard {
@@ -189,6 +208,50 @@ function getReportStackLabel(report: LabReport, stacks: Stack[], data: AppData) 
   if (linkedStack) return linkedStack.name;
   const context = buildLabProtocolContext(data, report.drawDate);
   return context.activeStacks[0]?.name ?? 'Baseline';
+}
+
+function pickBestComparisonPair(first: LabResult[], second: LabResult[]) {
+  if (first.length === 0 || second.length === 0) return { first: first[0], second: second[0] };
+  const exact = findPair(first, second, (a, b) => sameUnit(a, b) && sameAssay(a, b) && isNumericPair(a, b));
+  if (exact) return exact;
+  const unitNumeric = findPair(first, second, (a, b) => sameUnit(a, b) && isNumericPair(a, b));
+  if (unitNumeric) return unitNumeric;
+  const sameUnitPair = findPair(first, second, sameUnit);
+  if (sameUnitPair) return sameUnitPair;
+  return { first: first[0], second: second[0] };
+}
+
+function findPair(first: LabResult[], second: LabResult[], predicate: (first: LabResult, second: LabResult) => boolean) {
+  for (const firstResult of first) {
+    const secondResult = second.find((candidate) => predicate(firstResult, candidate));
+    if (secondResult) return { first: firstResult, second: secondResult };
+  }
+  return undefined;
+}
+
+function sameUnit(first: LabResult, second: LabResult) {
+  return first.unit.trim().toLowerCase() === second.unit.trim().toLowerCase();
+}
+
+function sameAssay(first: LabResult, second: LabResult) {
+  const firstAssay = first.assayMethod?.trim().toLowerCase() ?? '';
+  const secondAssay = second.assayMethod?.trim().toLowerCase() ?? '';
+  return !firstAssay || !secondAssay || firstAssay === secondAssay;
+}
+
+function isNumericPair(first: LabResult, second: LabResult) {
+  return typeof first.numericValue === 'number' && typeof second.numericValue === 'number';
+}
+
+function compareRowsByUsefulness(a: LabCompareRow, b: LabCompareRow) {
+  const order: Record<LabCompareRow['status'], number> = {
+    matched: 0,
+    'non-numeric': 1,
+    'assay-mismatch': 2,
+    'unit-mismatch': 3,
+    missing: 4,
+  };
+  return order[a.status] - order[b.status] || a.marker.localeCompare(b.marker);
 }
 
 function getTrendForResult(result: LabResult, report: LabReport, points: LabTrendPoint[]) {
@@ -277,4 +340,3 @@ export function makeLabCompareHref(firstReportId?: string, secondReportId?: stri
   if (secondReportId) params.set('second', secondReportId);
   return `/labs?${params.toString()}`;
 }
-

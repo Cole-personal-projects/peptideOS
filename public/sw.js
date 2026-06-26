@@ -1,4 +1,4 @@
-const CACHE_NAME = 'peptideos-shell-v3';
+const CACHE_NAME = 'peptideos-shell-v4';
 const APP_SHELL = [
   '/offline.html',
   '/manifest.json',
@@ -28,68 +28,81 @@ self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
+  if (event.data?.type === 'claim') {
+    self.clients.claim();
+  }
 });
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return response;
-        })
-        .catch(() => caches.match(event.request).then((cached) => cached ?? caches.match('/offline.html'))),
-    );
-    return;
-  }
-
   const url = new URL(event.request.url);
-  const shouldNetworkFirst =
-    url.pathname.startsWith('/_next/') ||
-    url.pathname === '/sw.js' ||
-    isNextRouteDataRequest(event.request, url);
+  if (url.origin !== self.location.origin) return;
 
-  if (shouldNetworkFirst) {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return response;
-        })
-        .catch(() => caches.match(event.request)),
-    );
+  if (event.request.mode === 'navigate') {
+    event.respondWith(networkFirstPage(event.request));
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
+  if (isDynamicRequest(event.request, url)) {
+    return;
+  }
 
-      return fetch(event.request)
-        .then((response) => {
-          if (!response || response.status !== 200) return response;
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return response;
-        });
-    }),
-  );
+  if (isStaticAsset(url)) {
+    event.respondWith(cacheFirst(event.request));
+  }
 });
 
+function isDynamicRequest(request, url) {
+  return (
+    url.pathname.startsWith('/api/') ||
+    url.pathname === '/sw.js' ||
+    isNextRouteDataRequest(request, url)
+  );
+}
+
+function isStaticAsset(url) {
+  return (
+    url.pathname.startsWith('/_next/static/') ||
+    url.pathname.startsWith('/ocr/') ||
+    url.pathname === '/manifest.json' ||
+    url.pathname === '/icon-192.png' ||
+    url.pathname === '/icon-512.png' ||
+    url.pathname === '/offline.html'
+  );
+}
+
 function isNextRouteDataRequest(request, url) {
-  if (url.origin !== self.location.origin) return false;
-  if (url.searchParams.has('_rsc')) return true;
+  return (
+    request.headers.get('rsc') === '1' ||
+    url.searchParams.has('_rsc') ||
+    request.headers.get('next-router-prefetch') === '1' ||
+    request.headers.get('next-router-state-tree') !== null
+  );
+}
 
-  const accept = request.headers.get('accept') ?? '';
-  if (accept.includes('text/x-component')) return true;
+function cacheFirst(request) {
+  return caches.match(request).then((cached) => {
+    if (cached) return cached;
 
-  return request.headers.has('next-router-state-tree') || request.headers.has('next-url');
+    return fetch(request).then((response) => {
+      if (response && response.status === 200) {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+      }
+      return response;
+    });
+  });
+}
+
+function networkFirstPage(request) {
+  return fetch(request)
+    .then((response) => {
+      if (response && response.status === 200) {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+      }
+      return response;
+    })
+    .catch(() => caches.match(request).then((cached) => cached ?? caches.match('/offline.html')));
 }

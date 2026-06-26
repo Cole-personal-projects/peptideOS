@@ -70,21 +70,24 @@ describe('lab results view models', () => {
   });
 
   test('comparison matches normalized markers and handles missing and unit mismatches', () => {
-    const first = labImport('2026-07-01', [
-      { testName: 'Testosterone Total', value: '700', unit: 'ng/dL' },
-      { testName: 'IGF-1', value: '180', unit: 'ng/mL' },
-    ]);
-    const second = labImport('2026-06-01', [
-      { testName: 'Testosterone', value: '650', unit: 'ng/dL' },
-      { testName: 'IGF-1', value: '26', unit: 'nmol/L' },
-      { testName: 'Glucose', value: '88', unit: 'mg/dL' },
-    ]);
-    const rows = buildLabComparison(withImports([first, second]), first.report.id, second.report.id);
+const first = labImport('2026-07-01', [
+{ testName: 'Testosterone Total', value: '700', unit: 'ng/dL' },
+{ testName: 'IGF-1', value: '180', unit: 'ng/mL' },
+{ testName: 'Estradiol Sensitive', assayMethod: 'LC/MS/MS', value: '22', unit: 'pg/mL' },
+]);
+const second = labImport('2026-06-01', [
+{ testName: 'Testosterone', value: '650', unit: 'ng/dL' },
+{ testName: 'IGF-1', value: '26', unit: 'nmol/L' },
+{ testName: 'Estradiol Sensitive', assayMethod: 'Immunoassay', value: '31', unit: 'pg/mL' },
+{ testName: 'Glucose', value: '88', unit: 'mg/dL' },
+]);
+const rows = buildLabComparison(withImports([first, second]), first.report.id, second.report.id);
 
-    expect(rows.find((row) => row.key === 'testosterone')).toMatchObject({ status: 'matched' });
-    expect(rows.find((row) => row.key === 'igf-1')).toMatchObject({ status: 'unit-mismatch' });
-    expect(rows.find((row) => row.key === 'glucose')).toMatchObject({ status: 'missing' });
-  });
+expect(rows[0]).toMatchObject({ key: 'testosterone', status: 'matched', deltaValue: 50 });
+expect(rows.find((row) => row.key === 'estradiol')).toMatchObject({ status: 'assay-mismatch', issue: 'Assay or method differs' });
+expect(rows.find((row) => row.key === 'igf-1')).toMatchObject({ status: 'unit-mismatch', issue: 'Units differ' });
+expect(rows.find((row) => row.key === 'glucose')).toMatchObject({ status: 'missing' });
+});
 
   test('dashboard handles empty, one-report, and three-report trend states', () => {
     expect(buildLabTrendsDashboard(withImports([]))).toMatchObject({ totalReports: 0, markersTracked: 0, correlations: [] });
@@ -104,4 +107,3 @@ describe('lab results view models', () => {
     expect(dashboard.correlations[0]).toMatchObject({ strength: 'strong' });
   });
 });
-

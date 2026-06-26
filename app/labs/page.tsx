@@ -1136,7 +1136,14 @@ function MarkerDetailView({ detail, onCompare, onShare }: { detail: ReturnType<t
   );
 }
 
-function CompareView({ reports, firstReportId, secondReportId, rows, onSelect, onShare }: {
+function CompareView({
+  reports,
+  firstReportId,
+  secondReportId,
+  rows,
+  onSelect,
+  onShare,
+}: {
   reports: LabReport[];
   firstReportId: string;
   secondReportId: string;
@@ -1146,34 +1153,107 @@ function CompareView({ reports, firstReportId, secondReportId, rows, onSelect, o
 }) {
   const first = reports.find((report) => report.id === firstReportId);
   const second = reports.find((report) => report.id === secondReportId);
+  const comparableRows = rows.filter((row) => row.status === 'matched');
+  const reviewRows = rows.filter((row) => row.status !== 'matched');
+  const reportLabel = `${first ? formatDate(first.drawDate) : 'Test 1'} vs ${second ? formatDate(second.drawDate) : 'Test 2'}`;
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <DateSelect label="Test 1" value={firstReportId} reports={reports} onChange={(value) => onSelect(value, secondReportId)} />
         <DateSelect label="Test 2" value={secondReportId} reports={reports} onChange={(value) => onSelect(firstReportId, value)} />
       </div>
-      <Card className="overflow-hidden">
-<div className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-2 border-b bg-secondary/70 px-3 py-2 text-xs font-semibold text-muted-foreground">
-          <span>Marker</span><span className="text-right">Test 1</span><span className="text-right">Test 2</span><span className="text-right">Delta</span>
-        </div>
-        {rows.map((row) => (
-          <div key={row.key} className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-2 border-b px-3 py-3 text-sm last:border-b-0">
-            <span className="font-medium">{row.marker}</span>
-            <span className="text-right">{row.first ? formatResultValue(row.first) : '—'}</span>
-            <span className="text-right">{row.second ? formatResultValue(row.second) : '—'}</span>
-            <span className={cn('text-right font-semibold', deltaClass(row.deltaPercent))}>{formatDelta(row)}</span>
+
+      <div className="grid grid-cols-3 gap-2">
+        <StatCard label="Comparable" value={String(comparableRows.length)} accent />
+        <StatCard label="Needs review" value={String(reviewRows.length)} />
+        <StatCard label="Markers" value={String(rows.length)} />
+      </div>
+
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="space-y-3 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Comparable changes</p>
+              <p className="text-xs text-muted-foreground">Same marker, unit, assay, and numeric value.</p>
+            </div>
+            <Badge variant="outline">{reportLabel}</Badge>
           </div>
-        ))}
+
+          {rows.length === 0 ? (
+            <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">Import at least two reports to compare.</p>
+          ) : comparableRows.length === 0 ? (
+            <p className="rounded-md border border-chart-4/40 bg-chart-4/10 p-4 text-sm text-muted-foreground">
+              No reliable deltas yet. Check the review queue for unit, assay, missing, or non-numeric mismatches.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {comparableRows.map((row) => <CompareRowCard key={row.key} row={row} />)}
+            </div>
+          )}
+        </CardContent>
       </Card>
+
+      {reviewRows.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Needs review</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {reviewRows.map((row) => <CompareReviewRow key={row.key} row={row} />)}
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-accent/40 bg-accent/10">
         <CardContent className="space-y-2 p-4 text-sm">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-accent">Summary</p>
-          {rows.length === 0 ? <p className="text-muted-foreground">Import at least two reports to compare.</p> : rows.slice(0, 4).map((row) => <p key={row.key} className="text-muted-foreground">· {row.marker}: {formatDelta(row)}</p>)}
+          {comparableRows.length === 0 ? (
+            <p className="text-muted-foreground">No reliable numeric changes are available for these two reports.</p>
+          ) : (
+            comparableRows.slice(0, 4).map((row) => (
+              <p key={row.key} className="text-muted-foreground">{row.marker}: {formatDelta(row)}</p>
+            ))
+          )}
         </CardContent>
       </Card>
-      <Button className="w-full" onClick={() => onShare(`Lab comparison: ${first ? formatDate(first.drawDate) : 'Test 1'} vs ${second ? formatDate(second.drawDate) : 'Test 2'}`)}>
-        <Copy className="h-4 w-4" /> Share Comparison
+
+      <Button
+        className="w-full"
+        onClick={() => onShare(`Lab comparison: ${reportLabel}. Comparable markers: ${comparableRows.length}. Needs review: ${reviewRows.length}.`)}
+      >
+        <Copy className="h-4 w-4" />
+        Share Comparison
       </Button>
+    </div>
+  );
+}
+
+function CompareRowCard({ row }: { row: LabCompareRow }) {
+  return (
+    <div className="rounded-md border bg-background p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-medium">{row.marker}</p>
+          <p className="text-xs text-muted-foreground">{formatCompareValues(row)}</p>
+        </div>
+        <span className={cn('text-right text-lg font-semibold tabular-nums', deltaClass(row.deltaPercent))}>{formatDelta(row)}</span>
+      </div>
+    </div>
+  );
+}
+
+function CompareReviewRow({ row }: { row: LabCompareRow }) {
+  return (
+    <div className="rounded-md border p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-medium">{row.marker}</p>
+          <p className="text-xs text-muted-foreground">{formatCompareValues(row)}</p>
+        </div>
+        <Badge variant="outline">{compareStatusLabel(row.status)}</Badge>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">{row.issue ?? compareStatusLabel(row.status)}</p>
     </div>
   );
 }
@@ -1282,11 +1362,38 @@ function TrendBadge({ direction, percent }: { direction: 'up' | 'down' | 'flat';
 }
 
 function formatDelta(row: LabCompareRow) {
-  if (row.status === 'missing') return 'Missing';
-  if (row.status === 'unit-mismatch') return 'Unit';
-  if (row.status === 'non-numeric') return 'Text';
-  if (row.deltaPercent === undefined) return '—';
-  return `${row.deltaPercent > 0 ? '+' : ''}${Math.round(row.deltaPercent)}%`;
+  if (row.status !== 'matched') return row.issue ?? compareStatusLabel(row.status);
+  if (row.deltaValue === undefined || row.deltaPercent === undefined) return 'No delta';
+  const unit = row.first?.unit ? ` ${row.first.unit}` : '';
+  const absolute = `${row.deltaValue > 0 ? '+' : ''}${formatNumber(row.deltaValue)}${unit}`;
+  const percent = `${row.deltaPercent > 0 ? '+' : ''}${Math.round(row.deltaPercent)}%`;
+  return `${absolute} (${percent})`;
+}
+
+function formatCompareValues(row: LabCompareRow) {
+  const first = row.first ? formatResultValue(row.first) : 'Missing';
+  const second = row.second ? formatResultValue(row.second) : 'Missing';
+  return `${first} vs ${second}`;
+}
+
+function compareStatusLabel(status: LabCompareRow['status']) {
+  switch (status) {
+    case 'matched':
+      return 'Comparable';
+    case 'assay-mismatch':
+      return 'Assay differs';
+    case 'unit-mismatch':
+      return 'Unit differs';
+    case 'non-numeric':
+      return 'Text value';
+    case 'missing':
+      return 'Missing';
+  }
+}
+
+function formatNumber(value: number) {
+  if (Number.isInteger(value)) return String(value);
+  return value.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
 }
 
 function flagClass(flag: LabResult['flag']) {
