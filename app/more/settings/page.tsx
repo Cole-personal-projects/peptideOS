@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Cloud, Database, Download, Fingerprint, Moon, RefreshCw, Shield, Sun, Trash2, Upload, UserRound } from 'lucide-react';
+import { Check, Cloud, Database, Download, Fingerprint, Palette, RefreshCw, Shield, Trash2, Upload, UserRound } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import {
@@ -26,6 +26,39 @@ import { useApp } from '@/lib/context';
 import { isFeatureEnabled } from '@/lib/feature-gates';
 import { validateUserDataExport, type UserDataImportPreview } from '@/lib/persistence';
 import { formatReferenceLibraryStatus } from '@/lib/reference-library-status';
+import type { AppTheme } from '@/lib/types';
+
+const themeOptions: Array<{
+  id: AppTheme;
+  name: string;
+  tone: string;
+  swatches: string[];
+}> = [
+  {
+    id: 'clinical-light',
+    name: 'Clinical Light',
+    tone: 'Clean and high-trust',
+    swatches: ['#f7faf9', '#117d82', '#2f8f5b'],
+  },
+  {
+    id: 'graphite-dark',
+    name: 'Graphite Dark',
+    tone: 'Focused night cockpit',
+    swatches: ['#0a0f12', '#27b5ad', '#f0a84f'],
+  },
+  {
+    id: 'signal',
+    name: 'Signal',
+    tone: 'High-contrast data',
+    swatches: ['#08111f', '#37d5ff', '#7ee06b'],
+  },
+  {
+    id: 'warm-minimal',
+    name: 'Warm Minimal',
+    tone: 'Softer daily use',
+    swatches: ['#fbf7ef', '#8f5f2a', '#4f8b63'],
+  },
+];
 
 function formatDateTime(value: string | null) {
   return value ? new Date(value).toLocaleString() : 'No successful save yet';
@@ -46,14 +79,14 @@ function formatImportCounts(preview: UserDataImportPreview) {
 }
 
 export default function SettingsPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const {
-    data,
-    referenceLibraryStatus,
+const router = useRouter();
+const searchParams = useSearchParams();
+const {
+data,
+referenceLibraryStatus,
 persistenceStatus,
 setUserMode,
-setDarkMode,
+setTheme,
 toggleBiometricLock,
 exportAllData,
 importAllData,
@@ -62,6 +95,7 @@ saveToCloud,
 retrieveFromCloud,
 setCloudSyncEnabled,
 } = useApp();
+const activeTheme = data.theme ?? (data.darkMode ? 'graphite-dark' : 'clinical-light');
   const { config: authConfig, status: authStatus, user, signInWithEmail, verifyEmailCode, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [email, setEmail] = useState('');
@@ -476,35 +510,41 @@ void retrieveFromCloud();
             <CardTitle className="text-base">Appearance</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                {data.darkMode ? <Moon className="w-5 h-5 text-muted-foreground" /> : <Sun className="w-5 h-5 text-muted-foreground" />}
-                <div>
-                  <p className="font-medium text-sm">Theme</p>
-                  <p className="text-xs text-muted-foreground">Choose how PeptideOS appears on this device.</p>
-                </div>
+            <div className="flex items-center gap-3">
+              <Palette className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium text-sm">Theme</p>
+                <p className="text-xs text-muted-foreground">Choose how PeptideOS appears on this device.</p>
               </div>
-              <Switch aria-label="Use dark theme" checked={data.darkMode} onCheckedChange={setDarkMode} />
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                variant={!data.darkMode ? 'default' : 'outline'}
-                className="justify-start"
-                onClick={() => setDarkMode(false)}
-              >
-                <Sun className="w-4 h-4 mr-2" />
-                Light
-              </Button>
-              <Button
-                type="button"
-                variant={data.darkMode ? 'default' : 'outline'}
-                className="justify-start"
-                onClick={() => setDarkMode(true)}
-              >
-                <Moon className="w-4 h-4 mr-2" />
-                Dark
-              </Button>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {themeOptions.map((theme) => {
+                const selected = activeTheme === theme.id;
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setTheme(theme.id)}
+                    className={`flex min-h-20 items-center justify-between rounded-lg border p-3 text-left transition ${selected ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-card hover:border-primary/50'}`}
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium">{theme.name}</span>
+                      <span className="block text-xs text-muted-foreground">{theme.tone}</span>
+                      <span className="mt-3 flex gap-1.5">
+                        {theme.swatches.map((swatch) => (
+                          <span
+                            key={swatch}
+                            className="h-4 w-4 rounded-full border border-border"
+                            style={{ backgroundColor: swatch }}
+                          />
+                        ))}
+                      </span>
+                    </span>
+                    {selected ? <Check className="h-4 w-4 shrink-0 text-primary" /> : null}
+                  </button>
+                );
+              })}
             </div>
           </CardContent>
         </Card> {biometricLockEnabled && (

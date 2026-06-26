@@ -28,6 +28,7 @@ export type ScheduleStatus = 'active' | 'paused' | 'completed';
 export type ScheduleLogStatus = 'pending' | 'taken' | 'skipped' | 'missed';
 export type ScheduleFrequency = 'daily' | 'weekly' | 'interval' | 'cycle';
 export type UserMode = 'beginner' | 'researcher';
+export type AppTheme = 'clinical-light' | 'graphite-dark' | 'signal' | 'warm-minimal';
 export type SiteCode =
   | 'abdomen-upper-left'
   | 'abdomen-upper-right'
@@ -508,9 +509,10 @@ export interface AppData {
   hasSeenDisclaimer: boolean;
   hasCompletedOnboarding: boolean;
   userMode: UserMode;
-biometricLock: boolean;
-darkMode: boolean;
-cloudSyncEnabled?: boolean;
+  biometricLock: boolean;
+  darkMode: boolean;
+  theme?: AppTheme;
+  cloudSyncEnabled?: boolean;
 }
 
 export interface AppSettings {
@@ -519,5 +521,6 @@ hasCompletedOnboarding: boolean;
 userMode: UserMode;
 biometricLock: boolean;
 darkMode: boolean;
+theme?: AppTheme;
 cloudSyncEnabled?: boolean;
 }

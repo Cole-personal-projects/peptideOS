@@ -92,10 +92,11 @@ export class UserDataImportError extends Error {
 const DEFAULT_APP_SETTINGS: AppSettings = {
   hasSeenDisclaimer: false,
   hasCompletedOnboarding: false,
-  userMode: 'beginner',
-  biometricLock: false,
-  darkMode: true,
-  cloudSyncEnabled: false,
+userMode: 'beginner',
+biometricLock: false,
+darkMode: true,
+theme: 'graphite-dark',
+cloudSyncEnabled: false,
 };
 
 const HISTORICAL_DEMO_VIALS = [
@@ -128,9 +129,10 @@ function getDefaultSettings(defaults: AppData): AppSettings {
     hasCompletedOnboarding: defaults.hasCompletedOnboarding,
     userMode: defaults.userMode,
     biometricLock: defaults.biometricLock,
-    darkMode: defaults.darkMode,
-    cloudSyncEnabled: defaults.cloudSyncEnabled ?? false,
-  };
+darkMode: defaults.darkMode,
+theme: defaults.theme,
+cloudSyncEnabled: defaults.cloudSyncEnabled ?? false,
+};
 }
 
 function normalizeSettings(settings: Partial<AppSettings> | undefined, defaults: AppSettings): AppSettings {
@@ -138,10 +140,11 @@ function normalizeSettings(settings: Partial<AppSettings> | undefined, defaults:
     hasSeenDisclaimer: settings?.hasSeenDisclaimer ?? defaults.hasSeenDisclaimer,
     hasCompletedOnboarding: settings?.hasCompletedOnboarding ?? defaults.hasCompletedOnboarding,
     userMode: settings?.userMode ?? defaults.userMode,
-    biometricLock: settings?.biometricLock ?? defaults.biometricLock,
-    darkMode: settings?.darkMode ?? defaults.darkMode,
-    cloudSyncEnabled: settings?.cloudSyncEnabled ?? defaults.cloudSyncEnabled,
-  };
+biometricLock: settings?.biometricLock ?? defaults.biometricLock,
+darkMode: settings?.darkMode ?? defaults.darkMode,
+theme: settings?.theme ?? (settings?.darkMode ?? defaults.darkMode ? 'graphite-dark' : 'clinical-light'),
+cloudSyncEnabled: settings?.cloudSyncEnabled ?? defaults.cloudSyncEnabled,
+};
 }
 
 function applyUserData(defaults: AppData, persisted: PersistedUserData): AppData {

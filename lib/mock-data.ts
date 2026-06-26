@@ -517,8 +517,9 @@ export const initialAppData: AppData = {
   labImportAudits: [],
   hasSeenDisclaimer: false,
   hasCompletedOnboarding: false,
-  userMode: 'beginner',
+userMode: 'beginner',
 biometricLock: false,
 darkMode: true,
+theme: 'graphite-dark',
 cloudSyncEnabled: false
 };

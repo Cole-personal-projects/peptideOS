@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
-import type { AppData, Compound, Peptide, Vial, Dose, InventoryBatch, LabImportAudit, LabReport, LabResult, ReconstitutionCalculation, ScheduleLog, SignalCheckIn, SiteCode, Stack, UserMode } from './types';
+import type { AppData, AppTheme, Compound, Peptide, Vial, Dose, InventoryBatch, LabImportAudit, LabReport, LabResult, ReconstitutionCalculation, ScheduleLog, SignalCheckIn, SiteCode, Stack, UserMode } from './types';
 import { initialAppData } from './mock-data';
 import { useAuth } from './auth-context';
 import { createSupabaseAuthClient } from './auth';
@@ -110,7 +110,8 @@ cloudMessage: string | null;
   // Settings
   setHasSeenDisclaimer: (seen: boolean) => void;
   completeOnboarding: (userMode?: UserMode) => Promise<void>;
-  setUserMode: (userMode: UserMode) => void;
+setUserMode: (userMode: UserMode) => void;
+setTheme: (theme: AppTheme) => void;
 setDarkMode: (enabled: boolean) => void;
 toggleDarkMode: () => void;
 toggleBiometricLock: () => void;
@@ -729,16 +730,23 @@ return visibleData.stacks.filter(s => s.status === 'active');
     return setAndPersistData(prev => completeOnboardingState(prev, userMode));
   }, [setAndPersistData]);
 
-  const setUserMode = useCallback((userMode: UserMode) => {
-    void setAndPersistData(prev => ({ ...prev, userMode }));
-  }, [setAndPersistData]);
+const setUserMode = useCallback((userMode: UserMode) => {
+void setAndPersistData(prev => ({ ...prev, userMode }));
+}, [setAndPersistData]);
 
-  const setDarkMode = useCallback((enabled: boolean) => {
-void setAndPersistData(prev => ({ ...prev, darkMode: enabled }));
+const setTheme = useCallback((theme: AppTheme) => {
+void setAndPersistData(prev => ({ ...prev, theme, darkMode: theme !== 'clinical-light' && theme !== 'warm-minimal' }));
+}, [setAndPersistData]);
+
+const setDarkMode = useCallback((enabled: boolean) => {
+void setAndPersistData(prev => ({ ...prev, darkMode: enabled, theme: enabled ? 'graphite-dark' : 'clinical-light' }));
 }, [setAndPersistData]);
 
 const toggleDarkMode = useCallback(() => {
-void setAndPersistData(prev => ({ ...prev, darkMode: !prev.darkMode }));
+void setAndPersistData(prev => {
+const darkMode = !prev.darkMode;
+return { ...prev, darkMode, theme: darkMode ? 'graphite-dark' : 'clinical-light' };
+});
 }, [setAndPersistData]);
 
   const toggleBiometricLock = useCallback(() => {
@@ -954,6 +962,7 @@ cloudMessage: effectiveCloudMessage,
 setHasSeenDisclaimer,
 completeOnboarding,
 setUserMode,
+setTheme,
 setDarkMode,
 toggleDarkMode,
 toggleBiometricLock,
