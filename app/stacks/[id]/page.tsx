@@ -564,55 +564,91 @@ function pickDayStatus(logs: ScheduleLog[]): ScheduleLog['status'] | 'empty' {
 }
 
 function ProtocolPkCard({ view }: { view: ReturnType<typeof buildProtocolPkView> }) {
-  const primary = view.compounds[0];
+  const [selectedCompoundId, setSelectedCompoundId] = useState(view.compounds[0]?.compound.id ?? '');
+  const selected = view.compounds.find((compound) => compound.compound.id === selectedCompoundId) ?? view.compounds[0];
 
   return (
-    <section className="overflow-hidden rounded-[22px] border border-primary/30 bg-[#150d08]">
-      <div className="flex items-start justify-between gap-3 border-b border-[#332012] px-3.5 py-3">
+    <section className="overflow-hidden rounded-[22px] border border-primary/30 bg-card">
+      <div className="flex items-start justify-between gap-3 border-b border-border px-3.5 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[13px] bg-primary/15 text-primary">
             <Waves className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold tracking-normal">Estimated Amount</h2>
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              First-order model from logged and scheduled doses
-            </p>
+            <h2 className="text-sm font-bold tracking-normal">Estimated Remaining</h2>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">Actual solid · projected dashed</p>
           </div>
         </div>
-        {primary && <span className="shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-primary">{primary.compound.name}</span>}
+        {selected && (
+          <span className="shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-primary">
+            {view.compounds.length} model{view.compounds.length === 1 ? '' : 's'}
+          </span>
+        )}
       </div>
 
-      {primary ? (
+      {selected ? (
         <div className="space-y-3 p-3.5">
-          <div className="grid grid-cols-3 gap-2">
-            <PkMetric label="Now" value={formatEstimatedMg(primary.currentEstimatedMg)} />
-            <PkMetric label="Peak" value={`${primary.percentOfPeak}%`} accent />
-            <PkMetric label="Half-life" value={formatHalfLife(primary.halfLifeHours)} />
+          {view.compounds.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {view.compounds.map((compound) => {
+                const active = compound.compound.id === selected.compound.id;
+                return (
+                  <button
+                    key={compound.compound.id}
+                    type="button"
+                    onClick={() => setSelectedCompoundId(compound.compound.id)}
+                    className={cn(
+                      'shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold transition',
+                      active ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-secondary text-muted-foreground',
+                    )}
+                  >
+                    {compound.compound.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <PkMetric label="Now" value={formatEstimatedMg(selected.currentEstimatedMg)} />
+            <PkMetric label="Peak" value={`${selected.percentOfPeak}%`} accent />
+            <PkMetric label="Half-life" value={formatHalfLife(selected.halfLifeHours)} />
+            <PkMetric label="Next" value={selected.nextEventAt ? formatShortDateTime(selected.nextEventAt) : 'None'} />
           </div>
-          <PkCurveGraph compound={primary} />
-          <div className="grid grid-cols-[1fr_auto] gap-3 rounded-[16px] border border-[#332012] bg-[#211208] p-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Model caveat</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{primary.compound.pharmacokinetics?.modelNotes}</p>
+
+          <PkCurveGraph compound={selected} />
+
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+            <div className="rounded-[16px] border border-border bg-secondary p-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Assumption</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{selected.compound.pharmacokinetics?.halfLifeSource}</p>
             </div>
-            <div className="text-right">
-              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Next</p>
-              <p className="mt-1 text-xs font-bold text-primary">{primary.nextEventAt ? formatShortDateTime(primary.nextEventAt) : 'None'}</p>
+            <div className="rounded-[16px] border border-border bg-secondary p-3 sm:min-w-36 sm:text-right">
+              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Events</p>
+              <p className="mt-1 text-xs font-bold text-primary">{selected.actualEvents.length} actual · {selected.plannedEvents.length} planned</p>
             </div>
+          </div>
+
+          <div className="rounded-[16px] border border-border bg-background/40 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Model caveat</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{selected.compound.pharmacokinetics?.modelNotes}</p>
           </div>
         </div>
       ) : (
         <div className="p-3.5">
-          <div className="rounded-[16px] border border-dashed border-[#3a2012] bg-[#211208] p-4">
-            <p className="text-sm font-semibold">No source-backed half-life for this protocol yet.</p>
+          <div className="rounded-[16px] border border-dashed border-border bg-secondary p-4">
+            <p className="text-sm font-semibold">No source-backed half-life protocol yet.</p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
               Add PK metadata to the compound record before PeptideOS draws an estimated remaining amount curve.
             </p>
             {view.unsupportedCompounds.length > 0 && (
-              <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-                Waiting on {view.unsupportedCompounds.map((compound) => compound.name).join(', ')}
-              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {view.unsupportedCompounds.map((compound) => (
+                  <span key={compound.id} className="rounded-full border border-border bg-background px-2.5 py-1 text-[10px] font-bold text-muted-foreground">
+                    {compound.name}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -621,10 +657,10 @@ function ProtocolPkCard({ view }: { view: ReturnType<typeof buildProtocolPkView>
   );
 }
 
-function PkMetric({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function PkMetric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="rounded-[15px] border border-[#332012] bg-[#211208] px-3 py-2">
-      <p className={cn('text-base font-extrabold leading-none', accent ? 'text-primary' : 'text-foreground')}>{value}</p>
+    <div className="rounded-[15px] border border-border bg-secondary px-3 py-2">
+      <p className={cn('truncate text-base font-extrabold leading-none', accent ? 'text-primary' : 'text-foreground')}>{value}</p>
       <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
     </div>
   );
@@ -637,30 +673,31 @@ function PkCurveGraph({ compound }: { compound: ProtocolPkCompoundView }) {
   const timelineEnd = new Date(points.at(-1)?.sampledAt ?? new Date().toISOString()).getTime();
   const actualPath = buildPkPath(compound.actualPoints, max, timelineStart, timelineEnd);
   const projectedPath = buildPkPath(compound.projectedPoints, max, timelineStart, timelineEnd);
-  const doseMarkers = [...compound.actualEvents, ...compound.plannedEvents].slice(-12);
+  const doseMarkers = [...compound.actualEvents, ...compound.plannedEvents].slice(-16);
+  const gradientId = `pk-fill-${compound.compound.id.replace(/[^a-z0-9_-]/gi, '-')}`;
 
   return (
-    <div className="relative overflow-hidden rounded-[18px] border border-[#332012] bg-[#0d0805] px-2 py-3">
+    <div className="relative overflow-hidden rounded-[18px] border border-border bg-background px-2 py-3">
       <svg viewBox="0 0 320 150" className="h-40 w-full" role="img" aria-label={`${compound.compound.name} estimated remaining amount curve`}>
         <defs>
-          <linearGradient id={`pk-fill-${compound.compound.id}`} x1="0" x2="0" y1="0" y2="1">
+          <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.42" />
             <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.02" />
           </linearGradient>
         </defs>
-        <path d="M20 124 H300" stroke="#332012" strokeWidth="1" />
-        <path d="M20 82 H300" stroke="#21150f" strokeWidth="1" />
-        <path d="M20 40 H300" stroke="#21150f" strokeWidth="1" />
-        {projectedPath && <path d={closeAreaPath(projectedPath)} fill={`url(#pk-fill-${compound.compound.id})`} />}
-        {actualPath && <path d={actualPath} fill="none" stroke="#f5ede5" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />}
+        <path d="M20 124 H300" stroke="var(--border)" strokeWidth="1" />
+        <path d="M20 82 H300" stroke="var(--border)" strokeOpacity="0.55" strokeWidth="1" />
+        <path d="M20 40 H300" stroke="var(--border)" strokeOpacity="0.55" strokeWidth="1" />
+        {projectedPath && <path d={closeAreaPath(projectedPath)} fill={`url(#${gradientId})`} />}
+        {actualPath && <path d={actualPath} fill="none" stroke="var(--foreground)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />}
         {projectedPath && <path d={projectedPath} fill="none" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="7 6" />}
         {doseMarkers.map((event) => {
           const x = 20 + ((new Date(event.occurredAt).getTime() - timelineStart) / Math.max(timelineEnd - timelineStart, 1)) * 280;
-          return <circle key={event.id} cx={x} cy={event.source === 'actual' ? 128 : 132} r={event.source === 'actual' ? 4 : 3} fill={event.source === 'actual' ? '#f5ede5' : 'var(--primary)'} />;
+          return <circle key={event.id} cx={x} cy={event.source === 'actual' ? 128 : 132} r={event.source === 'actual' ? 4 : 3} fill={event.source === 'actual' ? 'var(--foreground)' : 'var(--primary)'} />;
         })}
       </svg>
-      <div className="absolute left-3 top-3 rounded-full border border-[#332012] bg-black/35 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-        Actual solid · projected dashed
+      <div className="absolute left-3 top-3 rounded-full border border-border bg-background/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+        {compound.compound.name}
       </div>
     </div>
   );
