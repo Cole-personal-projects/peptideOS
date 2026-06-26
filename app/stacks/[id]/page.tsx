@@ -1,9 +1,9 @@
 "use client";
 
-import { use, useMemo, useState } from 'react';
+import { use, useState } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Archive, Beaker, CalendarDays, CheckCircle2, Clock, Pause, Play, Plus, Settings, Trash2 } from 'lucide-react';
+import { ArrowLeft, Archive, Beaker, CalendarDays, CheckCircle2, Clock, Pause, Play, Plus, Settings, Trash2, Waves } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -16,6 +16,7 @@ import { useApp } from '@/lib/context';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose } from '@/lib/dose-helpers';
 import { getDefaultScheduleRecurrence, getSchedulePreset, getScheduleSummary, normalizeScheduleRecurrence } from '@/lib/schedules';
+import { buildProtocolPkView, type ProtocolPkCompoundView } from '@/lib/protocol-pk-view';
 import { cn } from '@/lib/utils';
 import type { LabResult, ScheduleLog, Stack, StackPeptide, StackStatus } from '@/lib/types';
 import type { SchedulePreset } from '@/lib/schedules';
@@ -66,9 +67,10 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
   const upcomingRows = upcomingLogs.length > 0
     ? upcomingLogs.map((log) => toUpcomingDoseFromLog(log, stack, trackableCompounds))
     : stack.peptides.slice(0, 2).map((peptide, index) => toUpcomingDoseFromPeptide(peptide, trackableCompounds, index));
-  const linkedLab = getLinkedLabPreview(stack.id, data.labReports, data.labResults);
-  const trajectory = getTrajectoryBars(scheduleLogs);
-  const circumference = 2 * Math.PI * 52;
+const linkedLab = getLinkedLabPreview(stack.id, data.labReports, data.labResults);
+const trajectory = getTrajectoryBars(scheduleLogs);
+const pkView = buildProtocolPkView(data, stack);
+const circumference = 2 * Math.PI * 52;
   const dashOffset = circumference - (adherence / 100) * circumference;
 
   const hasSchedulableItems = stack.peptides.length > 0;
@@ -170,11 +172,11 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
             </div>
           </section>
 
-<section className="rounded-[20px] border border-[#332012] bg-card p-3.5">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <h2 className="text-sm font-bold tracking-normal">14-Day Log</h2>
-            <p className="shrink-0 text-right text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Recent</p>
-            </div>
+	<section className="rounded-[20px] border border-[#332012] bg-card p-3.5">
+	          <div className="mb-4 flex items-center justify-between gap-4">
+	            <h2 className="text-sm font-bold tracking-normal">14-Day Log</h2>
+	            <p className="shrink-0 text-right text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Recent</p>
+	            </div>
           <div className="flex h-9 items-end justify-between gap-2">
               {trajectory.map((bar, index) => (
                 <div
@@ -190,11 +192,13 @@ export default function StackDetailPage({ params }: { params: Promise<{ id: stri
                   style={{ height: bar.height }}
                   aria-label={`${bar.date}: ${bar.status}`}
                 />
-              ))}
-            </div>
-          </section>
+	              ))}
+	            </div>
+	          </section>
 
-<section className="overflow-hidden rounded-[20px] border border-[#332012] bg-[#211208]">
+          <ProtocolPkCard view={pkView} />
+	
+	<section className="overflow-hidden rounded-[20px] border border-[#332012] bg-[#211208]">
           <div className="flex items-center justify-between gap-3 border-b border-[#332012] px-3.5 py-3">
 <h2 className="shrink-0 text-sm font-bold tracking-normal">Upcoming Doses</h2>
 <Button type="button" variant="ghost" className="h-auto shrink-0 p-0 text-xs font-extrabold uppercase tracking-[0.08em] text-primary" onClick={openEditDialog}>
@@ -500,6 +504,20 @@ function formatDoseTime(date: Date) {
   return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
+function formatEstimatedMg(value: number) {
+  if (value < 0.01 && value > 0) return '<0.01 mg';
+  return `${value.toLocaleString('en-US', { maximumFractionDigits: value >= 1 ? 1 : 2 })} mg`;
+}
+
+function formatHalfLife(hours: number) {
+  if (hours >= 48) return `${Math.round(hours / 24)}d`;
+  return `${Math.round(hours)}h`;
+}
+
+function formatShortDateTime(value: string) {
+  return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 function formatDisplayTiming(timing: string, index: number) {
   const normalized = timing.toLowerCase();
   if (normalized.includes('evening') || normalized.includes('night')) return '08:00 PM';
@@ -543,6 +561,126 @@ function pickDayStatus(logs: ScheduleLog[]): ScheduleLog['status'] | 'empty' {
   if (logs.some((log) => log.status === 'missed')) return 'missed';
   if (logs.some((log) => log.status === 'skipped')) return 'skipped';
   return 'empty';
+}
+
+function ProtocolPkCard({ view }: { view: ReturnType<typeof buildProtocolPkView> }) {
+  const primary = view.compounds[0];
+
+  return (
+    <section className="overflow-hidden rounded-[22px] border border-primary/30 bg-[#150d08]">
+      <div className="flex items-start justify-between gap-3 border-b border-[#332012] px-3.5 py-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[13px] bg-primary/15 text-primary">
+            <Waves className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold tracking-normal">Estimated Amount</h2>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              First-order model from logged and scheduled doses
+            </p>
+          </div>
+        </div>
+        {primary && <span className="shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-primary">{primary.compound.name}</span>}
+      </div>
+
+      {primary ? (
+        <div className="space-y-3 p-3.5">
+          <div className="grid grid-cols-3 gap-2">
+            <PkMetric label="Now" value={formatEstimatedMg(primary.currentEstimatedMg)} />
+            <PkMetric label="Peak" value={`${primary.percentOfPeak}%`} accent />
+            <PkMetric label="Half-life" value={formatHalfLife(primary.halfLifeHours)} />
+          </div>
+          <PkCurveGraph compound={primary} />
+          <div className="grid grid-cols-[1fr_auto] gap-3 rounded-[16px] border border-[#332012] bg-[#211208] p-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Model caveat</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{primary.compound.pharmacokinetics?.modelNotes}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Next</p>
+              <p className="mt-1 text-xs font-bold text-primary">{primary.nextEventAt ? formatShortDateTime(primary.nextEventAt) : 'None'}</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="p-3.5">
+          <div className="rounded-[16px] border border-dashed border-[#3a2012] bg-[#211208] p-4">
+            <p className="text-sm font-semibold">No source-backed half-life for this protocol yet.</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Add PK metadata to the compound record before PeptideOS draws an estimated remaining amount curve.
+            </p>
+            {view.unsupportedCompounds.length > 0 && (
+              <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                Waiting on {view.unsupportedCompounds.map((compound) => compound.name).join(', ')}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function PkMetric({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="rounded-[15px] border border-[#332012] bg-[#211208] px-3 py-2">
+      <p className={cn('text-base font-extrabold leading-none', accent ? 'text-primary' : 'text-foreground')}>{value}</p>
+      <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+function PkCurveGraph({ compound }: { compound: ProtocolPkCompoundView }) {
+  const points = [...compound.actualPoints, ...compound.projectedPoints];
+  const max = Math.max(...points.map((point) => point.estimatedRemainingMg), compound.peakProjectedMg, 0.001);
+  const timelineStart = new Date(points[0]?.sampledAt ?? new Date().toISOString()).getTime();
+  const timelineEnd = new Date(points.at(-1)?.sampledAt ?? new Date().toISOString()).getTime();
+  const actualPath = buildPkPath(compound.actualPoints, max, timelineStart, timelineEnd);
+  const projectedPath = buildPkPath(compound.projectedPoints, max, timelineStart, timelineEnd);
+  const doseMarkers = [...compound.actualEvents, ...compound.plannedEvents].slice(-12);
+
+  return (
+    <div className="relative overflow-hidden rounded-[18px] border border-[#332012] bg-[#0d0805] px-2 py-3">
+      <svg viewBox="0 0 320 150" className="h-40 w-full" role="img" aria-label={`${compound.compound.name} estimated remaining amount curve`}>
+        <defs>
+          <linearGradient id={`pk-fill-${compound.compound.id}`} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.42" />
+            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+        <path d="M20 124 H300" stroke="#332012" strokeWidth="1" />
+        <path d="M20 82 H300" stroke="#21150f" strokeWidth="1" />
+        <path d="M20 40 H300" stroke="#21150f" strokeWidth="1" />
+        {projectedPath && <path d={closeAreaPath(projectedPath)} fill={`url(#pk-fill-${compound.compound.id})`} />}
+        {actualPath && <path d={actualPath} fill="none" stroke="#f5ede5" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />}
+        {projectedPath && <path d={projectedPath} fill="none" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="7 6" />}
+        {doseMarkers.map((event) => {
+          const x = 20 + ((new Date(event.occurredAt).getTime() - timelineStart) / Math.max(timelineEnd - timelineStart, 1)) * 280;
+          return <circle key={event.id} cx={x} cy={event.source === 'actual' ? 128 : 132} r={event.source === 'actual' ? 4 : 3} fill={event.source === 'actual' ? '#f5ede5' : 'var(--primary)'} />;
+        })}
+      </svg>
+      <div className="absolute left-3 top-3 rounded-full border border-[#332012] bg-black/35 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+        Actual solid · projected dashed
+      </div>
+    </div>
+  );
+}
+
+function buildPkPath(points: Array<{ sampledAt: string; estimatedRemainingMg: number }>, max: number, timelineStart: number, timelineEnd: number) {
+  if (points.length === 0) return '';
+  const timeline = Math.max(timelineEnd - timelineStart, 1);
+  return points.map((point, index) => {
+    const x = 20 + ((new Date(point.sampledAt).getTime() - timelineStart) / timeline) * 280;
+    const y = 124 - (point.estimatedRemainingMg / max) * 104;
+    return `${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${Math.max(20, y).toFixed(1)}`;
+  }).join(' ');
+}
+
+function closeAreaPath(path: string) {
+  const matches = Array.from(path.matchAll(/[ML] ([\d.]+) [\d.]+/g));
+  const firstX = matches[0]?.[1] ?? '20';
+  const lastX = matches.at(-1)?.[1] ?? '300';
+  return `${path} L ${lastX} 124 L ${firstX} 124 Z`;
 }
 
 function getLinkedLabPreview(stackId: string, reports: { id: string; drawDate: string; linkedStackId?: string; }[], results: LabResult[]) {
