@@ -305,9 +305,14 @@ export default function LibraryPage() {
                 <Plus className="w-4 h-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="flex max-h-[88dvh] flex-col gap-0 overflow-hidden border-border bg-card p-0 text-card-foreground shadow-2xl sm:max-w-xl">
-              <DialogHeader className="border-b bg-card px-6 py-4 text-left">
-                <DialogTitle>Add compound</DialogTitle>
+            <DialogContent className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] flex-col gap-0 overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground shadow-2xl sm:h-auto sm:max-h-[88dvh] sm:max-w-xl">
+              <DialogHeader className="shrink-0 border-b bg-card px-6 py-4 pr-14 text-left">
+                <div className="flex items-center justify-between gap-3">
+                  <DialogTitle>Add compound</DialogTitle>
+                  <Button type="button" size="sm" onClick={handleAddCompound} disabled={!name.trim()}>
+                    Save
+                  </Button>
+                </div>
               </DialogHeader>
               <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto bg-card px-6 py-5">
                 <CompoundField id="name" label="Name">
@@ -380,7 +385,7 @@ export default function LibraryPage() {
                   />
                 </CompoundField>
               </div>
-              <DialogFooter className="shrink-0 flex-col border-t bg-card px-6 py-4 sm:justify-start">
+              <DialogFooter className="shrink-0 flex-col border-t bg-card px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:justify-start">
                 <Button type="button" className="w-full" onClick={handleAddCompound}>Save compound</Button>
                 <Button type="button" variant="outline" className="w-full" onClick={() => setAddOpen(false)}>Cancel</Button>
               </DialogFooter>
