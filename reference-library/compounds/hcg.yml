@@ -146,6 +146,14 @@ tracking:
   - prompt-route-confirmation
   - prompt-vial-state-confirmation
 
+pharmacokinetics:
+  half_life_hours: 29
+  half_life_source: "Ovidrel prescribing information describes hCG elimination after subcutaneous choriogonadotropin alfa with mean terminal half-life about 29 plus or minus 6 hours."
+  source_ids:
+    - dailymed-ovidrel
+  evidence_tier: approved_label
+  model_notes: "First-order estimated remaining amount only; Ovidrel recombinant choriogonadotropin alfa PK may not match urinary-derived, compounded, or research-market hCG products and does not represent measured concentration, clinical response, fertility response, or dose guidance."
+
 app_profile:
   headline: "FDA-approved placental glycoprotein hormone that signals through LHCGR; used for ART oocyte trigger, ovulation induction, and male hypogonadotropic hypogonadism."
   summary: "hCG is an LH-mimicking hormone commonly tracked around fertility, testicular function, and testosterone-support protocols. Useful tracking keeps concentration, reconstitution, dosing cadence, concurrent TRT or fertility medications, labs, and subjective response together."
@@ -167,6 +175,12 @@ app_profile:
   reality_check: "This record was assembled without live web access during this run. URL-level claims point to DailyMed, PubChem, and PubMed/PMC stable identifiers and should be re-verified by a reviewer. Off-label male use of hCG (TRT/PCT) is not an FDA-approved indication, and the FTC has warned against marketing hCG for weight loss. the tracking record does not interpret labs or design protocols."
 
 sources:
+- id: dailymed-ovidrel
+  title: "OVIDREL choriogonadotropin alfa injection label"
+  url: "https://dailymed.nlm.nih.gov/dailymed/getFile.cfm?setid=a683e58a-63ea-44b8-a326-1a99a537bcf2&type=pdf"
+  source_type: label
+  publisher: DailyMed
+  year: 2003
 - id: dailymed-hcg
   title: "DailyMed — Human chorionic gonadotropin (and choriogonadotropin alfa) product labels"
   url: "https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=Human+chorionic+gonadotropin"

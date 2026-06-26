@@ -95,6 +95,14 @@ tracking:
   - "summarize-tracking"
   - "flag-source-quality"
 
+pharmacokinetics:
+  half_life_hours: 0.133
+  half_life_source: "DailyMed Egrifta SV labeling describes mean elimination half-life of tesamorelin as 8 minutes after single subcutaneous administration."
+  source_ids:
+    - dailymed-tesamorelin
+  evidence_tier: approved_label
+  model_notes: "First-order estimated remaining amount only; short plasma half-life does not model downstream IGF-1 or clinical response and is not dose guidance."
+
 app_profile:
   headline: "GHRH analog with label-backed vial tracking."
   summary: "Tesamorelin is a prescription GHRH analog approved for reducing excess visceral abdominal fat in HIV-associated lipodystrophy. Useful tracking connects dose timing with waist or body-composition trends, IGF-1, glucose, edema, and injection-site notes."

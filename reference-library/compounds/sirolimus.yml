@@ -90,6 +90,14 @@ tracking:
   - "Track adherence, tolerability notes, and lab-context notes without interpreting medical decisions."
   - "Surface label-backed caution and source-quality flags in summaries."
 
+pharmacokinetics:
+  half_life_hours: 62
+  half_life_source: "DailyMed sirolimus labeling describes terminal elimination half-life about 62 plus or minus 16 hours after multiple dosing in stable renal transplant patients."
+  source_ids:
+    - dailymed-sirolimus
+  evidence_tier: approved_label
+  model_notes: "First-order estimated remaining amount only; oral sirolimus exposure varies by product, food, interactions, and clinical context and does not represent measured concentration, clinical response, or dose guidance."
+
 app_profile:
   headline: "Label-backed sirolimus tracking for high-caution longevity and immunology contexts."
   summary: "Sirolimus is an mTOR inhibitor with clinical immunosuppressant use and longevity-oriented interest. Useful tracking keeps schedule, formulation, trough or safety labs, lipids, glucose, mouth sores, infection signals, interactions, and tolerability together."
@@ -113,8 +121,8 @@ sources:
   publisher: "PubChem"
   year: 2026
 - id: dailymed-sirolimus
-  title: "SIROLIMUS label search"
-  url: "https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=Sirolimus"
+  title: "SIROLIMUS solution label"
+  url: "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=a522b5e1-fe51-4eb8-9657-3b1d6af8dfd5"
   source_type: label
   publisher: "DailyMed"
   year: 2026

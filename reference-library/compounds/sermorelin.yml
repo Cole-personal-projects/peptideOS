@@ -96,6 +96,14 @@ tracking:
     - Surface overlap warnings when another GH-axis compound is already active.
     - Prompt for IGF-1 lab cadence based on user-entered baseline.
 
+pharmacokinetics:
+  half_life_hours: 0.108
+  half_life_source: "Sermorelin product characteristics describe plasma half-life of 6 to 7 minutes after intravenous administration."
+  source_ids:
+    - hpra-sermorelin-spc
+  evidence_tier: approved_label
+  model_notes: "First-order estimated remaining amount uses short IV sermorelin plasma half-life only; it does not model downstream GH or IGF-1 response, compounded product behavior, clinical response, or dose guidance."
+
 app_profile:
   headline: GHRH(1-29) — the original short-acting GH secretagogue.
   summary: "Sermorelin is a GHRH analog used to stimulate endogenous growth-hormone pulses. Useful tracking ties bedtime or fasting timing to sleep, recovery, body-composition goals, injection reactions, stack pairing, and IGF-1 response."
@@ -114,6 +122,12 @@ app_profile:
   reality_check: Sermorelin raises GH and IGF-1 modestly — it is not exogenous HGH and won't produce HGH-level body recomposition. The original Geref label is the strongest evidence base; broader anti-aging claims outrun that data.
 
 sources:
+  - id: hpra-sermorelin-spc
+    title: "Sermorelin product characteristics"
+    url: https://assets.hpra.ie/products/Human/16600/LicenseSPC_PA0285-006-001_13072006155719.pdf
+    source_type: regulatory
+    publisher: HPRA
+    year: 2006
   - id: fda-geref-review
     title: FDA Medical Review, Sermorelin / GHRH-related NDA materials
     url: https://www.accessdata.fda.gov/drugsatfda_docs/nda/2010/022505Orig1s000MedR.pdf

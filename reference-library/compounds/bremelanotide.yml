@@ -77,6 +77,14 @@ tracking:
   - ask-for-label-photo
   - create-inventory-from-label
   - flag-alias-mismatch
+pharmacokinetics:
+  half_life_hours: 2.7
+  half_life_source: "DailyMed Vyleesi labeling describes mean terminal half-life of bremelanotide approximately 2.7 hours after single subcutaneous administration."
+  source_ids:
+    - dailymed-bremelanotide
+  evidence_tier: approved_label
+  model_notes: "First-order estimated remaining amount only; Vyleesi label does not establish effects for compounded or research-market PT-141 and does not represent measured concentration, clinical response, or dose guidance."
+
 app_profile:
   headline: FDA-approved melanocortin agonist that drives arousal centrally — and reliably makes you nauseous.
   summary: "Bremelanotide is a melanocortin receptor agonist used clinically for hypoactive sexual desire disorder. Useful tracking captures route, timing before use, onset, libido response, flushing, nausea, blood pressure, and repeat-dose tolerability."
@@ -102,8 +110,8 @@ sources:
   publisher: NCBI / National Library of Medicine
   year: 2026
 - id: dailymed-bremelanotide
-  title: DailyMed label candidates for Bremelanotide
-  url: https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=Bremelanotide
+  title: VYLEESI bremelanotide injection label
+  url: https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=f1d0c1b5-2f39-4bad-a6a4-0066e3ad5dcf
   source_type: label
   publisher: DailyMed
   year: 2026

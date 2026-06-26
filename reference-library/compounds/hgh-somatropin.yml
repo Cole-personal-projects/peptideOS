@@ -89,6 +89,14 @@ tracking:
   - "Keep IU and mg fields explicit so Peppi can rely on user-confirmed product data."
   - "Track adherence, container age, and user-entered notes without giving medical recommendations."
 
+pharmacokinetics:
+  half_life_hours: 0.352
+  half_life_source: "DailyMed Norditropin labeling describes terminal elimination half-life approximately 21.1 plus or minus 5.1 minutes after IV infusion in growth-hormone-deficient patients."
+  source_ids:
+    - dailymed-norditropin
+  evidence_tier: approved_label
+  model_notes: "First-order estimated remaining amount uses IV somatropin elimination from a specific Norditropin label; subcutaneous apparent exposure can differ because absorption is product and route dependent, and this does not represent measured concentration, IGF-1 response, clinical response, or dose guidance."
+
 app_profile:
   headline: "Label-backed recombinant human growth hormone where exact brand, cartridge, and storage details matter."
   summary: "Somatropin is recombinant human growth hormone, best tracked with product identity, IU-to-mg strength, injection timing, IGF-1, glucose, sleep, recovery, edema, numbness, and other side effects that can change with dose."
