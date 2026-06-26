@@ -110,6 +110,7 @@ const importMethods: Array<{
 interface PdfImportPayload {
   draft?: LabImportDraft;
   error?: string;
+  extractedText?: string;
   pageCount?: number;
   mode?: string;
 }
@@ -269,6 +270,36 @@ setImportStep(2);
     } : previous);
   };
 
+  const convertUnresolvedRow = (index: number) => {
+    setDraft((previous) => {
+      if (!previous) return previous;
+      const raw = previous.unresolvedRows[index];
+      if (!raw) return previous;
+
+      return {
+        ...previous,
+        rows: [
+          ...previous.rows,
+          {
+            testName: raw,
+            value: '',
+            unit: '',
+            flag: 'unknown',
+            panelName: previous.panelName,
+          },
+        ],
+        unresolvedRows: previous.unresolvedRows.filter((_, rowIndex) => rowIndex !== index),
+      };
+    });
+  };
+
+  const removeUnresolvedRow = (index: number) => {
+    setDraft((previous) => previous ? {
+      ...previous,
+      unresolvedRows: previous.unresolvedRows.filter((_, rowIndex) => rowIndex !== index),
+    } : previous);
+  };
+
   const addManualRow = () => {
     if (!manualRow.testName.trim() || !manualRow.value.trim()) return;
     setManualRows((previous) => [
@@ -315,6 +346,7 @@ setPdfImportMessage(payload.error ? `${payload.error} Asking Peppi to extract th
 const aiFormData = new FormData();
 aiFormData.append('file', file);
 aiFormData.append('metadata', JSON.stringify(baseImportOptions));
+if (payload.extractedText) aiFormData.append('extractedText', payload.extractedText);
 const aiResponse = await fetch('/api/ai/parse-lab-pdf', {
 method: 'POST',
 body: aiFormData,
@@ -339,12 +371,7 @@ setPdfImportMessage(aiPayload.error ? `${aiPayload.error} Running local OCR...` 
       const pdfDraft: LabImportDraft = {
         ...ocrDraft,
         method: 'pdf',
-        unresolvedRows: [],
       };
-      if (pdfDraft.rows.length === 0) {
-        setPdfImportMessage('OCR finished, but no lab markers were parsed. Use manual entry for this report.');
-        return;
-      }
       applyPdfDraft(pdfDraft, ocrResult.pageCount, 'ocr');
     } catch (error) {
       setPdfImportMessage(error instanceof Error ? `Could not import PDF: ${error.message}` : 'Could not import PDF. Try manual entry.');
@@ -461,10 +488,12 @@ setPdfImportMessage(aiPayload.error ? `${aiPayload.error} Running local OCR...` 
             onAddManualRow={addManualRow}
             onApplyTemplate={applyTemplate}
             onImportFile={importFile}
-            onBuildDraft={buildDraft}
-            onUpdateDraftRow={updateDraftRow}
-            onRemoveDraftRow={removeDraftRow}
-            onSaveDraft={saveDraft}
+        onBuildDraft={buildDraft}
+        onUpdateDraftRow={updateDraftRow}
+        onRemoveDraftRow={removeDraftRow}
+        onConvertUnresolvedRow={convertUnresolvedRow}
+        onRemoveUnresolvedRow={removeUnresolvedRow}
+        onSaveDraft={saveDraft}
             onViewTimeline={() => setWorkspaceView('timeline')}
           />
         ) : view === 'detail' ? (
@@ -573,6 +602,8 @@ function ImportWizard(props: {
   onBuildDraft: () => void;
   onUpdateDraftRow: (index: number, updates: Partial<LabImportRow>) => void;
   onRemoveDraftRow: (index: number) => void;
+  onConvertUnresolvedRow: (index: number) => void;
+  onRemoveUnresolvedRow: (index: number) => void;
   onSaveDraft: () => Promise<void>;
   onViewTimeline: () => void;
 }) {
@@ -790,7 +821,28 @@ function ReviewStep(props: Parameters<typeof ImportWizard>[0]) {
               </div>
             ))}
           </div>
-          {(props.draft?.unresolvedRows.length ?? 0) > 0 && <p className="text-xs text-muted-foreground">{props.draft?.unresolvedRows.length} rows need manual review and were not saved.</p>}
+          {(props.draft?.unresolvedRows.length ?? 0) > 0 && (
+            <div className="space-y-2 rounded-lg border border-chart-4/40 bg-chart-4/10 p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-chart-4" />
+                <div>
+                  <p className="text-sm font-semibold">{props.draft?.unresolvedRows.length} unreadable row{props.draft?.unresolvedRows.length === 1 ? '' : 's'}</p>
+                  <p className="text-xs text-muted-foreground">Review each line. Add real lab markers as editable results, or dismiss non-result text.</p>
+                </div>
+              </div>
+              <div className="max-h-56 space-y-2 overflow-auto">
+                {props.draft?.unresolvedRows.map((row, index) => (
+                  <div key={`${row}-${index}`} className="rounded-md border bg-background/80 p-2">
+                    <p className="break-words text-xs text-muted-foreground">{row}</p>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <Button type="button" size="sm" variant="outline" onClick={() => props.onConvertUnresolvedRow(index)}>Add as result</Button>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => props.onRemoveUnresolvedRow(index)}>Dismiss</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
       <WizardActions

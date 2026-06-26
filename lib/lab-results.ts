@@ -139,12 +139,13 @@ export function parseLabText(input: string, options: LabImportOptions): LabImpor
   const unresolvedRows: string[] = [];
 
   input.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).forEach((line) => {
-    const match = line.match(/^(.+?)\s+([-+]?\d+(?:\.\d+)?|positive|negative|detected|not detected)\s+([a-zA-Z/%µμ0-9.\/-]+)?(?:\s+(?:ref(?:erence)?(?: range)?:?)?\s*([<>]?\d+(?:\.\d+)?\s*-\s*[<>]?\d+(?:\.\d+)?|[<>]=?\s*\d+(?:\.\d+)?))?(?:\s+(high|low|normal|critical|h|l))?$/i);
+    const match = line.match(/^(.+?)\s+([-+]?\d+(?:\.\d+)?|positive|negative|detected|not detected)(?:\s+((?=[a-zA-Z%µμ])[a-zA-Z/%µμ0-9.\/-]+))?(?:\s+(?:ref(?:erence)?(?: range)?:?)?\s*(not estab\.?|[<>]?\d+(?:\.\d+)?\s*-\s*[<>]?\d+(?:\.\d+)?|[<>]=?\s*\d+(?:\.\d+)?))?(?:\s+(high|low|normal|critical|h|l))?(?:\s+\d{2})?$/i);
     if (!match) {
       unresolvedRows.push(line);
       return;
     }
     const testName = match[1].trim();
+    if (!isLikelyLabMarkerName(testName)) return;
     rows.push(normalizeRow({
       testName,
       assayMethod: extractAssayMethod(testName),
@@ -157,6 +158,16 @@ export function parseLabText(input: string, options: LabImportOptions): LabImpor
   });
 
   return buildDraft(rows, unresolvedRows, 'text', options);
+}
+
+function isLikelyLabMarkerName(value: string) {
+  const normalized = value.trim();
+  if (normalized.length < 2) return false;
+  if (/^\d+$/.test(normalized)) return false;
+  if (/\b(patient|specimen|date\/time|reported|received|address|phone|birth|provider|doctor|overall report|lab report|page)\b/i.test(normalized)) return false;
+  if (/\b(ave|avenue|street|st\.?|road|rd\.?|way|apt|suite|seattle|wa)\b/i.test(normalized)) return false;
+  if (/^[A-Z][a-z]+,\s*[A-Z]\b/.test(normalized)) return false;
+  return true;
 }
 
 export function createAiLabPdfDraft(

@@ -61,6 +61,31 @@ test.describe('account settings', () => {
     expect(pageErrors).toEqual([]);
   });
 
+  test('opens settings after deleting a protocol without route error', async ({ page }) => {
+    const pageErrors: string[] = [];
+    page.on('pageerror', (error) => pageErrors.push(error.message));
+
+    await page.goto('/stacks');
+    await page.getByRole('button', { name: 'I Understand' }).click({ timeout: 5_000 }).catch(() => {});
+    await page.getByRole('button', { name: 'New protocol' }).click();
+    await page.getByLabel('Protocol Name').fill('Settings Delete Regression');
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+    await page.getByRole('checkbox', { name: 'BPC-157' }).check();
+    await page.getByRole('button', { name: 'Create Protocol' }).click();
+    await page.getByRole('link', { name: /Settings Delete Regression/ }).click();
+    await page.getByRole('button', { name: 'Protocol settings' }).click();
+    await page.getByRole('button', { name: 'Delete protocol' }).click();
+    await page.getByRole('button', { name: 'Delete now' }).click();
+    await expect(page.getByRole('heading', { name: 'Protocols' })).toBeVisible();
+
+    await page.getByRole('link', { name: 'More' }).click();
+    await page.getByRole('link', { name: /Settings/ }).click();
+
+    await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+    await expect(page.getByText("This page couldn't load")).toHaveCount(0);
+    expect(pageErrors).toEqual([]);
+  });
+
   test('anchors settings content in a stable readable column on full-screen iPad', async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 1366 });
     await page.goto('/more/settings');

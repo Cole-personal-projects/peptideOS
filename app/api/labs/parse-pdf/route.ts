@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
-import { PDFParse } from 'pdf-parse';
-import path from 'node:path';
 import { z } from 'zod/v4';
 
+import { inferLabResultDate } from '@/lib/lab-date-extraction';
 import { parseLabText } from '@/lib/lab-results';
 import type { LabReport } from '@/lib/types';
 
 export const runtime = 'nodejs';
 
 const MAX_PDF_BYTES = 10 * 1024 * 1024;
-const pdfWorkerPath = path.join(process.cwd(), 'node_modules/pdf-parse/dist/pdf-parse/cjs/pdf.worker.mjs');
 
 const metadataSchema = z.object({
   drawDate: z.string().min(1),
@@ -59,9 +57,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'File does not look like a PDF.' }, { status: 415 });
   }
 
-  PDFParse.setWorker(pdfWorkerPath);
-  const parser = new PDFParse({ data: bytes });
+  let parser: { getText: (options?: { partial?: [number, number] }) => Promise<{ text: string; total: number }>; destroy: () => Promise<void> } | null = null;
   try {
+    const { PDFParse } = await import('pdf-parse');
+    const path = await import('node:path');
+    PDFParse.setWorker(path.join(process.cwd(), 'node_modules/pdf-parse/dist/pdf-parse/cjs/pdf.worker.mjs'));
+    parser = new PDFParse({ data: bytes });
     const result = await parser.getText({ partial: [1, 12] });
     const extractedText = cleanExtractedText(result.text);
     if (extractedText.length < 30) {
@@ -70,8 +71,10 @@ export async function POST(request: Request) {
       }, { status: 422 });
     }
 
+    const labResultDate = inferLabResultDate(extractedText);
     const draft = parseLabText(extractedText, {
       ...parsedMetadata.data,
+      drawDate: labResultDate ?? parsedMetadata.data.drawDate,
       sourceLabel: parsedMetadata.data.sourceLabel || inferSourceLabel(file.name, extractedText),
       panelName: parsedMetadata.data.panelName || inferPanelName(file.name, extractedText),
       existingReports: parsedMetadata.data.existingReports as LabReport[] | undefined,
@@ -82,14 +85,15 @@ export async function POST(request: Request) {
         ...draft,
         method: 'pdf',
       },
+      extractedText,
       extractedTextPreview: extractedText.slice(0, 2000),
       pageCount: result.total,
     });
   } catch (error) {
     console.error('parse-pdf failed', error);
-    return NextResponse.json({ error: 'Could not read PDF. Try a text-based PDF or enter values manually.' }, { status: 422 });
+    return NextResponse.json({ error: 'Could not read PDF directly. Trying Peppi extraction next.' }, { status: 422 });
   } finally {
-    await parser.destroy().catch(() => undefined);
+    await parser?.destroy().catch(() => undefined);
   }
 }
 
