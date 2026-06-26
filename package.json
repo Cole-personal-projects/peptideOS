@@ -27,6 +27,9 @@
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "predeploy": "node tools/copy-ocr-assets.mjs",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "diagnostics:tail": "wrangler tail peptideos --search client-diagnostic --format pretty",
+    "diagnostics:tail:json": "wrangler tail peptideos --search client-diagnostic --format json",
+    "diagnostics:tail:errors": "wrangler tail peptideos --search client-diagnostic --status error --format pretty",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "pnpm": {
