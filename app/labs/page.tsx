@@ -15,6 +15,7 @@ import {
   Grid3X3,
   ImageIcon,
   Pencil,
+  RefreshCw,
   Share2,
   Table2,
   TestTube,
@@ -654,83 +655,208 @@ function ImportMethodStep({ onChooseMethod }: { onChooseMethod: (method: ImportM
 }
 
 function ImportInputStep(props: Parameters<typeof ImportWizard>[0]) {
-  const isPdf = props.method === 'pdf';
-  const isPhotoShell = props.method === 'photo';
-  return (
-    <div className="space-y-4">
-      <StepLabel>Step 2 of 4 · Upload or enter results</StepLabel>
-      <ImportMetaFields {...props} />
+const isPdf = props.method === 'pdf';
+const isPhotoShell = props.method === 'photo';
+const hasPdfDraft = Boolean(props.draft && props.method === 'pdf');
+return (
+<div className="space-y-4">
+<StepLabel>Step 2 of 4 · Upload or enter results</StepLabel>
+<ImportMetaFields {...props} />
 
-      {isPdf || isPhotoShell ? (
-        <Card className="border-dashed">
-          <CardContent className="space-y-3 p-5 text-center">
-            {props.method === 'pdf' ? <FileText className="mx-auto h-8 w-8 text-muted-foreground" /> : <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground" />}
-            <div>
-              <p className="text-sm font-semibold">{props.method === 'pdf' ? 'Select a lab PDF' : 'Select a lab photo or screenshot'}</p>
-              <p className="text-xs text-muted-foreground">
-                {props.method === 'pdf'
-                  ? 'Text-based PDFs import directly. Scanned or image PDFs run local OCR before review.'
-                  : 'Photo OCR is not connected yet. Switch to manual or CSV/text to save.'}
-              </p>
-            </div>
-            <Input type="file" accept={props.method === 'pdf' ? '.pdf' : 'image/*'} onChange={(event) => void props.onImportFile(event.target.files?.[0])} />
-            {props.selectedFileName && <p className="text-xs text-muted-foreground">Selected: {props.selectedFileName}</p>}
-            {props.isParsingPdf && <p className="text-xs text-primary">Reading PDF...</p>}
-            {props.pdfImportMessage && <p className="rounded-md border bg-background px-3 py-2 text-xs text-muted-foreground">{props.pdfImportMessage}</p>}
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" onClick={() => props.onImportMethodChange('manual')}>Manual entry</Button>
-              <Button variant="outline" onClick={() => props.onImportMethodChange('csv')}>CSV/text</Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : props.method === 'manual' ? (
-        <ManualEntryFields {...props} />
-      ) : (
+{isPdf || isPhotoShell ? (
+<PdfImportPanel {...props} />
+) : props.method === 'manual' ? (
+<ManualEntryFields {...props} />
+) : (
         <CsvTextFields {...props} />
       )}
 
-      <WizardActions
-        backLabel="Back"
-        nextLabel="Review Data"
-        onBack={() => props.onStepChange(0)}
-        onNext={props.onBuildDraft}
-        nextDisabled={isPdf || isPhotoShell || (props.method === 'manual' ? props.manualRows.length === 0 : props.rawInput.trim().length === 0)}
-      />
-    </div>
-  );
+<WizardActions
+backLabel="Back"
+nextLabel={isPdf ? props.isParsingPdf ? 'Reading...' : hasPdfDraft ? 'Review Results' : 'Choose PDF' : 'Review Data'}
+onBack={() => props.onStepChange(0)}
+onNext={isPdf ? () => props.onStepChange(2) : props.onBuildDraft}
+nextDisabled={isPhotoShell || props.isParsingPdf || (isPdf ? !hasPdfDraft : props.method === 'manual' ? props.manualRows.length === 0 : props.rawInput.trim().length === 0)}
+/>
+</div>
+);
 }
 
 function ImportMetaFields(props: Parameters<typeof ImportWizard>[0]) {
-  return (
-    <Card>
-      <CardContent className="grid gap-3 p-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="lab-draw-date">Test Date</Label>
-            <Input id="lab-draw-date" aria-label="Draw date" type="date" value={props.drawDate} onChange={(event) => props.onDrawDateChange(event.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="lab-resulted-date">Resulted</Label>
-            <Input id="lab-resulted-date" type="date" value={props.resultedDate} onChange={(event) => props.onResultedDateChange(event.target.value)} />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Input aria-label="Lab provider" placeholder="Lab provider" value={props.sourceLabel} onChange={(event) => props.onSourceLabelChange(event.target.value)} />
-          <Input aria-label="Panel name" placeholder="Panel name" value={props.panelName} onChange={(event) => props.onPanelNameChange(event.target.value)} />
-        </div>
-        <select
-          aria-label="Active Protocol"
-          className="h-10 rounded-md border border-input bg-secondary px-3 text-sm"
-          value={props.linkedStackId}
-          onChange={(event) => props.onLinkedStackIdChange(event.target.value)}
-        >
-          <option value="">Baseline / no linked protocol</option>
-          {props.activeStacks.map((stack) => <option key={stack.id} value={stack.id}>{stack.name}</option>)}
-        </select>
-        <Textarea value={props.notes} onChange={(event) => props.onNotesChange(event.target.value)} placeholder="Report notes without patient identifiers" />
-      </CardContent>
-    </Card>
-  );
+const hasDetails = Boolean(props.sourceLabel || props.panelName || props.notes);
+const showDetails = hasDetails || props.method !== 'pdf';
+return (
+<Card className="overflow-hidden">
+<CardContent className="space-y-3 p-3">
+<div className="grid grid-cols-2 gap-2">
+<div className="space-y-1">
+<Label htmlFor="lab-draw-date" className="text-[11px]">Lab date</Label>
+<Input id="lab-draw-date" aria-label="Draw date" type="date" value={props.drawDate} onChange={(event) => props.onDrawDateChange(event.target.value)} />
+</div>
+<div className="space-y-1">
+<Label htmlFor="lab-resulted-date" className="text-[11px]">Resulted</Label>
+<Input id="lab-resulted-date" type="date" value={props.resultedDate} onChange={(event) => props.onResultedDateChange(event.target.value)} />
+</div>
+</div>
+<select
+aria-label="Active Protocol"
+className="h-10 w-full rounded-md border border-input bg-secondary px-3 text-sm"
+value={props.linkedStackId}
+onChange={(event) => props.onLinkedStackIdChange(event.target.value)}
+>
+<option value="">Baseline / no linked protocol</option>
+{props.activeStacks.map((stack) => <option key={stack.id} value={stack.id}>{stack.name}</option>)}
+</select>
+<details className="group rounded-lg border bg-background/40 p-2" open={showDetails}>
+<summary className="cursor-pointer list-none text-xs font-semibold text-muted-foreground">
+<span>{hasDetails ? 'Report details' : 'Add provider, panel, or notes'}</span>
+</summary>
+<div className="mt-3 space-y-2">
+<div className="grid grid-cols-2 gap-2">
+<Input aria-label="Lab provider" placeholder="Provider" value={props.sourceLabel} onChange={(event) => props.onSourceLabelChange(event.target.value)} />
+<Input aria-label="Panel name" placeholder="Panel" value={props.panelName} onChange={(event) => props.onPanelNameChange(event.target.value)} />
+</div>
+<Textarea value={props.notes} onChange={(event) => props.onNotesChange(event.target.value)} placeholder="Notes without patient identifiers" className="min-h-20" />
+</div>
+</details>
+</CardContent>
+</Card>
+);
+}
+
+function PdfImportPanel(props: Parameters<typeof ImportWizard>[0]) {
+const isPhoto = props.method === 'photo';
+const compactName = compactFileName(props.selectedFileName);
+const status = getPdfImportStatus(props);
+const StatusIcon = status.icon;
+return (
+<Card className={cn('overflow-hidden', props.draft ? 'border-chart-3/40' : 'border-primary/20')}>
+<CardContent className="space-y-4 p-4">
+<div className="flex items-start gap-3">
+<span className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-xl', status.tone)}>
+{isPhoto ? <ImageIcon className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
+</span>
+<div className="min-w-0 flex-1">
+<p className="text-sm font-semibold">{isPhoto ? 'Photo import coming soon' : props.selectedFileName ? 'Lab PDF selected' : 'Upload lab PDF'}</p>
+<p className="text-xs text-muted-foreground">{isPhoto ? 'Use manual entry or CSV/text for now.' : 'We extract the report date and marker rows before review.'}</p>
+</div>
+<Badge variant="outline" className={cn('shrink-0', status.badgeClass)}>{status.label}</Badge>
+</div>
+
+{props.selectedFileName ? (
+<div className="flex items-center gap-2 rounded-xl border bg-secondary/40 p-2">
+<FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+<div className="min-w-0 flex-1">
+<p className="truncate text-sm font-semibold">{compactName}</p>
+<p className="text-[11px] text-muted-foreground">PDF selected</p>
+</div>
+<label className="shrink-0">
+<span className="inline-flex h-8 cursor-pointer items-center rounded-md border px-3 text-xs font-semibold">Replace</span>
+<input className="sr-only" type="file" accept={isPhoto ? 'image/*' : '.pdf'} onChange={(event) => void props.onImportFile(event.target.files?.[0])} />
+</label>
+</div>
+) : (
+<label className="block cursor-pointer rounded-2xl border border-dashed bg-secondary/25 p-5 text-center transition-colors hover:bg-secondary/45">
+<Upload className="mx-auto h-6 w-6 text-primary" />
+<span className="mt-2 block text-sm font-semibold">{isPhoto ? 'Choose image' : 'Choose PDF'}</span>
+<span className="mt-1 block text-xs text-muted-foreground">{isPhoto ? 'Photo extraction is not active yet.' : 'PDF text, Peppi extraction, and OCR fallback are handled automatically.'}</span>
+<input className="sr-only" type="file" accept={isPhoto ? 'image/*' : '.pdf'} onChange={(event) => void props.onImportFile(event.target.files?.[0])} />
+</label>
+)}
+
+<div className="grid grid-cols-3 gap-2">
+{status.steps.map((step) => (
+<div key={step.label} className={cn('rounded-lg border px-2 py-2 text-center text-[11px] font-semibold', step.active ? 'border-primary/40 bg-primary/10 text-primary' : step.done ? 'border-chart-3/40 bg-chart-3/10 text-chart-3' : 'text-muted-foreground')}>
+{step.label}
+</div>
+))}
+</div>
+
+{props.pdfImportMessage && (
+<div className={cn('flex gap-2 rounded-xl border px-3 py-2 text-sm', status.messageClass)}>
+<StatusIcon className="mt-0.5 h-4 w-4 shrink-0" />
+<p>{polishPdfImportMessage(props.pdfImportMessage)}</p>
+</div>
+)}
+
+<div className="grid grid-cols-2 gap-2">
+<Button variant="ghost" onClick={() => props.onImportMethodChange('manual')}>Use manual entry</Button>
+<Button variant="ghost" onClick={() => props.onImportMethodChange('csv')}>Paste CSV/text</Button>
+</div>
+</CardContent>
+</Card>
+);
+}
+
+function compactFileName(fileName: string) {
+if (!fileName) return '';
+const extensionMatch = fileName.match(/(\.[a-z0-9]+)$/i);
+const extension = extensionMatch?.[1] ?? '';
+const base = extension ? fileName.slice(0, -extension.length) : fileName;
+if (base.length <= 18) return fileName;
+return `${base.slice(0, 6)}...${base.slice(-6)}${extension}`;
+}
+
+function polishPdfImportMessage(message: string) {
+const lower = message.toLowerCase();
+if (lower.includes('peppi extracted')) return message.replace('Peppi extracted', 'Ready for review');
+if (lower.includes('ocr parsed')) return message.replace('OCR parsed', 'Ready for review');
+if (lower.includes('parsed')) return message.replace('Parsed', 'Ready for review');
+if (lower.includes('could not read pdf directly')) return 'Checking another extraction method.';
+if (lower.includes('asking peppi')) return 'Using Peppi extraction.';
+if (lower.includes('ocr page')) return message.replace(/^OCR page/i, 'Scanning page');
+if (lower.includes('running local ocr')) return 'Scanning the PDF locally.';
+return message;
+}
+
+function getPdfImportStatus(props: Parameters<typeof ImportWizard>[0]) {
+const hasFile = Boolean(props.selectedFileName);
+const hasDraft = Boolean(props.draft);
+const isWorking = props.isParsingPdf;
+const hasUnreadable = (props.draft?.unresolvedRows.length ?? 0) > 0;
+
+if (hasDraft) {
+return {
+label: hasUnreadable ? 'Needs review' : 'Ready',
+icon: hasUnreadable ? AlertCircle : Check,
+tone: hasUnreadable ? 'bg-chart-4/15 text-chart-4' : 'bg-chart-3/15 text-chart-3',
+badgeClass: hasUnreadable ? 'border-chart-4/40 text-chart-4' : 'border-chart-3/40 text-chart-3',
+messageClass: hasUnreadable ? 'border-chart-4/35 bg-chart-4/10 text-foreground' : 'border-chart-3/35 bg-chart-3/10 text-foreground',
+steps: [
+{ label: 'Upload', done: true, active: false },
+{ label: 'Extract', done: true, active: false },
+{ label: 'Review', done: false, active: true },
+],
+};
+}
+
+if (isWorking) {
+return {
+label: 'Reading',
+icon: RefreshCw,
+tone: 'bg-primary/15 text-primary',
+badgeClass: 'border-primary/40 text-primary',
+messageClass: 'border-primary/25 bg-primary/10 text-foreground',
+steps: [
+{ label: 'Upload', done: true, active: false },
+{ label: 'Extract', done: false, active: true },
+{ label: 'Review', done: false, active: false },
+],
+};
+}
+
+return {
+label: hasFile ? 'Selected' : 'Waiting',
+icon: FileText,
+tone: hasFile ? 'bg-primary/15 text-primary' : 'bg-secondary text-muted-foreground',
+badgeClass: hasFile ? 'border-primary/40 text-primary' : 'text-muted-foreground',
+messageClass: 'border-border bg-secondary/30 text-muted-foreground',
+steps: [
+{ label: 'Upload', done: hasFile, active: !hasFile },
+{ label: 'Extract', done: false, active: false },
+{ label: 'Review', done: false, active: false },
+],
+};
 }
 
 function CsvTextFields(props: Parameters<typeof ImportWizard>[0]) {
