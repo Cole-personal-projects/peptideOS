@@ -305,11 +305,11 @@ export default function LibraryPage() {
                 <Plus className="w-4 h-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[88vh] gap-0 overflow-hidden border-border bg-card p-0 text-card-foreground shadow-2xl sm:max-w-xl">
+            <DialogContent className="flex max-h-[88dvh] flex-col gap-0 overflow-hidden border-border bg-card p-0 text-card-foreground shadow-2xl sm:max-w-xl">
               <DialogHeader className="border-b bg-card px-6 py-4 text-left">
                 <DialogTitle>Add compound</DialogTitle>
               </DialogHeader>
-              <div className="grid gap-4 overflow-y-auto bg-card px-6 py-5">
+              <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto bg-card px-6 py-5">
                 <CompoundField id="name" label="Name">
                   <Input
                     id="custom-compound-name"
@@ -380,7 +380,7 @@ export default function LibraryPage() {
                   />
                 </CompoundField>
               </div>
-              <DialogFooter className="flex-col border-t bg-card px-6 py-4 sm:justify-start">
+              <DialogFooter className="shrink-0 flex-col border-t bg-card px-6 py-4 sm:justify-start">
                 <Button type="button" className="w-full" onClick={handleAddCompound}>Save compound</Button>
                 <Button type="button" variant="outline" className="w-full" onClick={() => setAddOpen(false)}>Cancel</Button>
               </DialogFooter>
