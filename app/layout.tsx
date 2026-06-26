@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { ClientDiagnostics } from '@/components/client-diagnostics'
 import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register'
 import { ThemeSync } from '@/components/theme-sync'
 import { AuthProvider } from '@/lib/auth-context'
@@ -38,6 +39,7 @@ export default function RootLayout({
         <AuthProvider>
           <AppProvider>
             <ThemeSync />
+            <ClientDiagnostics />
             {children}
           </AppProvider>
         </AuthProvider>
