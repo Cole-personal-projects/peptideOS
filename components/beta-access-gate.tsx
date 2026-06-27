@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { ArrowRight, KeyRound, LockKeyhole, ShieldCheck } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,6 @@ import {
   BETA_ACCESS_ENTITLEMENT,
   betaRedemptionMessage,
   hasActiveBetaAccess,
-  hasBetaGateEntry,
   isBetaGateEnabled,
   normalizeInviteCode,
   type BetaAccessState,
@@ -105,8 +104,6 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
 
     return () => window.clearTimeout(timeoutId);
   }, [checkExistingAccess]);
-
-  const hasEntry = useMemo(() => hasBetaGateEntry(email, inviteCode), [email, inviteCode]);
 
   const handleSubmit = async () => {
     const trimmedEmail = email.trim().toLowerCase();
@@ -204,7 +201,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
                   }}
                 />
               </div>
-              <Button className="h-11 w-full" onClick={handleSubmit} disabled={!hasEntry || isSubmitting}>
+              <Button className="h-11 w-full" onClick={handleSubmit} disabled={isSubmitting}>
                 <KeyRound className="size-4" />
                 {isSubmitting ? 'Unlocking...' : 'Enter PeptideOS'}
                 <ArrowRight className="size-4" />
