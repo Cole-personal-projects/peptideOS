@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 const migrationSql = readFileSync('supabase/migrations/20260627000000_add_beta_invites_and_entitlements.sql', 'utf8');
 const emailGrantMigrationSql = readFileSync('supabase/migrations/20260627001000_add_email_beta_access_grants.sql', 'utf8');
+const digestSearchPathMigrationSql = readFileSync('supabase/migrations/20260627153000_fix_beta_invite_digest_search_path.sql', 'utf8');
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as { scripts: Record<string, string> };
 
 describe('beta access schema', () => {
@@ -38,6 +39,12 @@ describe('beta access schema', () => {
     expect(emailGrantMigrationSql).toContain("digest(normalized_code, 'sha256')");
     expect(emailGrantMigrationSql).toContain("'alreadyRedeemed', true");
     expect(emailGrantMigrationSql).toContain('grant execute on function public.redeem_beta_invite_by_email(text, text) to service_role');
+  });
+
+  test('uses pgcrypto digest with explicit extensions schema in beta invite functions', () => {
+    expect(digestSearchPathMigrationSql).toContain('create extension if not exists pgcrypto with schema extensions');
+    expect(digestSearchPathMigrationSql).toContain('set search_path = public, extensions');
+    expect(digestSearchPathMigrationSql).toContain("extensions.digest(normalized_code, 'sha256')");
   });
 
   test('ships invite generation command', () => {
