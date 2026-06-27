@@ -11,6 +11,7 @@ import {
   BETA_ACCESS_ENTITLEMENT,
   betaRedemptionMessage,
   hasActiveBetaAccess,
+  hasBetaGateEntry,
   isBetaGateEnabled,
   normalizeInviteCode,
   type BetaAccessState,
@@ -105,13 +106,16 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timeoutId);
   }, [checkExistingAccess]);
 
-  const canSubmit = useMemo(
-    () => email.trim().includes('@') && normalizeInviteCode(inviteCode).length >= 4 && !isSubmitting,
-    [email, inviteCode, isSubmitting],
-  );
+  const hasEntry = useMemo(() => hasBetaGateEntry(email, inviteCode), [email, inviteCode]);
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    const trimmedEmail = email.trim().toLowerCase();
+    const normalizedInviteCode = normalizeInviteCode(inviteCode);
+
+    if (!trimmedEmail || !normalizedInviteCode) {
+      setMessage('Enter your email and beta key.');
+      return;
+    }
 
     setIsSubmitting(true);
     setMessage('');
@@ -121,8 +125,8 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-          inviteCode: normalizeInviteCode(inviteCode),
+          email: trimmedEmail,
+          inviteCode: normalizedInviteCode,
         }),
       });
       const payload = (await response.json()) as BetaRedemptionResult;
@@ -200,7 +204,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
                   }}
                 />
               </div>
-              <Button className="h-11 w-full" onClick={handleSubmit} disabled={!canSubmit}>
+              <Button className="h-11 w-full" onClick={handleSubmit} disabled={!hasEntry || isSubmitting}>
                 <KeyRound className="size-4" />
                 {isSubmitting ? 'Unlocking...' : 'Enter PeptideOS'}
                 <ArrowRight className="size-4" />
