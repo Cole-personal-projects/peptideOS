@@ -41,3 +41,12 @@ export function createSupabaseTokenVerifier(accessToken: string) {
     },
   });
 }
+
+export function getServerSecret() {
+  return (
+    process.env.BETA_GATE_COOKIE_SECRET?.trim() ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    process.env.ANTHROPIC_API_KEY?.trim() ||
+    ''
+  );
+}

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 
 const migrationSql = readFileSync('supabase/migrations/20260627000000_add_beta_invites_and_entitlements.sql', 'utf8');
+const emailGrantMigrationSql = readFileSync('supabase/migrations/20260627001000_add_email_beta_access_grants.sql', 'utf8');
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as { scripts: Record<string, string> };
 
 describe('beta access schema', () => {
@@ -26,6 +27,17 @@ describe('beta access schema', () => {
     expect(migrationSql).toContain("values (redeemer_user_id, 'beta_access'");
     expect(migrationSql).toContain('revoke all on function public.redeem_beta_invite(text, uuid, text) from public');
     expect(migrationSql).toContain('grant execute on function public.redeem_beta_invite(text, uuid, text) to service_role');
+  });
+
+  test('supports email plus beta key access without a signed-in account', () => {
+    expect(emailGrantMigrationSql).toContain('create table if not exists public.beta_email_access_grants');
+    expect(emailGrantMigrationSql).toContain('email text not null unique');
+    expect(emailGrantMigrationSql).toContain('alter table public.beta_email_access_grants enable row level security');
+    expect(emailGrantMigrationSql).toContain('create policy "service_role manages beta email access grants"');
+    expect(emailGrantMigrationSql).toContain('create or replace function public.redeem_beta_invite_by_email');
+    expect(emailGrantMigrationSql).toContain("digest(normalized_code, 'sha256')");
+    expect(emailGrantMigrationSql).toContain("'alreadyRedeemed', true");
+    expect(emailGrantMigrationSql).toContain('grant execute on function public.redeem_beta_invite_by_email(text, text) to service_role');
   });
 
   test('ships invite generation command', () => {
