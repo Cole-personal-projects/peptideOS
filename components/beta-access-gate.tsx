@@ -156,7 +156,12 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
               </p>
             </section>
           ) : (
-            <form className="space-y-5 rounded-[18px] border border-border bg-card/95 p-5 shadow-xl" onSubmit={handleSubmit}>
+            <form
+              action="/api/beta/redeem"
+              method="post"
+              className="space-y-5 rounded-[18px] border border-border bg-card/95 p-5 shadow-xl"
+              onSubmit={handleSubmit}
+            >
               <div className="grid gap-2">
                 <Label htmlFor="beta-email">Email</Label>
                 <Input
@@ -172,9 +177,9 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
               <div className="grid gap-2">
                 <Label htmlFor="beta-invite">Beta key</Label>
                 <Input
-                  ref={codeRef}
-                  id="beta-invite"
-                  name="betaKey"
+                ref={codeRef}
+                id="beta-invite"
+                name="inviteCode"
                   autoCapitalize="characters"
                   autoComplete="off"
                   placeholder="Paste or type beta key"

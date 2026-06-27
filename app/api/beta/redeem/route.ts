@@ -18,6 +18,8 @@ const redeemSchema = z.object({
   inviteCode: z.string().min(4).max(80),
 });
 
+type RedeemRequest = z.infer<typeof redeemSchema>;
+
 export async function GET() {
   const secret = getServerSecret();
   const cookieStore = await cookies();
@@ -31,28 +33,34 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const isFormPost = isFormRequest(request);
   const config = getSupabaseServerConfig();
+
   if (!config.configured) {
-    return NextResponse.json(
+    return betaResponse(
+      request,
+      isFormPost,
       { ok: false, message: 'Beta access is not configured on this deployment.' },
-      { status: 503 },
+      503,
     );
   }
 
-  let body: z.infer<typeof redeemSchema>;
+  let body: RedeemRequest;
   try {
-    body = redeemSchema.parse(await request.json());
+    body = redeemSchema.parse(await readRedeemRequest(request, isFormPost));
   } catch {
-    return NextResponse.json(
+    return betaResponse(
+      request,
+      isFormPost,
       { ok: false, reason: 'invalid_request', message: betaRedemptionMessage({ ok: false, reason: 'invalid_request' }) },
-      { status: 400 },
+      400,
     );
   }
 
   const serviceClient = createSupabaseServerClient();
   const secret = getServerSecret();
   if (!serviceClient || !secret) {
-    return NextResponse.json({ ok: false, message: 'Beta access is not configured on this deployment.' }, { status: 503 });
+    return betaResponse(request, isFormPost, { ok: false, message: 'Beta access is not configured on this deployment.' }, 503);
   }
 
   const email = body.email.trim().toLowerCase();
@@ -62,11 +70,16 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    return NextResponse.json({ ok: false, message: 'Could not unlock beta access right now.' }, { status: 500 });
+    return betaResponse(request, isFormPost, { ok: false, message: 'Could not unlock beta access right now.' }, 500);
   }
 
   const payload = data as BetaRedemptionResult;
-  const response = NextResponse.json({ ...payload, message: betaRedemptionMessage(payload) }, { status: payload.ok ? 200 : 400 });
+  const response = betaResponse(
+    request,
+    isFormPost,
+    { ...payload, message: betaRedemptionMessage(payload) },
+    payload.ok ? 200 : 400,
+  );
 
   if (payload.ok) {
     response.cookies.set({
@@ -81,4 +94,37 @@ export async function POST(request: Request) {
   }
 
   return response;
+}
+
+function isFormRequest(request: Request) {
+  const contentType = request.headers.get('content-type') ?? '';
+  return contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data');
+}
+
+async function readRedeemRequest(request: Request, isFormPost: boolean) {
+  if (!isFormPost) return request.json();
+
+  const formData = await request.formData();
+  return {
+    email: String(formData.get('email') ?? ''),
+    inviteCode: String(formData.get('inviteCode') ?? formData.get('betaKey') ?? ''),
+  };
+}
+
+function betaResponse(
+  request: Request,
+  isFormPost: boolean,
+  payload: BetaRedemptionResult,
+  status: number,
+) {
+  if (!isFormPost) return NextResponse.json(payload, { status });
+
+  const url = new URL('/', request.url);
+  if (payload.ok) {
+    url.searchParams.set('beta', 'confirmed');
+  } else {
+    url.searchParams.set('beta_error', payload.reason ?? 'failed');
+  }
+
+  return NextResponse.redirect(url, 303);
 }
