@@ -23,6 +23,24 @@ One-time after the first deploy, set the AI assistant key as a Worker secret:
 pnpm exec wrangler secret put ANTHROPIC_API_KEY
 ```
 
+Private beta gate:
+
+- Production builds set `NEXT_PUBLIC_BETA_GATE_ENABLED=true`.
+- Set the server-only Supabase service key in Cloudflare before inviting testers:
+
+```bash
+pnpm exec wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+```
+
+- Apply Supabase migrations, then generate a 10-use invite:
+
+```bash
+supabase db push
+pnpm beta:invite --max 10 --label "Initial private beta"
+```
+
+Run the printed SQL in Supabase. Only the SHA-256 invite hash is stored; share the raw invite code with testers. Redeeming grants account-bound `beta_access`, the same entitlement foundation later used for premium features.
+
 Manual deploy from a machine with Cloudflare credentials: `pnpm run deploy`. Local preview in the Workers runtime: `pnpm preview`.
 
 Production diagnostics are emitted as sanitized `client-diagnostic` log lines from the Worker. For live triage:

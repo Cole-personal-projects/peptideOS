@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { ClientDiagnostics } from '@/components/client-diagnostics'
 import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register'
 import { ThemeSync } from '@/components/theme-sync'
+import { BetaAccessGate } from '@/components/beta-access-gate'
 import { AuthProvider } from '@/lib/auth-context'
 import { AppProvider } from '@/lib/context'
 import './globals.css'
@@ -37,11 +38,13 @@ export default function RootLayout({
     <html lang="en" className="dark bg-background">
       <body className="font-sans antialiased">
         <AuthProvider>
-          <AppProvider>
-            <ThemeSync />
-            <ClientDiagnostics />
-            {children}
-          </AppProvider>
+          <BetaAccessGate>
+            <AppProvider>
+              <ThemeSync />
+              <ClientDiagnostics />
+              {children}
+            </AppProvider>
+          </BetaAccessGate>
         </AuthProvider>
         <ServiceWorkerRegister />
       </body>
