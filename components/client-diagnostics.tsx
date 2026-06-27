@@ -96,7 +96,25 @@ export function ClientDiagnostics() {
 
     emitClientDiagnostic('client_diagnostics_ready', { build: 'runtime' });
 
+    const pointerRecoveryInterval = window.setInterval(() => {
+      if (document.body.style.pointerEvents !== 'none') return;
+      if (hasActiveBlockingLayer()) return;
+
+      document.body.style.pointerEvents = '';
+      document.documentElement.style.pointerEvents = '';
+      emitClientDiagnostic(
+        'stale_pointer_lock_recovered',
+        {
+          bodyPointerEvents: 'none',
+          activeElement: document.activeElement?.tagName ?? null,
+          overlays: countBlockingLayerNodes(),
+        },
+        'error',
+      );
+    }, 1500);
+
     return () => {
+      window.clearInterval(pointerRecoveryInterval);
       window.fetch = originalFetch;
       window.removeEventListener('error', handleError);
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
@@ -204,4 +222,36 @@ function isInstrumentedApi(url: string) {
     parsed.pathname.startsWith('/api/') &&
     parsed.pathname !== '/api/client-diagnostics'
   );
+}
+
+function hasActiveBlockingLayer() {
+  return Boolean(
+    document.querySelector(
+      [
+        '[data-slot="dialog-content"]',
+        '[data-slot="dialog-overlay"]',
+        '[data-slot="sheet-content"]',
+        '[data-slot="sheet-overlay"]',
+        '[data-slot="alert-dialog-content"]',
+        '[data-slot="alert-dialog-overlay"]',
+        '[role="dialog"]',
+        '[role="alertdialog"]',
+      ].join(','),
+    ),
+  );
+}
+
+function countBlockingLayerNodes() {
+  return document.querySelectorAll(
+    [
+      '[data-slot="dialog-content"]',
+      '[data-slot="dialog-overlay"]',
+      '[data-slot="sheet-content"]',
+      '[data-slot="sheet-overlay"]',
+      '[data-slot="alert-dialog-content"]',
+      '[data-slot="alert-dialog-overlay"]',
+      '[role="dialog"]',
+      '[role="alertdialog"]',
+    ].join(','),
+  ).length;
 }

@@ -5,14 +5,14 @@ test.describe('welcome screen', () => {
     await page.goto('/');
 
     await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
-    await expect(page.getByText('Your peptide research operating system.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Get started' })).toBeVisible();
+    await expect(page.getByText('A private protocol cockpit')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Start local setup' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible();
-    await expect(page.getByLabel('Animated Peppi science graphic')).toHaveCount(1);
-    await expect(page.getByText('For research tracking only. Not medical advice.')).toBeVisible();
+    await expect(page.getByLabel('Animated protocol cockpit preview')).toHaveCount(1);
+    await expect(page.getByText('No dose advice')).toBeVisible();
     await expect(page.getByText('Protocol score')).toHaveCount(0);
 
-    await page.getByRole('button', { name: 'Get started' }).click();
+    await page.getByRole('button', { name: 'Start local setup' }).click();
 
     await expect(page.getByRole('alertdialog', { name: 'Research Purposes Only' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'I Understand' })).toBeVisible();
@@ -21,15 +21,15 @@ test.describe('welcome screen', () => {
   test('skips the root welcome screen after onboarding is complete', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByRole('button', { name: 'Get started' }).click();
+    await page.getByRole('button', { name: 'Start local setup' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
     await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
 
     await page.reload();
 
     await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
-    await expect(page.getByText('Your peptide research operating system.')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Get started' })).toHaveCount(0);
+    await expect(page.getByText('A private protocol cockpit')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Start local setup' })).toHaveCount(0);
   });
 
   test('lets first-run users open sign-in controls from the welcome screen', async ({ page }) => {
@@ -47,7 +47,7 @@ test.describe('welcome screen', () => {
   test('starts onboarding from the dedicated welcome route for new users', async ({ page }) => {
     await page.goto('/welcome');
 
-    await page.getByRole('button', { name: 'Get started' }).click();
+    await page.getByRole('button', { name: 'Start local setup' }).click();
 
     await expect(page.getByRole('alertdialog', { name: 'Research Purposes Only' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'I Understand' })).toBeVisible();

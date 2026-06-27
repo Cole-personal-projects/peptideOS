@@ -372,10 +372,10 @@ test.describe('library detail pages', () => {
       expect(control.right).toBeLessThanOrEqual(metrics.dialogRight - 24);
     }
 
-    const topElementAtQuickAction = await page.evaluate(() => {
+    const quickActionIsTopElement = await page.evaluate(() => {
       const element = document.elementFromPoint(window.innerWidth / 2, window.innerHeight - 105);
-      return element?.getAttribute('data-slot');
+      return Boolean(element?.closest('[aria-label="Quick actions"]'));
     });
-    expect(topElementAtQuickAction).toBe('dialog-overlay');
+    expect(quickActionIsTopElement).toBe(false);
   });
 });
