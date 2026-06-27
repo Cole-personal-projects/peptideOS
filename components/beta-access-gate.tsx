@@ -88,9 +88,19 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ email, inviteCode }),
       });
-      const payload = (await response.json()) as BetaRedemptionResult;
 
-      if (!response.ok || !payload.ok) {
+      if (response.ok) {
+        setLocalBetaAccessMarker();
+        didSucceed = true;
+        setPhase('success');
+        window.setTimeout(() => {
+          window.location.replace('/');
+        }, 1100);
+        return;
+      }
+
+      const payload = await readBetaRedemptionPayload(response);
+      if (!payload.ok) {
         setMessage(payload.message ?? betaRedemptionMessage(payload));
         return;
       }
@@ -215,4 +225,12 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
       </div>
     </main>
   );
+}
+
+async function readBetaRedemptionPayload(response: Response): Promise<BetaRedemptionResult> {
+  try {
+    return (await response.json()) as BetaRedemptionResult;
+  } catch {
+    return { ok: false, message: 'Could not unlock beta access right now.' };
+  }
 }
