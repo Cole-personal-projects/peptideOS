@@ -19,10 +19,47 @@ import {
 } from '@/lib/beta-access';
 import { useAuth } from '@/lib/auth-context';
 
+const BETA_ACCESS_LOCAL_KEY = 'peptideos.betaAccessPassed';
+const BETA_ACCESS_LOCAL_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 180;
+
+interface LocalBetaAccessMarker {
+  passed: true;
+  expiresAt: number;
+}
+
+function hasLocalBetaAccessMarker() {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    const marker = JSON.parse(window.localStorage.getItem(BETA_ACCESS_LOCAL_KEY) ?? 'null') as Partial<LocalBetaAccessMarker> | null;
+    if (marker?.passed === true && typeof marker.expiresAt === 'number' && marker.expiresAt > Date.now()) return true;
+  } catch {
+    // Fall through and clear malformed legacy marker.
+  }
+
+  clearLocalBetaAccessMarker();
+  return false;
+}
+
+function setLocalBetaAccessMarker() {
+  const marker: LocalBetaAccessMarker = {
+    passed: true,
+    expiresAt: Date.now() + BETA_ACCESS_LOCAL_MAX_AGE_MS,
+  };
+  window.localStorage.setItem(BETA_ACCESS_LOCAL_KEY, JSON.stringify(marker));
+}
+
+function clearLocalBetaAccessMarker() {
+  window.localStorage.removeItem(BETA_ACCESS_LOCAL_KEY);
+}
+
 export function BetaAccessGate({ children }: { children: ReactNode }) {
   const enabled = isBetaGateEnabled();
   const { client, status, user } = useAuth();
-  const [accessState, setAccessState] = useState<BetaAccessState>(enabled ? 'locked' : 'disabled');
+  const [accessState, setAccessState] = useState<BetaAccessState>(() => {
+    if (!enabled) return 'disabled';
+    return hasLocalBetaAccessMarker() ? 'granted' : 'locked';
+  });
   const [email, setEmail] = useState(() => user?.email ?? '');
   const [inviteCode, setInviteCode] = useState('');
   const [message, setMessage] = useState('');
@@ -39,9 +76,12 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
       .catch(() => null);
 
     if (betaStatus?.ok) {
+      setLocalBetaAccessMarker();
       setAccessState('granted');
       return;
     }
+
+    clearLocalBetaAccessMarker();
 
     if (status === 'signed-in' && user && client) {
       const { data } = await client
@@ -51,6 +91,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
         .eq('entitlement', BETA_ACCESS_ENTITLEMENT);
 
       if (hasActiveBetaAccess((data ?? []) as BetaEntitlement[])) {
+        setLocalBetaAccessMarker();
         setAccessState('granted');
       }
     }
@@ -88,6 +129,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
       setMessage(payload.message ?? betaRedemptionMessage(payload));
 
       if (response.ok && payload.ok) {
+        setLocalBetaAccessMarker();
         setInviteCode('');
         setAccessState('granted');
       }
