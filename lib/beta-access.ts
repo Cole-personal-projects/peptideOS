@@ -26,10 +26,6 @@ export function normalizeInviteCode(value: string) {
   return value.trim().replace(/\s+/g, '').toUpperCase();
 }
 
-export function hasBetaGateEntry(email: string, inviteCode: string) {
-  return email.trim().length > 0 && inviteCode.trim().length > 0;
-}
-
 export function hasActiveBetaAccess(entitlements: BetaEntitlement[], now = new Date()) {
   return entitlements.some((entitlement) => {
     if (entitlement.entitlement !== BETA_ACCESS_ENTITLEMENT || !entitlement.active) return false;

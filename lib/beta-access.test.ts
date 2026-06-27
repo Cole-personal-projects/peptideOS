@@ -4,7 +4,6 @@ import {
   BETA_ACCESS_ENTITLEMENT,
   betaRedemptionMessage,
   hasActiveBetaAccess,
-  hasBetaGateEntry,
   isBetaGateEnabled,
   normalizeInviteCode,
   type BetaEntitlement,
@@ -20,13 +19,6 @@ describe('beta access', () => {
   test('normalizes invite codes for stable redemption UX', () => {
     expect(normalizeInviteCode('  pep beta 2026  ')).toBe('PEPBETA2026');
 expect(normalizeInviteCode('pep-beta-2026')).toBe('PEP-BETA-2026');
-});
-
-test('enables beta gate submit when both fields have content', () => {
-expect(hasBetaGateEntry('', 'POS-TEST')).toBe(false);
-expect(hasBetaGateEntry('cole@example.com', '')).toBe(false);
-expect(hasBetaGateEntry('cole@example.com', 'POS-MSJG6-H2DBM-8P3DX')).toBe(true);
-expect(hasBetaGateEntry(' cole@example.com ', ' POS-MSJG6-H2DBM-8P3DX ')).toBe(true);
 });
 
 test('detects active beta entitlement inside validity window', () => {
