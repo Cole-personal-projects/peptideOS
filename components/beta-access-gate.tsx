@@ -1,23 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { ArrowRight, KeyRound, LockKeyhole, ShieldCheck } from 'lucide-react';
+import { FormEvent, useEffect, useRef, useState, type ReactNode } from 'react';
+import { ArrowRight, LockKeyhole, ShieldCheck } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  BETA_ACCESS_ENTITLEMENT,
-  betaRedemptionMessage,
-  hasActiveBetaAccess,
-  isBetaGateEnabled,
-  normalizeInviteCode,
-  type BetaAccessState,
-  type BetaEntitlement,
-  type BetaRedemptionResult,
-} from '@/lib/beta-access';
-import { useAuth } from '@/lib/auth-context';
+import { betaRedemptionMessage, isBetaGateEnabled, normalizeInviteCode, type BetaRedemptionResult } from '@/lib/beta-access';
 
 const BETA_ACCESS_LOCAL_KEY = 'peptideos.betaAccessPassed';
 const BETA_ACCESS_LOCAL_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 180;
@@ -27,17 +16,17 @@ interface LocalBetaAccessMarker {
   expiresAt: number;
 }
 
-function hasLocalBetaAccessMarker() {
+function getLocalBetaAccessMarker() {
   if (typeof window === 'undefined') return false;
 
   try {
     const marker = JSON.parse(window.localStorage.getItem(BETA_ACCESS_LOCAL_KEY) ?? 'null') as Partial<LocalBetaAccessMarker> | null;
     if (marker?.passed === true && typeof marker.expiresAt === 'number' && marker.expiresAt > Date.now()) return true;
   } catch {
-    // Fall through and clear malformed legacy marker.
+    // Ignore malformed marker and clear below.
   }
 
-  clearLocalBetaAccessMarker();
+  window.localStorage.removeItem(BETA_ACCESS_LOCAL_KEY);
   return false;
 }
 
@@ -49,67 +38,42 @@ function setLocalBetaAccessMarker() {
   window.localStorage.setItem(BETA_ACCESS_LOCAL_KEY, JSON.stringify(marker));
 }
 
-function clearLocalBetaAccessMarker() {
-  window.localStorage.removeItem(BETA_ACCESS_LOCAL_KEY);
-}
-
 export function BetaAccessGate({ children }: { children: ReactNode }) {
   const enabled = isBetaGateEnabled();
-  const { client, status, user } = useAuth();
-  const [accessState, setAccessState] = useState<BetaAccessState>(() => {
-    if (!enabled) return 'disabled';
-    return hasLocalBetaAccessMarker() ? 'granted' : 'locked';
-  });
-  const [email, setEmail] = useState(() => user?.email ?? '');
-  const [inviteCode, setInviteCode] = useState('');
-  const [message, setMessage] = useState('');
+  const emailRef = useRef<HTMLInputElement>(null);
+  const codeRef = useRef<HTMLInputElement>(null);
+  const [isUnlocked, setIsUnlocked] = useState(() => !enabled || getLocalBetaAccessMarker());
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const checkExistingAccess = useCallback(async () => {
-    if (!enabled) {
-      setAccessState('disabled');
-      return;
-    }
-
-    const betaStatus = await fetch('/api/beta/redeem', { method: 'GET' })
-      .then((response) => response.json() as Promise<{ ok: boolean }>)
-      .catch(() => null);
-
-    if (betaStatus?.ok) {
-      setLocalBetaAccessMarker();
-      setAccessState('granted');
-      return;
-    }
-
-    clearLocalBetaAccessMarker();
-
-    if (status === 'signed-in' && user && client) {
-      const { data } = await client
-        .from('user_entitlements')
-        .select('entitlement, active, starts_at, ends_at')
-        .eq('user_id', user.id)
-        .eq('entitlement', BETA_ACCESS_ENTITLEMENT);
-
-      if (hasActiveBetaAccess((data ?? []) as BetaEntitlement[])) {
-        setLocalBetaAccessMarker();
-        setAccessState('granted');
-      }
-    }
-  }, [client, enabled, status, user]);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      void checkExistingAccess();
-    }, 0);
+    if (!enabled || isUnlocked) return;
 
-    return () => window.clearTimeout(timeoutId);
-  }, [checkExistingAccess]);
+    let active = true;
+    void fetch('/api/beta/redeem', { method: 'GET', cache: 'no-store' })
+      .then((response) => response.json() as Promise<{ ok: boolean }>)
+      .then((payload) => {
+        if (!active || !payload.ok) return;
+        setLocalBetaAccessMarker();
+        setIsUnlocked(true);
+      })
+      .catch(() => {
+        // Stay on the beta screen; entering the key remains the recovery path.
+      });
 
-  const handleSubmit = async () => {
-    const trimmedEmail = email.trim().toLowerCase();
-    const normalizedInviteCode = normalizeInviteCode(inviteCode);
+    return () => {
+      active = false;
+    };
+  }, [enabled, isUnlocked]);
 
-    if (!trimmedEmail || !normalizedInviteCode) {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+
+    const email = emailRef.current?.value.trim().toLowerCase() ?? '';
+    const inviteCode = normalizeInviteCode(codeRef.current?.value ?? '');
+
+    if (!email || !inviteCode) {
       setMessage('Enter your email and beta key.');
       return;
     }
@@ -121,19 +85,17 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
       const response = await fetch('/api/beta/redeem', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          email: trimmedEmail,
-          inviteCode: normalizedInviteCode,
-        }),
+        body: JSON.stringify({ email, inviteCode }),
       });
       const payload = (await response.json()) as BetaRedemptionResult;
-      setMessage(payload.message ?? betaRedemptionMessage(payload));
 
-      if (response.ok && payload.ok) {
-        setLocalBetaAccessMarker();
-        setInviteCode('');
-        setAccessState('granted');
+      if (!response.ok || !payload.ok) {
+        setMessage(payload.message ?? betaRedemptionMessage(payload));
+        return;
       }
+
+      setLocalBetaAccessMarker();
+      setIsUnlocked(true);
     } catch {
       setMessage('Could not unlock beta access right now.');
     } finally {
@@ -141,7 +103,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
     }
   };
 
-  if (!enabled || accessState === 'disabled' || accessState === 'granted') return <>{children}</>;
+  if (isUnlocked) return <>{children}</>;
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -173,47 +135,42 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
             </p>
           </div>
 
-          <Card className="rounded-[18px] border-border bg-card/95 shadow-xl">
-            <CardContent className="space-y-5 p-5">
-              <div className="grid gap-2">
-                <Label htmlFor="beta-email">Email</Label>
-                <Input
-                  id="beta-email"
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="beta-invite">Beta key</Label>
-                <Input
-                  id="beta-invite"
-                  autoCapitalize="characters"
-                  autoComplete="off"
-                  placeholder="Paste or type beta key"
-                  value={inviteCode}
-                  onChange={(event) => setInviteCode(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') void handleSubmit();
-                  }}
-                />
-              </div>
-              <Button className="h-11 w-full" onClick={handleSubmit} disabled={isSubmitting}>
-                <KeyRound className="size-4" />
-                {isSubmitting ? 'Unlocking...' : 'Enter PeptideOS'}
-                <ArrowRight className="size-4" />
-              </Button>
+          <form className="space-y-5 rounded-[18px] border border-border bg-card/95 p-5 shadow-xl" onSubmit={handleSubmit}>
+            <div className="grid gap-2">
+              <Label htmlFor="beta-email">Email</Label>
+              <Input
+                ref={emailRef}
+                id="beta-email"
+                name="email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="beta-invite">Beta key</Label>
+              <Input
+                ref={codeRef}
+                id="beta-invite"
+                name="betaKey"
+                autoCapitalize="characters"
+                autoComplete="off"
+                placeholder="Paste or type beta key"
+              />
+            </div>
 
-              {message ? (
-                <div role="status" className="rounded-xl border bg-background p-3 text-sm text-muted-foreground">
-                  {message}
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
+            <Button type="submit" className="h-11 w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Unlocking...' : 'Enter PeptideOS'}
+              <ArrowRight className="size-4" />
+            </Button>
+
+            {message ? (
+              <div role="status" className="rounded-xl border bg-background p-3 text-sm text-muted-foreground">
+                {message}
+              </div>
+            ) : null}
+          </form>
         </section>
       </div>
     </main>
