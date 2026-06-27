@@ -22,29 +22,24 @@ import { useAuth } from '@/lib/auth-context';
 export function BetaAccessGate({ children }: { children: ReactNode }) {
   const enabled = isBetaGateEnabled();
   const { client, status, user } = useAuth();
-  const [accessState, setAccessState] = useState<BetaAccessState>(enabled ? 'loading' : 'disabled');
+  const [accessState, setAccessState] = useState<BetaAccessState>(enabled ? 'locked' : 'disabled');
   const [email, setEmail] = useState(() => user?.email ?? '');
   const [inviteCode, setInviteCode] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const checkAccess = useCallback(async () => {
+  const checkExistingAccess = useCallback(async () => {
     if (!enabled) {
       setAccessState('disabled');
       return;
     }
 
     const betaStatus = await fetch('/api/beta/redeem', { method: 'GET' })
-      .then((response) => response.json() as Promise<{ ok: boolean; email?: string | null }>)
+      .then((response) => response.json() as Promise<{ ok: boolean }>)
       .catch(() => null);
 
     if (betaStatus?.ok) {
       setAccessState('granted');
-      return;
-    }
-
-    if (status === 'loading') {
-      setAccessState('loading');
       return;
     }
 
@@ -57,20 +52,17 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
 
       if (hasActiveBetaAccess((data ?? []) as BetaEntitlement[])) {
         setAccessState('granted');
-        return;
       }
     }
-
-    setAccessState('locked');
   }, [client, enabled, status, user]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      void checkAccess();
+      void checkExistingAccess();
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [checkAccess]);
+  }, [checkExistingAccess]);
 
   const canSubmit = useMemo(
     () => email.trim().includes('@') && normalizeInviteCode(inviteCode).length >= 4 && !isSubmitting,
@@ -140,46 +132,37 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
 
           <Card className="rounded-[18px] border-border bg-card/95 shadow-xl">
             <CardContent className="space-y-5 p-5">
-              {accessState === 'loading' ? (
-                <div className="space-y-4 py-6 text-center">
-                  <div className="mx-auto size-10 animate-pulse rounded-full bg-primary/25" />
-                  <p className="text-sm text-muted-foreground">Checking access...</p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid gap-2">
-                    <Label htmlFor="beta-email">Email</Label>
-                    <Input
-                      id="beta-email"
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      placeholder="you@example.com"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="beta-invite">Beta key</Label>
-                    <Input
-                      id="beta-invite"
-                      autoCapitalize="characters"
-                      autoComplete="off"
-                      placeholder="POS-XXXXX-XXXXX-XXXXX"
-                      value={inviteCode}
-                      onChange={(event) => setInviteCode(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter') void handleSubmit();
-                      }}
-                    />
-                  </div>
-                  <Button className="h-11 w-full" onClick={handleSubmit} disabled={!canSubmit}>
-                    <KeyRound className="size-4" />
-                    {isSubmitting ? 'Unlocking...' : 'Enter PeptideOS'}
-                    <ArrowRight className="size-4" />
-                  </Button>
-                </>
-              )}
+              <div className="grid gap-2">
+                <Label htmlFor="beta-email">Email</Label>
+                <Input
+                  id="beta-email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="beta-invite">Beta key</Label>
+                <Input
+                  id="beta-invite"
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  placeholder="Paste or type beta key"
+                  value={inviteCode}
+                  onChange={(event) => setInviteCode(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') void handleSubmit();
+                  }}
+                />
+              </div>
+              <Button className="h-11 w-full" onClick={handleSubmit} disabled={!canSubmit}>
+                <KeyRound className="size-4" />
+                {isSubmitting ? 'Unlocking...' : 'Enter PeptideOS'}
+                <ArrowRight className="size-4" />
+              </Button>
 
               {message ? (
                 <div role="status" className="rounded-xl border bg-background p-3 text-sm text-muted-foreground">
