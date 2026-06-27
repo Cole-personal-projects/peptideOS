@@ -1,14 +1,34 @@
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { z } from 'zod/v4';
 
 import { betaRedemptionMessage, normalizeInviteCode, type BetaRedemptionResult } from '@/lib/beta-access';
-import { createSupabaseServerClient, createSupabaseTokenVerifier, getSupabaseServerConfig } from '@/lib/supabase-server';
+import {
+  BETA_SESSION_COOKIE,
+  createBetaSessionCookie,
+  getBetaSessionMaxAgeSeconds,
+  verifyBetaSessionCookie,
+} from '@/lib/beta-session';
+import { createSupabaseServerClient, getServerSecret, getSupabaseServerConfig } from '@/lib/supabase-server';
 
 export const runtime = 'nodejs';
 
 const redeemSchema = z.object({
+  email: z.email(),
   inviteCode: z.string().min(4).max(80),
 });
+
+export async function GET() {
+  const secret = getServerSecret();
+  const cookieStore = await cookies();
+  const session = secret ? verifyBetaSessionCookie(cookieStore.get(BETA_SESSION_COOKIE)?.value, secret) : null;
+
+  return NextResponse.json({
+    ok: Boolean(session),
+    email: session?.email ?? null,
+    entitlement: session?.entitlement ?? null,
+  });
+}
 
 export async function POST(request: Request) {
   const config = getSupabaseServerConfig();
@@ -17,11 +37,6 @@ export async function POST(request: Request) {
       { ok: false, message: 'Beta access is not configured on this deployment.' },
       { status: 503 },
     );
-  }
-
-  const accessToken = parseBearerToken(request.headers.get('authorization'));
-  if (!accessToken) {
-    return NextResponse.json({ ok: false, message: 'Sign in before redeeming beta access.' }, { status: 401 });
   }
 
   let body: z.infer<typeof redeemSchema>;
@@ -34,35 +49,36 @@ export async function POST(request: Request) {
     );
   }
 
-  const verifier = createSupabaseTokenVerifier(accessToken);
   const serviceClient = createSupabaseServerClient();
-  if (!verifier || !serviceClient) {
+  const secret = getServerSecret();
+  if (!serviceClient || !secret) {
     return NextResponse.json({ ok: false, message: 'Beta access is not configured on this deployment.' }, { status: 503 });
   }
 
-  const { data: userData, error: userError } = await verifier.auth.getUser(accessToken);
-  const user = userData.user;
-  if (userError || !user?.id || !user.email) {
-    return NextResponse.json({ ok: false, message: 'Your sign-in expired. Sign in again.' }, { status: 401 });
-  }
-
-  const { data, error } = await serviceClient.rpc('redeem_beta_invite', {
+  const email = body.email.trim().toLowerCase();
+  const { data, error } = await serviceClient.rpc('redeem_beta_invite_by_email', {
     invite_code: normalizeInviteCode(body.inviteCode),
-    redeemer_user_id: user.id,
-    redeemer_email: user.email,
+    redeemer_email: email,
   });
 
   if (error) {
-    console.error('beta invite redemption failed', error);
-    return NextResponse.json({ ok: false, message: 'Could not redeem beta access right now.' }, { status: 500 });
+    return NextResponse.json({ ok: false, message: 'Could not unlock beta access right now.' }, { status: 500 });
   }
 
-  const result = data as BetaRedemptionResult;
-  const status = result.ok ? 200 : result.reason === 'invalid_request' ? 400 : 422;
-  return NextResponse.json({ ...result, message: betaRedemptionMessage(result) }, { status });
-}
+  const payload = data as BetaRedemptionResult;
+  const response = NextResponse.json({ ...payload, message: betaRedemptionMessage(payload) }, { status: payload.ok ? 200 : 400 });
 
-function parseBearerToken(header: string | null) {
-  const match = header?.match(/^Bearer\s+(.+)$/i);
-  return match?.[1]?.trim() || null;
+  if (payload.ok) {
+    response.cookies.set({
+      name: BETA_SESSION_COOKIE,
+      value: createBetaSessionCookie(email, secret),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: getBetaSessionMaxAgeSeconds(),
+    });
+  }
+
+  return response;
 }
