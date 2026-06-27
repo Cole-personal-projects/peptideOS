@@ -4,7 +4,7 @@ import { writeFile } from 'node:fs/promises';
 test.describe('dashboard workspace', () => {
   test('shows Carbon Ember cockpit after first-run accept', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: 'Get started' }).click();
+    await page.getByRole('button', { name: 'Start local setup' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
 
     await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
@@ -13,6 +13,9 @@ test.describe('dashboard workspace', () => {
     await expect(page.getByText('Build your first protocol')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Recent activity' })).toBeVisible();
     await expect(page.getByRole('navigation')).toBeVisible();
+    await page.getByRole('button', { name: 'Quick actions' }).click();
+    await expect(page.getByRole('dialog', { name: 'Quick Actions' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'New Protocol' })).toBeVisible();
   });
 
   test('labels scheduled dose states clearly', async ({ page }, testInfo) => {

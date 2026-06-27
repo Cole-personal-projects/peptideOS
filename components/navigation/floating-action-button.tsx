@@ -47,8 +47,9 @@ export function FloatingActionButton() {
         <SheetTrigger asChild>
           <Button
             size="icon"
+            aria-label="Quick actions"
             className={cn(
-              "fixed bottom-20 left-1/2 -translate-x-1/2 z-50",
+              "fixed bottom-20 left-1/2 -translate-x-1/2 z-30",
               "h-14 w-14 rounded-full ember-gradient ember-glow",
               "text-primary-foreground hover:brightness-110",
               "transition-transform active:scale-95"

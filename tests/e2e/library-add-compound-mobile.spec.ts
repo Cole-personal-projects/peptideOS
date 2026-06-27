@@ -11,7 +11,7 @@ test.describe('mobile custom compound entry', () => {
     await expect(dialog).toBeVisible();
     await dialog.getByPlaceholder('e.g., KPV or custom blend').fill('Mobile Save Test');
 
-    const topSaveButton = dialog.getByRole('button', { name: 'Save' });
+    const topSaveButton = dialog.getByRole('button', { name: 'Save', exact: true });
     await expect(topSaveButton).toBeVisible();
     await topSaveButton.click();
 

@@ -22,7 +22,7 @@ test.describe('account settings', () => {
     await expect(page.getByText('App version')).toBeVisible();
     await expect(page.getByText('v1.0.0')).toBeVisible();
     await expect(page.getByText('Build')).toBeVisible();
-    await expect(page.getByText('peptideos-shell-v4')).toBeVisible();
+    await expect(page.getByText('peptideos-shell-v5')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Save to cloud' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Retrieve from cloud' })).toBeDisabled();
     await expect(page.getByText('Content mode')).toBeVisible();
@@ -37,13 +37,13 @@ test.describe('account settings', () => {
     await page.goto('/more/settings');
     await page.getByRole('button', { name: 'I Understand' }).click();
 
-    await page.getByRole('button', { name: 'Light' }).click();
+    await page.getByRole('button', { name: 'Clinical Light' }).click();
     await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(false);
-    await expect(page.getByRole('switch', { name: 'Use dark theme' })).not.toBeChecked();
+    await expect(page.getByRole('button', { name: 'Clinical Light' })).toHaveAttribute('aria-pressed', 'true');
 
-    await page.getByRole('button', { name: 'Dark' }).click();
+    await page.getByRole('button', { name: 'Graphite Dark' }).click();
     await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(true);
-    await expect(page.getByRole('switch', { name: 'Use dark theme' })).toBeChecked();
+    await expect(page.getByRole('button', { name: 'Graphite Dark' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('navigates from settings to dashboard without route error', async ({ page }) => {

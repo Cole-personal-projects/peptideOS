@@ -1,4 +1,4 @@
-const CACHE_NAME = 'peptideos-shell-v4';
+const CACHE_NAME = 'peptideos-shell-v5';
 const APP_SHELL = [
   '/offline.html',
   '/manifest.json',
