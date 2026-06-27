@@ -83,12 +83,14 @@ describe('body map reference data', () => {
 
   it('keeps front abdomen, thigh, and deltoid overlays within anatomical envelopes', () => {
     expectTemplateZoneBounds('male-front', {
-      'abdomen-upper-left': { minX: 300, maxX: 425, minY: 410, maxY: 650 },
-      'abdomen-upper-right': { minX: 300, maxX: 425, minY: 410, maxY: 650 },
-      'abdomen-mid-left': { minX: 300, maxX: 425, minY: 410, maxY: 650 },
-      'abdomen-mid-right': { minX: 300, maxX: 425, minY: 410, maxY: 650 },
-      'abdomen-lower-left': { minX: 300, maxX: 425, minY: 410, maxY: 650 },
-      'abdomen-lower-right': { minX: 300, maxX: 425, minY: 410, maxY: 650 },
+ 'abdomen-upper-left': { minX: 300, maxX: 425, minY: 465, maxY: 705 },
+ 'abdomen-upper-right': { minX: 300, maxX: 425, minY: 465, maxY: 705 },
+ 'abdomen-mid-left': { minX: 300, maxX: 425, minY: 465, maxY: 705 },
+ 'abdomen-mid-right': { minX: 300, maxX: 425, minY: 465, maxY: 705 },
+ 'abdomen-lower-left': { minX: 300, maxX: 425, minY: 465, maxY: 705 },
+ 'abdomen-lower-right': { minX: 300, maxX: 425, minY: 465, maxY: 705 },
+ 'flank-left': { minX: 245, maxX: 300, minY: 465, maxY: 625 },
+ 'flank-right': { minX: 425, maxX: 485, minY: 465, maxY: 625 },
       'thigh-front-upper-left': { minX: 220, maxX: 505, minY: 640, maxY: 950 },
       'thigh-front-upper-right': { minX: 220, maxX: 505, minY: 640, maxY: 950 },
       'thigh-front-mid-left': { minX: 220, maxX: 505, minY: 640, maxY: 950 },

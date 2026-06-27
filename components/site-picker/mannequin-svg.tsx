@@ -42,12 +42,16 @@ export function MannequinSvg({
     .filter((entry) => entry.hitTarget && entry.state);
 
   return (
-    <div className={cn('mx-auto w-full max-w-[340px]', compact && 'max-w-[280px]')}>
-      <div className="relative aspect-[1/2] w-full overflow-hidden rounded-md bg-slate-950/20">
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-55 [&>svg]:h-full [&>svg]:w-full">
-          <Body data={[]} gender={sex} side={view} scale={1.7} border="#94a3b8" />
+    <div className={cn('mx-auto w-full max-w-[350px]', compact && 'max-w-[280px]')}>
+      <div className="relative aspect-[1/2] w-full overflow-hidden rounded-2xl border border-border bg-[radial-gradient(circle_at_50%_22%,rgba(20,184,166,0.12),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.28),rgba(15,23,42,0.08))] shadow-inner">
+        <div className="pointer-events-none absolute inset-x-7 top-4 h-px bg-gradient-to-r from-transparent via-primary/25 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-10 bottom-8 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="pointer-events-none absolute left-3 top-3 rounded-full border bg-background/75 px-2.5 py-1 text-[11px] font-medium text-muted-foreground backdrop-blur">
+          {view === 'front' ? 'Front' : 'Back'} · {sex === 'male' ? 'Male' : 'Female'}
         </div>
-
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-50 [&>svg]:h-full [&>svg]:w-full">
+          <Body data={[]} gender={sex} side={view} scale={1.7} border="#64748b" />
+        </div>
         <svg
           viewBox={template.viewBox}
           preserveAspectRatio="xMidYMid meet"
@@ -75,6 +79,10 @@ export function MannequinSvg({
             );
           })}
         </svg>
+        <div className="pointer-events-none absolute inset-x-3 bottom-3 flex items-center justify-between rounded-full border bg-background/75 px-3 py-1.5 text-[11px] text-muted-foreground backdrop-blur">
+          <span>Tap to select</span>
+          <span>Long press history</span>
+        </div>
       </div>
     </div>
   );

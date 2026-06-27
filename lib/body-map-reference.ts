@@ -224,10 +224,31 @@ function zonesForTemplate(
     templateId,
     siteCode,
     side,
-    pathData,
+    pathData: tuneZonePath(templateId, siteCode, pathData),
     displayLabel: null,
     zOrder,
   }));
+}
+
+function tuneZonePath(templateId: BodyTemplateId, siteCode: SiteCode, pathData: string) {
+  if (templateId === 'male-front' && isMaleFrontTorsoSite(siteCode)) {
+    return translatePath(pathData, 0, 54);
+  }
+  return pathData;
+}
+
+function isMaleFrontTorsoSite(siteCode: SiteCode) {
+  return siteCode.startsWith('abdomen-') || siteCode === 'flank-left' || siteCode === 'flank-right';
+}
+
+function translatePath(pathData: string, dx: number, dy: number) {
+  let coordinateIndex = 0;
+  return pathData.replace(/-?\d+(?:\.\d+)?/g, (value) => {
+    const numericValue = Number(value);
+    const translated = numericValue + (coordinateIndex % 2 === 0 ? dx : dy);
+    coordinateIndex += 1;
+    return Number.isInteger(translated) ? String(translated) : translated.toFixed(2);
+  });
 }
 
 export function getBodyTemplate(sex: BodyTemplateSex, view: BodyTemplateView): BodyTemplate {
