@@ -15,8 +15,10 @@ interface AuthContextType {
   config: AuthConfig;
   status: AuthStatus;
   user: AuthUser | null;
+  client: SupabaseClient | null;
   signInWithEmail: (email: string) => Promise<{ ok: boolean; message: string }>;
   verifyEmailCode: (email: string, token: string) => Promise<{ ok: boolean; message: string }>;
+  getAccessToken: () => Promise<string | null>;
   signOut: () => Promise<void>;
 }
 
@@ -113,6 +115,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true, message: 'Signed in.' };
   }, [client]);
 
+  const getAccessToken = useCallback(async () => {
+    if (!client) return null;
+    const { data, error } = await client.auth.getSession();
+    if (error) return null;
+    return data.session?.access_token ?? null;
+  }, [client]);
+
   const signOut = useCallback(async () => {
     if (!client) return;
     await client.auth.signOut();
@@ -122,12 +131,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextType>(() => ({
     config,
+    client,
+    getAccessToken,
     status,
     user,
     signInWithEmail,
     verifyEmailCode,
     signOut,
-  }), [config, signInWithEmail, signOut, status, user, verifyEmailCode]);
+  }), [client, config, getAccessToken, signInWithEmail, signOut, status, user, verifyEmailCode]);
 
   return (
     <AuthContext.Provider value={value}>

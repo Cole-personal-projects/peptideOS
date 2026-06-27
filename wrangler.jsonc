@@ -16,7 +16,11 @@
   ],
   "observability": {
     "enabled": true
+  },
+  "vars": {
+    "NEXT_PUBLIC_BETA_GATE_ENABLED": "true"
   }
-  // Secrets (set via `pnpm exec wrangler secret put <NAME>` or the Cloudflare dashboard):
-  // - ANTHROPIC_API_KEY: enables the AI protocol assistant
+  // Secrets (set via `pnpm exec wrangler secret put <NAME>` or Cloudflare dashboard):
+  // - ANTHROPIC_API_KEY: enables AI protocol assistant
+  // - SUPABASE_SERVICE_ROLE_KEY: enables private beta invite redemption
 }
