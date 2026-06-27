@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowRight, LockKeyhole, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Loader2, LockKeyhole, ShieldCheck } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +43,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
   const emailRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
   const [isUnlocked, setIsUnlocked] = useState(() => !enabled || getLocalBetaAccessMarker());
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [phase, setPhase] = useState<'idle' | 'submitting' | 'success'>('idle');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isSubmitting) return;
+    if (phase !== 'idle') return;
 
     const email = emailRef.current?.value.trim().toLowerCase() ?? '';
     const inviteCode = normalizeInviteCode(codeRef.current?.value ?? '');
@@ -78,8 +78,9 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
       return;
     }
 
-    setIsSubmitting(true);
+    setPhase('submitting');
     setMessage('');
+    let didSucceed = false;
 
     try {
       const response = await fetch('/api/beta/redeem', {
@@ -95,18 +96,23 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
       }
 
       setLocalBetaAccessMarker();
-      setIsUnlocked(true);
+      didSucceed = true;
+      setPhase('success');
+      window.setTimeout(() => {
+        window.location.replace('/');
+      }, 1100);
     } catch {
       setMessage('Could not unlock beta access right now.');
+      setPhase('idle');
     } finally {
-      setIsSubmitting(false);
+      if (!didSucceed) setPhase('idle');
     }
   };
 
   if (isUnlocked) return <>{children}</>;
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="fixed inset-0 z-[2147483647] overflow-y-auto bg-background text-foreground">
       <div className="mx-auto flex min-h-screen w-full max-w-lg flex-col px-5 py-6">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -135,42 +141,71 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
             </p>
           </div>
 
-          <form className="space-y-5 rounded-[18px] border border-border bg-card/95 p-5 shadow-xl" onSubmit={handleSubmit}>
-            <div className="grid gap-2">
-              <Label htmlFor="beta-email">Email</Label>
-              <Input
-                ref={emailRef}
-                id="beta-email"
-                name="email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="beta-invite">Beta key</Label>
-              <Input
-                ref={codeRef}
-                id="beta-invite"
-                name="betaKey"
-                autoCapitalize="characters"
-                autoComplete="off"
-                placeholder="Paste or type beta key"
-              />
-            </div>
-
-            <Button type="submit" className="h-11 w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Unlocking...' : 'Enter PeptideOS'}
-              <ArrowRight className="size-4" />
-            </Button>
-
-            {message ? (
-              <div role="status" className="rounded-xl border bg-background p-3 text-sm text-muted-foreground">
-                {message}
+          {phase === 'success' ? (
+            <section
+              role="status"
+              aria-live="polite"
+              className="rounded-[18px] border border-primary/40 bg-card/95 p-6 text-center shadow-xl"
+            >
+              <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-primary text-primary-foreground">
+                <CheckCircle2 className="size-7" />
               </div>
-            ) : null}
-          </form>
+              <h2 className="text-2xl font-semibold">Beta access confirmed.</h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                Opening PeptideOS. Your app starts in local mode unless you choose cloud sync later.
+              </p>
+            </section>
+          ) : (
+            <form className="space-y-5 rounded-[18px] border border-border bg-card/95 p-5 shadow-xl" onSubmit={handleSubmit}>
+              <div className="grid gap-2">
+                <Label htmlFor="beta-email">Email</Label>
+                <Input
+                  ref={emailRef}
+                  id="beta-email"
+                  name="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="beta-invite">Beta key</Label>
+                <Input
+                  ref={codeRef}
+                  id="beta-invite"
+                  name="betaKey"
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  placeholder="Paste or type beta key"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="h-11 w-full transition-transform active:scale-[0.98]"
+                disabled={phase === 'submitting'}
+              >
+                {phase === 'submitting' ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    Checking beta key...
+                  </>
+                ) : (
+                  <>
+                    Enter PeptideOS
+                    <ArrowRight className="size-4" />
+                  </>
+                )}
+              </Button>
+
+              {message ? (
+                <div role="status" className="rounded-xl border bg-background p-3 text-sm text-muted-foreground">
+                  {message}
+                </div>
+              ) : null}
+            </form>
+          )}
         </section>
       </div>
     </main>
