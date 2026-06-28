@@ -2,13 +2,14 @@ import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 
 test.describe('dashboard workspace', () => {
-  test('shows Carbon Ember cockpit after first-run accept', async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('button', { name: 'Start local setup' }).click();
-    await page.getByRole('button', { name: 'I Understand' }).click();
+test('shows Carbon Ember cockpit on root after first-run accept', async ({ page }) => {
+await page.goto('/');
+await expect(page.getByRole('alertdialog', { name: 'Research Purposes Only' })).toBeVisible();
+await page.getByRole('button', { name: 'I Understand' }).click();
 
-    await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
-    await expect(page.getByText('No data yet')).toBeVisible();
+await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
+await expect(page.getByText('A private protocol cockpit')).toHaveCount(0);
+await expect(page.getByText('No data yet')).toBeVisible();
     await expect(page.getByText('Build your first protocol')).toBeVisible();
     await expect(page.getByText('Build your first protocol')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Recent activity' })).toBeVisible();

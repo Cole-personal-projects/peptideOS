@@ -4,7 +4,6 @@ test.describe('first-launch onboarding', () => {
   test('supports setup mode selection and applies researcher defaults to library', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByRole('button', { name: 'Start local setup' }).click();
     const welcome = page.getByRole('alertdialog', { name: 'Research Purposes Only' });
     await expect(welcome.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
     await expect(welcome.getByText('Dose', { exact: true })).toBeVisible();
