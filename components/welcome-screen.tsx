@@ -21,6 +21,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { APP_COPYRIGHT, APP_RELEASE_TARGET, APP_VERSION } from '@/lib/app-metadata';
 
 interface WelcomeScreenProps {
   onGetStarted?: () => void;
@@ -365,11 +366,14 @@ export function WelcomeScreen({ onGetStarted, completedOnboarding = false }: Wel
       <FeatureRail />
       <InstallInstructions />
 
-      <footer className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-5 py-8 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <p>Research tracking only. Not medical advice, diagnosis, dosing guidance, or safety guidance.</p>
-        <Link href="/library" className="font-medium text-primary">
-          Browse reference library
-        </Link>
+<footer className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-5 py-8 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+<div className="space-y-1">
+<p>Research tracking only. Not medical advice, diagnosis, dosing guidance, or safety guidance.</p>
+<p>{APP_COPYRIGHT} - Beta v{APP_VERSION} - Initial release target v{APP_RELEASE_TARGET}</p>
+</div>
+<Link href="/library" className="font-medium text-primary">
+Browse reference library
+</Link>
       </footer>
     </main>
   );

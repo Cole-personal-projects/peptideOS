@@ -8,9 +8,10 @@ test.describe('welcome screen', () => {
     await expect(page.getByText('A private protocol cockpit')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Start local setup' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible();
-    await expect(page.getByLabel('Animated protocol cockpit preview')).toHaveCount(1);
-    await expect(page.getByText('No dose advice')).toBeVisible();
-    await expect(page.getByText('Protocol score')).toHaveCount(0);
+await expect(page.getByLabel('Animated protocol cockpit preview')).toHaveCount(1);
+await expect(page.getByText('No dose advice')).toBeVisible();
+await expect(page.getByText('2026 MonkeyShines - Beta v0.4 - Initial release target v1.0')).toBeVisible();
+await expect(page.getByText('Protocol score')).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Start local setup' }).click();
 
