@@ -99,6 +99,67 @@ describe('schedule normalization', () => {
   test('normalizes a list of stacks without changing stack order', () => {
     expect(normalizeStacks([legacyStack]).map((stack) => stack.id)).toEqual(['stack-legacy']);
   });
+
+  test('activates phased stack items inside their own schedule windows', () => {
+    const stack = normalizeStack({
+      ...legacyStack,
+      id: 'stack-phased',
+      startDate: '2026-05-04T00:00:00.000Z',
+      durationDays: 28,
+      peptides: [
+        {
+          peptideId: 'retatrutide',
+          doseValue: 0.5,
+          doseUnit: 'mg',
+          frequency: 'weekly',
+          route: 'subq',
+          timing: 'Monday morning',
+          schedule: { frequency: 'weekly', timesOfDay: ['08:00'], weekdays: [1] },
+          phaseLabel: 'Phase 1',
+          startOffsetDays: 0,
+          durationDays: 14,
+        },
+        {
+          peptideId: 'retatrutide',
+          doseValue: 1,
+          doseUnit: 'mg',
+          frequency: 'weekly',
+          route: 'subq',
+          timing: 'Monday morning',
+          schedule: { frequency: 'weekly', timesOfDay: ['08:00'], weekdays: [1] },
+          phaseLabel: 'Phase 2',
+          startOffsetDays: 14,
+          durationDays: 14,
+        },
+      ],
+      status: 'planned',
+    });
+
+    const result = activateStackSchedules({ stack, existingSchedules: [], existingScheduleLogs: [] });
+
+    expect(result.schedules.map((schedule) => ({
+      doseValue: schedule.doseValue,
+      startDate: schedule.startDate,
+      endDate: schedule.endDate,
+    }))).toEqual([
+      {
+        doseValue: 0.5,
+        startDate: '2026-05-04T00:00:00.000Z',
+        endDate: '2026-05-17T23:59:59.999Z',
+      },
+      {
+        doseValue: 1,
+        startDate: '2026-05-18T00:00:00.000Z',
+        endDate: '2026-05-31T23:59:59.999Z',
+      },
+    ]);
+    expect(result.scheduleLogs.map((log) => ({ peptideId: log.peptideId, dueAt: log.dueAt }))).toEqual([
+      { peptideId: 'retatrutide', dueAt: '2026-05-04T08:00:00.000Z' },
+      { peptideId: 'retatrutide', dueAt: '2026-05-11T08:00:00.000Z' },
+      { peptideId: 'retatrutide', dueAt: '2026-05-18T08:00:00.000Z' },
+      { peptideId: 'retatrutide', dueAt: '2026-05-25T08:00:00.000Z' },
+    ]);
+  });
 });
 
 describe('schedule generation', () => {

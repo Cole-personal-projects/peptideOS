@@ -298,6 +298,23 @@ function getStackEndDate(stack: Stack): string {
   return end.toISOString();
 }
 
+function getStackPeptideScheduleWindow(stack: Stack, peptide: StackPeptide): { startDate: string; endDate: string } {
+  const stackStart = localDayStart(new Date(stack.startDate));
+  const stackEnd = new Date(getStackEndDate(stack));
+  const startOffsetDays = Math.max(Math.round(peptide.startOffsetDays ?? 0), 0);
+  const start = addDays(stackStart, startOffsetDays);
+  const durationDays = peptide.durationDays && peptide.durationDays > 0
+    ? Math.round(peptide.durationDays)
+    : Math.max(daysSince(start, stackEnd) + 1, 1);
+  const end = addDays(start, Math.max(durationDays - 1, 0));
+  end.setHours(23, 59, 59, 999);
+
+  return {
+    startDate: start.toISOString(),
+    endDate: new Date(Math.min(end.getTime(), stackEnd.getTime())).toISOString(),
+  };
+}
+
 export function generateScheduleLogs(schedule: Schedule): ScheduleLog[] {
   const logs: ScheduleLog[] = [];
   const start = localDayStart(new Date(schedule.startDate));
@@ -353,7 +370,6 @@ export interface ActivateStackSchedulesResult {
 
 export function activateStackSchedules(input: ActivateStackSchedulesInput): ActivateStackSchedulesResult {
   const stack = normalizeStack(input.stack);
-  const endDate = getStackEndDate(stack);
   const schedulesByItemId = new Map(
     input.existingSchedules
       .filter((schedule) => schedule.stackId === stack.id)
@@ -365,6 +381,7 @@ export function activateStackSchedules(input: ActivateStackSchedulesInput): Acti
 
   stack.peptides.forEach((peptide) => {
     const stackPeptideId = peptide.id!;
+    const window = getStackPeptideScheduleWindow(stack, peptide);
     let schedule = schedulesByItemId.get(stackPeptideId);
 
     if (!schedule) {
@@ -377,12 +394,27 @@ export function activateStackSchedules(input: ActivateStackSchedulesInput): Acti
         doseUnit: peptide.doseUnit,
         route: peptide.route,
         recurrence: normalizeScheduleRecurrence(peptide.schedule ?? getDefaultScheduleRecurrence(peptide)),
-        startDate: stack.startDate,
-        endDate,
+        startDate: window.startDate,
+        endDate: window.endDate,
         status: 'active',
       };
       schedulesByItemId.set(stackPeptideId, schedule);
       nextSchedules.push(schedule);
+    } else {
+      schedule = {
+        ...schedule,
+        peptideId: peptide.peptideId,
+        doseValue: peptide.doseValue,
+        doseUnit: peptide.doseUnit,
+        route: peptide.route,
+        recurrence: normalizeScheduleRecurrence(peptide.schedule ?? getDefaultScheduleRecurrence(peptide)),
+        startDate: window.startDate,
+        endDate: window.endDate,
+      };
+      const scheduleIndex = nextSchedules.findIndex((candidate) => candidate.id === schedule!.id);
+      if (scheduleIndex >= 0) {
+        nextSchedules[scheduleIndex] = schedule;
+      }
     }
 
     generateScheduleLogs(schedule).forEach((log) => {
@@ -442,7 +474,7 @@ function updateStackPeptide(
     ...normalizedStack,
     peptides: normalizedStack.peptides.map((peptide) => peptide.id === input.stackPeptideId ? updatedPeptide : peptide),
   };
-  const endDate = getStackEndDate(stack);
+  const window = getStackPeptideScheduleWindow(stack, updatedPeptide);
   const scheduleId = `${stack.id}-schedule-${input.stackPeptideId}`;
   const previousSchedule = input.existingSchedules.find((schedule) => (
     schedule.stackId === stack.id && schedule.stackPeptideId === input.stackPeptideId
@@ -456,8 +488,8 @@ function updateStackPeptide(
     doseUnit: updatedPeptide.doseUnit,
     route: updatedPeptide.route,
     recurrence: normalizeScheduleRecurrence(updatedPeptide.schedule ?? getDefaultScheduleRecurrence(updatedPeptide)),
-    startDate: stack.startDate,
-    endDate,
+    startDate: window.startDate,
+    endDate: window.endDate,
     status: previousSchedule?.status ?? 'active',
   };
   const preservedLogs = input.existingScheduleLogs.filter((log) => (
