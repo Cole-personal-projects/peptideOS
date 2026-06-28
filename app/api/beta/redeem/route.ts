@@ -22,11 +22,15 @@ const redeemSchema = z.object({
 type RedeemRequest = z.infer<typeof redeemSchema>;
 
 export async function POST(request: Request) {
+  const wantsJson = request.headers.get('accept')?.includes('application/json') || request.headers.get('content-type')?.includes('application/json');
   const config = getSupabaseServerConfig();
   const serviceClient = createSupabaseServerClient();
   const secret = getBetaCookieSecret();
 
   if (!config.configured || !serviceClient || !secret) {
+    if (wantsJson) {
+      return NextResponse.json({ ok: false, reason: 'not_configured', message: betaRedemptionMessage({ ok: false, reason: 'not_configured' }) }, { status: 503 });
+    }
     return redirectToBeta(request, { ok: false, reason: 'not_configured' });
   }
 
@@ -34,6 +38,9 @@ export async function POST(request: Request) {
   try {
     body = redeemSchema.parse(await readRedeemRequest(request));
   } catch {
+    if (wantsJson) {
+      return NextResponse.json({ ok: false, reason: 'invalid_request', message: betaRedemptionMessage({ ok: false, reason: 'invalid_request' }) }, { status: 400 });
+    }
     return redirectToBeta(request, { ok: false, reason: 'invalid_request' });
   }
 
@@ -47,16 +54,24 @@ export async function POST(request: Request) {
   });
 
   if (error) {
+    if (wantsJson) {
+      return NextResponse.json({ ok: false, reason: 'server_error', message: betaRedemptionMessage({ ok: false, reason: 'server_error' }) }, { status: 500 });
+    }
     return redirectToBeta(request, { ok: false, reason: 'server_error' }, next);
   }
 
   const payload = data as BetaRedemptionResult;
   if (!payload.ok) {
+    if (wantsJson) {
+      return NextResponse.json({ ...payload, message: betaRedemptionMessage(payload) }, { status: 403 });
+    }
     return redirectToBeta(request, { ...payload, message: betaRedemptionMessage(payload) }, next);
   }
 
   const url = new URL(next, request.url);
-  const response = NextResponse.redirect(url, 303);
+  const response = wantsJson
+    ? NextResponse.json({ ...payload, message: betaRedemptionMessage(payload), next })
+    : NextResponse.redirect(url, 303);
   response.cookies.set({
     name: BETA_SESSION_COOKIE,
     value: await createBetaSessionCookie(email, secret),
@@ -79,6 +94,15 @@ function getBetaCookieSecret() {
 }
 
 async function readRedeemRequest(request: Request) {
+  if (request.headers.get('content-type')?.includes('application/json')) {
+    const body = await request.json();
+    return {
+      email: String(body.email ?? ''),
+      inviteCode: String(body.inviteCode ?? ''),
+      next: String(body.next ?? '/'),
+    };
+  }
+
   const formData = await request.formData();
   return {
     email: String(formData.get('email') ?? ''),
