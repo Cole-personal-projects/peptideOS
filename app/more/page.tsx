@@ -10,6 +10,7 @@ import {
   FlaskConical,
   Heart,
   Info,
+  MessageSquarePlus,
   Settings,
   TestTube,
   Users,
@@ -62,6 +63,7 @@ const menuSections: MenuSection[] = [
   {
     title: 'App',
     items: [
+      { href: '/more/feedback', label: 'Send Feedback', icon: MessageSquarePlus, description: 'Bug or idea' },
       { href: '/more/settings', label: 'Settings', icon: Settings, description: 'Sync' },
       { href: '/more/about', label: 'About', icon: Info, description: 'Info' },
     ],
