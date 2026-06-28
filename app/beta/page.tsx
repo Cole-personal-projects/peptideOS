@@ -1,10 +1,10 @@
-import { ArrowRight, LockKeyhole, ShieldCheck } from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { LockKeyhole, ShieldCheck } from 'lucide-react';
+import { BetaAccessForm } from '@/components/beta-access-form';
 import { betaRedemptionMessage, type BetaRedemptionReason } from '@/lib/beta-access';
-import { safeBetaNextPath } from '@/lib/beta-gate';
+import { getBetaCookieSecret, safeBetaNextPath } from '@/lib/beta-gate';
+import { BETA_SESSION_COOKIE, verifyBetaSessionCookie } from '@/lib/beta-session';
 
 interface BetaPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -13,10 +13,18 @@ interface BetaPageProps {
 export default async function BetaPage({ searchParams }: BetaPageProps) {
   const params = await searchParams;
   const error = readSingleParam(params.error);
-  const next = safeBetaNextPath(readSingleParam(params.next));
-  const message = error
-    ? betaRedemptionMessage({ ok: false, reason: error as BetaRedemptionReason })
-    : '';
+  const requestedNext = safeBetaNextPath(readSingleParam(params.next));
+  const next = requestedNext === '/' ? '/welcome' : requestedNext;
+  const message = error ? betaRedemptionMessage({ ok: false, reason: error as BetaRedemptionReason }) : '';
+  const cookieStore = await cookies();
+  const secret = getBetaCookieSecret();
+  const session = secret
+    ? await verifyBetaSessionCookie(cookieStore.get(BETA_SESSION_COOKIE)?.value, secret)
+    : null;
+
+  if (session) {
+    redirect(next);
+  }
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -43,52 +51,14 @@ export default async function BetaPage({ searchParams }: BetaPageProps) {
               Closed beta
             </div>
             <h1 className="text-4xl font-semibold leading-tight tracking-normal">Enter beta access.</h1>
-            <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              Enter your email and beta key once. PeptideOS opens directly on this device after access is confirmed.
+            <p className="mt-3 text-base leading-7 text-muted-foreground">
+              Use the email you want tied to this beta and paste your beta key.
             </p>
           </div>
 
-          <form
-            action="/api/beta/redeem"
-            method="post"
-            className="space-y-5 rounded-[18px] border border-border bg-card/95 p-5 shadow-xl"
-          >
-            <input type="hidden" name="next" value={next} />
-            <div className="grid gap-2">
-              <Label htmlFor="beta-email">Email</Label>
-              <Input
-                id="beta-email"
-                name="email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="beta-invite">Beta key</Label>
-              <Input
-                id="beta-invite"
-                name="inviteCode"
-                autoCapitalize="characters"
-                autoComplete="off"
-                placeholder="Paste or type beta key"
-                required
-              />
-            </div>
-
-            <Button type="submit" className="h-11 w-full transition-transform active:scale-[0.98]">
-              Enter PeptideOS
-              <ArrowRight className="size-4" />
-            </Button>
-
-            {message ? (
-              <div role="status" className="rounded-xl border bg-background p-3 text-sm text-muted-foreground">
-                {message}
-              </div>
-            ) : null}
-          </form>
+          <div className="rounded-[28px] border bg-card p-5 shadow-xl shadow-primary/5">
+            <BetaAccessForm nextPath={next} initialMessage={message} />
+          </div>
         </section>
       </div>
     </main>
@@ -96,5 +66,6 @@ export default async function BetaPage({ searchParams }: BetaPageProps) {
 }
 
 function readSingleParam(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
+  if (Array.isArray(value)) return value[0];
+  return value;
 }

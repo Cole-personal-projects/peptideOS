@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { emitClientDiagnostic } from '@/lib/client-diagnostics';
 import { useApp } from '@/lib/context';
 import type { UserMode } from '@/lib/types';
 
@@ -26,7 +27,9 @@ export function DisclaimerDialog() {
   const handleAccept = async (mode: UserMode = 'beginner') => {
     setSaving(true);
     try {
+      emitClientDiagnostic('onboarding_completion_started', { mode, step });
       await completeOnboarding(mode);
+      emitClientDiagnostic('onboarding_completed', { mode });
     } finally {
       setSaving(false);
     }
