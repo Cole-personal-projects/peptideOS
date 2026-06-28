@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('welcome screen', () => {
-  test('greets first-run users before onboarding starts', async ({ page }) => {
-    await page.goto('/');
+  test('greets first-run users on dedicated welcome route', async ({ page }) => {
+    await page.goto('/welcome');
 
     await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
     await expect(page.getByText('A private protocol cockpit')).toBeVisible();
@@ -18,10 +18,9 @@ test.describe('welcome screen', () => {
     await expect(page.getByRole('button', { name: 'I Understand' })).toBeVisible();
   });
 
-  test('skips the root welcome screen after onboarding is complete', async ({ page }) => {
+  test('keeps root as dashboard after onboarding is complete', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByRole('button', { name: 'Start local setup' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
     await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
 
@@ -32,8 +31,8 @@ test.describe('welcome screen', () => {
     await expect(page.getByRole('button', { name: 'Start local setup' })).toHaveCount(0);
   });
 
-  test('lets first-run users open sign-in controls from the welcome screen', async ({ page }) => {
-    await page.goto('/');
+  test('lets first-run users open sign-in controls from welcome screen', async ({ page }) => {
+    await page.goto('/welcome');
 
     await page.getByRole('link', { name: 'Sign in' }).click();
 
@@ -44,7 +43,7 @@ test.describe('welcome screen', () => {
     await expect(page.getByRole('button', { name: 'Send sign-in link' })).toBeVisible();
   });
 
-  test('starts onboarding from the dedicated welcome route for new users', async ({ page }) => {
+  test('starts onboarding from dedicated welcome route for new users', async ({ page }) => {
     await page.goto('/welcome');
 
     await page.getByRole('button', { name: 'Start local setup' }).click();

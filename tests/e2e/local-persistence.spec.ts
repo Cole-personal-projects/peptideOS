@@ -5,7 +5,6 @@ test.describe('local persistence', () => {
   test('persists onboarding completion across reloads', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByRole('button', { name: 'Start local setup' }).click();
     await page.getByRole('button', { name: 'I Understand' }).click();
     await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
 
