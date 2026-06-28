@@ -25,7 +25,8 @@ test.describe('protocol builder', () => {
   await expect(page.getByText('Visual Builder Protocol')).toBeVisible();
   await expect(page.getByLabel('7-day cadence preview').first()).toBeVisible();
   await page.getByRole('button', { name: 'Create Protocol' }).click();
-  await expect(page.getByText('Visual Builder Protocol')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Protocol Created' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Visual Builder Protocol/ })).toBeVisible();
 });
 test('shows non-blocking conflict warnings before saving a stack', async ({ page }, testInfo) => {
     const exportPath = testInfo.outputPath('active-stack-conflict-data.json');
@@ -87,8 +88,9 @@ await expect(page.getByRole('heading', { name: 'Review warnings' })).toBeVisible
     await expect(page.getByText('Review active protocol overlap')).toBeVisible();
     await expect(page.getByText(/BPC-157 is already present in active protocol/)).toBeVisible();
 
-    await page.getByRole('button', { name: 'Create Protocol' }).click();
-    await expect(page.getByText('Overlap Review Protocol')).toBeVisible();
+  await page.getByRole('button', { name: 'Create Protocol' }).click();
+  await expect(page.getByRole('heading', { name: 'Protocol Created' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Overlap Review Protocol/ })).toBeVisible();
   });
 
   test('creates a stack through the multi-step builder while preserving draft state', async ({ page }) => {
@@ -141,10 +143,10 @@ await expect(page.locator('input[type="time"]').first()).toHaveValue('10:30');
 await expect(page.getByRole('checkbox', { name: 'BPC-157' })).toBeChecked();
 await expect(page.getByRole('checkbox', { name: 'TB-500' })).toBeChecked();
 
-    await page.getByRole('button', { name: 'Create Protocol' }).click();
-    await expect(page.getByRole('heading', { name: 'New Protocol' })).toHaveCount(0);
-    await expect(page.getByText('Cut Recovery Protocol')).toBeVisible();
-    await page.getByRole('link', { name: /Cut Recovery Protocol/ }).click();
+  await page.getByRole('button', { name: 'Create Protocol' }).click();
+  await expect(page.getByRole('heading', { name: 'New Protocol' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Protocol Created' })).toBeVisible();
+  await page.getByRole('link', { name: /Cut Recovery Protocol/ }).click();
     await expect(page.getByText('Daily · 10:30 AM')).toBeVisible();
   });
 

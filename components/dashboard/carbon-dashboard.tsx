@@ -8,6 +8,8 @@ import {
   Check,
   ChevronRight,
   FlaskConical,
+  PackageCheck,
+  Play,
   Settings,
   ShieldCheck,
   Syringe,
@@ -150,12 +152,55 @@ const filledBars = percent === null ? 0 : Math.round((percent / 100) * 7);
   );
 }
 
+function FirstProtocolSetupCard() {
+  return (
+    <section className="mt-2 rounded-[18px] border border-primary/25 bg-card p-4 shadow-[0_16px_40px_hsl(var(--primary)/0.08)]">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary">First protocol</p>
+          <h2 className="mt-1 text-lg font-extrabold tracking-normal">Build the loop once.</h2>
+        </div>
+        <div className="grid h-11 w-11 place-items-center rounded-[14px] bg-primary/10 text-primary">
+          <Play className="h-5 w-5" />
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-4 gap-1.5" aria-label="First protocol setup path">
+        {[
+          { label: 'Pick', active: true },
+          { label: 'Dose', active: true },
+          { label: 'Stock', active: false },
+          { label: 'Log', active: false },
+        ].map((step) => (
+          <div key={step.label} className="space-y-1">
+            <div className={cn('h-2 rounded-full', step.active ? 'bg-primary' : 'bg-secondary')} />
+            <p className="text-center text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">{step.label}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
+        <Button asChild className="h-11 justify-between rounded-[14px] px-4">
+          <Link href="/stacks?add=protocol">
+            Start protocol
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        </Button>
+        <Button asChild variant="outline" size="icon" className="h-11 w-11 rounded-[14px]" aria-label="Add stock">
+          <Link href="/more/inventory?add=stock">
+            <PackageCheck className="h-5 w-5" />
+          </Link>
+        </Button>
+      </div>
+    </section>
+  );
+}
+
 export function CarbonDashboard() {
   const { data, getPeptide, getRecentDoses } = useApp();
   const [activeLogId, setActiveLogId] = useState<string | null>(null);
   const briefing = useMemo(() => buildDashboardBriefing(data), [data]);
   const summary = useMemo(() => buildProtocolCockpitSummary(data), [data]);
   const activeStacks = data.stacks.filter((stack) => stack.status === 'active');
+  const hasAnyProtocol = data.stacks.length > 0;
   const recentDoses = getRecentDoses(4);
   const todayEvents = summary.events.filter((event) => event.kind === 'due-dose').slice(0, 3);
   const score = briefing.scheduledToday === 0 ? null : Math.round(briefing.completionPercent);
@@ -199,9 +244,11 @@ export function CarbonDashboard() {
               activeStacks.slice(0, 3).map((stack) => <ProtocolChip key={stack.id} label={stack.name} />)
             )}
           </div>
-        </section>
+      </section>
 
-        <Link
+      {!hasAnyProtocol && <FirstProtocolSetupCard />}
+
+      <Link
           href={insightHref}
           className={cn(
 'relative mt-2 flex items-start gap-3 overflow-hidden rounded-[14px] border border-border bg-card p-3.5',
