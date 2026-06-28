@@ -14,6 +14,7 @@ import { StatusDot } from '@/components/ui/visual-primitives';
 import { getAllowedWorkflowDoseUnits, getTrackableCompounds, getWorkflowDosePresets } from '@/lib/compound-workflows';
 import { useApp } from '@/lib/context';
 import { formatDose, getDoseUnitLabel } from '@/lib/dose-helpers';
+import { getDoseDrawVolumePreview } from '@/lib/draw-volume';
 import { getVialInventoryMetrics } from '@/lib/inventory-metrics';
 import type { DoseUnit, Route, Schedule, ScheduleLog, SiteCode } from '@/lib/types';
 
@@ -72,11 +73,17 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
       .sort((a, b) => new Date(a.log.dueAt).getTime() - new Date(b.log.dueAt).getTime());
   }, [data.scheduleLogs, data.schedules]);
 
-  const selectedScheduleLog = scheduleLogId
-    ? dueProtocolLogs.find((entry) => entry.log.id === scheduleLogId) ?? null
-    : null;
+const selectedScheduleLog = scheduleLogId
+? dueProtocolLogs.find((entry) => entry.log.id === scheduleLogId) ?? null
+: null;
+const parsedDoseValue = Number.parseFloat(doseValue);
+const drawPreview = getDoseDrawVolumePreview({
+  vial: selectedVial,
+  doseValue: Number.isFinite(parsedDoseValue) ? parsedDoseValue : 0,
+  doseUnit,
+});
 
-  const resetForm = () => {
+const resetForm = () => {
     setScheduleLogId('');
     setPeptideId('');
     setVialId('');
@@ -329,10 +336,32 @@ export function LogDoseSheet({ open, onOpenChange }: LogDoseSheetProps) {
                 ))}
               </div>
             )}
-          </div>
+</div>
 
-          <div className="space-y-2">
-            <Label>Route</Label>
+{drawPreview && (
+<div className="rounded-[14px] border border-primary/25 bg-primary/10 p-3 text-sm">
+<div className="flex items-center justify-between gap-3">
+<div>
+<p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Draw volume</p>
+<p className="mt-1 text-xs text-muted-foreground">Derived from selected vial concentration.</p>
+</div>
+<p className="text-base font-bold text-primary">{drawPreview.drawLabel}</p>
+</div>
+<div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+<div className="rounded-[10px] bg-background/70 p-2">
+<p className="font-bold">{drawPreview.syringeLabel}</p>
+<p className="mt-0.5 text-muted-foreground">U-100 syringe</p>
+</div>
+<div className="rounded-[10px] bg-background/70 p-2">
+<p className="font-bold">{drawPreview.concentrationLabel}</p>
+<p className="mt-0.5 text-muted-foreground">Selected vial</p>
+</div>
+</div>
+</div>
+)}
+
+<div className="space-y-2">
+<Label>Route</Label>
             <Select value={route} onValueChange={(value) => handleRouteChange(value as Route)}>
               <SelectTrigger>
                 <SelectValue />

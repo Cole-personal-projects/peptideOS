@@ -90,10 +90,13 @@ test.describe('log dose sheet body picker', () => {
     await page.getByRole('combobox').filter({ hasText: 'Select compound' }).click();
     await page.getByRole('option', { name: 'hGH (Somatropin)' }).click();
     await page.getByRole('combobox').filter({ hasText: 'Select vial' }).click();
-    await page.getByRole('option', { name: /HGH-2024-010/ }).click();
+await page.getByRole('option', { name: /HGH-2024-010/ }).click();
 
-    await page.getByRole('button', { name: 'hGH 2 IU (beginner)' }).click();
-    await page.getByRole('button', { name: 'Upper Left Abdomen' }).click();
+await page.getByRole('button', { name: 'hGH 2 IU (beginner)' }).click();
+await expect(page.getByText('Draw volume')).toBeVisible();
+await expect(page.getByText('0.20 mL')).toBeVisible();
+await expect(page.getByText('20 U-100 units')).toBeVisible();
+await page.getByRole('button', { name: 'Upper Left Abdomen' }).click();
     await page.getByRole('button', { name: 'Log Dose' }).click();
 
     await page.getByRole('link', { name: 'Log' }).click();

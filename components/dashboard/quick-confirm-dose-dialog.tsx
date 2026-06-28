@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/lib/context';
 import { formatDose } from '@/lib/dose-helpers';
+import { getDoseDrawVolumePreview } from '@/lib/draw-volume';
 import { getCompatibleInjectionZones, getInjectionZoneById, getSuggestedZone } from '@/lib/injection-zones';
 import { getVialInventoryMetrics } from '@/lib/inventory-metrics';
 import type { SiteCode } from '@/lib/types';
@@ -98,7 +99,8 @@ export function QuickConfirmDoseDialog({
   const autoSelectedVialId = open && activeVials.length === 1 ? activeVials[0].id : '';
   const selectedVialId = vialId || autoSelectedVialId;
   const selectedVial = activeVials.find((vial) => vial.id === selectedVialId) ?? null;
-  const selectedVialMetrics = selectedVial ? getVialInventoryMetrics(selectedVial, data.doses) : null;
+const selectedVialMetrics = selectedVial ? getVialInventoryMetrics(selectedVial, data.doses) : null;
+const drawPreview = activeSchedule ? getDoseDrawVolumePreview({ vial: selectedVial, doseValue: activeSchedule.doseValue, doseUnit: activeSchedule.doseUnit }) : null;
   const suggestedSite = useMemo(
     () => {
       if (!activeSchedule || !requiresSite) return null;
@@ -222,9 +224,27 @@ export function QuickConfirmDoseDialog({
                       {selectedVial.lotNumber || 'No lot'} · {selectedVialMetrics.remainingLabel} left
                     </p>
                   )}
-                </div>
-              )}
-            </div>
+</div>
+)}
+{drawPreview && (
+<div className="rounded-md border border-primary/25 bg-primary/10 p-3 text-sm">
+<div className="flex items-center justify-between gap-3">
+<p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Draw volume</p>
+<p className="font-semibold text-primary">{drawPreview.drawLabel}</p>
+</div>
+<div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+<div className="rounded-md bg-background/70 p-2">
+<p className="font-medium text-foreground">{drawPreview.syringeLabel}</p>
+<p>U-100 syringe</p>
+</div>
+<div className="rounded-md bg-background/70 p-2">
+<p className="font-medium text-foreground">{drawPreview.concentrationLabel}</p>
+<p>Selected vial</p>
+</div>
+</div>
+</div>
+)}
+</div>
 
             {requiresSite && (
               <div className="space-y-2">
