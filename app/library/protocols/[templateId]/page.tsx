@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from 'react';
+import { use, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, Calculator, RotateCcw, Syringe } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApp } from '@/lib/context';
-import { protocolTemplateToStackDraft } from '@/lib/protocol-templates';
+import { buildProtocolTemplateSchedulePreview, protocolTemplateToStackDraft } from '@/lib/protocol-templates';
 
 export default function ProtocolPreviewPage({ params }: { params: Promise<{ templateId: string }> }) {
   const { templateId } = use(params);
@@ -24,10 +24,24 @@ export default function ProtocolPreviewPage({ params }: { params: Promise<{ temp
     return template ? { compound, template } : null;
   }, null);
   const [selectedDose, setSelectedDose] = useState(() => match?.template.defaultDose);
+  const schedulePreview = useMemo(() => {
+    if (!match || !selectedDose) {
+      return { phases: [], events: [] };
+    }
+
+    return buildProtocolTemplateSchedulePreview({
+      compound: match.compound,
+      template: match.template,
+      doseValue: selectedDose.value,
+      doseUnit: selectedDose.unit,
+      startDate: new Date().toISOString(),
+    });
+  }, [match, selectedDose]);
 
   if (!match || !selectedDose) return null;
 
   const { compound, template } = match;
+  const previewEvents = schedulePreview.events.slice(0, 8);
 
   const saveStack = () => {
     addStack(protocolTemplateToStackDraft({
@@ -70,27 +84,35 @@ export default function ProtocolPreviewPage({ params }: { params: Promise<{ temp
           <CardContent className="space-y-5">
             <section className="space-y-2">
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-semibold">Dosage</h2>
+                <h2 className="text-base font-semibold">{template.titration.length > 0 ? 'Dose ladder' : 'Dosage'}</h2>
                 <span className="text-sm text-muted-foreground">
-                  {selectedDose.value} {selectedDose.unit}
+                  {template.titration.length > 0 ? `${schedulePreview.phases.length} phases` : `${selectedDose.value} ${selectedDose.unit}`}
                 </span>
               </div>
-              <div className="grid grid-cols-5 gap-2">
-                {template.doseChips.map((chip) => {
-                  const selected = chip.value === selectedDose.value && chip.unit === selectedDose.unit;
-                  return (
-                    <Button
-                      key={`${chip.value}-${chip.unit}`}
-                      type="button"
-                      variant={selected ? 'default' : 'secondary'}
-                      aria-pressed={selected}
-                      onClick={() => setSelectedDose({ value: chip.value, unit: chip.unit })}
-                    >
-                      {chip.label} {chip.unit}
-                    </Button>
-                  );
-                })}
-              </div>
+              {template.titration.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {schedulePreview.phases.map((phase) => (
+                    <Badge key={phase.id} variant="secondary">{phase.doseValue} {phase.doseUnit}</Badge>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-5 gap-2">
+                  {template.doseChips.map((chip) => {
+                    const selected = chip.value === selectedDose.value && chip.unit === selectedDose.unit;
+                    return (
+                      <Button
+                        key={`${chip.value}-${chip.unit}`}
+                        type="button"
+                        variant={selected ? 'default' : 'secondary'}
+                        aria-pressed={selected}
+                        onClick={() => setSelectedDose({ value: chip.value, unit: chip.unit })}
+                      >
+                        {chip.label} {chip.unit}
+                      </Button>
+                    );
+                  })}
+                </div>
+              )}
             </section>
 
             <section className="grid grid-cols-2 gap-3">
@@ -108,16 +130,41 @@ export default function ProtocolPreviewPage({ params }: { params: Promise<{ temp
             </section>
 
             {template.titration.length > 0 ? (
-              <section className="space-y-2">
+              <section className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-base font-semibold">Titration Schedule</h2>
-                  <Badge variant="outline">Tracking default</Badge>
+                  <h2 className="text-base font-semibold">Phase preview</h2>
+                  <Badge variant="outline">{schedulePreview.events.length} planned events</Badge>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {template.titration.map((step) => (
-                    <Badge key={`${step.doseValue}-${step.durationWeeks}`} variant="secondary">
-                      {step.doseValue}{step.doseUnit} x{step.durationWeeks}wk
-                    </Badge>
+                <div className="space-y-2">
+                  {schedulePreview.phases.map((phase) => (
+                    <div key={phase.id} className="rounded-xl border border-border/70 bg-background/70 p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold">{phase.label}</p>
+                          <p className="text-xs text-muted-foreground">{phase.durationDays} days · {phase.scheduleSummary}</p>
+                        </div>
+                        <Badge variant="secondary">{phase.doseValue} {phase.doseUnit}</Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            {previewEvents.length > 0 ? (
+              <section className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base font-semibold">Next scheduled events</h2>
+                  <Badge variant="outline">Preview</Badge>
+                </div>
+                <div className="grid gap-2">
+                  {previewEvents.map((event) => (
+                    <div key={event.id} className="flex items-center justify-between gap-3 rounded-xl bg-background/70 px-3 py-2">
+                      <span className="text-sm font-medium">{event.label}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(event.dueAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
                   ))}
                 </div>
               </section>

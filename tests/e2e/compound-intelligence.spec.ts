@@ -24,7 +24,10 @@ test.describe('compound intelligence library', () => {
 
     await expect(page.getByRole('heading', { name: 'Protocol Preview' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Triple Agonist' })).toBeVisible();
-    await expect(page.getByRole('button', { name: '4 mg' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('heading', { name: 'Dose ladder' })).toBeVisible();
+    await expect(page.getByText('20 planned events')).toBeVisible();
+    await expect(page.getByText('Phase 1', { exact: true })).toBeVisible();
+    await expect(page.getByText('0.5 mg').first()).toBeVisible();
     await expect(page.getByText('Monitor resting heart rate, HRV, sleep')).toBeVisible();
 
     await page.getByRole('button', { name: 'Save planned protocol' }).click();
@@ -32,7 +35,7 @@ test.describe('compound intelligence library', () => {
     const savedStack = page.getByRole('link', { name: /Triple Agonist/ });
     await expect(savedStack).toBeVisible();
     await expect(savedStack.getByText('Planned')).toBeVisible();
-    await expect(savedStack.getByText('Retatrutide', { exact: true })).toBeVisible();
+    await expect(savedStack.getByText('Retatrutide', { exact: true })).toHaveCount(4);
   });
 
   test('opens custom setup for GLP-1 compounds without protocol templates', async ({ page }) => {

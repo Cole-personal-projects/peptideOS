@@ -358,6 +358,9 @@ export interface StackPeptide {
   route: Route;
   timing: string;
   schedule?: ScheduleRecurrence;
+  phaseLabel?: string;
+  startOffsetDays?: number;
+  durationDays?: number;
 }
 
 export interface Stack {
