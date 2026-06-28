@@ -219,4 +219,54 @@ test('supports custom weekday schedule selection in the protocol builder', async
   await expect(page.getByText('2x weekly · Tuesday, Thursday · 8:00 AM')).toBeVisible();
 });
 
+test('keeps mobile protocol builder content inside the viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/stacks');
+
+  await page.getByRole('button', { name: 'I Understand' }).click();
+  await page.getByRole('button', { name: 'New protocol' }).click();
+  await page.getByLabel('Protocol Name').fill('Mobile Bounds Protocol');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('checkbox', { name: 'Retatrutide' }).check();
+  await page.getByLabel('Search compounds').fill('ipam');
+  await page.getByRole('checkbox', { name: 'Ipamorelin' }).check();
+  await page.locator('input[type="time"]').last().fill('21:00');
+
+  const overflow = await page.evaluate(() => ({
+    documentOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    bodyOverflow: document.body.scrollWidth - document.body.clientWidth,
+  }));
+  expect(overflow.documentOverflow).toBeLessThanOrEqual(1);
+  expect(overflow.bodyOverflow).toBeLessThanOrEqual(1);
+
+  const sheetBox = await page.locator('[data-slot="sheet-content"]').boundingBox();
+  expect(sheetBox).not.toBeNull();
+  expect(sheetBox!.x).toBeGreaterThanOrEqual(-1);
+  expect(sheetBox!.x + sheetBox!.width).toBeLessThanOrEqual(391);
+});
+
+test('anchors mobile edit protocol dialog inside the viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/stacks');
+
+  await page.getByRole('button', { name: 'I Understand' }).click();
+  await page.getByRole('button', { name: 'New protocol' }).click();
+  await page.getByLabel('Protocol Name').fill('Mobile Edit Protocol');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('checkbox', { name: 'Retatrutide' }).check();
+  await page.getByLabel('Search compounds').fill('ipam');
+  await page.getByRole('checkbox', { name: 'Ipamorelin' }).check();
+  await page.getByRole('button', { name: 'Create Protocol' }).click();
+  await page.getByRole('link', { name: /Mobile Edit Protocol/ }).click();
+  await page.getByRole('button', { name: 'Protocol settings' }).click();
+  await page.getByRole('button', { name: 'Edit protocol' }).click();
+
+  const dialogBox = await page.locator('[data-slot="dialog-content"][data-state="open"]').boundingBox();
+  expect(dialogBox).not.toBeNull();
+  expect(dialogBox!.x).toBeGreaterThanOrEqual(-1);
+  expect(dialogBox!.x + dialogBox!.width).toBeLessThanOrEqual(391);
+  expect(dialogBox!.y + dialogBox!.height).toBeLessThanOrEqual(845);
+  await expect(page.getByRole('button', { name: 'Save changes' })).toBeVisible();
+});
+
 });

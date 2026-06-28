@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import { ArrowLeft, Archive, Beaker, CalendarDays, CheckCircle2, Clock, Pause, Play, Plus, Settings, Trash2, Waves } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ScheduleTimeFields } from '@/components/stacks/schedule-time-fields';
+import { popRouteHistory } from '@/components/navigation/route-history';
 import { useApp } from '@/lib/context';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose } from '@/lib/dose-helpers';
@@ -31,7 +32,8 @@ const statusLabels: Record<StackStatus, string> = {
 const trajectoryWindow = 14;
 
 export default function StackDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+const { id } = use(params);
+const router = useRouter();
   const {
     data,
     getStack,
@@ -107,21 +109,25 @@ const circumference = 2 * Math.PI * 52;
     setIsEditOpen(false);
   };
 
-  const handleDelete = async () => {
+const handleDelete = async () => {
     setIsDeletePending(true);
     setIsActionsOpen(false);
     await deleteStack(stack.id);
     window.location.assign('/stacks');
-  };
+};
+
+const handleBack = () => {
+  router.push(popRouteHistory('/stacks'));
+};
 
   return (
     <AppShell showFloatingAction={false}>
       <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-3 backdrop-blur min-[420px]:px-5">
         <div className="flex items-center gap-2.5">
-            <Link href="/stacks" aria-label="Back to Protocols" className="grid h-9 w-9 shrink-0 place-items-center text-foreground">
-            <ArrowLeft className="h-4 w-4" />
-            </Link>
+<button type="button" aria-label="Back to previous screen" className="grid h-9 w-9 shrink-0 place-items-center text-foreground" onClick={handleBack}>
+<ArrowLeft className="h-4 w-4" />
+</button>
           <h1 className="min-w-0 flex-1 truncate text-[15px] font-bold leading-tight tracking-normal text-foreground">
               {stack.name}
             </h1>
@@ -369,16 +375,16 @@ const circumference = 2 * Math.PI * 52;
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent>
-          <DialogHeader>
+<Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+<DialogContent className="top-auto bottom-0 left-0 flex max-h-[92dvh] w-full max-w-none translate-x-0 translate-y-0 grid-rows-none flex-col gap-0 overflow-hidden rounded-b-none rounded-t-3xl border-x-0 p-0 sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-h-[min(760px,92vh)] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-lg sm:border-x">
+<DialogHeader className="shrink-0 border-b border-border px-5 pb-4 pt-5 text-left">
             <DialogTitle>Edit protocol</DialogTitle>
             <DialogDescription>
               Update saved protocol basics and schedule timing.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
+<div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-4">
             <div className="grid gap-2">
               <Label htmlFor="edit-protocol-name">Protocol name</Label>
               <Input id="edit-protocol-name" value={editName} onChange={(event) => setEditName(event.target.value)} />
@@ -392,11 +398,11 @@ const circumference = 2 * Math.PI * 52;
               <Input id="edit-protocol-duration" type="number" min="1" value={editDurationDays} onChange={(event) => setEditDurationDays(event.target.value)} />
             </div>
 
-            <div className="space-y-4 rounded-md border p-3">
+<div className="min-w-0 space-y-4 overflow-hidden rounded-[18px] border p-3">
               {stack.peptides.map((sp) => {
                 const compound = trackableCompounds.find((candidate) => candidate.id === sp.peptideId);
                 return (
-                  <div key={sp.id ?? sp.peptideId} className="space-y-2 border-b pb-4 last:border-b-0 last:pb-0">
+<div key={sp.id ?? sp.peptideId} className="min-w-0 space-y-2 border-b pb-4 last:border-b-0 last:pb-0">
                     <p className="font-medium">{compound?.name ?? sp.peptideId}</p>
                     <Select
                       value={getSchedulePreset(sp)}
@@ -432,7 +438,7 @@ const circumference = 2 * Math.PI * 52;
             </div>
           </div>
 
-          <DialogFooter>
+<DialogFooter className="shrink-0 border-t border-border bg-background/95 px-5 py-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
             <Button onClick={handleSaveEdit} disabled={!editName.trim() || Number(editDurationDays) < 1}>
               Save changes
