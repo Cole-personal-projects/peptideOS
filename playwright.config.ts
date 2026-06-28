@@ -24,7 +24,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm next start -p 3100',
+    command: 'BETA_GATE_ENABLED=false pnpm next start -p 3100',
     url: 'http://127.0.0.1:3100/log/site-map',
     reuseExistingServer: false,
     timeout: 180_000,

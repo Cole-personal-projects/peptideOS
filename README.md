@@ -25,21 +25,26 @@ pnpm exec wrangler secret put ANTHROPIC_API_KEY
 
 Private beta gate:
 
-- Production builds set `NEXT_PUBLIC_BETA_GATE_ENABLED=true`.
+- Production Workers set server-only `BETA_GATE_ENABLED=true` in `wrangler.jsonc`.
 - Set the server-only Supabase service key in Cloudflare before inviting testers:
 
 ```bash
 pnpm exec wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 ```
 
-- Apply Supabase migrations, then generate a 10-use invite:
+- Optionally set a dedicated beta cookie signing secret. If omitted, the service-role key is used for signing:
+
+```bash
+pnpm exec wrangler secret put BETA_GATE_COOKIE_SECRET
+```
+
+- Apply Supabase migrations, then provision invite rows by storing SHA-256 code hashes in `beta_invite_codes`. Do not commit raw beta keys.
 
 ```bash
 supabase db push
-pnpm beta:invite --max 10 --label "Initial private beta"
 ```
 
-Run the printed SQL in Supabase. Only the SHA-256 invite hash is stored; share the raw invite code with testers. Redeeming grants account-bound `beta_access`, the same entitlement foundation later used for premium features.
+Only SHA-256 invite hashes are stored; share raw invite codes out of band. Redeeming stores a signed httpOnly beta access cookie and an email grant.
 
 Manual deploy from a machine with Cloudflare credentials: `pnpm run deploy`. Local preview in the Workers runtime: `pnpm preview`.
 

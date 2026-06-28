@@ -25,18 +25,17 @@ test.describe('welcome landing page', () => {
   });
 
   test('keeps the landing hero inside the mobile viewport', async ({ page }) => {
-    await page.goto('/welcome');
-    await expect(page.getByLabel('Animated protocol cockpit preview')).toBeVisible();
+    await page.goto('/welcome', { waitUntil: 'networkidle' });
+    const hero = page.getByLabel('Animated protocol cockpit preview');
+    await expect(hero).toBeVisible();
 
     await expect
       .poll(async () => {
-        return page.evaluate(() => {
-          const hero = document.querySelector('[aria-label="Animated protocol cockpit preview"]');
-          const rect = hero?.getBoundingClientRect();
-          const pageOverflow = document.documentElement.scrollWidth > window.innerWidth + 1;
-          const heroOverflow = rect ? rect.left < -1 || rect.right > window.innerWidth + 1 : true;
-          return pageOverflow || heroOverflow;
-        });
+        const box = await hero.boundingBox();
+        const viewport = page.viewportSize();
+        const pageOverflow = await page.locator('html').evaluate((element) => element.scrollWidth > window.innerWidth + 1);
+        const heroOverflow = box && viewport ? box.x < -1 || box.x + box.width > viewport.width + 1 : true;
+        return pageOverflow || heroOverflow;
       })
       .toBe(false);
   });
