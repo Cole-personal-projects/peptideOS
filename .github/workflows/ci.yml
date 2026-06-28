@@ -44,4 +44,6 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Browser smoke tests
+        env:
+          BETA_GATE_ENABLED: "false"
         run: pnpm test:e2e:ci
