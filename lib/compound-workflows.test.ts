@@ -95,4 +95,9 @@ describe('compound workflow adapter', () => {
     expect(isReconstitutableCompound(trackable.find((compound) => compound.id === 'custom-focus'))).toBe(false);
     expect(isReconstitutableCompound(undefined)).toBe(false);
   });
+  test('returns compounds alphabetically by display name', () => {
+    const names = getTrackableCompounds(appData).map((compound) => compound.name);
+
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })));
+  });
 });

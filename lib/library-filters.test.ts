@@ -139,6 +139,21 @@ describe('library filters', () => {
   });
 });
 
+describe('library alphabetical ordering', () => {
+  it('sorts peptide and compound results by display name', () => {
+    expect(filterPeptides(peptides, { search: '', category: 'all' }).map((peptide) => peptide.name)).toEqual([
+      'BPC-157',
+      'hGH (Somatropin)',
+      'Semaglutide',
+    ]);
+    expect(filterCompounds(compounds, { search: '', category: 'all', compoundType: 'all' }).map((compound) => compound.name)).toEqual([
+      'BPC-157',
+      'Custom Cognitive Compound',
+      'Testosterone Cypionate',
+    ]);
+  });
+});
+
 describe('compound library filters', () => {
   it('filters compounds by name, aliases, and research text', () => {
     expect(filterCompounds(compounds, { search: 'depo', category: 'all', compoundType: 'all' }).map((compound) => compound.id)).toEqual([

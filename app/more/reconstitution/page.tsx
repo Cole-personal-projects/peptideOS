@@ -51,6 +51,8 @@ import {
   type SavedCalculation 
 } from '@/components/reconstitution/saved-calculations';
 
+const sortedPeptideConversions = [...peptideConversions].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+
 export default function ReconstitutionPage() {
   const { data, addReconstitutionCalculation, deleteReconstitutionCalculation } = useApp();
   const searchParams = useSearchParams();
@@ -70,9 +72,15 @@ export default function ReconstitutionPage() {
   const [vialCost, setVialCost] = useState<string>('');
   const [cycleDays, setCycleDays] = useState<string>('');
   const [selectedPresetId, setSelectedPresetId] = useState<string | undefined>();
+  const [compoundSearch, setCompoundSearch] = useState('');
 
   // Get current compound and syringe
-  const compound = useMemo(() => getConversionById(selectedCompoundId), [selectedCompoundId]);
+const compound = useMemo(() => getConversionById(selectedCompoundId), [selectedCompoundId]);
+const filteredPeptideConversions = useMemo(() => {
+const query = compoundSearch.trim().toLowerCase();
+if (!query) return sortedPeptideConversions;
+return sortedPeptideConversions.filter((candidate) => `${candidate.name} ${candidate.id}`.toLowerCase().includes(query));
+}, [compoundSearch]);
   const syringe = useMemo(() => 
     syringeTypes.find(s => s.id === syringeTypeId) || syringeTypes[0], 
     [syringeTypeId]
@@ -237,26 +245,39 @@ export default function ReconstitutionPage() {
                 <Beaker className="h-4 w-4" />
                 Compound
               </Label>
-              <Select value={selectedCompoundId} onValueChange={(v) => {
-                applyCompoundDefaults(v);
-                setSelectedPresetId(undefined);
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select compound" />
-                </SelectTrigger>
-                <SelectContent>
-                  {peptideConversions.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      <div className="flex items-center gap-2">
-                        {p.name}
-                        {p.dosingMode === 'iu-primary' && (
-                          <Badge variant="secondary" className="px-1.5 py-0 text-[11px]">IU</Badge>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                value={compoundSearch}
+                onChange={(event) => setCompoundSearch(event.target.value)}
+                placeholder="Search compounds"
+                aria-label="Search compounds"
+              />
+              <div className="max-h-72 overflow-y-auto rounded-2xl border bg-background/70 p-1" aria-label="Compound results">
+                {filteredPeptideConversions.length === 0 ? (
+                  <div className="p-3 text-sm text-muted-foreground">No compounds match that search.</div>
+                ) : filteredPeptideConversions.map((p) => {
+                  const selected = p.id === selectedCompoundId;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        applyCompoundDefaults(p.id);
+                        setSelectedPresetId(undefined);
+                      }}
+                      className={cn(
+                        'flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-colors',
+                        selected ? 'bg-primary/15 text-primary' : 'hover:bg-secondary',
+                      )}
+                      aria-pressed={selected}
+                    >
+                      <span className="font-medium">{p.name}</span>
+                      {p.dosingMode === 'iu-primary' ? (
+                        <Badge variant="secondary" className="px-1.5 py-0 text-[11px]">IU</Badge>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
               {compound?.notes && (
                 <p className="text-xs text-muted-foreground">{compound.notes}</p>
               )}
