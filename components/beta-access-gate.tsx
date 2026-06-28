@@ -10,20 +10,25 @@ import { betaRedemptionMessage, isBetaGateEnabled, normalizeInviteCode, type Bet
 
 const BETA_ACCESS_LOCAL_KEY = 'peptideos.betaAccessPassed';
 const BETA_ACCESS_LOCAL_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 180;
+const SUCCESS_HANDOFF_MS = 900;
 
 interface LocalBetaAccessMarker {
   passed: true;
   expiresAt: number;
 }
 
+type GateStatus = 'checking' | 'locked' | 'submitting' | 'success' | 'unlocked';
+
 function getLocalBetaAccessMarker() {
   if (typeof window === 'undefined') return false;
 
   try {
-    const marker = JSON.parse(window.localStorage.getItem(BETA_ACCESS_LOCAL_KEY) ?? 'null') as Partial<LocalBetaAccessMarker> | null;
+    const marker = JSON.parse(window.localStorage.getItem(BETA_ACCESS_LOCAL_KEY) ?? 'null') as
+      | Partial<LocalBetaAccessMarker>
+      | null;
     if (marker?.passed === true && typeof marker.expiresAt === 'number' && marker.expiresAt > Date.now()) return true;
   } catch {
-    // Ignore malformed marker and clear below.
+    // Ignore malformed markers. Cookie verification remains the source of truth.
   }
 
   window.localStorage.removeItem(BETA_ACCESS_LOCAL_KEY);
@@ -38,37 +43,93 @@ function setLocalBetaAccessMarker() {
   window.localStorage.setItem(BETA_ACCESS_LOCAL_KEY, JSON.stringify(marker));
 }
 
+function clearLocalBetaAccessMarker() {
+  window.localStorage.removeItem(BETA_ACCESS_LOCAL_KEY);
+}
+
 export function BetaAccessGate({ children }: { children: ReactNode }) {
   const enabled = isBetaGateEnabled();
   const emailRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
-  const [isUnlocked, setIsUnlocked] = useState(() => !enabled || getLocalBetaAccessMarker());
-  const [phase, setPhase] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [status, setStatus] = useState<GateStatus>(() => (enabled ? 'checking' : 'unlocked'));
   const [message, setMessage] = useState('');
+  const [hadLocalHint] = useState(() => enabled && getLocalBetaAccessMarker());
 
   useEffect(() => {
-    if (!enabled || isUnlocked) return;
+    if (!enabled) return;
 
-    let active = true;
-    void fetch('/api/beta/redeem', { method: 'GET', cache: 'no-store' })
-      .then((response) => response.json() as Promise<{ ok: boolean }>)
-      .then((payload) => {
-        if (!active || !payload.ok) return;
-        setLocalBetaAccessMarker();
-        setIsUnlocked(true);
-      })
-      .catch(() => {
-        // Stay on the beta screen; entering the key remains the recovery path.
-      });
+    let cancelled = false;
+    let handoffTimer: number | undefined;
+    const controller = new AbortController();
+    const params = new URLSearchParams(window.location.search);
+    const hasConfirmedRedirect = params.get('beta') === 'confirmed';
+    const betaError = params.get('beta_error');
+
+    async function verifySession() {
+      if (hasConfirmedRedirect) {
+        setStatus('success');
+        setMessage('Beta access confirmed. Opening PeptideOS.');
+      } else if (betaError) {
+        setStatus('locked');
+        setMessage(betaRedemptionMessage({ ok: false, reason: betaError as BetaRedemptionResult['reason'] }));
+      } else {
+        setStatus('checking');
+        setMessage(hadLocalHint ? 'Restoring beta access...' : '');
+      }
+
+      try {
+        const response = await fetch('/api/beta/redeem', {
+          method: 'GET',
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        const payload = (await response.json()) as BetaRedemptionResult;
+        if (cancelled) return;
+
+        if (response.ok && payload.ok) {
+          setLocalBetaAccessMarker();
+          setStatus(hasConfirmedRedirect ? 'success' : 'unlocked');
+          setMessage(hasConfirmedRedirect ? 'Beta access confirmed. Opening PeptideOS.' : '');
+          window.history.replaceState({}, '', '/');
+          if (hasConfirmedRedirect) {
+            handoffTimer = window.setTimeout(() => setStatus('unlocked'), SUCCESS_HANDOFF_MS);
+          }
+          return;
+        }
+
+        clearLocalBetaAccessMarker();
+        window.history.replaceState({}, '', '/');
+        setStatus('locked');
+        if (!betaError) setMessage('');
+      } catch {
+        if (cancelled || controller.signal.aborted) return;
+        clearLocalBetaAccessMarker();
+        setStatus('locked');
+        setMessage('Could not verify beta access right now.');
+      }
+    }
+
+    void verifySession();
 
     return () => {
-      active = false;
+      cancelled = true;
+      controller.abort();
+      if (handoffTimer) window.clearTimeout(handoffTimer);
     };
-  }, [enabled, isUnlocked]);
+  }, [enabled, hadLocalHint]);
+
+  const unlockAfterSuccess = () => {
+    setLocalBetaAccessMarker();
+    setStatus('success');
+    setMessage('Beta access confirmed. Opening PeptideOS.');
+    window.setTimeout(() => {
+      window.history.replaceState({}, '', '/');
+      setStatus('unlocked');
+    }, SUCCESS_HANDOFF_MS);
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (phase !== 'idle') return;
 
     const email = emailRef.current?.value.trim().toLowerCase() ?? '';
     const inviteCode = normalizeInviteCode(codeRef.current?.value ?? '');
@@ -78,9 +139,8 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
       return;
     }
 
-    setPhase('submitting');
+    setStatus('submitting');
     setMessage('');
-    let didSucceed = false;
 
     try {
       const response = await fetch('/api/beta/redeem', {
@@ -90,36 +150,20 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
       });
 
       if (response.ok) {
-        setLocalBetaAccessMarker();
-        didSucceed = true;
-        setPhase('success');
-        window.setTimeout(() => {
-          window.location.replace('/');
-        }, 1100);
+        unlockAfterSuccess();
         return;
       }
 
       const payload = await readBetaRedemptionPayload(response);
-      if (!payload.ok) {
-        setMessage(payload.message ?? betaRedemptionMessage(payload));
-        return;
-      }
-
-      setLocalBetaAccessMarker();
-      didSucceed = true;
-      setPhase('success');
-      window.setTimeout(() => {
-        window.location.replace('/');
-      }, 1100);
+      setMessage(payload.message ?? betaRedemptionMessage(payload));
+      setStatus('locked');
     } catch {
       setMessage('Could not unlock beta access right now.');
-      setPhase('idle');
-    } finally {
-      if (!didSucceed) setPhase('idle');
+      setStatus('locked');
     }
   };
 
-  if (isUnlocked) return <>{children}</>;
+  if (status === 'unlocked') return <>{children}</>;
 
   return (
     <main className="fixed inset-0 z-[2147483647] overflow-y-auto bg-background text-foreground">
@@ -147,11 +191,25 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
             </div>
             <h1 className="text-4xl font-semibold leading-tight tracking-normal">Enter beta access.</h1>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              Use your email and beta key. That is all testers need to open PeptideOS.
+              Use your email and beta key. After access is confirmed, PeptideOS opens in local mode.
             </p>
           </div>
 
-          {phase === 'success' ? (
+          {status === 'checking' ? (
+            <section
+              role="status"
+              aria-live="polite"
+              className="rounded-[18px] border border-border bg-card/95 p-6 text-center shadow-xl"
+            >
+              <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-primary text-primary-foreground">
+                <Loader2 className="size-7 animate-spin" />
+              </div>
+              <h2 className="text-2xl font-semibold">Checking beta access.</h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                {message || 'Verifying this device before opening PeptideOS.'}
+              </p>
+            </section>
+          ) : status === 'success' ? (
             <section
               role="status"
               aria-live="polite"
@@ -162,7 +220,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
               </div>
               <h2 className="text-2xl font-semibold">Beta access confirmed.</h2>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                Opening PeptideOS. Your app starts in local mode unless you choose cloud sync later.
+                Opening PeptideOS. The app starts in local mode unless you choose cloud sync later.
               </p>
             </section>
           ) : (
@@ -187,9 +245,9 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
               <div className="grid gap-2">
                 <Label htmlFor="beta-invite">Beta key</Label>
                 <Input
-                ref={codeRef}
-                id="beta-invite"
-                name="inviteCode"
+                  ref={codeRef}
+                  id="beta-invite"
+                  name="inviteCode"
                   autoCapitalize="characters"
                   autoComplete="off"
                   placeholder="Paste or type beta key"
@@ -199,9 +257,9 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
               <Button
                 type="submit"
                 className="h-11 w-full transition-transform active:scale-[0.98]"
-                disabled={phase === 'submitting'}
+                disabled={status === 'submitting'}
               >
-                {phase === 'submitting' ? (
+                {status === 'submitting' ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
                     Checking beta key...
