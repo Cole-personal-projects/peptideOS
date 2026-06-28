@@ -13,6 +13,10 @@ export interface CompoundLibraryFilterOptions {
   evidence?: LibraryEvidenceFilter;
 }
 
+function byName<T extends { name: string }>(rows: T[]): T[] {
+  return [...rows].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+}
+
 function searchableText(peptide: Peptide): string {
   return [
     peptide.name,
@@ -30,11 +34,11 @@ function searchableText(peptide: Peptide): string {
 export function filterPeptides(peptides: Peptide[], options: LibraryFilterOptions): Peptide[] {
   const search = options.search.trim().toLowerCase();
 
-  return peptides.filter((peptide) => {
+  return byName(peptides.filter((peptide) => {
     const matchesSearch = search.length === 0 || searchableText(peptide).includes(search);
     const matchesCategory = options.category === 'all' || peptide.category === options.category;
     return matchesSearch && matchesCategory;
-  });
+  }));
 }
 
 function searchableCompoundText(compound: Compound): string {
@@ -59,12 +63,12 @@ function searchableCompoundText(compound: Compound): string {
 export function filterCompounds(compounds: Compound[], options: CompoundLibraryFilterOptions): Compound[] {
   const search = options.search.trim().toLowerCase();
 
-  return compounds.filter((compound) => {
+  return byName(compounds.filter((compound) => {
     if (compound.deletedAt) return false;
     const matchesSearch = search.length === 0 || searchableCompoundText(compound).includes(search);
     const matchesCategory = options.category === 'all' || compound.category === options.category;
     const matchesType = options.compoundType === 'all' || compound.compoundType === options.compoundType;
     const matchesEvidence = !options.evidence || options.evidence === 'all' || getLibraryEvidenceDisplay(compound).filter === options.evidence;
     return matchesSearch && matchesCategory && matchesType && matchesEvidence;
-  });
+  }));
 }

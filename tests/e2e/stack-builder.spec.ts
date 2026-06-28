@@ -12,9 +12,13 @@ test.describe('protocol builder', () => {
   await expect(page.getByRole('heading', { name: 'Templates' })).toHaveCount(0);
   await page.getByLabel('Protocol Name').fill('Visual Builder Protocol');
  
-  await page.getByRole('button', { name: 'Next' }).click();
-  await expect(page.getByRole('heading', { name: 'Compounds' })).toBeVisible();
-  await page.getByRole('checkbox', { name: 'BPC-157' }).check();
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page.getByRole('heading', { name: 'Compounds' })).toBeVisible();
+    await page.getByLabel('Search compounds').fill('tb');
+    await expect(page.getByRole('checkbox', { name: 'TB-500' })).toBeVisible();
+    await expect(page.getByRole('checkbox', { name: 'BPC-157' })).toHaveCount(0);
+    await page.getByLabel('Search compounds').fill('');
+    await page.getByRole('checkbox', { name: 'BPC-157' }).check();
   await page.getByRole('checkbox', { name: 'TB-500' }).check();
   await expect(page.getByText('250 mcg').first()).toBeVisible();
   await expect(page.getByText('1 mg').first()).toBeVisible();

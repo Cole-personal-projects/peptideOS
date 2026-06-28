@@ -276,7 +276,7 @@ test.describe('library detail pages', () => {
 
     await expect(page).toHaveURL(/\/more\/reconstitution\?compound=bpc-157$/);
     await expect(page.getByRole('heading', { name: 'Reconstitution Calculator' })).toBeVisible();
-    await expect(page.getByRole('combobox').filter({ hasText: 'BPC-157' })).toBeVisible();
+  await expect(page.getByLabel('Compound results').getByRole('button', { name: /BPC-157/ })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeVisible();
   });
 

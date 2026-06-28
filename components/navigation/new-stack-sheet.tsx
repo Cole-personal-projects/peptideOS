@@ -118,6 +118,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
   const [selectedPeptides, setSelectedPeptides] = useState<string[]>(() => getInitialSelectedPeptides(initialDraft, initialCompound));
   const [draftPeptideOverrides, setDraftPeptideOverrides] = useState<StackPeptide[] | null>(() => initialDraft?.peptides ?? null);
   const [durationDays, setDurationDays] = useState(() => getInitialDurationDays(initialDraft));
+  const [compoundSearch, setCompoundSearch] = useState('');
 
   const resetForm = () => {
     setCurrentStep(0);
@@ -126,6 +127,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
     setSelectedPeptides(getInitialSelectedPeptides(initialDraft, initialCompound));
     setDraftPeptideOverrides(initialDraft?.peptides ?? null);
     setDurationDays(getInitialDurationDays(initialDraft));
+    setCompoundSearch('');
   };
 
   const getDraftPeptides = (): StackPeptide[] =>
@@ -163,6 +165,10 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
   const draftPeptides = getDraftPeptides();
   const currentStepName: BuilderStep = steps[currentStep];
   const peptideNameById = Object.fromEntries(trackableCompounds.map((compound) => [compound.id, compound.name]));
+  const normalizedCompoundSearch = compoundSearch.trim().toLowerCase();
+  const visibleTrackableCompounds = normalizedCompoundSearch
+    ? trackableCompounds.filter((compound) => `${compound.name} ${compound.id}`.toLowerCase().includes(normalizedCompoundSearch))
+    : trackableCompounds;
   const plannedDoseCount = draftPeptides.reduce((total, stackPeptide) => total + estimateDoseCount(stackPeptide, Number.parseInt(durationDays) || 0), 0);
   const activeCompoundIds = new Set(data.vials.filter((vial) => vial.status === 'active' || vial.status === 'sealed').map((vial) => vial.peptideId));
   const inventoryCoverage = {
@@ -272,8 +278,19 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
                     <h2 className="text-base font-bold">Compounds</h2>
                     <Badge variant="secondary">{selectedPeptides.length} selected</Badge>
                   </div>
-                  <div className="mt-4 grid max-h-[34vh] min-w-0 grid-cols-1 gap-2 overflow-y-auto overflow-x-hidden pr-1 sm:grid-cols-2">
-                    {trackableCompounds.map((compound) => (
+                  <Input
+                    className="mt-4"
+                    value={compoundSearch}
+                    onChange={(event) => setCompoundSearch(event.target.value)}
+                    placeholder="Search compounds"
+                    aria-label="Search compounds"
+                  />
+                  <div className="mt-3 grid max-h-[42vh] min-w-0 grid-cols-1 gap-2 overflow-y-auto overflow-x-hidden pr-1 sm:grid-cols-2">
+                    {visibleTrackableCompounds.length === 0 ? (
+                      <div className="rounded-[18px] border border-dashed p-4 text-sm text-muted-foreground sm:col-span-2">
+                        No compounds match that search.
+                      </div>
+                    ) : visibleTrackableCompounds.map((compound) => (
                       <CompoundPickCard
                         key={compound.id}
                         compound={compound}

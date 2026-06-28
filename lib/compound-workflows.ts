@@ -61,7 +61,11 @@ export function getTrackableCompounds(data: Pick<AppData, 'peptides' | 'compound
       compoundsById.set(compound.id, fromCompound(compound));
     });
 
-  return Array.from(compoundsById.values());
+  return sortTrackableCompounds(Array.from(compoundsById.values()));
+}
+
+export function sortTrackableCompounds(compounds: TrackableCompound[]): TrackableCompound[] {
+  return [...compounds].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 }
 
 export function getAllowedWorkflowDoseUnits(compound: TrackableCompound | undefined): DoseUnit[] {
