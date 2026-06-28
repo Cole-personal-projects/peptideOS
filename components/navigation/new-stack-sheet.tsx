@@ -1,7 +1,8 @@
 "use client";
 
+import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
-import { Check, ChevronLeft, ChevronRight, Clock3, PackageCheck } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Clock3, PackageCheck, Play, Syringe } from 'lucide-react';
 
 import { ScheduleTimeFields } from '@/components/stacks/schedule-time-fields';
 import { Badge } from '@/components/ui/badge';
@@ -119,6 +120,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
   const [draftPeptideOverrides, setDraftPeptideOverrides] = useState<StackPeptide[] | null>(() => initialDraft?.peptides ?? null);
   const [durationDays, setDurationDays] = useState(() => getInitialDurationDays(initialDraft));
   const [compoundSearch, setCompoundSearch] = useState('');
+  const [createdStackId, setCreatedStackId] = useState<string | null>(null);
 
   const resetForm = () => {
     setCurrentStep(0);
@@ -128,6 +130,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
     setDraftPeptideOverrides(initialDraft?.peptides ?? null);
     setDurationDays(getInitialDurationDays(initialDraft));
     setCompoundSearch('');
+    setCreatedStackId(null);
   };
 
   const getDraftPeptides = (): StackPeptide[] =>
@@ -190,7 +193,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
   const handleCreate = () => {
     if (!name.trim() || selectedPeptides.length === 0) return;
 
-    addStack({
+    const nextStackId = addStack({
       name: name.trim(),
       description,
       peptides: getDraftPeptides(),
@@ -199,9 +202,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
       status: 'planned',
       notes: '',
     });
-
-    resetForm();
-    onOpenChange(false);
+    setCreatedStackId(nextStackId);
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -212,6 +213,61 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent side="bottom" className="inset-x-0 bottom-0 h-[88svh] w-screen max-w-none overflow-hidden rounded-t-3xl border-x-0 px-0">
+        {createdStackId ? (
+          <div className="flex h-full min-w-0 flex-col overflow-hidden">
+            <SheetHeader className="shrink-0 px-4 pb-3">
+              <SheetTitle>Protocol Created</SheetTitle>
+            </SheetHeader>
+            <div className="flex min-h-0 flex-1 flex-col justify-center px-5 pb-8 pt-4">
+              <div className="mx-auto grid h-20 w-20 place-items-center rounded-[24px] border border-primary/30 bg-primary/10 text-primary">
+                <Check className="h-8 w-8" />
+              </div>
+              <div className="mt-5 text-center">
+                <p className="text-xl font-extrabold tracking-normal">Ready to review</p>
+                <p className="mx-auto mt-2 max-w-[290px] text-sm leading-6 text-muted-foreground">
+                  Review it, start it, then add stock when ready.
+                </p>
+              </div>
+              <div className="mt-6 grid grid-cols-3 gap-2">
+                <div className="rounded-[16px] border border-border bg-card p-3 text-center">
+                  <Syringe className="mx-auto h-5 w-5 text-primary" />
+                  <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Schedule</p>
+                </div>
+                <div className="rounded-[16px] border border-border bg-card p-3 text-center">
+                  <PackageCheck className="mx-auto h-5 w-5 text-chart-3" />
+                  <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Stock optional</p>
+                </div>
+                <div className="rounded-[16px] border border-border bg-card p-3 text-center">
+                  <Play className="mx-auto h-5 w-5 text-chart-4" />
+                  <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Activate</p>
+                </div>
+              </div>
+            </div>
+            <div className="shrink-0 space-y-2 border-t border-border bg-background/95 p-4 backdrop-blur">
+              <Button asChild className="w-full">
+                <Link
+                  href={`/stacks/${createdStackId}`}
+                  aria-label={`Review and activate ${name.trim()}`}
+                  onClick={() => onOpenChange(false)}
+                >
+                  Review and activate
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button asChild variant="outline">
+                  <Link href="/more/inventory?add=stock" onClick={() => onOpenChange(false)}>
+                    Add stock
+                  </Link>
+                </Button>
+                <Button variant="ghost" onClick={() => onOpenChange(false)}>
+                  Dashboard
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
         <SheetHeader className="shrink-0 px-4 pb-3">
           <SheetTitle>New Protocol</SheetTitle>
         </SheetHeader>
@@ -366,6 +422,8 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
             </div>
           </div>
         </div>
+          </>
+        )}
       </SheetContent>
     </Sheet>
   );

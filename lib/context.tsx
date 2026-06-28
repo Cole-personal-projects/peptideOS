@@ -97,7 +97,7 @@ cloudMessage: string | null;
   deleteLabReport: (reportId: string) => void;
   // Stacks
   getStack: (id: string) => Stack | undefined;
-  addStack: (stack: Omit<Stack, 'id'>) => void;
+  addStack: (stack: Omit<Stack, 'id'>) => string;
   updateStack: (id: string, updates: Partial<Stack>) => void;
   deleteStack: (id: string) => Promise<void>;
   activateStack: (id: string) => void;
@@ -581,6 +581,7 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed
     const id = `stack-${Date.now()}`;
     const newStack: Stack = normalizeStack({ ...stack, id });
     void setAndPersistData(prev => ({ ...prev, stacks: [...prev.stacks, newStack] }));
+    return id;
   }, [setAndPersistData]);
 
   const updateStack = useCallback((id: string, updates: Partial<Stack>) => {
