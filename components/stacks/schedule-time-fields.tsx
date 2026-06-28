@@ -16,16 +16,17 @@ export function ScheduleTimeFields({ stackPeptide, idPrefix, onTimesChange }: Sc
   const timesOfDay = recurrence.timesOfDay.length > 0 ? recurrence.timesOfDay : ['08:00'];
 
   return (
-    <div className="space-y-2">
-      <div className="grid gap-2 sm:grid-cols-2">
+    <div className="min-w-0 max-w-full space-y-2 overflow-hidden">
+      <div className="grid min-w-0 gap-2 sm:grid-cols-2">
         {timesOfDay.map((timeOfDay, index) => (
-          <div key={`${idPrefix}-time-${index}`} className="space-y-1">
+          <div key={`${idPrefix}-time-${index}`} className="min-w-0 space-y-1">
             <Label htmlFor={`${idPrefix}-time-${index}`} className="text-xs">
               {timesOfDay.length > 1 ? `Dose time ${index + 1}` : 'Dose time'}
             </Label>
             <Input
               id={`${idPrefix}-time-${index}`}
               type="time"
+              className="max-w-full"
               value={timeOfDay}
               onChange={(event) => {
                 const nextTimes = [...timesOfDay];

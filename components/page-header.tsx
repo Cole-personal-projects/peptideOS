@@ -4,7 +4,11 @@ import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSyncExternalStore } from 'react';
-import { ROUTE_HISTORY_CHANGED_EVENT, ROUTE_HISTORY_PREVIOUS_KEY } from '@/components/navigation/route-history';
+import {
+  ROUTE_HISTORY_CHANGED_EVENT,
+  getRouteHistoryPreviousPath as readRouteHistoryPreviousPath,
+  popRouteHistory,
+} from '@/components/navigation/route-history';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -26,7 +30,7 @@ export function PageHeader({ title, backHref, rightElement, className }: PageHea
   const handleBack = () => {
     if (!backHref) return;
 
-    router.push(window.sessionStorage.getItem(ROUTE_HISTORY_PREVIOUS_KEY) ?? previousPath ?? backHref);
+  router.push(popRouteHistory(backHref));
   };
 
   return (
@@ -88,5 +92,5 @@ function subscribeToRouteHistory(callback: () => void) {
 }
 
 function getRouteHistoryPreviousPath() {
-  return window.sessionStorage.getItem(ROUTE_HISTORY_PREVIOUS_KEY);
+  return readRouteHistoryPreviousPath();
 }

@@ -212,7 +212,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="bottom" className="inset-x-0 bottom-0 h-[88svh] w-screen max-w-none overflow-hidden rounded-t-3xl border-x-0 px-0">
+      <SheetContent side="bottom" className="inset-x-0 bottom-0 h-[88svh] w-screen max-w-none overflow-hidden overscroll-contain rounded-t-3xl border-x-0 px-0">
         {createdStackId ? (
           <div className="flex h-full min-w-0 flex-col overflow-hidden">
             <SheetHeader className="shrink-0 px-4 pb-3">
@@ -286,7 +286,7 @@ export function NewStackSheet({ open, onOpenChange, initialCompoundId, initialDr
             </div>
           </div>
 
-          <div className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-28 pt-4">
+          <div className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 pb-28 pt-4">
             {currentStepName === 'Setup' && (
               <section className="space-y-4">
                 <div className="grid grid-cols-2 gap-2">
@@ -497,7 +497,7 @@ function ScheduleCard({
   const selectedPreset = getSchedulePreset(stackPeptide);
 
   return (
-    <div className="rounded-[20px] border border-border bg-card p-4">
+    <div className="max-w-full overflow-hidden rounded-[20px] border border-border bg-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-bold">{compound?.name ?? stackPeptide.peptideId}</p>
@@ -506,8 +506,8 @@ function ScheduleCard({
         <Badge variant="secondary">{getScheduleSummary(recurrence).split(' · ')[0]}</Badge>
       </div>
 
-      <div className="mt-4 grid grid-cols-[1fr_92px] gap-2">
-        <div className="space-y-1">
+      <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_92px] gap-2">
+        <div className="min-w-0 space-y-1">
           <Label htmlFor={`${stackPeptide.peptideId}-dose`} className="text-xs">Dose</Label>
           <Input
             id={`${stackPeptide.peptideId}-dose`}
@@ -517,7 +517,7 @@ function ScheduleCard({
             onChange={(event) => onDoseValueChange(Number.parseFloat(event.target.value) || 0)}
           />
         </div>
-        <div className="space-y-1">
+        <div className="min-w-0 space-y-1">
           <Label htmlFor={`${stackPeptide.peptideId}-dose-unit`} className="text-xs">Unit</Label>
           <Select value={stackPeptide.doseUnit} onValueChange={(value) => onDoseUnitChange(value as DoseUnit)}>
             <SelectTrigger id={`${stackPeptide.peptideId}-dose-unit`} aria-label={`${compound?.name ?? stackPeptide.peptideId} dose unit`}>
@@ -532,7 +532,7 @@ function ScheduleCard({
         </div>
       </div>
 
-      <div className="mt-4 space-y-2">
+      <div className="mt-4 min-w-0 space-y-2">
         <Label htmlFor={`${stackPeptide.peptideId}-schedule`} className="text-xs">Schedule</Label>
         <Select value={selectedPreset} onValueChange={(value) => onScheduleChange(value as SchedulePreset)}>
           <SelectTrigger id={`${stackPeptide.peptideId}-schedule`}>
@@ -544,7 +544,7 @@ function ScheduleCard({
             ))}
           </SelectContent>
         </Select>
-        <div className="flex gap-1 overflow-x-auto pb-1">
+        <div className="-mx-1 flex max-w-full gap-1 overflow-x-auto overflow-y-hidden px-1 pb-1">
           {scheduleOptions.slice(0, 5).map((option) => (
             <Button
               key={option.value}
@@ -560,7 +560,7 @@ function ScheduleCard({
         </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 min-w-0 overflow-hidden">
         <ScheduleTimeFields stackPeptide={stackPeptide} idPrefix={`new-stack-${stackPeptide.peptideId}`} onTimesChange={onTimesChange} />
       </div>
 
