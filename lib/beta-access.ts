@@ -18,7 +18,17 @@ export interface BetaRedemptionResult {
   message?: string;
 }
 
-export function isBetaGateEnabled(env: Record<string, string | undefined> = process.env) {
+// Next.js only inlines NEXT_PUBLIC_* vars into the client bundle when it can statically see
+// the literal `process.env.NEXT_PUBLIC_X` expression. Reading it only through the `env`
+// parameter's default below breaks that detection, so this constant exists purely so the
+// literal expression appears in the source - without it, NEXT_PUBLIC_BETA_GATE_ENABLED is
+// always undefined on the client, the gate silently disables itself once React hydrates, and
+// any click on its (now un-hydrated, orphaned) markup falls through to a native form submit.
+const BETA_GATE_ENABLED_ENV = process.env.NEXT_PUBLIC_BETA_GATE_ENABLED;
+
+export function isBetaGateEnabled(
+  env: Record<string, string | undefined> = { NEXT_PUBLIC_BETA_GATE_ENABLED: BETA_GATE_ENABLED_ENV },
+) {
   return env.NEXT_PUBLIC_BETA_GATE_ENABLED === 'true';
 }
 

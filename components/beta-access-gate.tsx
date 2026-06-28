@@ -55,6 +55,11 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<GateStatus>(() => (enabled ? 'locked' : 'unlocked'));
   const [message, setMessage] = useState('');
   const [hadLocalHint] = useState(() => enabled && getLocalBetaAccessMarker());
+  // Once the user submits the form, the passive background session check (verifySession,
+  // fired on mount) must not be allowed to overwrite that outcome if it resolves later —
+  // otherwise a slow GET can silently revert a just-confirmed unlock with no error shown.
+  const submittedRef = useRef(false);
+  const verifyAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -63,6 +68,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
     let handoffTimer: number | undefined;
     let verifyTimer: number | undefined;
     const controller = new AbortController();
+    verifyAbortRef.current = controller;
     const params = new URLSearchParams(window.location.search);
     const hasConfirmedRedirect = params.get('beta') === 'confirmed';
     const betaError = params.get('beta_error');
@@ -88,7 +94,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
         });
         if (verifyTimer) window.clearTimeout(verifyTimer);
         const payload = (await response.json()) as BetaRedemptionResult;
-        if (cancelled) return;
+        if (cancelled || submittedRef.current) return;
 
         if (response.ok && payload.ok) {
           setLocalBetaAccessMarker();
@@ -106,7 +112,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
         setStatus('locked');
         if (!betaError) setMessage('');
       } catch {
-        if (cancelled) return;
+        if (cancelled || submittedRef.current) return;
         clearLocalBetaAccessMarker();
         setStatus('locked');
         setMessage('Enter your email and beta key to continue.');
@@ -144,6 +150,8 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
       return;
     }
 
+    submittedRef.current = true;
+    verifyAbortRef.current?.abort();
     setStatus('submitting');
     setMessage('');
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RefreshCw, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ export function ServiceWorkerRegister() {
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const [isActivating, setIsActivating] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+  const expectingReloadRef = useRef(false);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
@@ -22,8 +23,12 @@ export function ServiceWorkerRegister() {
 
     let refreshing = false;
 
+    // self.clients.claim() in sw.js also fires controllerchange on a page's very first
+    // visit (no controller -> this worker), not just on a genuine version takeover. Reloading
+    // then would yank the page out from under a user mid-interaction for no reason, so only
+    // reload when the user actually asked for the update via activateUpdate().
     const handleControllerChange = () => {
-      if (refreshing) return;
+      if (refreshing || !expectingReloadRef.current) return;
       refreshing = true;
       window.location.reload();
     };
@@ -83,6 +88,7 @@ export function ServiceWorkerRegister() {
   const activateUpdate = () => {
     if (!waitingWorker) return;
     setIsActivating(true);
+    expectingReloadRef.current = true;
     waitingWorker.postMessage({ type: 'SKIP_WAITING' });
   };
 
