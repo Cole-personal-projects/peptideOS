@@ -11,6 +11,7 @@ import { betaRedemptionMessage, isBetaGateEnabled, normalizeInviteCode, type Bet
 const BETA_ACCESS_LOCAL_KEY = 'peptideos.betaAccessPassed';
 const BETA_ACCESS_LOCAL_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 180;
 const SUCCESS_HANDOFF_MS = 900;
+const SESSION_VERIFY_TIMEOUT_MS = 2500;
 
 interface LocalBetaAccessMarker {
   passed: true;
@@ -51,7 +52,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
   const enabled = isBetaGateEnabled();
   const emailRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
-  const [status, setStatus] = useState<GateStatus>(() => (enabled ? 'checking' : 'unlocked'));
+  const [status, setStatus] = useState<GateStatus>(() => (enabled ? 'locked' : 'unlocked'));
   const [message, setMessage] = useState('');
   const [hadLocalHint] = useState(() => enabled && getLocalBetaAccessMarker());
 
@@ -60,6 +61,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
 
     let cancelled = false;
     let handoffTimer: number | undefined;
+    let verifyTimer: number | undefined;
     const controller = new AbortController();
     const params = new URLSearchParams(window.location.search);
     const hasConfirmedRedirect = params.get('beta') === 'confirmed';
@@ -73,16 +75,18 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
         setStatus('locked');
         setMessage(betaRedemptionMessage({ ok: false, reason: betaError as BetaRedemptionResult['reason'] }));
       } else {
-        setStatus('checking');
-        setMessage(hadLocalHint ? 'Restoring beta access...' : '');
+        setStatus('locked');
+        setMessage(hadLocalHint ? 'Checking saved beta access. You can enter your beta key below.' : '');
       }
 
       try {
+        verifyTimer = window.setTimeout(() => controller.abort(), SESSION_VERIFY_TIMEOUT_MS);
         const response = await fetch('/api/beta/redeem', {
           method: 'GET',
           cache: 'no-store',
           signal: controller.signal,
         });
+        if (verifyTimer) window.clearTimeout(verifyTimer);
         const payload = (await response.json()) as BetaRedemptionResult;
         if (cancelled) return;
 
@@ -102,10 +106,10 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
         setStatus('locked');
         if (!betaError) setMessage('');
       } catch {
-        if (cancelled || controller.signal.aborted) return;
+        if (cancelled) return;
         clearLocalBetaAccessMarker();
         setStatus('locked');
-        setMessage('Could not verify beta access right now.');
+        setMessage('Enter your email and beta key to continue.');
       }
     }
 
@@ -115,6 +119,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
       cancelled = true;
       controller.abort();
       if (handoffTimer) window.clearTimeout(handoffTimer);
+      if (verifyTimer) window.clearTimeout(verifyTimer);
     };
   }, [enabled, hadLocalHint]);
 
