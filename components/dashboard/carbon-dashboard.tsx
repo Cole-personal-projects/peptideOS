@@ -13,6 +13,7 @@ import {
   Syringe,
 } from 'lucide-react';
 import { QuickConfirmDoseDialog } from '@/components/dashboard/quick-confirm-dose-dialog';
+import { AdherenceCard } from '@/components/dashboard/adherence-card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/context';
 import { buildDashboardBriefing } from '@/lib/dashboard-summary';
@@ -119,8 +120,8 @@ function ProtocolChip({ label }: { label: string }) {
 }
 
 function AdherenceBars({ completed, total }: { completed: number; total: number }) {
-  const percent = total === 0 ? null : Math.round((completed / total) * 100);
-  const filledBars = percent === null ? 0 : Math.round((percent / 100) * 7);
+const percent = total === 0 ? null : Math.round((completed / total) * 100);
+const filledBars = percent === null ? 0 : Math.round((percent / 100) * 7);
 
   return (
     <section className="rounded-[14px] border border-border bg-card p-4">
@@ -337,10 +338,14 @@ className="ember-gradient ember-glow mt-4 flex w-full items-center justify-cente
         )}
 
         <div className="mt-5">
-          <AdherenceBars completed={summary.completedTodayCount} total={Math.max(briefing.scheduledToday, summary.completedTodayCount)} />
-        </div>
+<AdherenceBars completed={summary.completedTodayCount} total={Math.max(briefing.scheduledToday, summary.completedTodayCount)} />
+</div>
 
-        <section className="mt-5 grid grid-cols-2 gap-3">
+<div className="mt-3">
+<AdherenceCard />
+</div>
+
+<section className="mt-5 grid grid-cols-2 gap-3">
           <Link href="/more/inventory" className="rounded-[14px] border border-border bg-card p-4">
             <FlaskConical className="h-5 w-5 text-chart-4" />
 <p className="mt-3 text-xl font-bold leading-none">{data.vials.filter((vial) => vial.status === 'active').length}</p>
