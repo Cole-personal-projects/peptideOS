@@ -280,13 +280,13 @@ test.describe('library detail pages', () => {
     await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeVisible();
   });
 
-  test('does not offer reconstitution actions for unsupported compound detail pages', async ({ page }) => {
-    await page.goto('/library/retatrutide');
+  test('does not offer reconstitution actions for non-reconstituted compound detail pages', async ({ page }) => {
+    await page.goto('/library/metformin');
 
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await expect(page.getByRole('heading', { name: 'Retatrutide' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Metformin' })).toBeVisible();
 
-    await expect(page.getByRole('link', { name: 'Calculate Retatrutide reconstitution' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Calculate Metformin reconstitution' })).toHaveCount(0);
   });
 
   test('creates, edits, persists, and deletes a custom compound', async ({ page }) => {

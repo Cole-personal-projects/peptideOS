@@ -1,6 +1,8 @@
 // Compound-aware IU/mass conversion table
 // IU (International Units) measure biological activity, mg measures mass
 // Conversion ratios are compound-specific and standardized
+import { referenceCompounds } from './reference-compounds';
+import type { Compound, DoseUnit } from './types';
 
 export type DosingMode = 'mass-only' | 'iu-primary' | 'mcg-only';
 
@@ -15,7 +17,7 @@ export interface PeptideConversion {
   notes?: string;
 }
 
-export const peptideConversions: PeptideConversion[] = [
+const curatedPeptideConversions: PeptideConversion[] = [
   // IU-Primary Compounds
   {
     id: 'hgh',
@@ -268,6 +270,73 @@ export const peptideConversions: PeptideConversion[] = [
     notes: 'Truncated IGF-1. Very potent, mcg dosing only.',
   },
 ];
+
+function normalizeVialAmount(amount: { value: number; unit: DoseUnit }): { value: number; unit: 'mg' | 'iu' } | null {
+  if (amount.unit === 'iu') return { value: amount.value, unit: 'iu' };
+  if (amount.unit === 'mg') return { value: amount.value, unit: 'mg' };
+  if (amount.unit === 'mcg') return { value: amount.value / 1000, unit: 'mg' };
+  return null;
+}
+
+function getFallbackDoseRange(compound: Compound): PeptideConversion['typicalDoseRange'] {
+  const firstPreset = compound.dosePresets[0];
+  if (firstPreset) {
+    return {
+      min: firstPreset.value,
+      max: firstPreset.value,
+      unit: firstPreset.unit,
+    };
+  }
+
+  const unit = compound.defaultDoseUnit === 'iu' ? 'iu' : compound.defaultDoseUnit === 'mg' ? 'mg' : 'mcg';
+  return {
+    min: 0.001,
+    max: 1000000,
+    unit,
+  };
+}
+
+function toGeneratedConversion(compound: Compound): PeptideConversion | null {
+  if (compound.concentrationMode !== 'reconstituted' || !compound.reconstitutionDefaults) return null;
+
+  const typicalVialSizes = compound.reconstitutionDefaults.typicalVialAmounts
+    .map(normalizeVialAmount)
+    .filter((amount): amount is { value: number; unit: 'mg' | 'iu' } => Boolean(amount));
+
+  if (typicalVialSizes.length === 0) return null;
+
+  const dosingMode: DosingMode = compound.defaultDoseUnit === 'iu' || compound.conversion?.iuPerMg
+    ? 'iu-primary'
+    : 'mass-only';
+
+  return {
+    id: compound.id,
+    name: compound.name,
+    dosingMode,
+    iuPerMg: compound.conversion?.iuPerMg,
+    defaultUnit: compound.defaultDoseUnit === 'iu' ? 'iu' : compound.defaultDoseUnit === 'mg' ? 'mg' : 'mcg',
+    typicalVialSizes,
+    typicalDoseRange: getFallbackDoseRange(compound),
+    notes: compound.conversion?.notes ?? 'Generated from PeptideOS reference-library reconstitution metadata.',
+  };
+}
+
+function buildPeptideConversions(): PeptideConversion[] {
+  const conversionsById = new Map(curatedPeptideConversions.map((conversion) => [conversion.id, conversion]));
+
+  referenceCompounds
+    .map(toGeneratedConversion)
+    .filter((conversion): conversion is PeptideConversion => Boolean(conversion))
+    .forEach((conversion) => {
+      if (!conversionsById.has(conversion.id)) {
+        conversionsById.set(conversion.id, conversion);
+      }
+    });
+
+  return Array.from(conversionsById.values());
+}
+
+export const peptideConversions: PeptideConversion[] = buildPeptideConversions();
 
 // Syringe types with their specifications
 export interface SyringeType {

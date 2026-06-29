@@ -14,5 +14,8 @@ test.describe('reconstitution compound picker', () => {
 
     await results.getByRole('button', { name: /HCG/ }).click();
     await expect(results.getByRole('button', { name: /HCG/ })).toHaveAttribute('aria-pressed', 'true');
+
+    await page.getByLabel('Search compounds').fill('dsip');
+    await expect(results.getByRole('button', { name: /Delta Sleep-Inducing Peptide|DSIP/ })).toBeVisible();
   });
 });

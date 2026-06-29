@@ -5,7 +5,9 @@ import {
   convertMcgToMg,
   convertMgToIU,
   getConversionById,
+  peptideConversions,
 } from './peptide-conversions';
+import { referenceCompounds } from './reference-compounds';
 
 describe('peptide conversion metadata', () => {
   it('keeps IU conversion ratios compound-specific', () => {
@@ -30,5 +32,24 @@ describe('peptide conversion metadata', () => {
   it('converts mcg to mg without changing the stored display unit', () => {
     expect(convertMcgToMg(250)).toBe(0.25);
     expect(convertMcgToMg(2500)).toBe(2.5);
+  });
+
+  it('includes every reconstituted reference-library compound in the calculator picker', () => {
+    const conversionIds = new Set(peptideConversions.map((compound) => compound.id));
+    const reconstitutedReferenceIds = referenceCompounds
+      .filter((compound) => compound.concentrationMode === 'reconstituted' && compound.reconstitutionDefaults)
+      .map((compound) => compound.id);
+
+    expect(reconstitutedReferenceIds.length).toBeGreaterThan(20);
+    expect([...conversionIds]).toEqual(expect.arrayContaining(reconstitutedReferenceIds));
+  });
+
+  it('generates calculator defaults from reference reconstitution metadata', () => {
+    expect(getConversionById('dsip')).toMatchObject({
+      id: 'dsip',
+      name: 'Delta Sleep-Inducing Peptide',
+      defaultUnit: 'mcg',
+      typicalVialSizes: [{ value: 5, unit: 'mg' }],
+    });
   });
 });
