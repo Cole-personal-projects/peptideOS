@@ -13,13 +13,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { ScheduleTimeFields } from '@/components/stacks/schedule-time-fields';
 import { popRouteHistory } from '@/components/navigation/route-history';
+import { SyringeVisualization } from '@/components/reconstitution/syringe-visualization';
 import { useApp } from '@/lib/context';
 import { getTrackableCompounds } from '@/lib/compound-workflows';
 import { formatDose } from '@/lib/dose-helpers';
+import { getDoseDrawVolumePreview, type DoseDrawVolumePreview } from '@/lib/draw-volume';
+import { syringeTypes } from '@/lib/peptide-conversions';
 import { getDefaultScheduleRecurrence, getSchedulePreset, getScheduleSummary, normalizeScheduleRecurrence } from '@/lib/schedules';
 import { buildProtocolPkView, type ProtocolPkCompoundView } from '@/lib/protocol-pk-view';
 import { cn } from '@/lib/utils';
-import type { LabResult, ScheduleLog, Stack, StackPeptide, StackStatus } from '@/lib/types';
+import type { LabResult, ReconstitutionCalculation, ScheduleLog, Stack, StackPeptide, StackStatus, Vial } from '@/lib/types';
 import type { SchedulePreset } from '@/lib/schedules';
 
 const statusLabels: Record<StackStatus, string> = {
@@ -30,6 +33,7 @@ const statusLabels: Record<StackStatus, string> = {
 };
 
 const trajectoryWindow = 14;
+const u100Syringe = syringeTypes.find((syringe) => syringe.id === 'u100-1ml') ?? syringeTypes[0];
 
 export default function StackDetailPage({ params }: { params: Promise<{ id: string }> }) {
 const { id } = use(params);
@@ -51,8 +55,9 @@ const router = useRouter();
   const stack = getStack(id);
   const [editName, setEditName] = useState(stack?.name ?? '');
   const [editDescription, setEditDescription] = useState(stack?.description ?? '');
-  const [editDurationDays, setEditDurationDays] = useState(stack?.durationDays.toString() ?? '');
-  const [editNotes, setEditNotes] = useState(stack?.notes ?? '');
+const [editDurationDays, setEditDurationDays] = useState(stack?.durationDays.toString() ?? '');
+const [editNotes, setEditNotes] = useState(stack?.notes ?? '');
+const [doseDetailPeptideId, setDoseDetailPeptideId] = useState<string | null>(null);
 
   if (!stack) {
     if (isDeletePending) return null;
@@ -75,7 +80,10 @@ const pkView = buildProtocolPkView(data, stack);
 const circumference = 2 * Math.PI * 52;
   const dashOffset = circumference - (adherence / 100) * circumference;
 
-  const hasSchedulableItems = stack.peptides.length > 0;
+const hasSchedulableItems = stack.peptides.length > 0;
+const selectedDosePeptide = doseDetailPeptideId ? stack.peptides.find((peptide) => peptide.peptideId === doseDetailPeptideId) ?? null : null;
+const selectedDoseCompound = selectedDosePeptide ? trackableCompounds.find((candidate) => candidate.id === selectedDosePeptide.peptideId) : undefined;
+const selectedDoseDetail = selectedDosePeptide ? buildProtocolDoseDetail(selectedDosePeptide, data.vials, data.reconstitutionCalculations) : null;
 
   const handleStatusChange = (newStatus: StackStatus) => {
     if (newStatus === 'active') {
@@ -238,40 +246,47 @@ const handleBack = () => {
           </section>
 
 	<section className="rounded-[22px] border border-[#332012] bg-card p-4">
-	          <div className="mb-4 flex items-center justify-between gap-4">
-	<h2 className="text-base font-bold tracking-normal">Protocol</h2>
-	<span className="rounded-full border border-[#3a2012] bg-[#211208] px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-muted-foreground">{statusLabels[stack.status]}</span>
-	            </div>
-	            <div className="space-y-3">
-	              {stack.peptides.map((peptide) => {
-	                const compound = trackableCompounds.find((candidate) => candidate.id === peptide.peptideId);
-	                return (
-	<div key={peptide.id ?? peptide.peptideId} className="rounded-[18px] border border-[#332012] bg-[#211208] p-3.5">
-	                    <div className="flex items-start justify-between gap-3">
-	                      <div className="min-w-0">
-	<p className="truncate text-base font-extrabold leading-tight">{compound?.name ?? peptide.peptideId}</p>
-	<p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{formatRoute(peptide.route)}</p>
-	                      </div>
-	                      <div className="shrink-0 rounded-[14px] bg-[#2b180d] px-3 py-2 text-right">
-	<p className="text-sm font-extrabold text-primary">{formatDose(peptide.doseValue, peptide.doseUnit)}</p>
-	<p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Dose</p>
-	                      </div>
-	                    </div>
-	                    <div className="mt-3 rounded-[14px] border border-[#3a2012] bg-[#1b100a] px-3 py-2">
-	<p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Schedule</p>
-	<p className="mt-1 text-sm font-semibold leading-snug text-primary">{formatScheduleSummary(peptide)}</p>
-	                    </div>
-	                  </div>
-	                );
-	              })}
-	            </div>
-	            {(stack.description || stack.notes) && (
-	              <div className="mt-4 space-y-2 border-t border-[#332012] pt-3">
-	                {stack.description && <p className="text-sm leading-relaxed text-muted-foreground">{stack.description}</p>}
-	                {stack.notes && <p className="text-sm leading-relaxed text-muted-foreground">{stack.notes}</p>}
-	              </div>
-	            )}
-	          </section>
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <h2 className="text-base font-bold tracking-normal">Protocol</h2>
+            <span className="rounded-full border border-[#3a2012] bg-[#211208] px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-muted-foreground">{statusLabels[stack.status]}</span>
+          </div>
+          <div className="space-y-3">
+            {stack.peptides.map((peptide) => {
+              const compound = trackableCompounds.find((candidate) => candidate.id === peptide.peptideId);
+              const compoundName = compound?.name ?? peptide.peptideId;
+              return (
+                <button
+                  key={peptide.id ?? peptide.peptideId}
+                  type="button"
+                  className="w-full rounded-[18px] border border-[#332012] bg-[#211208] p-3.5 text-left transition-colors hover:bg-[#28170c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+                  onClick={() => setDoseDetailPeptideId(peptide.peptideId)}
+                  aria-label={`Open dose view for ${compoundName}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-extrabold leading-tight">{compoundName}</p>
+                      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{formatRoute(peptide.route)}</p>
+                    </div>
+                    <div className="shrink-0 rounded-[14px] bg-[#2b180d] px-3 py-2 text-right">
+                      <p className="text-sm font-extrabold text-primary">{formatDose(peptide.doseValue, peptide.doseUnit)}</p>
+                      <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Dose</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 rounded-[14px] border border-[#3a2012] bg-[#1b100a] px-3 py-2">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Schedule</p>
+                    <p className="mt-1 text-sm font-semibold leading-snug text-primary">{formatScheduleSummary(peptide)}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {(stack.description || stack.notes) && (
+            <div className="mt-4 space-y-2 border-t border-[#332012] pt-3">
+              {stack.description && <p className="text-sm leading-relaxed text-muted-foreground">{stack.description}</p>}
+              {stack.notes && <p className="text-sm leading-relaxed text-muted-foreground">{stack.notes}</p>}
+            </div>
+          )}
+        </section>
 
         <section className="space-y-2.5">
 <h2 className="text-sm font-bold tracking-normal">Linked Labs</h2>
@@ -314,12 +329,76 @@ const handleBack = () => {
               )}
             </div>
           </section>
-        </main>
-      </div>
+</main>
+</div>
 
-      <Dialog open={isActionsOpen} onOpenChange={(open) => {
-        setIsActionsOpen(open);
-        if (!open) setIsDeleteConfirming(false);
+<Dialog open={Boolean(selectedDosePeptide)} onOpenChange={(open) => !open && setDoseDetailPeptideId(null)}>
+<DialogContent className="max-w-lg">
+<DialogHeader>
+            <DialogTitle>{selectedDoseCompound?.name ?? selectedDosePeptide?.peptideId ?? 'Dose view'}</DialogTitle>
+            <DialogDescription>Read-only draw view from your saved protocol and reconstitution data.</DialogDescription>
+          </DialogHeader>
+{selectedDosePeptide && (
+<div className="space-y-4">
+<div className="grid grid-cols-2 gap-2">
+<div className="rounded-[14px] border border-[#332012] bg-[#211208] p-3">
+<p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Protocol dose</p>
+<p className="mt-1 text-lg font-extrabold text-primary">{formatDose(selectedDosePeptide.doseValue, selectedDosePeptide.doseUnit)}</p>
+</div>
+<div className="rounded-[14px] border border-[#332012] bg-[#211208] p-3">
+<p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Route</p>
+<p className="mt-1 text-lg font-extrabold text-primary">{formatRoute(selectedDosePeptide.route)}</p>
+</div>
+</div>
+{selectedDoseDetail?.preview ? (
+<div className="space-y-3">
+<div className="rounded-[18px] border border-primary/30 bg-primary/10 p-4 text-center">
+<p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Draw amount</p>
+<p className="mt-1 text-4xl font-black tracking-normal text-primary">{formatSyringeUnits(selectedDoseDetail.preview.syringeUnits)}</p>
+<p className="mt-1 text-sm font-semibold text-primary">{selectedDoseDetail.preview.syringeLabel}</p>
+</div>
+<SyringeVisualization syringeType={u100Syringe} drawUnits={selectedDoseDetail.preview.syringeUnits} doseLabel={formatDose(selectedDosePeptide.doseValue, selectedDosePeptide.doseUnit)} />
+<div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+<div className="rounded-[12px] bg-secondary/70 p-3">
+<p className="font-semibold text-foreground">{selectedDoseDetail.preview.drawLabel}</p>
+<p>Draw volume</p>
+</div>
+<div className="rounded-[12px] bg-secondary/70 p-3">
+<p className="font-semibold text-foreground">{selectedDoseDetail.preview.concentrationLabel}</p>
+<p>{selectedDoseDetail.sourceLabel}</p>
+</div>
+</div>
+<p className="text-xs leading-relaxed text-muted-foreground">Syringe units are U-100 volume markings, not dose recommendations.</p>
+</div>
+) : selectedDoseDetail?.savedCalculation ? (
+<div className="space-y-3">
+<div className="rounded-[18px] border border-primary/30 bg-primary/10 p-4 text-center">
+<p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Saved draw amount</p>
+<p className="mt-1 text-4xl font-black tracking-normal text-primary">{formatSyringeUnits(selectedDoseDetail.savedCalculation.drawUnits)}</p>
+<p className="mt-1 text-sm font-semibold text-primary">{formatSavedDrawLabel(selectedDoseDetail.savedCalculation)}</p>
+</div>
+<SyringeVisualization syringeType={u100Syringe} drawUnits={selectedDoseDetail.savedCalculation.drawUnits} doseLabel={formatDose(selectedDosePeptide.doseValue, selectedDosePeptide.doseUnit)} />
+<p className="text-xs leading-relaxed text-muted-foreground">Using saved reconstitution math. Activate matching inventory to keep future dose logging tied to a vial.</p>
+</div>
+) : (
+<div className="rounded-[18px] border border-chart-4/40 bg-chart-4/10 p-4">
+<p className="text-sm font-extrabold text-chart-4">No reconstitution saved yet</p>
+<p className="mt-2 text-sm leading-6 text-muted-foreground">Save vial amount and BAC water first, then PeptideOS can show syringe draw units for this protocol dose.</p>
+<Button asChild className="mt-4 w-full">
+<Link href={`/more/reconstitution?compound=${selectedDosePeptide.peptideId}`} onClick={() => setDoseDetailPeptideId(null)}>
+Open reconstitution
+</Link>
+</Button>
+</div>
+)}
+</div>
+)}
+</DialogContent>
+</Dialog>
+
+<Dialog open={isActionsOpen} onOpenChange={(open) => {
+setIsActionsOpen(open);
+if (!open) setIsDeleteConfirming(false);
       }}>
         <DialogContent>
           <DialogHeader>
@@ -449,6 +528,56 @@ const handleBack = () => {
 
     </AppShell>
   );
+}
+
+interface ProtocolDoseDetail {
+  preview: DoseDrawVolumePreview | null;
+  sourceLabel: string;
+  savedCalculation: ReconstitutionCalculation | null;
+}
+
+function buildProtocolDoseDetail(
+  stackPeptide: StackPeptide,
+  vials: Vial[],
+  savedCalculations: ReconstitutionCalculation[],
+): ProtocolDoseDetail {
+  const activeVials = vials.filter((vial) => vial.peptideId === stackPeptide.peptideId && vial.status === 'active');
+  for (const vial of activeVials) {
+    const preview = getDoseDrawVolumePreview({
+      vial,
+      doseValue: stackPeptide.doseValue,
+      doseUnit: stackPeptide.doseUnit,
+    });
+    if (preview) {
+      return {
+        preview,
+        sourceLabel: vial.name || 'Active vial',
+        savedCalculation: null,
+      };
+    }
+  }
+
+  const savedCalculation = [...savedCalculations]
+    .filter((calculation) => (
+      calculation.compoundId === stackPeptide.peptideId &&
+      calculation.doseUnit === stackPeptide.doseUnit &&
+      Math.abs(calculation.doseValue - stackPeptide.doseValue) < 0.0001
+    ))
+    .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime())[0] ?? null;
+
+  return {
+    preview: null,
+    sourceLabel: savedCalculation ? 'Saved reconstitution' : '',
+    savedCalculation,
+  };
+}
+
+function formatSyringeUnits(value: number) {
+  return `${value.toLocaleString('en-US', { maximumFractionDigits: value % 1 === 0 ? 0 : 1 })} U`;
+}
+
+function formatSavedDrawLabel(calculation: ReconstitutionCalculation) {
+  return `${formatSyringeUnits(calculation.drawUnits)} / ${calculation.drawMl.toFixed(2)} mL`;
 }
 
 function getProgressPercentage(stack: Stack) {
