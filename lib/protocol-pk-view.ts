@@ -15,9 +15,12 @@ export interface ProtocolPkCompoundView {
   actualPoints: ConcentrationCurvePoint[];
   projectedPoints: ConcentrationCurvePoint[];
   currentEstimatedMg: number;
+  estimatedBeforeNextMg: number | null;
   peakProjectedMg: number;
   percentOfPeak: number;
+  lowProjectedMg: number;
   nextEventAt?: string;
+  lastRecordedAt?: string;
 }
 
 export interface ProtocolPkView {
@@ -98,15 +101,25 @@ function buildCompoundPkView(
     intervalHours: 12,
   });
   const currentEstimatedMg = sumEstimatedRemainingAmount(actualEvents, now.toISOString(), halfLifeHours);
+  const nextEventAt = plannedEvents
+    .map((event) => event.occurredAt)
+    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())[0];
+  const estimatedBeforeNextMg = nextEventAt
+    ? sumEstimatedRemainingAmount(actualEvents, nextEventAt, halfLifeHours)
+    : null;
   const peakProjectedMg = Math.max(
     currentEstimatedMg,
     ...projectedPoints.map((point) => point.estimatedRemainingMg),
     0,
   );
   const percentOfPeak = peakProjectedMg > 0 ? Math.min(100, Math.round((currentEstimatedMg / peakProjectedMg) * 100)) : 0;
-  const nextEventAt = plannedEvents
+  const lowProjectedMg = Math.min(
+    currentEstimatedMg,
+    ...projectedPoints.map((point) => point.estimatedRemainingMg),
+  );
+  const lastRecordedAt = actualEvents
     .map((event) => event.occurredAt)
-    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())[0];
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
 
   return {
     compound,
@@ -116,8 +129,11 @@ function buildCompoundPkView(
     actualPoints,
     projectedPoints,
     currentEstimatedMg,
+    estimatedBeforeNextMg,
     peakProjectedMg,
     percentOfPeak,
+    lowProjectedMg,
     nextEventAt,
+    lastRecordedAt,
   };
 }
