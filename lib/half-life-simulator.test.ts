@@ -14,6 +14,13 @@ const compound = {
   },
 } satisfies Pick<Compound, 'id' | 'name' | 'pharmacokinetics'>;
 
+const iuCompound = {
+  ...compound,
+  id: 'hgh-somatropin',
+  name: 'hGH / Somatropin',
+  conversion: { iuPerMg: 3 },
+} satisfies Pick<Compound, 'id' | 'name' | 'conversion' | 'pharmacokinetics'>;
+
 describe('half-life simulator', () => {
   it('models repeated scheduled doses inside the selected window', () => {
     const simulation = buildHalfLifeSimulation({
@@ -51,6 +58,21 @@ describe('half-life simulator', () => {
 
     expect(simulation.events[0].amountMg).toBe(0.5);
     expect(simulation.currentEstimatedMg).toBe(0.5);
+  });
+
+  it('converts IU doses to mg when compound conversion metadata is available', () => {
+    const simulation = buildHalfLifeSimulation({
+      compound: iuCompound,
+      doseValue: 3,
+      doseUnit: 'iu',
+      doseCount: 1,
+      frequencyId: 'daily',
+      windowDays: 14,
+      now: new Date('2026-06-01T08:00:00.000Z'),
+    });
+
+    expect(simulation.events[0].amountMg).toBe(1);
+    expect(simulation.currentEstimatedMg).toBe(1);
   });
 
   it('reports unsupported compounds instead of drawing a fake curve', () => {

@@ -12,13 +12,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useApp } from '@/lib/context';
-import { formatDose, getAllowedDoseUnits, getDosePresetsForPeptide } from '@/lib/dose-helpers';
+import { formatDose, getDosePresetsForPeptide } from '@/lib/dose-helpers';
 import { buildHalfLifeSimulation, halfLifeFrequencyOptions, type HalfLifeFrequencyId } from '@/lib/half-life-simulator';
 import { cn } from '@/lib/utils';
 import type { Compound, DoseUnit } from '@/lib/types';
 
 const windowOptions = [14, 30, 90, 120];
 const doseCountOptions = [1, 2, 4, 8, 12];
+const maxDoseCount = 365;
 
 export default function HalfLifeVisualizerPage() {
   const { data } = useApp();
@@ -33,7 +34,7 @@ export default function HalfLifeVisualizerPage() {
   const [doseCount, setDoseCount] = useState(4);
   const [frequencyId, setFrequencyId] = useState<HalfLifeFrequencyId>('weekly');
   const [windowDays, setWindowDays] = useState(14);
-  const allowedUnits = useMemo(() => selectedCompound ? getAllowedDoseUnits(selectedCompound.id) : ['mcg', 'mg'] satisfies DoseUnit[], [selectedCompound]);
+  const allowedUnits = useMemo(() => selectedCompound ? getHalfLifeDoseUnits(selectedCompound) : ['mcg', 'mg'] satisfies DoseUnit[], [selectedCompound]);
   const dosePresets = useMemo(() => selectedCompound ? getDosePresetsForPeptide(selectedCompound.id).slice(0, 5) : [], [selectedCompound]);
   const filteredCompounds = useMemo(() => {
     const query = compoundSearch.trim().toLowerCase();
@@ -54,8 +55,8 @@ export default function HalfLifeVisualizerPage() {
 
   const applyCompound = (compound: Compound) => {
     setSelectedCompoundId(compound.id);
-    const units = getAllowedDoseUnits(compound.id);
-    if (!units.includes(doseUnit)) setDoseUnit(units[0]);
+    const units = getHalfLifeDoseUnits(compound);
+    setDoseUnit(units.includes(compound.defaultDoseUnit) ? compound.defaultDoseUnit : units[0]);
     const preset = getDosePresetsForPeptide(compound.id)[0];
     if (preset) {
       setDoseValue(String(preset.doseValue));
@@ -95,7 +96,25 @@ export default function HalfLifeVisualizerPage() {
         <Card>
           <CardContent className="space-y-4 p-4">
             <div className="space-y-2">
-              <Label htmlFor="compound-search">Compound</Label>
+              <Label htmlFor="compound-search">Search compounds</Label>
+              <Select
+                value={selectedCompound?.id ?? ''}
+                onValueChange={(compoundId) => {
+                  const compound = pkCompounds.find((candidate) => candidate.id === compoundId);
+                  if (compound) applyCompound(compound);
+                }}
+              >
+                <SelectTrigger aria-label="Compound picker">
+                  <SelectValue placeholder="Select compound" />
+                </SelectTrigger>
+                <SelectContent>
+                  {pkCompounds.map((compound) => (
+                    <SelectItem key={compound.id} value={compound.id}>
+                      {compound.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -125,13 +144,13 @@ export default function HalfLifeVisualizerPage() {
 
             <div className="grid grid-cols-[1fr_96px] gap-3">
               <div className="space-y-2">
-                <Label htmlFor="dose-value">Dose</Label>
+                <Label htmlFor="dose-value">Dose amount</Label>
                 <Input id="dose-value" inputMode="decimal" value={doseValue} onChange={(event) => setDoseValue(event.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Unit</Label>
                 <Select value={doseUnit} onValueChange={(value) => setDoseUnit(value as DoseUnit)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger aria-label="Dose unit"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {allowedUnits.map((unit) => <SelectItem key={unit} value={unit}>{unit === 'iu' ? 'IU' : unit}</SelectItem>)}
                   </SelectContent>
@@ -167,13 +186,25 @@ export default function HalfLifeVisualizerPage() {
               ))}
             </ChipGroup>
 
-            <ChipGroup label="Doses to model">
+            <div className="space-y-2">
+              <Label htmlFor="dose-count">Doses to model</Label>
+              <Input
+                id="dose-count"
+                inputMode="numeric"
+                type="number"
+                min={1}
+                max={maxDoseCount}
+                value={doseCount}
+                onChange={(event) => setDoseCount(clampDoseCount(event.target.value))}
+              />
+              <div className="flex gap-2 overflow-x-auto pb-1">
               {doseCountOptions.map((count) => (
                 <Chip key={count} active={count === doseCount} onClick={() => setDoseCount(count)}>
                   {count}
                 </Chip>
               ))}
-            </ChipGroup>
+              </div>
+            </div>
 
             <ChipGroup label="Window">
               {windowOptions.map((days) => (
@@ -312,4 +343,31 @@ function formatRelativeClearance(value?: string | null) {
   if (diffDays === 0) return '<1d';
   if (diffDays < 14) return `${diffDays}d`;
   return `${Math.round(diffDays / 7)}w`;
+}
+
+function getHalfLifeDoseUnits(compound: Compound): DoseUnit[] {
+  const units = new Set<DoseUnit>(['mcg', 'mg']);
+  if (
+    compound.defaultDoseUnit === 'iu'
+    || compound.conversion?.iuPerMg
+    || compound.conversion?.mgPerIU
+    || compound.dosePresets.some((preset) => preset.unit === 'iu')
+    || compound.vialPresets.some((preset) => preset.totalAmount?.unit === 'iu')
+  ) {
+    units.add('iu');
+  }
+
+  return Array.from(units).sort((a, b) => unitOrder(a) - unitOrder(b));
+}
+
+function unitOrder(unit: DoseUnit) {
+  if (unit === 'iu') return 0;
+  if (unit === 'mg') return 1;
+  return 2;
+}
+
+function clampDoseCount(value: string) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed)) return 1;
+  return Math.max(1, Math.min(maxDoseCount, parsed));
 }
