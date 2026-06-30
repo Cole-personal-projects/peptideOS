@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 
 test.describe('protocol dose detail view', () => {
-  test('opens a read-only syringe units view from a protocol compound card', async ({ page }, testInfo) => {
+  test('opens read-only syringe units view from protocol compound card', async ({ page }, testInfo) => {
     const exportPath = testInfo.outputPath('protocol-dose-detail.json');
     await writeFile(exportPath, JSON.stringify(buildBackup({
       vials: [
@@ -24,7 +24,12 @@ test.describe('protocol dose detail view', () => {
 
     await restoreBackup(page, exportPath);
     await page.goto('/stacks/stack-dose-detail');
-    await page.getByRole('button', { name: 'Open dose view for BPC-157' }).click();
+
+    const compoundCard = page.getByRole('button', { name: 'Open dose view for BPC-157' });
+    await expect(compoundCard.getByText('Draw ready')).toBeVisible();
+    await expect(compoundCard.getByText(/10 U/)).toBeVisible();
+
+    await compoundCard.click();
 
     const dialog = page.getByRole('dialog', { name: 'BPC-157' });
     await expect(dialog).toBeVisible();
@@ -34,17 +39,30 @@ test.describe('protocol dose detail view', () => {
     await expect(dialog.getByLabel('Syringe showing 10.0 units to draw')).toBeVisible();
   });
 
-  test('prompts reconstitution setup when syringe math is missing', async ({ page }, testInfo) => {
+  test('returns from reconstitution setup and marks protocol dose draw ready', async ({ page }, testInfo) => {
     const exportPath = testInfo.outputPath('protocol-dose-detail-missing.json');
     await writeFile(exportPath, JSON.stringify(buildBackup({ vials: [] })));
 
     await restoreBackup(page, exportPath);
     await page.goto('/stacks/stack-dose-detail');
-    await page.getByRole('button', { name: 'Open dose view for BPC-157' }).click();
 
+    const compoundCard = page.getByRole('button', { name: 'Open dose view for BPC-157' });
+    await expect(compoundCard.getByText('Draw setup')).toBeVisible();
+    await expect(compoundCard.getByText('Add reconstitution')).toBeVisible();
+
+    await compoundCard.click();
     await expect(page.getByText('No reconstitution saved yet')).toBeVisible();
     await page.getByRole('link', { name: 'Open reconstitution' }).click();
-    await expect(page).toHaveURL(/\/more\/reconstitution\?compound=bpc-157$/);
+    await expect(page).toHaveURL(/\/more\/reconstitution\?compound=bpc-157&doseValue=250&doseUnit=mcg&returnTo=%2Fstacks%2Fstack-dose-detail$/);
+
+    await expect(page.getByRole('heading', { name: 'Reconstitution Calculator' })).toBeVisible();
+    await expect(page.locator('input[value="250"]').first()).toBeVisible();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+
+    await expect(page).toHaveURL(/\/stacks\/stack-dose-detail$/);
+    const readyCard = page.getByRole('button', { name: 'Open dose view for BPC-157' });
+    await expect(readyCard.getByText('Draw ready')).toBeVisible();
+    await expect(readyCard.getByText(/10 U/)).toBeVisible();
   });
 });
 
@@ -54,17 +72,21 @@ async function restoreBackup(page: import('@playwright/test').Page, exportPath: 
   await page.getByLabel('Import Data File').setInputFiles(exportPath);
   await expect(page.getByRole('alertdialog', { name: 'Restore this PeptideOS backup?' })).toBeVisible();
   await page.getByRole('button', { name: 'Restore backup' }).click();
-  await expect(page.getByRole('status')).toContainText('Data restored from backup');
+  await expect(page.getByRole('status')).toContainText('Data restored');
 }
 
-function buildBackup({ vials }: { vials: unknown[] }) {
+function buildBackup(overrides: Record<string, unknown> = {}) {
+  const now = '2026-06-28T12:00:00.000Z';
+
   return {
-    schemaVersion: 7,
-    exportedAt: '2026-06-28T12:00:00.000Z',
+    schemaVersion: 1,
+    exportedAt: now,
     data: {
-      vials,
-      inventoryBatches: [],
+      peptides: [],
+      compounds: [],
       doses: [],
+      vials: [],
+      inventoryBatches: [],
       stacks: [
         {
           id: 'stack-dose-detail',
@@ -103,6 +125,7 @@ function buildBackup({ vials }: { vials: unknown[] }) {
         biometricLock: false,
         darkMode: true,
       },
+      ...overrides,
     },
   };
 }
