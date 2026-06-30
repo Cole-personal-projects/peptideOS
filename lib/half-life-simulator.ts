@@ -1,4 +1,3 @@
-import { convertDoseToMg } from './dose-helpers';
 import { sampleEstimatedRemainingCurve, sumEstimatedRemainingAmount, type ConcentrationCurvePoint, type PharmacokineticDoseEvent } from './pharmacokinetics';
 import type { Compound, DoseUnit } from './types';
 
@@ -11,7 +10,7 @@ export interface HalfLifeFrequencyOption {
 }
 
 export interface HalfLifeSimulationInput {
-  compound: Pick<Compound, 'id' | 'name' | 'pharmacokinetics'>;
+  compound: Pick<Compound, 'id' | 'name' | 'conversion' | 'pharmacokinetics'>;
   doseValue: number;
   doseUnit: DoseUnit;
   doseCount: number;
@@ -46,14 +45,14 @@ export function buildHalfLifeSimulation(input: HalfLifeSimulationInput): HalfLif
     return emptySimulation('No source-backed half-life is available for this compound.');
   }
 
-  const doseMg = convertDoseToMg(input.compound.id, input.doseValue, input.doseUnit);
+  const doseMg = convertDoseToMgForCompound(input.compound, input.doseValue, input.doseUnit);
   if (!doseMg || doseMg <= 0) {
     return emptySimulation('Enter a dose that can be converted to mg.');
   }
 
   const frequency = halfLifeFrequencyOptions.find((option) => option.id === input.frequencyId) ?? halfLifeFrequencyOptions[0];
   const now = input.now ?? new Date();
-  const doseCount = Math.max(1, Math.min(60, Math.round(input.doseCount)));
+  const doseCount = Math.max(1, Math.min(365, Math.round(input.doseCount)));
   const windowDays = Math.max(1, Math.min(180, Math.round(input.windowDays)));
   const endAt = new Date(now.getTime() + windowDays * DAY_MS).toISOString();
   const events = Array.from({ length: doseCount }, (_, index) => ({
@@ -81,6 +80,18 @@ export function buildHalfLifeSimulation(input: HalfLifeSimulationInput): HalfLif
     peakEstimatedMg,
     clearsAt,
   };
+}
+
+function convertDoseToMgForCompound(
+  compound: Pick<Compound, 'id' | 'conversion'>,
+  value: number,
+  unit: DoseUnit,
+) {
+  if (unit === 'mg') return value;
+  if (unit === 'mcg') return value / 1000;
+  if (compound.conversion?.iuPerMg) return value / compound.conversion.iuPerMg;
+  if (compound.conversion?.mgPerIU) return value * compound.conversion.mgPerIU;
+  return null;
 }
 
 function estimateClearanceAt(events: PharmacokineticDoseEvent[], halfLifeHours: number, peakEstimatedMg: number) {
