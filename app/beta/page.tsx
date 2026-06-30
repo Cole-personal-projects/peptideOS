@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { LockKeyhole, ShieldCheck } from 'lucide-react';
+import { Activity, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { BetaAccessForm } from '@/components/beta-access-form';
 import { betaRedemptionMessage, type BetaRedemptionReason } from '@/lib/beta-access';
 import { getBetaCookieSecret, safeBetaNextPath } from '@/lib/beta-gate';
@@ -44,16 +44,25 @@ export default async function BetaPage({ searchParams }: BetaPageProps) {
           </div>
         </header>
 
-        <section className="flex flex-1 flex-col justify-center py-10">
-          <div className="mb-7">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+        <section className="flex flex-1 flex-col justify-center py-8">
+          <div className="mb-6">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
               <ShieldCheck className="size-3.5 text-primary" />
               Closed beta
             </div>
-            <h1 className="text-4xl font-semibold leading-tight tracking-normal">Enter beta access.</h1>
-            <p className="mt-3 text-base leading-7 text-muted-foreground">
-              Use the email you want tied to this beta and paste your beta key.
+            <h1 className="text-4xl font-black leading-[0.98] tracking-normal">Help shape the protocol cockpit.</h1>
+            <p className="mt-4 text-base leading-7 text-muted-foreground">
+              Enter your beta key once. Then use the app normally and send specific feedback on the flows that should feel faster, clearer, and more visual.
             </p>
+          </div>
+
+          <div className="mb-4 grid grid-cols-3 gap-2">
+            {['Set up', 'Track', 'Report'].map((label) => (
+              <div key={label} className="rounded-[18px] border bg-card p-3">
+                <Activity className="mb-2 size-4 text-primary" />
+                <p className="text-xs font-extrabold">{label}</p>
+              </div>
+            ))}
           </div>
 
           <div className="rounded-[28px] border bg-card p-5 shadow-xl shadow-primary/5">
