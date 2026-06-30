@@ -14,6 +14,7 @@ import {
   Settings,
   TestTube,
   Users,
+  Waves,
 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
@@ -52,6 +53,7 @@ const menuSections: MenuSection[] = [
   {
     title: 'Track',
     items: [
+      { href: '/more/half-life', label: 'Half-Life', icon: Waves, description: 'PK curve' },
       { href: '/more/signals', label: 'Signals', icon: Activity, description: 'Check-ins' },
       { href: '/more/integrations', label: 'Integrations', icon: Heart, description: 'Devices', badge: 'Soon' },
     ],

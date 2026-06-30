@@ -240,7 +240,7 @@ const handleBack = () => {
             </div>
           <div className="bg-[#211208] px-3.5 py-3">
 <Button asChild className="h-9 w-full rounded-[14px] bg-primary text-sm font-bold tracking-normal text-black hover:bg-primary/90">
-<Link href="/log"><Plus className="mr-2 h-5 w-5" /> Log Dose Now</Link>
+<Link href="/log?action=log"><Plus className="mr-2 h-5 w-5" /> Log Dose Now</Link>
               </Button>
             </div>
           </section>
