@@ -116,8 +116,12 @@ describe('protocol PK view', () => {
     expect(view.compounds[0].actualEvents).toHaveLength(1);
     expect(view.compounds[0].plannedEvents).toHaveLength(1);
     expect(view.compounds[0].currentEstimatedMg).toBeGreaterThan(0);
+    expect(view.compounds[0].estimatedBeforeNextMg).toBeGreaterThan(0);
+    expect(view.compounds[0].estimatedBeforeNextMg).toBeLessThan(view.compounds[0].currentEstimatedMg);
+    expect(view.compounds[0].lowProjectedMg).toBeLessThanOrEqual(view.compounds[0].currentEstimatedMg);
     expect(view.compounds[0].peakProjectedMg).toBeGreaterThanOrEqual(view.compounds[0].currentEstimatedMg);
     expect(view.compounds[0].nextEventAt).toBe('2026-06-29T08:00:00.000Z');
+    expect(view.compounds[0].lastRecordedAt).toBe('2026-06-22T08:00:00.000Z');
   });
 
   it('keeps unsupported compounds out of modeled curves', () => {

@@ -746,8 +746,8 @@ function ProtocolPkCard({ view }: { view: ReturnType<typeof buildProtocolPkView>
             <Waves className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold tracking-normal">Estimated Remaining</h2>
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">Actual solid · projected dashed</p>
+            <h2 className="text-sm font-bold tracking-normal">PK Timeline</h2>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">Recorded doses + saved schedule</p>
           </div>
         </div>
         {selected && (
@@ -781,10 +781,10 @@ function ProtocolPkCard({ view }: { view: ReturnType<typeof buildProtocolPkView>
           )}
 
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <PkMetric label="Now" value={formatEstimatedMg(selected.currentEstimatedMg)} />
-            <PkMetric label="Peak" value={`${selected.percentOfPeak}%`} accent />
+            <PkMetric label="Estimated now" value={formatEstimatedMg(selected.currentEstimatedMg)} />
+            <PkMetric label="Before next" value={selected.estimatedBeforeNextMg === null ? 'No dose' : formatEstimatedMg(selected.estimatedBeforeNextMg)} accent />
             <PkMetric label="Half-life" value={formatHalfLife(selected.halfLifeHours)} />
-            <PkMetric label="Next" value={selected.nextEventAt ? formatShortDateTime(selected.nextEventAt) : 'None'} />
+            <PkMetric label="Next scheduled" value={selected.nextEventAt ? formatShortDateTime(selected.nextEventAt) : 'None'} />
           </div>
 
           <PkCurveGraph compound={selected} />
@@ -795,8 +795,8 @@ function ProtocolPkCard({ view }: { view: ReturnType<typeof buildProtocolPkView>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{selected.compound.pharmacokinetics?.halfLifeSource}</p>
             </div>
             <div className="rounded-[16px] border border-border bg-secondary p-3 sm:min-w-36 sm:text-right">
-              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Events</p>
-              <p className="mt-1 text-xs font-bold text-primary">{selected.actualEvents.length} actual · {selected.plannedEvents.length} planned</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Window</p>
+              <p className="mt-1 text-xs font-bold text-primary">{formatEstimatedMg(selected.lowProjectedMg)} low · {formatEstimatedMg(selected.peakProjectedMg)} high</p>
             </div>
           </div>
 
@@ -847,27 +847,46 @@ function PkCurveGraph({ compound }: { compound: ProtocolPkCompoundView }) {
   const doseMarkers = [...compound.actualEvents, ...compound.plannedEvents].slice(-16);
   const gradientId = `pk-fill-${compound.compound.id.replace(/[^a-z0-9_-]/gi, '-')}`;
 
+  const nowX = compound.actualPoints.length > 0
+    ? 20 + ((new Date(compound.actualPoints.at(-1)?.sampledAt ?? new Date().toISOString()).getTime() - timelineStart) / Math.max(timelineEnd - timelineStart, 1)) * 280
+    : 20;
+
   return (
-    <div className="relative overflow-hidden rounded-[18px] border border-border bg-background px-2 py-3">
-      <svg viewBox="0 0 320 150" className="h-40 w-full" role="img" aria-label={`${compound.compound.name} estimated remaining amount curve`}>
+    <div className="relative overflow-hidden rounded-[18px] border border-border bg-background px-2 pb-2 pt-3">
+      <div className="mb-2 grid grid-cols-3 px-2 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+        <span>7d history</span>
+        <span className="text-center text-primary">Today</span>
+        <span className="text-right">14d schedule</span>
+      </div>
+      <svg viewBox="0 0 320 150" className="h-40 w-full" role="img" aria-label={`${compound.compound.name} estimated remaining amount timeline`}>
         <defs>
           <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.42" />
             <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.02" />
           </linearGradient>
         </defs>
+        <rect x="20" y="16" width={Math.max(0, nowX - 20)} height="108" rx="10" fill="var(--muted)" fillOpacity="0.38" />
+        <rect x={nowX} y="16" width={Math.max(0, 300 - nowX)} height="108" rx="10" fill="var(--primary)" fillOpacity="0.08" />
         <path d="M20 124 H300" stroke="var(--border)" strokeWidth="1" />
         <path d="M20 82 H300" stroke="var(--border)" strokeOpacity="0.55" strokeWidth="1" />
         <path d="M20 40 H300" stroke="var(--border)" strokeOpacity="0.55" strokeWidth="1" />
+        <path d={`M${nowX.toFixed(1)} 18 V128`} stroke="var(--primary)" strokeWidth="1.5" strokeOpacity="0.8" />
         {projectedPath && <path d={closeAreaPath(projectedPath)} fill={`url(#${gradientId})`} />}
-        {actualPath && <path d={actualPath} fill="none" stroke="var(--foreground)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />}
-        {projectedPath && <path d={projectedPath} fill="none" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="7 6" />}
+        {actualPath && <path d={actualPath} fill="none" stroke="var(--foreground)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />}
+        {projectedPath && <path d={projectedPath} fill="none" stroke="var(--primary)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />}
         {doseMarkers.map((event) => {
           const x = 20 + ((new Date(event.occurredAt).getTime() - timelineStart) / Math.max(timelineEnd - timelineStart, 1)) * 280;
-          return <circle key={event.id} cx={x} cy={event.source === 'actual' ? 128 : 132} r={event.source === 'actual' ? 4 : 3} fill={event.source === 'actual' ? 'var(--foreground)' : 'var(--primary)'} />;
+          return event.source === 'actual'
+            ? <circle key={event.id} cx={x} cy="132" r="4" fill="var(--foreground)" />
+            : <rect key={event.id} x={x - 3} y="129" width="6" height="6" rx="2" fill="var(--primary)" />;
         })}
       </svg>
-      <div className="absolute left-3 top-3 rounded-full border border-border bg-background/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+      <div className="mt-1 flex flex-wrap items-center gap-3 px-2 text-[11px] font-semibold text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-foreground" />Recorded</span>
+        <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-[3px] bg-primary" />Scheduled</span>
+        <span className="ml-auto text-primary">{compound.plannedEvents.length} upcoming</span>
+      </div>
+      <div className="absolute left-3 top-10 rounded-full border border-border bg-background/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
         {compound.compound.name}
       </div>
     </div>
