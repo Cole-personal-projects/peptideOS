@@ -15,7 +15,7 @@ await expect(page.getByText('Protocol score')).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Start local setup' }).click();
 
-    await expect(page.getByRole('alertdialog', { name: 'Research Purposes Only' })).toBeVisible();
+    await expect(page.getByRole('alertdialog', { name: 'One-time setup' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'I Understand' })).toBeVisible();
   });
 
@@ -38,7 +38,7 @@ await expect(page.getByText('Protocol score')).toHaveCount(0);
     await page.getByRole('link', { name: 'Sign in' }).click();
 
     await expect(page).toHaveURL(/\/more\/settings\?entry=signin$/);
-    await expect(page.getByRole('alertdialog', { name: 'Research Purposes Only' })).toHaveCount(0);
+    await expect(page.getByRole('alertdialog', { name: 'One-time setup' })).toHaveCount(0);
     await expect(page.getByText('Account', { exact: true })).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Send sign-in link' })).toBeVisible();
@@ -49,7 +49,7 @@ await expect(page.getByText('Protocol score')).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Start local setup' }).click();
 
-    await expect(page.getByRole('alertdialog', { name: 'Research Purposes Only' })).toBeVisible();
+    await expect(page.getByRole('alertdialog', { name: 'One-time setup' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'I Understand' })).toBeVisible();
   });
 });
