@@ -1,9 +1,12 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { CalendarDays, ChevronLeft, ChevronRight, Filter, List, Map } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
+import { QuickConfirmDoseDialog } from '@/components/dashboard/quick-confirm-dose-dialog';
+import { LogDoseSheet } from '@/components/navigation/log-dose-sheet';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,11 +34,17 @@ const signalTone: Record<DaySignal, 'primary' | 'success' | 'warning' | 'danger'
 };
 
 export default function LogPage() {
-  const { data, getDosesByDate } = useApp();
-  const [view, setView] = useState<'calendar' | 'list'>('calendar');
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [filterPeptide, setFilterPeptide] = useState<string>('all');
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+const { data, getDosesByDate } = useApp();
+const searchParams = useSearchParams();
+const logAction = searchParams.get('action');
+const [view, setView] = useState<'calendar' | 'list'>('calendar');
+const [selectedDate, setSelectedDate] = useState(new Date());
+const [filterPeptide, setFilterPeptide] = useState<string>('all');
+const [currentMonth, setCurrentMonth] = useState(new Date());
+const [activeScheduleLogId, setActiveScheduleLogId] = useState<string | null>(null);
+const [logSheetDismissed, setLogSheetDismissed] = useState(false);
+const [manualLogSheetOpen, setManualLogSheetOpen] = useState(false);
+const logSheetOpen = manualLogSheetOpen;
   const trackableCompounds = getTrackableCompounds(data);
   const [nowMs] = useState(() => Date.now());
 
@@ -87,11 +96,16 @@ export default function LogPage() {
       .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
   }, [data.scheduleLogs, filterPeptide, selectedDate]);
 
-  const timelineGroups = useMemo(() => buildDoseTimelineGroups(data.doses, filterPeptide), [data.doses, filterPeptide]);
-  const dayEmptyState = getEmptyStateContent('log-day-empty');
-  const timelineEmptyState = getEmptyStateContent('log-timeline-empty');
+const timelineGroups = useMemo(() => buildDoseTimelineGroups(data.doses, filterPeptide), [data.doses, filterPeptide]);
+const dayEmptyState = getEmptyStateContent('log-day-empty');
+const timelineEmptyState = getEmptyStateContent('log-timeline-empty');
+useEffect(() => {
+if (logAction !== 'log' || logSheetDismissed) return;
+const handle = window.setTimeout(() => setManualLogSheetOpen(true), 0);
+return () => window.clearTimeout(handle);
+}, [logAction, logSheetDismissed]);
 
-  return (
+return (
     <AppShell>
       <PageHeader
         title="Dose Log"
@@ -217,9 +231,18 @@ export default function LogPage() {
                 </Empty>
               ) : (
                 <div className="space-y-2">
-                  {selectedScheduleLogs.map((log) => (
-                    <ScheduleLogRow key={log.id} log={log} compounds={trackableCompounds} schedules={data.schedules} nowMs={nowMs} />
-                  ))}
+{selectedScheduleLogs.map((log) => (
+<ScheduleLogRow
+key={log.id}
+log={log}
+compounds={trackableCompounds}
+schedules={data.schedules}
+nowMs={nowMs}
+onLog={(logId) => {
+setActiveScheduleLogId(logId);
+}}
+/>
+))}
                   {selectedDoses.filter((dose) => !dose.scheduleLogId).map((dose) => (
                     <DoseRow key={dose.id} dose={dose} compounds={trackableCompounds} />
                   ))}
@@ -253,8 +276,25 @@ export default function LogPage() {
             )}
           </div>
         )}
-      </div>
-    </AppShell>
+</div>
+<LogDoseSheet
+open={logSheetOpen}
+onOpenChange={(open) => {
+setManualLogSheetOpen(open);
+if (!open) setLogSheetDismissed(true);
+}}
+/>
+<QuickConfirmDoseDialog
+logId={activeScheduleLogId}
+open={Boolean(activeScheduleLogId)}
+onOpenChange={(open) => {
+if (!open) setActiveScheduleLogId(null);
+}}
+title="Complete scheduled dose"
+description="Select vial and confirm details for this scheduled dose."
+confirmLabel="Complete dose"
+/>
+</AppShell>
   );
 }
 
@@ -279,12 +319,13 @@ function DoseRow({ dose, compounds }: { dose: Dose; compounds: ReturnType<typeof
   );
 }
 
-function ScheduleLogRow({ log, compounds, schedules, nowMs }: { log: ScheduleLog; compounds: ReturnType<typeof getTrackableCompounds>; schedules: Schedule[]; nowMs: number }) {
-  const compound = compounds.find((candidate) => candidate.id === log.peptideId);
-  const schedule = schedules.find((candidate) => candidate.id === log.scheduleId);
-  const status = getLogSignal(log, nowMs);
-  return (
-    <Card className="rounded-[16px]">
+function ScheduleLogRow({ log, compounds, schedules, nowMs, onLog }: { log: ScheduleLog; compounds: ReturnType<typeof getTrackableCompounds>; schedules: Schedule[]; nowMs: number; onLog: (logId: string) => void }) {
+const compound = compounds.find((candidate) => candidate.id === log.peptideId);
+const schedule = schedules.find((candidate) => candidate.id === log.scheduleId);
+const status = getLogSignal(log, nowMs);
+const canLog = log.status === 'pending';
+return (
+<Card className="rounded-[16px]">
       <CardContent className="flex items-center justify-between gap-3 p-3">
         <div className="flex min-w-0 items-center gap-3">
           <StatusDot tone={signalTone[status]} />
@@ -293,10 +334,21 @@ function ScheduleLogRow({ log, compounds, schedules, nowMs }: { log: ScheduleLog
             <p className="text-xs text-muted-foreground">{formatTime(log.dueAt)} · scheduled</p>
           </div>
         </div>
-        <div className="shrink-0 text-right">
-          {schedule && <Badge variant="secondary">{formatDose(schedule.doseValue, schedule.doseUnit)}</Badge>}
-          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">{status === 'done' ? 'Completed' : status}</p>
-        </div>
+<div className="shrink-0 text-right">
+{schedule && <Badge variant="secondary">{formatDose(schedule.doseValue, schedule.doseUnit)}</Badge>}
+<p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">{status === 'done' ? 'Completed' : status}</p>
+{canLog ? (
+<Button
+type="button"
+size="sm"
+className="mt-2 h-8 rounded-full px-3"
+onClick={() => onLog(log.id)}
+aria-label={`Log ${compound?.name ?? log.peptideId} scheduled dose`}
+>
+Log
+</Button>
+) : null}
+</div>
       </CardContent>
     </Card>
   );
