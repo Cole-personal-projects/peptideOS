@@ -251,10 +251,11 @@ const handleBack = () => {
             <span className="rounded-full border border-[#3a2012] bg-[#211208] px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-muted-foreground">{statusLabels[stack.status]}</span>
           </div>
           <div className="space-y-3">
-            {stack.peptides.map((peptide) => {
-              const compound = trackableCompounds.find((candidate) => candidate.id === peptide.peptideId);
-              const compoundName = compound?.name ?? peptide.peptideId;
-              return (
+{stack.peptides.map((peptide) => {
+const compound = trackableCompounds.find((candidate) => candidate.id === peptide.peptideId);
+const compoundName = compound?.name ?? peptide.peptideId;
+const doseDetail = buildProtocolDoseDetail(peptide, data.vials, data.reconstitutionCalculations);
+return (
                 <button
                   key={peptide.id ?? peptide.peptideId}
                   type="button"
@@ -272,13 +273,32 @@ const handleBack = () => {
                       <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Dose</p>
                     </div>
                   </div>
-                  <div className="mt-3 rounded-[14px] border border-[#3a2012] bg-[#1b100a] px-3 py-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Schedule</p>
-                    <p className="mt-1 text-sm font-semibold leading-snug text-primary">{formatScheduleSummary(peptide)}</p>
-                  </div>
-                </button>
-              );
-            })}
+<div className="mt-3 rounded-[14px] border border-[#3a2012] bg-[#1b100a] px-3 py-2">
+<p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Schedule</p>
+<p className="mt-1 text-sm font-semibold leading-snug text-primary">{formatScheduleSummary(peptide)}</p>
+</div>
+<div className={cn(
+  'mt-3 flex items-center justify-between gap-3 rounded-[14px] border px-3 py-2',
+  doseDetail.preview || doseDetail.savedCalculation
+    ? 'border-primary/30 bg-primary/10'
+    : 'border-chart-4/40 bg-chart-4/10',
+)}>
+  <div className="min-w-0">
+    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+      {doseDetail.preview || doseDetail.savedCalculation ? 'Draw ready' : 'Draw setup'}
+    </p>
+    <p className="mt-1 truncate text-sm font-extrabold text-primary">
+      {formatDoseDrawChip(doseDetail)}
+    </p>
+  </div>
+  <Beaker className={cn(
+    'h-4 w-4 shrink-0',
+    doseDetail.preview || doseDetail.savedCalculation ? 'text-primary' : 'text-chart-4',
+  )} />
+</div>
+</button>
+);
+})}
           </div>
           {(stack.description || stack.notes) && (
             <div className="mt-4 space-y-2 border-t border-[#332012] pt-3">
@@ -385,7 +405,7 @@ const handleBack = () => {
 <p className="text-sm font-extrabold text-chart-4">No reconstitution saved yet</p>
 <p className="mt-2 text-sm leading-6 text-muted-foreground">Save vial amount and BAC water first, then PeptideOS can show syringe draw units for this protocol dose.</p>
 <Button asChild className="mt-4 w-full">
-<Link href={`/more/reconstitution?compound=${selectedDosePeptide.peptideId}`} onClick={() => setDoseDetailPeptideId(null)}>
+<Link href={getReconstitutionHref(selectedDosePeptide, stack.id)} onClick={() => setDoseDetailPeptideId(null)}>
 Open reconstitution
 </Link>
 </Button>
@@ -573,11 +593,27 @@ function buildProtocolDoseDetail(
 }
 
 function formatSyringeUnits(value: number) {
-  return `${value.toLocaleString('en-US', { maximumFractionDigits: value % 1 === 0 ? 0 : 1 })} U`;
+return `${value.toLocaleString('en-US', { maximumFractionDigits: value % 1 === 0 ? 0 : 1 })} U`;
+}
+
+function formatDoseDrawChip(detail: ProtocolDoseDetail) {
+if (detail.preview) return `${formatSyringeUnits(detail.preview.syringeUnits)} · ${detail.preview.drawLabel}`;
+if (detail.savedCalculation) return `${formatSyringeUnits(detail.savedCalculation.drawUnits)} · saved`;
+return 'Add reconstitution';
 }
 
 function formatSavedDrawLabel(calculation: ReconstitutionCalculation) {
-  return `${formatSyringeUnits(calculation.drawUnits)} / ${calculation.drawMl.toFixed(2)} mL`;
+return `${formatSyringeUnits(calculation.drawUnits)} / ${calculation.drawMl.toFixed(2)} mL`;
+}
+
+function getReconstitutionHref(stackPeptide: StackPeptide, stackId: string) {
+const params = new URLSearchParams({
+compound: stackPeptide.peptideId,
+doseValue: stackPeptide.doseValue.toString(),
+doseUnit: stackPeptide.doseUnit,
+returnTo: `/stacks/${stackId}`,
+});
+return `/more/reconstitution?${params.toString()}`;
 }
 
 function getProgressPercentage(stack: Stack) {

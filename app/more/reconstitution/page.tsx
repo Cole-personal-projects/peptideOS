@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -55,19 +55,23 @@ const sortedPeptideConversions = [...peptideConversions].sort((a, b) => a.name.l
 
 export default function ReconstitutionPage() {
   const { data, addReconstitutionCalculation, deleteReconstitutionCalculation } = useApp();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialCompoundFromQuery = getConversionById(searchParams.get('compound') ?? '');
   const initialCompoundId = initialCompoundFromQuery?.id ?? 'bpc-157';
   const initialCompound = getConversionById(initialCompoundId);
+  const returnTo = getSafeReturnPath(searchParams.get('returnTo'));
+  const initialDoseValue = getPositiveQueryNumber(searchParams.get('doseValue'));
+  const initialDoseUnit = getDoseUnitQueryValue(searchParams.get('doseUnit'));
   // State
   const [selectedCompoundId, setSelectedCompoundId] = useState<string>(initialCompoundId);
   const [vialSize, setVialSize] = useState<string>(() => initialCompoundFromQuery?.typicalVialSizes[0]?.value.toString() ?? '5');
   const [vialUnit, setVialUnit] = useState<VialUnit>(initialCompoundFromQuery?.dosingMode === 'iu-primary' ? 'iu' : 'mg');
   const [bacWaterMl, setBacWaterMl] = useState<number>(2);
-  const [doseValue, setDoseValue] = useState<string>(() => initialCompoundFromQuery?.typicalDoseRange.min.toString() ?? '250');
-  const [doseUnit, setDoseUnit] = useState<DoseUnit>(
-    initialCompoundFromQuery?.dosingMode === 'iu-primary' ? 'iu' : initialCompoundFromQuery?.defaultUnit === 'mg' ? 'mg' : 'mcg',
-  );
+const [doseValue, setDoseValue] = useState<string>(() => initialDoseValue?.toString() ?? initialCompoundFromQuery?.typicalDoseRange.min.toString() ?? '250');
+const [doseUnit, setDoseUnit] = useState<DoseUnit>(
+initialDoseUnit ?? (initialCompoundFromQuery?.dosingMode === 'iu-primary' ? 'iu' : initialCompoundFromQuery?.defaultUnit === 'mg' ? 'mg' : 'mcg'),
+);
   const [syringeTypeId, setSyringeTypeId] = useState<string>('u100-1ml');
   const [vialCost, setVialCost] = useState<string>('');
   const [cycleDays, setCycleDays] = useState<string>('');
@@ -168,9 +172,12 @@ return sortedPeptideConversions.filter((candidate) => `${candidate.name} ${candi
       savedAt: new Date().toISOString(),
     };
     
-    addReconstitutionCalculation(newCalc);
-    toast.success('Calculation saved');
-  }, [addReconstitutionCalculation, calculations, compound, vialSize, vialUnit, bacWaterMl, doseValue, doseUnit]);
+addReconstitutionCalculation(newCalc);
+toast.success('Calculation saved');
+if (returnTo) {
+  router.push(returnTo);
+}
+}, [addReconstitutionCalculation, calculations, compound, vialSize, vialUnit, bacWaterMl, doseValue, doseUnit, returnTo, router]);
 
   // Share calculation
   const handleShare = useCallback(async () => {
@@ -613,4 +620,20 @@ return sortedPeptideConversions.filter((candidate) => `${candidate.name} ${candi
       </div>
     </AppShell>
   );
+}
+
+function getPositiveQueryNumber(value: string | null): number | null {
+  if (!value) return null;
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : null;
+}
+
+function getDoseUnitQueryValue(value: string | null): DoseUnit | null {
+  return value === 'mg' || value === 'mcg' || value === 'iu' ? value : null;
+}
+
+function getSafeReturnPath(value: string | null): string | null {
+  if (!value) return null;
+  if (!value.startsWith('/') || value.startsWith('//')) return null;
+  return value;
 }
