@@ -11,7 +11,7 @@ test.describe('local persistence', () => {
     await page.reload();
 
     await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'One-time setup' })).toHaveCount(0);
   });
 
   test('persists added vials across reloads', async ({ page }) => {
@@ -77,12 +77,12 @@ test.describe('local persistence', () => {
     await page.goto('/more/settings');
     await page.getByRole('button', { name: 'Clear local data' }).click();
     await page.getByRole('alertdialog', { name: 'Clear all local data?' }).getByRole('button', { name: 'Clear local data' }).click();
-    await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'One-time setup' })).toBeVisible();
     await page.reload();
 
-    await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'One-time setup' })).toBeVisible();
     await page.getByRole('button', { name: 'I Understand' }).click();
-    await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'One-time setup' })).toHaveCount(0);
     await page.goto('/more/inventory');
     await page.getByRole('tab', { name: /Sealed/ }).click();
 
@@ -135,7 +135,7 @@ test.describe('local persistence', () => {
     await expect(page.getByRole('status')).toContainText('Data restored from backup');
 
     await page.reload();
-    await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'One-time setup' })).toHaveCount(0);
     await page.goto('/more/inventory');
     await page.getByRole('tab', { name: /Sealed/ }).click();
     await expect(page.getByRole('link', { name: /Imported Backup GHK-Cu/ })).toBeVisible();

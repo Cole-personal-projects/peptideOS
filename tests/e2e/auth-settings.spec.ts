@@ -30,7 +30,7 @@ test.describe('account settings', () => {
     await page.getByRole('button', { name: 'Experienced' }).click();
     await expect(page.getByText('Experienced tracker')).toBeVisible();
     await expect(page.getByText('Biometric Lock')).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: 'Research Purposes Only' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'One-time setup' })).toHaveCount(0);
   });
 
   test('applies light and dark theme choices to the PWA shell', async ({ page }) => {

@@ -4,7 +4,7 @@ import { writeFile } from 'node:fs/promises';
 test.describe('dashboard workspace', () => {
 test('shows Carbon Ember cockpit on root after first-run accept', async ({ page }) => {
 await page.goto('/');
-await expect(page.getByRole('alertdialog', { name: 'Research Purposes Only' })).toBeVisible();
+await expect(page.getByRole('alertdialog', { name: 'One-time setup' })).toBeVisible();
 await page.getByRole('button', { name: 'I Understand' }).click();
 
 await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
