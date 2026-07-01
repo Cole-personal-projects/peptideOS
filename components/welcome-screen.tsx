@@ -21,6 +21,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { MarqueeTicker } from '@/components/ui/marquee-ticker';
 import { APP_COPYRIGHT, APP_RELEASE_TARGET, APP_VERSION } from '@/lib/app-metadata';
 
 interface WelcomeScreenProps {
@@ -318,6 +319,7 @@ export function WelcomeScreen({ onGetStarted, completedOnboarding = false }: Wel
 
       <section className="mx-auto grid w-full max-w-6xl items-center gap-10 px-5 pb-14 pt-8 md:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] md:pb-20 md:pt-14">
         <div className="max-w-2xl">
+<MarqueeTicker className="mb-5 max-w-xl" />
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
             <ShieldCheck className="size-3.5 text-primary" />
             Private research tracking. Local-first by default.

@@ -5,6 +5,12 @@ test.describe('welcome landing page', () => {
     await page.goto('/welcome');
 
     await expect(page.getByRole('heading', { name: 'PeptideOS' })).toBeVisible();
+    const banner = page.getByLabel('PeptideOS welcome banner');
+    await expect(banner).toBeVisible();
+    await expect(banner).toContainText('PeptideOS');
+    await expect(banner).toContainText('Optimize');
+    await expect(banner).toContainText('Grow');
+    await expect(banner).toContainText('Live');
     await expect(page.getByText('A private protocol cockpit for doses, inventory, labs, and estimated remaining amount.')).toBeVisible();
     await expect(page.getByLabel('Animated protocol cockpit preview')).toBeVisible();
     await expect(page.getByRole('button', { name: /Start local setup|Open PeptideOS/ })).toBeVisible();
