@@ -1,7 +1,7 @@
 import { sampleEstimatedRemainingCurve, sumEstimatedRemainingAmount, type ConcentrationCurvePoint, type PharmacokineticDoseEvent } from './pharmacokinetics';
 import type { Compound, DoseUnit } from './types';
 
-export type HalfLifeFrequencyId = 'daily' | 'every-2-days' | 'every-3-days' | 'weekly' | 'biweekly';
+export type HalfLifeFrequencyId = 'twice-daily' | 'daily' | 'every-2-days' | 'every-3-days' | 'weekly' | 'biweekly';
 
 export interface HalfLifeFrequencyOption {
   id: HalfLifeFrequencyId;
@@ -32,6 +32,7 @@ const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 
 export const halfLifeFrequencyOptions: HalfLifeFrequencyOption[] = [
+  { id: 'twice-daily', label: '2x daily', intervalDays: 0.5 },
   { id: 'daily', label: 'Daily', intervalDays: 1 },
   { id: 'every-2-days', label: 'Every 2d', intervalDays: 2 },
   { id: 'every-3-days', label: 'Every 3d', intervalDays: 3 },
@@ -47,7 +48,7 @@ export function buildHalfLifeSimulation(input: HalfLifeSimulationInput): HalfLif
 
   const doseMg = convertDoseToMgForCompound(input.compound, input.doseValue, input.doseUnit);
   if (!doseMg || doseMg <= 0) {
-    return emptySimulation('Enter a dose that can be converted to mg.');
+    return emptySimulation('Enter convertible dose amount.');
   }
 
   const frequency = halfLifeFrequencyOptions.find((option) => option.id === input.frequencyId) ?? halfLifeFrequencyOptions[0];
