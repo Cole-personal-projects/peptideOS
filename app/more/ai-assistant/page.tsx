@@ -8,6 +8,7 @@ import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { FluidMetaballs } from '@/components/ui/fluid-metaballs';
 import { Textarea } from '@/components/ui/textarea';
 import { QuickConfirmDoseDialog } from '@/components/dashboard/quick-confirm-dose-dialog';
 import {
@@ -209,7 +210,13 @@ export default function AIAssistantPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-          <PeppiMessage content={assistantMessage} />
+              {isSending ? (
+                <div className="rounded-md bg-secondary/50 p-3">
+                  <FluidMetaballs label="Peppi thinking" size="sm" showLabel />
+                </div>
+              ) : (
+                <PeppiMessage content={assistantMessage} />
+              )}
 
           {summaryCards.length > 0 && (
             <div className="grid gap-2" aria-label="Peppi today summary cards">
@@ -338,7 +345,7 @@ onDismiss={() => setPendingAction(null)}
                 </Button>
                 <Button onClick={sendMessage} disabled={!message.trim() || isSending}>
                   <Send className="w-4 h-4" />
-                  {isSending ? 'Sending...' : 'Send message'}
+                  {isSending ? 'Thinking...' : 'Send message'}
                 </Button>
               </div>
             </div>

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from 'react';
-import { AlertTriangle, Check, Loader2, RotateCcw, Sparkles } from 'lucide-react';
+import { AlertTriangle, Check, RotateCcw, Sparkles } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { FluidMetaballs } from '@/components/ui/fluid-metaballs';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/lib/context';
@@ -153,7 +154,7 @@ export function AiStackSheet({ open, onOpenChange }: AiStackSheetProps) {
               <Button type="button" className="w-full" onClick={handleParse} disabled={!description.trim() || loading}>
                 {loading ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Building schedule…
+                    <FluidMetaballs label="Building schedule" size="sm" className="mr-2" /> Building schedule…
                   </>
                 ) : (
                   <>
