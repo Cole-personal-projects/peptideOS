@@ -726,138 +726,162 @@ onChange={(event) => props.onLinkedStackIdChange(event.target.value)}
 }
 
 function PdfImportPanel(props: Parameters<typeof ImportWizard>[0]) {
-const isPhoto = props.method === 'photo';
-const compactName = compactFileName(props.selectedFileName);
-const status = getPdfImportStatus(props);
-const StatusIcon = status.icon;
-return (
-<Card className={cn('overflow-hidden', props.draft ? 'border-chart-3/40' : 'border-primary/20')}>
-<CardContent className="space-y-4 p-4">
-<div className="flex items-start gap-3">
-<span className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-xl', status.tone)}>
-{isPhoto ? <ImageIcon className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
-</span>
-<div className="min-w-0 flex-1">
-<p className="text-sm font-semibold">{isPhoto ? 'Photo import coming soon' : props.selectedFileName ? 'Lab PDF selected' : 'Upload lab PDF'}</p>
-<p className="text-xs text-muted-foreground">{isPhoto ? 'Use manual entry or CSV/text for now.' : 'We extract the report date and marker rows before review.'}</p>
-</div>
-<Badge variant="outline" className={cn('shrink-0', status.badgeClass)}>{status.label}</Badge>
-</div>
+  const isPhoto = props.method === 'photo';
+  const compactName = compactFileName(props.selectedFileName);
+  const status = getPdfImportStatus(props);
+  const StatusIcon = status.icon;
 
-{props.selectedFileName ? (
-<div className="flex items-center gap-2 rounded-xl border bg-secondary/40 p-2">
-<FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-<div className="min-w-0 flex-1">
-<p className="truncate text-sm font-semibold">{compactName}</p>
-<p className="text-[11px] text-muted-foreground">PDF selected</p>
-</div>
-<label className="shrink-0">
-<span className="inline-flex h-8 cursor-pointer items-center rounded-md border px-3 text-xs font-semibold">Replace</span>
-<input className="sr-only" type="file" accept={isPhoto ? 'image/*' : '.pdf'} onChange={(event) => void props.onImportFile(event.target.files?.[0])} />
-</label>
-</div>
-) : (
-<label className="block cursor-pointer rounded-2xl border border-dashed bg-secondary/25 p-5 text-center transition-colors hover:bg-secondary/45">
-<Upload className="mx-auto h-6 w-6 text-primary" />
-<span className="mt-2 block text-sm font-semibold">{isPhoto ? 'Choose image' : 'Choose PDF'}</span>
-<span className="mt-1 block text-xs text-muted-foreground">{isPhoto ? 'Photo extraction is not active yet.' : 'PDF text, Peppi extraction, and OCR fallback are handled automatically.'}</span>
-<input className="sr-only" type="file" accept={isPhoto ? 'image/*' : '.pdf'} onChange={(event) => void props.onImportFile(event.target.files?.[0])} />
-</label>
-)}
+  return (
+    <Card className={cn('overflow-hidden', props.draft ? 'border-chart-3/40' : 'border-primary/20')}>
+      <CardContent className="space-y-4 p-4">
+        <div className="flex items-start gap-3">
+          <span className={cn('grid size-11 shrink-0 place-items-center rounded-xl', status.tone)}>
+            {isPhoto ? <ImageIcon className="size-5" /> : <FileText className="size-5" />}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-semibold">{isPhoto ? 'Photo import' : 'PDF import'}</p>
+              <Badge variant="outline" className={cn('shrink-0', status.badgeClass)}>{status.label}</Badge>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {isPhoto ? 'Photo extraction is not active yet.' : status.helpText}
+            </p>
+          </div>
+        </div>
 
-<div className="grid grid-cols-3 gap-2">
-{status.steps.map((step) => (
-<div key={step.label} className={cn('rounded-lg border px-2 py-2 text-center text-[11px] font-semibold', step.active ? 'border-primary/40 bg-primary/10 text-primary' : step.done ? 'border-chart-3/40 bg-chart-3/10 text-chart-3' : 'text-muted-foreground')}>
-{step.label}
-</div>
-))}
-</div>
+        {props.selectedFileName ? (
+          <div className="flex items-center gap-2 rounded-2xl border bg-secondary/40 p-3">
+            <FileText className="size-4 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{compactName}</p>
+              <p className="text-[11px] text-muted-foreground">Selected report file</p>
+            </div>
+            <label className="shrink-0">
+              <span className="inline-flex h-8 cursor-pointer items-center rounded-md border bg-background px-3 text-xs font-semibold">Replace</span>
+              <input className="sr-only" type="file" accept={isPhoto ? 'image/*' : '.pdf'} onChange={(event) => void props.onImportFile(event.target.files?.[0])} />
+            </label>
+          </div>
+        ) : (
+          <label className="block cursor-pointer rounded-2xl border border-dashed bg-secondary/25 p-5 text-center transition-colors hover:bg-secondary/45">
+            <Upload className="mx-auto size-6 text-primary" />
+            <span className="mt-2 block text-sm font-semibold">{isPhoto ? 'Choose image' : 'Choose PDF'}</span>
+            <span className="mt-1 block text-xs text-muted-foreground">
+              {isPhoto ? 'Use manual entry or CSV/text for this beta.' : 'Upload once. PeptideOS tries direct text, Peppi extraction, then local OCR.'}
+            </span>
+            <input className="sr-only" type="file" accept={isPhoto ? 'image/*' : '.pdf'} onChange={(event) => void props.onImportFile(event.target.files?.[0])} />
+          </label>
+        )}
 
-{props.pdfImportMessage && (
-<div className={cn('flex gap-2 rounded-xl border px-3 py-2 text-sm', status.messageClass)}>
-	{props.isParsingPdf ? <FluidMetaballs label="Reading lab PDF" size="sm" /> : <StatusIcon className="mt-0.5 h-4 w-4 shrink-0" />}
-	<p>{polishPdfImportMessage(props.pdfImportMessage)}</p>
-	</div>
-	)}
+        <div className="grid gap-2 sm:grid-cols-3" aria-label="PDF import pipeline">
+          {status.steps.map((step, index) => (
+            <div
+              key={step.label}
+              className={cn(
+                'rounded-2xl border px-3 py-3',
+                step.active ? 'border-primary/40 bg-primary/10 text-primary' : step.done ? 'border-chart-3/40 bg-chart-3/10 text-chart-3' : 'bg-background/50 text-muted-foreground',
+              )}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-[0.08em]">{String(index + 1).padStart(2, '0')}</span>
+                {step.active ? <FluidMetaballs label={`${step.label} in progress`} size="sm" /> : step.done ? <Check className="size-4" /> : <span className="size-2 rounded-full bg-current opacity-35" />}
+              </div>
+              <p className="mt-2 text-sm font-semibold">{step.label}</p>
+              <p className="mt-1 text-xs opacity-80">{step.detail}</p>
+            </div>
+          ))}
+        </div>
 
-<div className="grid grid-cols-2 gap-2">
-<Button variant="ghost" onClick={() => props.onImportMethodChange('manual')}>Use manual entry</Button>
-<Button variant="ghost" onClick={() => props.onImportMethodChange('csv')}>Paste CSV/text</Button>
-</div>
-</CardContent>
-</Card>
-);
+        {(props.pdfImportMessage || props.isParsingPdf) && (
+          <div className={cn('flex gap-2 rounded-xl border px-3 py-2 text-sm', status.messageClass)}>
+            {props.isParsingPdf ? <FluidMetaballs label="Reading lab PDF" size="sm" /> : <StatusIcon className="mt-0.5 size-4 shrink-0" />}
+            <p>{props.pdfImportMessage ? polishPdfImportMessage(props.pdfImportMessage) : status.helpText}</p>
+          </div>
+        )}
+
+        <div className="rounded-2xl border bg-background/50 p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Need control?</p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Button variant="outline" onClick={() => props.onImportMethodChange('manual')}>Manual entry</Button>
+            <Button variant="outline" onClick={() => props.onImportMethodChange('csv')}>Paste CSV/text</Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 function compactFileName(fileName: string) {
-if (!fileName) return '';
-const extensionMatch = fileName.match(/(\.[a-z0-9]+)$/i);
-const extension = extensionMatch?.[1] ?? '';
-const base = extension ? fileName.slice(0, -extension.length) : fileName;
-if (base.length <= 18) return fileName;
-return `${base.slice(0, 6)}...${base.slice(-6)}${extension}`;
+  if (!fileName) return '';
+  const extensionMatch = fileName.match(/(\.[a-z0-9]+)$/i);
+  const extension = extensionMatch?.[1] ?? '';
+  const base = extension ? fileName.slice(0, -extension.length) : fileName;
+  if (base.length <= 18) return fileName;
+  return `${base.slice(0, 6)}...${base.slice(-6)}${extension}`;
 }
 
 function polishPdfImportMessage(message: string) {
-const lower = message.toLowerCase();
-if (lower.includes('peppi extracted')) return message.replace('Peppi extracted', 'Ready for review');
-if (lower.includes('ocr parsed')) return message.replace('OCR parsed', 'Ready for review');
-if (lower.includes('parsed')) return message.replace('Parsed', 'Ready for review');
-if (lower.includes('could not read pdf directly')) return 'Checking another extraction method.';
-if (lower.includes('asking peppi')) return 'Using Peppi extraction.';
-if (lower.includes('ocr page')) return message.replace(/^OCR page/i, 'Scanning page');
-if (lower.includes('running local ocr')) return 'Scanning the PDF locally.';
-return message;
+  const lower = message.toLowerCase();
+  if (lower.includes('peppi extracted')) return message.replace('Peppi extracted', 'Ready for review');
+  if (lower.includes('ocr parsed')) return message.replace('OCR parsed', 'Ready for review');
+  if (lower.includes('parsed')) return message.replace('Parsed', 'Ready for review');
+  if (lower.includes('could not read pdf directly')) return 'Checking another extraction method.';
+  if (lower.includes('asking peppi')) return 'Using Peppi extraction.';
+  if (lower.includes('ocr page')) return message.replace(/^OCR page/i, 'Scanning page');
+  if (lower.includes('running local ocr')) return 'Scanning PDF locally.';
+  return message;
 }
 
 function getPdfImportStatus(props: Parameters<typeof ImportWizard>[0]) {
-const hasFile = Boolean(props.selectedFileName);
-const hasDraft = Boolean(props.draft);
-const isWorking = props.isParsingPdf;
-const hasUnreadable = (props.draft?.unresolvedRows.length ?? 0) > 0;
+  const hasFile = Boolean(props.selectedFileName);
+  const hasDraft = Boolean(props.draft);
+  const isWorking = props.isParsingPdf;
+  const hasUnreadable = (props.draft?.unresolvedRows.length ?? 0) > 0;
 
-if (hasDraft) {
-return {
-label: hasUnreadable ? 'Needs review' : 'Ready',
-icon: hasUnreadable ? AlertCircle : Check,
-tone: hasUnreadable ? 'bg-chart-4/15 text-chart-4' : 'bg-chart-3/15 text-chart-3',
-badgeClass: hasUnreadable ? 'border-chart-4/40 text-chart-4' : 'border-chart-3/40 text-chart-3',
-messageClass: hasUnreadable ? 'border-chart-4/35 bg-chart-4/10 text-foreground' : 'border-chart-3/35 bg-chart-3/10 text-foreground',
-steps: [
-{ label: 'Upload', done: true, active: false },
-{ label: 'Extract', done: true, active: false },
-{ label: 'Review', done: false, active: true },
-],
-};
-}
+  if (hasDraft) {
+    return {
+      label: hasUnreadable ? 'Needs review' : 'Ready',
+      icon: hasUnreadable ? AlertCircle : Check,
+      tone: hasUnreadable ? 'bg-chart-4/15 text-chart-4' : 'bg-chart-3/15 text-chart-3',
+      badgeClass: hasUnreadable ? 'border-chart-4/40 text-chart-4' : 'border-chart-3/40 text-chart-3',
+      messageClass: hasUnreadable ? 'border-chart-4/35 bg-chart-4/10 text-foreground' : 'border-chart-3/35 bg-chart-3/10 text-foreground',
+      helpText: hasUnreadable ? 'Review unreadable rows before saving.' : 'Extracted rows are ready for review.',
+      steps: [
+        { label: 'Upload', detail: 'File received', done: true, active: false },
+        { label: 'Extract', detail: 'Markers found', done: true, active: false },
+        { label: 'Review', detail: hasUnreadable ? 'Fix flagged rows' : 'Confirm values', done: false, active: true },
+      ],
+    };
+  }
 
-if (isWorking) {
-return {
-label: 'Reading',
-icon: RefreshCw,
-tone: 'bg-primary/15 text-primary',
-badgeClass: 'border-primary/40 text-primary',
-messageClass: 'border-primary/25 bg-primary/10 text-foreground',
-steps: [
-{ label: 'Upload', done: true, active: false },
-{ label: 'Extract', done: false, active: true },
-{ label: 'Review', done: false, active: false },
-],
-};
-}
+  if (isWorking) {
+    return {
+      label: 'Reading',
+      icon: RefreshCw,
+      tone: 'bg-primary/15 text-primary',
+      badgeClass: 'border-primary/40 text-primary',
+      messageClass: 'border-primary/25 bg-primary/10 text-foreground',
+      helpText: 'Extracting date, assays, values, units, and ranges.',
+      steps: [
+        { label: 'Upload', detail: 'File received', done: true, active: false },
+        { label: 'Extract', detail: 'Reading markers', done: false, active: true },
+        { label: 'Review', detail: 'Next step', done: false, active: false },
+      ],
+    };
+  }
 
-return {
-label: hasFile ? 'Selected' : 'Waiting',
-icon: FileText,
-tone: hasFile ? 'bg-primary/15 text-primary' : 'bg-secondary text-muted-foreground',
-badgeClass: hasFile ? 'border-primary/40 text-primary' : 'text-muted-foreground',
-messageClass: 'border-border bg-secondary/30 text-muted-foreground',
-steps: [
-{ label: 'Upload', done: hasFile, active: !hasFile },
-{ label: 'Extract', done: false, active: false },
-{ label: 'Review', done: false, active: false },
-],
-};
+  return {
+    label: hasFile ? 'Selected' : 'Waiting',
+    icon: FileText,
+    tone: hasFile ? 'bg-primary/15 text-primary' : 'bg-secondary text-muted-foreground',
+    badgeClass: hasFile ? 'border-primary/40 text-primary' : 'text-muted-foreground',
+    messageClass: 'border-border bg-secondary/30 text-muted-foreground',
+    helpText: hasFile ? 'Ready to extract the selected report.' : 'Choose a report to start extraction.',
+    steps: [
+      { label: 'Upload', detail: hasFile ? 'File selected' : 'Choose file', done: hasFile, active: !hasFile },
+      { label: 'Extract', detail: 'Auto-read', done: false, active: false },
+      { label: 'Review', detail: 'Validate rows', done: false, active: false },
+    ],
+  };
 }
 
 function CsvTextFields(props: Parameters<typeof ImportWizard>[0]) {
