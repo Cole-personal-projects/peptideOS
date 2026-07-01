@@ -45,6 +45,24 @@ describe('half-life simulator', () => {
     expect(simulation.clearsAt).toBeTruthy();
   });
 
+  it('models twice-daily planned dose events', () => {
+    const simulation = buildHalfLifeSimulation({
+      compound,
+      doseValue: 1,
+      doseUnit: 'mg',
+      doseCount: 3,
+      frequencyId: 'twice-daily',
+      windowDays: 2,
+      now: new Date('2026-06-01T08:00:00.000Z'),
+    });
+
+    expect(simulation.events.map((event) => event.occurredAt)).toEqual([
+      '2026-06-01T08:00:00.000Z',
+      '2026-06-01T20:00:00.000Z',
+      '2026-06-02T08:00:00.000Z',
+    ]);
+  });
+
   it('converts mcg doses to mg for the estimate', () => {
     const simulation = buildHalfLifeSimulation({
       compound,
