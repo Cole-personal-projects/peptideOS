@@ -679,7 +679,7 @@ return (
 
 <WizardActions
 backLabel="Back"
-nextLabel={isPdf ? props.isParsingPdf ? 'Reading...' : hasPdfDraft ? 'Review Results' : 'Choose PDF' : 'Review Data'}
+          nextLabel={isPdf ? props.isParsingPdf ? <span className="inline-flex items-center gap-2"><FluidMetaballs label="Reading lab PDF" size="sm" /> Reading...</span> : hasPdfDraft ? 'Review Results' : 'Choose PDF' : 'Review Data'}
 onBack={() => props.onStepChange(0)}
 onNext={isPdf ? () => props.onStepChange(2) : props.onBuildDraft}
 nextDisabled={isPhotoShell || props.isParsingPdf || (isPdf ? !hasPdfDraft : props.method === 'manual' ? props.manualRows.length === 0 : props.rawInput.trim().length === 0)}
@@ -1049,8 +1049,8 @@ function TimelineView(props: {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center justify-between gap-3 text-sm">
             <span className="flex items-center gap-2"><Bot className="h-4 w-4 text-primary" /> Peppi lab analysis</span>
-            <Button size="sm" variant="outline" onClick={() => props.onAnalyze()} disabled={props.cards.length === 0 || props.isAnalyzing}>
-              {props.isAnalyzing ? <FluidMetaballs label="Peppi analyzing labs" size="sm" /> : 'Analyze all'}
+          <Button size="sm" variant="outline" onClick={() => props.onAnalyze()} disabled={props.cards.length === 0 || props.isAnalyzing}>
+              {props.isAnalyzing ? <span className="inline-flex items-center gap-2"><FluidMetaballs label="Peppi analyzing labs" size="sm" /> Analyzing...</span> : 'Analyze all'}
             </Button>
           </CardTitle>
         </CardHeader>
@@ -1477,7 +1477,7 @@ function StepLabel({ children }: { children: React.ReactNode }) {
   return <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{children}</p>;
 }
 
-function WizardActions({ backLabel, nextLabel, onBack, onNext, nextDisabled }: { backLabel: string; nextLabel: string; onBack: () => void; onNext: () => void | Promise<void>; nextDisabled?: boolean }) {
+function WizardActions({ backLabel, nextLabel, onBack, onNext, nextDisabled }: { backLabel: string; nextLabel: React.ReactNode; onBack: () => void; onNext: () => void | Promise<void>; nextDisabled?: boolean }) {
   return (
     <div className="grid grid-cols-2 gap-2">
       <Button variant="outline" onClick={onBack}>{backLabel}</Button>
