@@ -31,8 +31,9 @@ export function FluidMetaballs({ label = 'Loading', className, size = 'md', show
 
   return (
     <div className={cn('inline-flex items-center gap-2', className)} role="status" aria-label={label}>
-      <span className={cn('c11-container relative block shrink-0 bg-transparent', sizeClass[size])} data-paused={paused ? 'true' : 'false'}>
-        <span className="c11-ball c11-ball--1" />
+<span className={cn('c11-container relative block shrink-0 bg-transparent', sizeClass[size])} data-paused={paused ? 'true' : 'false'}>
+<span className="absolute inset-[18%] rounded-full border-2 border-primary/25 border-t-primary shadow-[0_0_14px_hsl(var(--primary)/0.28)] animate-spin" aria-hidden="true" />
+<span className="c11-ball c11-ball--1" />
         <span className="c11-ball c11-ball--2" />
         <span className="c11-ball c11-ball--3" />
         <svg className="pointer-events-none absolute size-0" width="0" height="0" aria-hidden="true" focusable="false">
