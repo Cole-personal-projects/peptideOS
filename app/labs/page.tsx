@@ -54,6 +54,7 @@ import {
   makeLabCompareHref,
   makeLabMarkerHref,
   type LabCompareRow,
+  type LabTimelineCard,
 } from '@/lib/lab-results-view';
 import type { LabImportMethod, LabReport, LabResult } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -65,7 +66,7 @@ interface LabAnalysisCard {
   severity: 'info' | 'watch' | 'caveat';
 }
 
-type LabView = 'timeline' | 'import' | 'detail' | 'compare' | 'trends';
+type LabView = 'timeline' | 'import' | 'report' | 'detail' | 'compare' | 'trends';
 type ImportMethod = LabImportMethod;
 
 const today = new Date().toISOString().slice(0, 10);
@@ -195,6 +196,7 @@ export default function LabsPage() {
     [data, reports, searchParams],
   );
   const comparison = useMemo(() => buildLabComparison(data, firstReportId, secondReportId), [data, firstReportId, secondReportId]);
+  const selectedReportCard = timelineCards.find((card) => card.report.id === (searchParams.get('report') ?? reports[0]?.id));
 
   const activeStacks = data.stacks.filter((stack) => stack.status === 'active');
   const baseImportOptions = {
@@ -498,6 +500,8 @@ setPdfImportMessage(aiPayload.error ? `${aiPayload.error} Running local OCR...` 
         onSaveDraft={saveDraft}
             onViewTimeline={() => setWorkspaceView('timeline')}
           />
+        ) : view === 'report' ? (
+          <ReportDetailView card={selectedReportCard} onAnalyze={analyzeLabs} onDelete={deleteLabReport} onShare={shareText} />
         ) : view === 'detail' ? (
           <MarkerDetailView detail={detail} onCompare={() => setWorkspaceView('compare')} onShare={shareText} />
         ) : view === 'compare' ? (
@@ -519,6 +523,7 @@ setPdfImportMessage(aiPayload.error ? `${aiPayload.error} Running local OCR...` 
             isAnalyzing={isAnalyzing}
             onAnalyze={analyzeLabs}
             onDelete={deleteLabReport}
+            onOpenReport={(reportId) => router.replace('/labs?view=report&report=' + encodeURIComponent(reportId), { scroll: false })}
           />
         )}
 
@@ -1036,78 +1041,142 @@ function TimelineView(props: {
   isAnalyzing: boolean;
   onAnalyze: (reportId?: string) => void;
   onDelete: (reportId: string) => void;
+  onOpenReport: (reportId: string) => void;
 }) {
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="border-primary/20 bg-primary/5">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center justify-between gap-3 text-sm">
             <span className="flex items-center gap-2"><Bot className="h-4 w-4 text-primary" /> Peppi lab analysis</span>
             <Button size="sm" variant="outline" onClick={() => props.onAnalyze()} disabled={props.cards.length === 0 || props.isAnalyzing}>
-              {props.isAnalyzing ? <FluidMetaballs label="Peppi analyzing labs" size="sm" /> : 'Analyze'}
+              {props.isAnalyzing ? <FluidMetaballs label="Peppi analyzing labs" size="sm" /> : 'Analyze all'}
             </Button>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <p className="text-xs text-muted-foreground">Peppi explains trends against local protocol records. It does not diagnose, recommend dose changes, or determine safety.</p>
           {props.isAnalyzing ? (
-            <div className="rounded-md border bg-background px-3 py-2">
-              <FluidMetaballs label="Peppi analyzing labs" size="sm" showLabel />
+            <div className="rounded-md border bg-background px-3 py-2"><FluidMetaballs label="Peppi analyzing labs" size="sm" showLabel /></div>
+          ) : props.analysisMessage ? <p className="rounded-md border bg-background px-3 py-2 text-sm">{props.analysisMessage}</p> : null}
+          {props.analysisCards.map((card) => <div key={card.id} className="rounded-md border bg-background p-3 text-sm"><p className="font-medium">{card.title}</p><p className="text-muted-foreground">{card.body}</p></div>)}
+        </CardContent>
+      </Card>
+
+      {props.cards.map((card) => <LabReportCard key={card.report.id} card={card} onAnalyze={props.onAnalyze} onDelete={props.onDelete} onOpenReport={props.onOpenReport} />)}
+    </div>
+  );
+}
+
+function LabReportCard({ card, onAnalyze, onDelete, onOpenReport }: { card: LabTimelineCard; onAnalyze: (reportId?: string) => void; onDelete: (reportId: string) => void; onOpenReport: (reportId: string) => void }) {
+  const flaggedCount = card.markers.filter((marker) => marker.flag === 'high' || marker.flag === 'low' || marker.flag === 'critical').length;
+  const cleanCount = Math.max(0, card.markerCount - flaggedCount);
+  const reviewTone = flaggedCount > 0 ? 'border-chart-4/40 bg-chart-4/10 text-chart-4' : 'border-chart-3/30 bg-chart-3/10 text-chart-3';
+
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="p-0">
+        <button type="button" aria-label={`Open lab report ${card.report.sourceLabel || 'Lab report'} ${card.report.panelName || 'Lab results'} ${formatDate(card.report.drawDate)}`} className="block w-full border-b px-4 py-3 text-left" onClick={() => onOpenReport(card.report.id)}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">{card.report.sourceLabel || 'Lab report'}</p>
+              <p className="truncate text-base font-semibold">{card.report.panelName || 'Lab results'}</p>
+              <p className="text-xs text-muted-foreground">{formatDate(card.report.drawDate)} · {card.markerCount} marker{card.markerCount === 1 ? '' : 's'}</p>
             </div>
-          ) : props.analysisMessage ? (
-            <p className="rounded-md border bg-background px-3 py-2 text-sm">{props.analysisMessage}</p>
-          ) : null}
-          {props.analysisCards.map((card) => (
-            <div key={card.id} className="rounded-md border bg-background p-3 text-sm">
-              <p className="font-medium">{card.title}</p>
-              <p className="text-muted-foreground">{card.body}</p>
+            <Badge variant="outline" className="shrink-0 border-primary/40 bg-primary/10 text-primary">{card.stackLabel}</Badge>
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+            <SignalPill label="Flagged" value={String(flaggedCount)} className={reviewTone} />
+            <SignalPill label="In range" value={String(cleanCount)} className="border-primary/20 bg-primary/10 text-primary" />
+            <SignalPill label="Panel" value={card.report.panelName || 'Labs'} className="border-accent/20 bg-accent/10 text-accent" />
+          </div>
+        </button>
+
+        <div className="space-y-2 p-3">
+          <div className="flex flex-wrap gap-2">
+            {card.markers.slice(0, 5).map((marker) => <MarkerChip key={marker.id} marker={marker} reportId={card.report.id} />)}
+            {card.markerCount > 5 && <button type="button" onClick={() => onOpenReport(card.report.id)} className="rounded-full border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground">+{card.markerCount - 5} more</button>}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-[1fr_1fr_auto] gap-2 border-t bg-secondary/30 p-2.5">
+          <Button variant="outline" size="sm" asChild><Link href={makeLabCompareHref(card.report.id)}>Compare</Link></Button>
+          <Button variant="outline" size="sm" onClick={() => onAnalyze(card.report.id)}>Analyze</Button>
+          <Button variant="ghost" size="icon" aria-label="Delete lab report" onClick={() => onDelete(card.report.id)}><Trash2 className="h-4 w-4" /></Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ReportDetailView({ card, onAnalyze, onDelete, onShare }: { card: LabTimelineCard | undefined; onAnalyze: (reportId?: string) => void; onDelete: (reportId: string) => void; onShare: (text: string) => void }) {
+  if (!card) {
+    return <Empty><EmptyHeader><EmptyTitle>Report not found</EmptyTitle><EmptyDescription>Select a lab report from the timeline.</EmptyDescription></EmptyHeader></Empty>;
+  }
+  const flaggedCount = card.markers.filter((marker) => marker.flag === 'high' || marker.flag === 'low' || marker.flag === 'critical').length;
+  const topMarkers = card.markers.slice(0, 8);
+  const shareSummary = (card.report.panelName || 'Lab report') + ' from ' + formatDate(card.report.drawDate) + ': ' + card.markerCount + ' markers, ' + flaggedCount + ' flagged.';
+
+  return (
+    <div className="space-y-4">
+      <Card className="overflow-hidden border-primary/25 bg-primary/5">
+        <CardContent className="space-y-4 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Report detail</p>
+              <p className="text-lg font-semibold">{card.report.panelName || 'Lab results'}</p>
+              <p className="text-sm text-muted-foreground">{card.report.sourceLabel || 'Source not specified'} · {formatDate(card.report.drawDate)}</p>
             </div>
+            <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary">{card.stackLabel}</Badge>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-xs">
+            <SignalPill label="Markers" value={String(card.markerCount)} className="border-primary/20 bg-primary/10 text-primary" />
+            <SignalPill label="Flagged" value={String(flaggedCount)} className={flaggedCount > 0 ? 'border-chart-4/40 bg-chart-4/10 text-chart-4' : 'border-chart-3/30 bg-chart-3/10 text-chart-3'} />
+            <SignalPill label="Method" value={card.report.sourceMethod || 'Saved'} className="border-accent/20 bg-accent/10 text-accent" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-base">Markers</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {topMarkers.map((marker) => (
+            <Link key={marker.id} href={makeLabMarkerHref(card.report.id, { id: marker.id, normalizedKey: marker.normalizedKey })} className="grid grid-cols-[1fr_auto] gap-3 rounded-xl border bg-background px-3 py-2">
+              <span className="min-w-0">
+                <span className="flex items-center gap-2"><StatusDot tone={marker.flag === 'high' || marker.flag === 'low' || marker.flag === 'critical' ? 'danger' : 'success'} className="h-2 w-2" /><span className="truncate text-sm font-semibold">{marker.name}</span></span>
+                <span className="mt-1 block text-xs text-muted-foreground">{marker.rangeLabel}</span>
+              </span>
+              <span className="text-right"><span className={cn('block text-sm font-bold', flagClass(marker.flag))}>{marker.valueLabel}</span>{marker.trend && <TrendBadge direction={marker.trend.direction} percent={marker.trend.percent} />}</span>
+            </Link>
           ))}
         </CardContent>
       </Card>
 
-      {props.cards.map((card) => (
-        <Card key={card.report.id} className="overflow-hidden">
-          <CardContent className="p-0">
-<div className="flex items-start justify-between gap-3 border-b px-3.5 py-3">
-<div className="min-w-0">
-<p className="truncate text-sm font-semibold">{formatDate(card.report.drawDate)}{card.report.panelName ? ` · ${card.report.panelName}` : ''}</p>
-                <p className="text-xs text-muted-foreground">{card.report.sourceLabel || 'Source not specified'} · {card.markerCount} marker{card.markerCount === 1 ? '' : 's'}</p>
-              </div>
-<Badge variant="outline" className="shrink-0 border-primary/40 bg-primary/10 text-primary">{card.stackLabel}</Badge>
-            </div>
-<div className="space-y-1.5 p-2.5">
-              {card.markers.slice(0, 6).map((marker) => (
-                <Link key={marker.id} href={makeLabMarkerHref(card.report.id, { id: marker.id, normalizedKey: marker.normalizedKey })} className="grid grid-cols-[1fr_auto] gap-3 rounded-[14px] bg-secondary/60 px-3 py-2">
-                  <span className="min-w-0">
-                    <span className="flex items-center gap-2">
-                      <StatusDot tone={marker.flag === 'high' || marker.flag === 'low' || marker.flag === 'critical' ? 'danger' : 'success'} className="h-2 w-2" />
-                      <span className="block truncate text-sm font-bold">{marker.name}</span>
-                    </span>
-                    <span className="mt-2 block">
-                      <RangeBar percent={marker.flag === 'high' || marker.flag === 'critical' ? 92 : marker.flag === 'low' ? 18 : 56} label={marker.rangeLabel} tone={marker.flag === 'high' || marker.flag === 'low' || marker.flag === 'critical' ? 'danger' : 'primary'} />
-                    </span>
-                  </span>
-                  <span className="text-right">
-                    <span className={cn('block text-sm font-bold', flagClass(marker.flag))}>{marker.valueLabel}</span>
-                    {marker.trend && <TrendBadge direction={marker.trend.direction} percent={marker.trend.percent} />}
-                  </span>
-                </Link>
-              ))}
-              {card.markerCount > 6 && <p className="px-1 text-xs text-muted-foreground">+{card.markerCount - 6} more markers</p>}
-            </div>
-<div className="grid grid-cols-4 gap-2 border-t bg-secondary/30 p-2.5">
-              <Button variant="outline" size="sm" asChild><Link href={makeLabCompareHref(card.report.id)}>Compare</Link></Button>
-              <Button variant="outline" size="sm">Notes</Button>
-              <Button variant="outline" size="sm" onClick={() => props.onAnalyze(card.report.id)}>Analyze</Button>
-              <Button variant="ghost" size="icon" aria-label="Delete lab report" onClick={() => props.onDelete(card.report.id)}><Trash2 className="h-4 w-4" /></Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+      {card.report.notes && <Card><CardHeader className="pb-2"><CardTitle className="text-base">Notes</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">{card.report.notes}</p></CardContent></Card>}
+
+      <div className="grid grid-cols-2 gap-2">
+        <Button asChild><Link href={makeLabCompareHref(card.report.id)}>Compare</Link></Button>
+        <Button variant="outline" onClick={() => onAnalyze(card.report.id)}>Analyze</Button>
+        <Button variant="outline" onClick={() => onShare(shareSummary)}><Share2 className="h-4 w-4" /> Share</Button>
+        <Button variant="ghost" onClick={() => onDelete(card.report.id)}><Trash2 className="h-4 w-4" /> Delete</Button>
+      </div>
     </div>
   );
 }
+
+function MarkerChip({ marker, reportId }: { marker: LabTimelineCard['markers'][number]; reportId: string }) {
+  const flagged = marker.flag === 'high' || marker.flag === 'low' || marker.flag === 'critical';
+  return (
+    <Link href={makeLabMarkerHref(reportId, { id: marker.id, normalizedKey: marker.normalizedKey })} className={cn('rounded-full border px-3 py-1 text-xs font-medium', flagged ? 'border-destructive/30 bg-destructive/10 text-destructive' : 'border-primary/20 bg-primary/10 text-primary')}>
+      {marker.name} · {marker.valueLabel}
+    </Link>
+  );
+}
+
+function SignalPill({ label, value, className }: { label: string; value: string; className: string }) {
+  return <div className={cn('min-w-0 rounded-lg border px-2 py-2', className)}><p className="truncate text-sm font-semibold">{value}</p><p className="text-[11px] opacity-80">{label}</p></div>;
+}
+
 
 function MarkerDetailView({ detail, onCompare, onShare }: { detail: ReturnType<typeof buildLabMarkerDetail>; onCompare: () => void; onShare: (text: string) => void }) {
   if (!detail) {
