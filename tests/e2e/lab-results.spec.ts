@@ -60,11 +60,15 @@ test.describe('lab results workspace', () => {
     await page.getByRole('button', { name: 'Confirm Import' }).click();
     await expect(page.getByText('Import complete')).toBeVisible();
     await page.getByRole('button', { name: 'View Timeline' }).click();
-    await expect(page.getByText(/Apr 23, 2026 · Metabolic/)).toBeVisible();
+    await expect(page.getByText('LabCorp')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Open lab report LabCorp Metabolic/ })).toBeVisible();
+    await expect(page.getByText(/Apr 23, 2026 · 1 marker/)).toBeVisible();
     await expect(page.getByRole('link', { name: /Glucose/ })).toBeVisible();
 
     await page.reload();
-    await expect(page.getByText(/Apr 23, 2026 · Metabolic/)).toBeVisible();
+    await expect(page.getByText('LabCorp')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Open lab report LabCorp Metabolic/ })).toBeVisible();
+    await expect(page.getByText(/Apr 23, 2026 · 1 marker/)).toBeVisible();
     await expect(page.getByRole('link', { name: /Glucose/ })).toBeVisible();
   });
 
@@ -103,9 +107,15 @@ await expect(page.getByText('Need control?')).toBeVisible();
     await expect(page.getByText('Import complete')).toBeVisible();
     await page.getByRole('button', { name: 'View Timeline' }).click();
 
-    await expect(page.getByText(/Jun 1, 2026 · Hormones/)).toBeVisible();
-    await expect(page.getByText('Baseline')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Analyze' }).first()).toBeVisible();
+  await expect(page.getByText('Quest Diagnostics')).toBeVisible();
+  await expect(page.getByText('Hormones')).toBeVisible();
+  await expect(page.getByText('Flagged')).toBeVisible();
+  await expect(page.getByText('Baseline')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Analyze' }).first()).toBeVisible();
+  await page.getByRole('button', { name: /Open lab report Quest Diagnostics Hormones/ }).click();
+  await expect(page).toHaveURL(/view=report/);
+  await expect(page.getByText('Report detail')).toBeVisible();
+  await expect(page.getByRole('link', { name: /Compare/ })).toBeVisible();
   await page.getByRole('link', { name: /Estradiol Sensitive/ }).click();
   await expect(page).toHaveURL(/view=detail/);
   await expect(page.getByText('Active protocol during test')).toBeVisible();
