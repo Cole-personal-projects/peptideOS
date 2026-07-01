@@ -30,6 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { FluidMetaballs } from '@/components/ui/fluid-metaballs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -774,10 +775,10 @@ return (
 
 {props.pdfImportMessage && (
 <div className={cn('flex gap-2 rounded-xl border px-3 py-2 text-sm', status.messageClass)}>
-<StatusIcon className="mt-0.5 h-4 w-4 shrink-0" />
-<p>{polishPdfImportMessage(props.pdfImportMessage)}</p>
-</div>
-)}
+	{props.isParsingPdf ? <FluidMetaballs label="Reading lab PDF" size="sm" /> : <StatusIcon className="mt-0.5 h-4 w-4 shrink-0" />}
+	<p>{polishPdfImportMessage(props.pdfImportMessage)}</p>
+	</div>
+	)}
 
 <div className="grid grid-cols-2 gap-2">
 <Button variant="ghost" onClick={() => props.onImportMethodChange('manual')}>Use manual entry</Button>
@@ -1019,13 +1020,19 @@ function TimelineView(props: {
           <CardTitle className="flex items-center justify-between gap-3 text-sm">
             <span className="flex items-center gap-2"><Bot className="h-4 w-4 text-primary" /> Peppi lab analysis</span>
             <Button size="sm" variant="outline" onClick={() => props.onAnalyze()} disabled={props.cards.length === 0 || props.isAnalyzing}>
-              {props.isAnalyzing ? 'Analyzing...' : 'Analyze'}
+              {props.isAnalyzing ? <FluidMetaballs label="Peppi analyzing labs" size="sm" /> : 'Analyze'}
             </Button>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <p className="text-xs text-muted-foreground">Peppi explains trends against local protocol records. It does not diagnose, recommend dose changes, or determine safety.</p>
-          {props.analysisMessage && <p className="rounded-md border bg-background px-3 py-2 text-sm">{props.analysisMessage}</p>}
+          {props.isAnalyzing ? (
+            <div className="rounded-md border bg-background px-3 py-2">
+              <FluidMetaballs label="Peppi analyzing labs" size="sm" showLabel />
+            </div>
+          ) : props.analysisMessage ? (
+            <p className="rounded-md border bg-background px-3 py-2 text-sm">{props.analysisMessage}</p>
+          ) : null}
           {props.analysisCards.map((card) => (
             <div key={card.id} className="rounded-md border bg-background p-3 text-sm">
               <p className="font-medium">{card.title}</p>
