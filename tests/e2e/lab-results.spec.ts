@@ -106,20 +106,24 @@ await expect(page.getByText('Need control?')).toBeVisible();
     await expect(page.getByText(/Jun 1, 2026 · Hormones/)).toBeVisible();
     await expect(page.getByText('Baseline')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Analyze' }).first()).toBeVisible();
-    await page.getByRole('link', { name: /Estradiol Sensitive/ }).click();
-    await expect(page).toHaveURL(/view=detail/);
-    await expect(page.getByText('Active protocol during test')).toBeVisible();
-    await expect(page.getByText(/Assay or unit changed.*Compare cautiously/).first()).toBeVisible();
+  await page.getByRole('link', { name: /Estradiol Sensitive/ }).click();
+  await expect(page).toHaveURL(/view=detail/);
+  await expect(page.getByText('Active protocol during test')).toBeVisible();
+  await expect(page.getByText('Limited series')).toBeVisible();
 
-    await page.getByRole('button', { name: 'Compare Tests' }).click();
-    await expect(page.getByLabel('Test 1')).toBeVisible();
-    await expect(page.getByText(/Estradiol Sensitive/).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Compare Tests' }).click();
+  await expect(page.getByLabel('Older report')).toBeVisible();
+  await expect(page.getByLabel('Newer report')).toBeVisible();
+  await expect(page.getByText(/Estradiol Sensitive/).first()).toBeVisible();
 
     await importQuestHormones(page, '2026-07-01');
-    await page.getByRole('button', { name: 'Compare' }).first().click();
-    await expect(page).toHaveURL(/view=compare/);
-    await expect(page.getByText('Testosterone Total', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText(/0%|\+/).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Compare' }).first().click();
+  await expect(page).toHaveURL(/view=compare/);
+  await expect(page.getByText('Clean deltas ready')).toBeVisible();
+  await expect(page.getByText('Clean changes')).toBeVisible();
+  await expect(page.getByText('Review').first()).toBeVisible();
+  await expect(page.getByText('Testosterone Total', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(/0%|\+/).first()).toBeVisible();
 
     await page.getByRole('button', { name: 'Trends' }).click();
     await expect(page.getByText('Key marker trends')).toBeVisible();

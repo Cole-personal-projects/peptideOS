@@ -1119,6 +1119,9 @@ function MarkerDetailView({ detail, onCompare, onShare }: { detail: ReturnType<t
   const rangePercent = rangeLow !== undefined && rangeHigh !== undefined && rangeHigh > rangeLow
     ? Math.min(100, Math.max(0, ((latest - rangeLow) / (rangeHigh - rangeLow)) * 100))
     : 50;
+  const cleanTrend = detail.comparablePoints.length >= 2;
+  const trendPoints = cleanTrend ? detail.comparablePoints : detail.points;
+
   return (
     <div className="space-y-4">
       <Card className="overflow-hidden">
@@ -1130,15 +1133,15 @@ function MarkerDetailView({ detail, onCompare, onShare }: { detail: ReturnType<t
                 <p className="text-sm text-muted-foreground">{detail.result.unit || 'unit not specified'} · Ref: {detail.result.referenceRange?.text ?? 'not specified'}</p>
               </div>
               <div className="text-right">
-<p className={cn('text-xl font-bold leading-none', flagClass(detail.result.flag))}>{detail.result.value}</p>
+                <p className={cn('text-xl font-bold leading-none', flagClass(detail.result.flag))}>{detail.result.value}</p>
                 {detail.latestTrend && <TrendBadge direction={detail.latestTrend.direction} percent={detail.latestTrend.percent} />}
               </div>
             </div>
             <div>
               <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                <div className="h-full rounded-full bg-gradient-to-r from-accent to-primary" style={{ width: `${rangePercent}%` }} />
+                <div className="h-full rounded-full bg-gradient-to-r from-accent to-primary" style={{ width: rangePercent + '%' }} />
               </div>
-<div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
+              <div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
                 <span>{rangeLow ?? 'Low'}</span>
                 <span>Reference range</span>
                 <span>{rangeHigh ?? 'High'}</span>
@@ -1146,9 +1149,22 @@ function MarkerDetailView({ detail, onCompare, onShare }: { detail: ReturnType<t
             </div>
           </div>
           <div className="space-y-3 p-4">
-            <p className="text-xs font-medium text-muted-foreground">Trend</p>
-            <TrendBars points={detail.comparablePoints.length ? detail.comparablePoints : detail.points} />
-            {detail.mixedAssays && <p className="rounded-md border border-chart-4/40 bg-chart-4/10 px-3 py-2 text-xs text-muted-foreground">Assay or unit changed across this trend. Compare cautiously.</p>}
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-medium text-muted-foreground">Trend</p>
+              <Badge variant="outline">{cleanTrend ? 'Comparable series' : 'Limited series'}</Badge>
+            </div>
+            <TrendBars points={trendPoints} />
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-md border bg-secondary/40 p-2">
+                <p className="font-medium">{detail.result.assayMethod || 'Assay not listed'}</p>
+                <p className="text-muted-foreground">Method</p>
+              </div>
+              <div className="rounded-md border bg-secondary/40 p-2">
+                <p className="font-medium">{detail.result.unit || 'Unit not listed'}</p>
+                <p className="text-muted-foreground">Unit</p>
+              </div>
+            </div>
+            {detail.mixedAssays && <p className="rounded-md border border-chart-4/40 bg-chart-4/10 px-3 py-2 text-xs text-muted-foreground">Assay or unit changed across this trend. Numeric trend uses only comparable rows when available.</p>}
           </div>
           <div className="border-t bg-secondary/40 p-4">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Active protocol during test</p>
@@ -1159,13 +1175,14 @@ function MarkerDetailView({ detail, onCompare, onShare }: { detail: ReturnType<t
       </Card>
       <div className="grid grid-cols-2 gap-2">
         <Button onClick={onCompare}>Compare Tests</Button>
-        <Button variant="outline" onClick={() => onShare(`${detail.result.testName}: ${formatResultValue(detail.result)} on ${formatDate(detail.report.drawDate)}`)}>
+        <Button variant="outline" onClick={() => onShare(detail.result.testName + ': ' + formatResultValue(detail.result) + ' on ' + formatDate(detail.report.drawDate))}>
           <Share2 className="h-4 w-4" /> Share Result
         </Button>
       </div>
     </div>
   );
 }
+
 
 function CompareView({
   reports,
@@ -1186,37 +1203,50 @@ function CompareView({
   const second = reports.find((report) => report.id === secondReportId);
   const comparableRows = rows.filter((row) => row.status === 'matched');
   const reviewRows = rows.filter((row) => row.status !== 'matched');
-  const reportLabel = `${first ? formatDate(first.drawDate) : 'Test 1'} vs ${second ? formatDate(second.drawDate) : 'Test 2'}`;
+  const reportLabel = (first ? formatDate(first.drawDate) : 'Test 1') + ' vs ' + (second ? formatDate(second.drawDate) : 'Test 2');
+  const issueCounts = countCompareIssues(reviewRows);
+  const hasCleanDeltas = comparableRows.length > 0;
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <DateSelect label="Test 1" value={firstReportId} reports={reports} onChange={(value) => onSelect(value, secondReportId)} />
-        <DateSelect label="Test 2" value={secondReportId} reports={reports} onChange={(value) => onSelect(firstReportId, value)} />
-      </div>
-
-      <div className="grid grid-cols-3 gap-2">
-        <StatCard label="Comparable" value={String(comparableRows.length)} accent />
-        <StatCard label="Needs review" value={String(reviewRows.length)} />
-        <StatCard label="Markers" value={String(rows.length)} />
-      </div>
+      <Card className="overflow-hidden border-primary/25 bg-primary/5">
+        <CardContent className="space-y-4 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Compare reports</p>
+              <p className="text-sm font-medium">{reportLabel}</p>
+            </div>
+            <Badge variant={hasCleanDeltas ? 'default' : 'outline'}>{hasCleanDeltas ? 'Clean deltas ready' : 'Review needed'}</Badge>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <DateSelect label="Older report" value={secondReportId} reports={reports} onChange={(value) => onSelect(firstReportId, value)} />
+            <DateSelect label="Newer report" value={firstReportId} reports={reports} onChange={(value) => onSelect(value, secondReportId)} />
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <StatCard label="Clean" value={String(comparableRows.length)} accent />
+            <StatCard label="Review" value={String(reviewRows.length)} />
+            <StatCard label="Total" value={String(rows.length)} />
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="space-y-3 p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Comparable changes</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Clean changes</p>
               <p className="text-xs text-muted-foreground">Same marker, unit, assay, and numeric value.</p>
             </div>
-            <Badge variant="outline">{reportLabel}</Badge>
+            <Badge variant="outline">{comparableRows.length}</Badge>
           </div>
 
           {rows.length === 0 ? (
             <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">Import at least two reports to compare.</p>
           ) : comparableRows.length === 0 ? (
-            <p className="rounded-md border border-chart-4/40 bg-chart-4/10 p-4 text-sm text-muted-foreground">
-              No reliable deltas yet. Check the review queue for unit, assay, missing, or non-numeric mismatches.
-            </p>
+            <div className="rounded-xl border border-chart-4/40 bg-chart-4/10 p-4">
+              <p className="font-medium">No clean numeric deltas yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">The reports loaded, but comparable rows need the same marker, unit, assay, and numeric value.</p>
+            </div>
           ) : (
             <div className="space-y-2">
               {comparableRows.map((row) => <CompareRowCard key={row.key} row={row} />)}
@@ -1228,9 +1258,21 @@ function CompareView({
       {reviewRows.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Needs review</CardTitle>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <CardTitle className="text-base">Needs review</CardTitle>
+                <p className="text-xs text-muted-foreground">These rows are preserved, but excluded from numeric deltas.</p>
+              </div>
+              <Badge variant="outline">{reviewRows.length}</Badge>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+              <CompareIssueChip label="Unit" count={issueCounts['unit-mismatch']} />
+              <CompareIssueChip label="Assay" count={issueCounts['assay-mismatch']} />
+              <CompareIssueChip label="Missing" count={issueCounts.missing} />
+              <CompareIssueChip label="Text" count={issueCounts['non-numeric']} />
+            </div>
             {reviewRows.map((row) => <CompareReviewRow key={row.key} row={row} />)}
           </CardContent>
         </Card>
@@ -1243,7 +1285,7 @@ function CompareView({
             <p className="text-muted-foreground">No reliable numeric changes are available for these two reports.</p>
           ) : (
             comparableRows.slice(0, 4).map((row) => (
-              <p key={row.key} className="text-muted-foreground">{row.marker}: {formatDelta(row)}</p>
+              <p key={row.key} className="text-muted-foreground">{row.marker}: {formatDelta(row)} ({formatAbsoluteDelta(row)})</p>
             ))
           )}
         </CardContent>
@@ -1251,7 +1293,7 @@ function CompareView({
 
       <Button
         className="w-full"
-        onClick={() => onShare(`Lab comparison: ${reportLabel}. Comparable markers: ${comparableRows.length}. Needs review: ${reviewRows.length}.`)}
+        onClick={() => onShare('Lab comparison: ' + reportLabel + '. Comparable markers: ' + comparableRows.length + '. Needs review: ' + reviewRows.length + '.')}
       >
         <Copy className="h-4 w-4" />
         Share Comparison
@@ -1261,14 +1303,27 @@ function CompareView({
 }
 
 function CompareRowCard({ row }: { row: LabCompareRow }) {
+  const direction = (row.deltaValue ?? 0) > 0 ? 'up' : (row.deltaValue ?? 0) < 0 ? 'down' : 'flat';
+  const DirectionIcon = direction === 'up' ? TrendingUp : direction === 'down' ? TrendingDown : Check;
+
   return (
-    <div className="rounded-md border bg-background p-3">
+    <div className="rounded-xl border bg-background p-3">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="font-medium">{row.marker}</p>
           <p className="text-xs text-muted-foreground">{formatCompareValues(row)}</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <Badge variant="outline">{row.first?.unit || row.second?.unit || 'unit not listed'}</Badge>
+            <Badge variant="outline">{row.first?.assayMethod || row.second?.assayMethod || 'assay not listed'}</Badge>
+          </div>
         </div>
-        <span className={cn('text-right text-lg font-semibold tabular-nums', deltaClass(row.deltaPercent))}>{formatDelta(row)}</span>
+        <div className="shrink-0 text-right">
+          <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm font-semibold tabular-nums', deltaToneClass(row.deltaValue))}>
+            <DirectionIcon className="h-3.5 w-3.5" />
+            {formatDelta(row)}
+          </span>
+          <p className="mt-1 text-[11px] text-muted-foreground">{formatAbsoluteDelta(row)}</p>
+        </div>
       </div>
     </div>
   );
@@ -1276,7 +1331,7 @@ function CompareRowCard({ row }: { row: LabCompareRow }) {
 
 function CompareReviewRow({ row }: { row: LabCompareRow }) {
   return (
-    <div className="rounded-md border p-3">
+    <div className={cn('rounded-xl border p-3', compareReviewTone(row.status))}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-medium">{row.marker}</p>
@@ -1284,10 +1339,20 @@ function CompareReviewRow({ row }: { row: LabCompareRow }) {
         </div>
         <Badge variant="outline">{compareStatusLabel(row.status)}</Badge>
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">{row.issue ?? compareStatusLabel(row.status)}</p>
+      <p className="mt-2 text-xs text-muted-foreground">{compareIssueCopy(row)}</p>
     </div>
   );
 }
+
+function CompareIssueChip({ label, count }: { label: string; count: number }) {
+  return (
+    <div className="rounded-lg border bg-secondary/40 px-2 py-2 text-center">
+      <p className="font-semibold tabular-nums">{count}</p>
+      <p className="text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
 
 function TrendsView({ dashboard }: { dashboard: ReturnType<typeof buildLabTrendsDashboard> }) {
   return (
@@ -1404,7 +1469,14 @@ function formatDelta(row: LabCompareRow) {
 function formatCompareValues(row: LabCompareRow) {
   const first = row.first ? formatResultValue(row.first) : 'Missing';
   const second = row.second ? formatResultValue(row.second) : 'Missing';
-  return `${first} vs ${second}`;
+  return first + ' vs ' + second;
+}
+
+function formatAbsoluteDelta(row: LabCompareRow) {
+  if (row.deltaValue === undefined) return 'No numeric delta';
+  const unit = row.first?.unit || row.second?.unit || '';
+  const prefix = row.deltaValue > 0 ? '+' : '';
+  return prefix + formatNumber(row.deltaValue) + (unit ? ' ' + unit : '');
 }
 
 function compareStatusLabel(status: LabCompareRow['status']) {
@@ -1422,6 +1494,48 @@ function compareStatusLabel(status: LabCompareRow['status']) {
   }
 }
 
+function compareIssueCopy(row: LabCompareRow) {
+  switch (row.status) {
+    case 'assay-mismatch':
+      return 'Different assay or method: ' + (row.first?.assayMethod || 'not listed') + ' vs ' + (row.second?.assayMethod || 'not listed') + '.';
+    case 'unit-mismatch':
+      return 'Different units: ' + (row.first?.unit || 'not listed') + ' vs ' + (row.second?.unit || 'not listed') + '.';
+    case 'non-numeric':
+      return 'One or both values are not numeric, so PeptideOS keeps them visible but does not calculate a delta.';
+    case 'missing':
+      return row.issue ?? 'This marker appears in only one selected report.';
+    case 'matched':
+      return 'Comparable numeric marker.';
+  }
+}
+
+function compareReviewTone(status: LabCompareRow['status']) {
+  switch (status) {
+    case 'assay-mismatch':
+      return 'border-chart-4/40 bg-chart-4/10';
+    case 'unit-mismatch':
+      return 'border-destructive/30 bg-destructive/10';
+    case 'missing':
+      return 'border-muted bg-secondary/40';
+    case 'non-numeric':
+      return 'border-accent/30 bg-accent/10';
+    case 'matched':
+      return 'bg-background';
+  }
+}
+
+function countCompareIssues(rows: LabCompareRow[]) {
+  return rows.reduce<Record<Exclude<LabCompareRow['status'], 'matched'>, number>>((counts, row) => {
+    if (row.status !== 'matched') counts[row.status] += 1;
+    return counts;
+  }, {
+    'assay-mismatch': 0,
+    'unit-mismatch': 0,
+    'non-numeric': 0,
+    missing: 0,
+  });
+}
+
 function formatNumber(value: number) {
   if (Number.isInteger(value)) return String(value);
   return value.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
@@ -1437,6 +1551,12 @@ function deltaClass(delta?: number) {
   if (delta === undefined || Math.abs(delta) < 1) return 'text-muted-foreground';
   return delta > 0 ? 'text-destructive' : 'text-accent';
 }
+
+function deltaToneClass(delta?: number) {
+  if (delta === undefined || Math.abs(delta) < 0.01) return 'bg-secondary text-muted-foreground';
+  return delta > 0 ? 'bg-destructive/10 text-destructive' : 'bg-accent/10 text-accent';
+}
+
 
 function toneClass(tone: 'amber' | 'green' | 'teal' | 'primary') {
   switch (tone) {
