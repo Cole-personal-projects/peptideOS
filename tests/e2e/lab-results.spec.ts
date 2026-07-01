@@ -79,6 +79,9 @@ test.describe('lab results workspace', () => {
     await page.getByRole('button', { name: 'Import Lab Results' }).click();
     await expect(page.getByText('Step 1 of 4')).toBeVisible();
     await page.getByRole('button', { name: 'Upload PDF' }).click();
+await expect(page.getByText('PDF import')).toBeVisible();
+await expect(page.getByLabel('PDF import pipeline')).toBeVisible();
+await expect(page.getByText('Need control?')).toBeVisible();
     await page.getByLabel('Draw date').fill('2026-06-01');
     await page.locator('input[type="file"]').setInputFiles({
       name: 'quest-hormones.pdf',
