@@ -313,6 +313,7 @@ export interface Vial {
   reconstitutedDate: string | null;
   expirationDate: string;
   status: VialStatus;
+  deletedAt?: string | null;
 }
 
 export interface InventoryBatch {
@@ -332,6 +333,7 @@ export interface InventoryBatch {
   packageQuantity?: number;
   vialCount: number;
   createdFrom: 'manual' | 'assistant' | 'import' | 'legacy';
+  deletedAt?: string | null;
 }
 
 export interface Dose {
@@ -439,6 +441,7 @@ export interface ReconstitutionCalculation {
   concentration: string;
   dosesPerVial: number;
   savedAt: string;
+  deletedAt?: string | null;
 }
 
 export interface SignalCheckIn {
@@ -447,6 +450,7 @@ export interface SignalCheckIn {
   energy: number;
   sleepHours: number;
   notes: string;
+  deletedAt?: string | null;
 }
 
 export type LabImportMethod = 'manual' | 'csv' | 'text' | 'pdf' | 'photo';
@@ -469,6 +473,7 @@ export interface LabReport {
   uniqueImportKey: string;
   notes: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 
 export interface LabResult {
@@ -483,6 +488,7 @@ export interface LabResult {
   referenceRange?: LabReferenceRange;
   flag: LabResultFlag;
   panelName?: string;
+  deletedAt?: string | null;
 }
 
 export interface LabImportAudit {
@@ -493,6 +499,7 @@ export interface LabImportAudit {
   parserConfidence: number;
   unresolvedRows: string[];
   duplicateStatus: 'new' | 'possible-duplicate';
+  deletedAt?: string | null;
 }
 
 export interface AppData {

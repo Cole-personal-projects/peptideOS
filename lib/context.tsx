@@ -45,11 +45,29 @@ function omitDeletedRecords<T extends { deletedAt?: string | null }>(records: T[
 function getVisibleAppData(data: AppData): AppData {
   return {
     ...data,
+    vials: omitDeletedRecords(data.vials),
+    inventoryBatches: omitDeletedRecords(data.inventoryBatches),
     doses: omitDeletedRecords(data.doses),
     stacks: omitDeletedRecords(data.stacks),
     schedules: omitDeletedRecords(data.schedules),
     scheduleLogs: omitDeletedRecords(data.scheduleLogs),
+    reconstitutionCalculations: omitDeletedRecords(data.reconstitutionCalculations),
+    signalCheckIns: omitDeletedRecords(data.signalCheckIns),
+    labReports: omitDeletedRecords(data.labReports),
+    labResults: omitDeletedRecords(data.labResults),
+    labImportAudits: omitDeletedRecords(data.labImportAudits),
+    compounds: omitDeletedRecords(data.compounds),
   };
+}
+
+function createRecordId(prefix: string) {
+  const randomId = globalThis.crypto?.randomUUID?.();
+  if (randomId) return `${prefix}-${randomId}`;
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function tombstoneRecord<T extends { deletedAt?: string | null }>(record: T, deletedAt: string): T {
+  return { ...record, deletedAt };
 }
 
 interface AppContextType {
@@ -159,9 +177,11 @@ const [referenceLibraryStatus, setReferenceLibraryStatus] = useState<ReferenceLi
 const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
 const [cloudLastSavedAt, setCloudLastSavedAt] = useState<string | null>(null);
 const [cloudLastRetrievedAt, setCloudLastRetrievedAt] = useState<string | null>(null);
-const [cloudStatus, setCloudStatus] = useState<'unavailable' | 'ready' | 'saving' | 'retrieving' | 'error'>('unavailable');
-const [cloudMessage, setCloudMessage] = useState<string | null>(null);
-const [hydratedOwnerId, setHydratedOwnerId] = useState<string | null>(null);
+  const [cloudStatus, setCloudStatus] = useState<'unavailable' | 'ready' | 'saving' | 'retrieving' | 'error'>('unavailable');
+  const [cloudMessage, setCloudMessage] = useState<string | null>(null);
+  const [persistenceError, setPersistenceError] = useState<{ ownerId: string; message: string } | null>(null);
+  const [hydrateAttempt, setHydrateAttempt] = useState(0);
+  const [hydratedOwnerId, setHydratedOwnerId] = useState<string | null>(null);
   const hydrated = authStatus !== 'loading' && hydratedOwnerId === persistenceOwnerId;
   const saveSequence = useRef(0);
 const persistenceQueue = useRef(Promise.resolve());
@@ -180,31 +200,35 @@ persistenceDb.close();
 };
 }, [persistenceDb]);
 
-useEffect(() => {
+  useEffect(() => {
     if (authStatus === 'loading') return;
 
     let active = true;
 
-loadPersistedAppData(persistenceDb, initialAppData, { ownerId: persistenceOwnerId })
-.then((persistedData) => {
-if (!active) return;
-dataRef.current = persistedData;
-setData(persistedData);
+    loadPersistedAppData(persistenceDb, initialAppData, { ownerId: persistenceOwnerId })
+      .then((persistedData) => {
+        if (!active) return;
+        setPersistenceError(null);
+        dataRef.current = persistedData;
+        setData(persistedData);
 return persistenceDb.metadata.get('lastSavedAt');
 })
-.then((metadata) => {
-if (!active) return;
-setLastSavedAt(typeof metadata?.value === 'string' ? metadata.value : null);
-})
-.finally(() => {
+      .then((metadata) => {
         if (!active) return;
+        setLastSavedAt(typeof metadata?.value === 'string' ? metadata.value : null);
         setHydratedOwnerId(persistenceOwnerId);
+      })
+      .catch((error) => {
+        if (!active) return;
+        const message = error instanceof Error ? error.message : 'PeptideOS could not read local data.';
+        console.error('Failed to hydrate PeptideOS data', error);
+        setPersistenceError({ ownerId: persistenceOwnerId, message });
       });
 
     return () => {
       active = false;
     };
-  }, [authStatus, persistenceDb, persistenceOwnerId]);
+  }, [authStatus, hydrateAttempt, persistenceDb, persistenceOwnerId]);
 
   useEffect(() => {
     if (!hydrated || !referenceLibraryReader || !authConfig.url) return;
@@ -325,9 +349,8 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed
   }, [data.vials]);
 
   const addVial = useCallback((vial: Omit<Vial, 'id'>, options: AddInventoryBatchOptions = {}) => {
-    const createdAt = Date.now();
-    const batchId = `batch-${createdAt}`;
-    const newVial: Vial = { ...vial, id: `vial-${createdAt}`, inventoryBatchId: batchId };
+    const batchId = createRecordId('batch');
+    const newVial: Vial = { ...vial, id: createRecordId('vial'), inventoryBatchId: batchId };
     const batch = createInventoryBatchForVials(batchId, [newVial], options.createdFrom ?? 'manual', {
       packageUnit: options.packageUnit,
       packageQuantity: options.packageQuantity,
@@ -340,11 +363,10 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed
   }, [setAndPersistData]);
 
   const addVials = useCallback((vials: Array<Omit<Vial, 'id'>>, options: AddInventoryBatchOptions = {}) => {
-    const createdAt = Date.now();
-    const batchId = `batch-${createdAt}`;
+    const batchId = createRecordId('batch');
     const newVials: Vial[] = vials.map((vial, index) => ({
       ...vial,
-      id: `vial-${createdAt}-${index}`,
+      id: createRecordId(`vial-${index}`),
       inventoryBatchId: batchId,
     }));
     const batch = createInventoryBatchForVials(batchId, newVials, options.createdFrom ?? 'manual', {
@@ -419,14 +441,18 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed
           ))
           .map((vial) => vial.id),
       );
-      const vials = prev.vials.filter((vial) => !vialIdsToDelete.has(vial.id));
-      const remainingBatchIds = new Set(vials.map((vial) => vial.inventoryBatchId).filter(Boolean));
+      const deletedAt = new Date().toISOString();
+      const batchIdsToDelete = new Set(
+        prev.inventoryBatches
+          .filter((batch) => targetVial.inventoryBatchId === batch.id)
+          .map((batch) => batch.id),
+      );
 
       return {
         ...prev,
-        vials,
-        inventoryBatches: prev.inventoryBatches.filter((batch) => remainingBatchIds.has(batch.id)),
-        doses: prev.doses.filter((dose) => !vialIdsToDelete.has(dose.vialId)),
+        vials: prev.vials.map((vial) => vialIdsToDelete.has(vial.id) ? tombstoneRecord(vial, deletedAt) : vial),
+        inventoryBatches: prev.inventoryBatches.map((batch) => batchIdsToDelete.has(batch.id) ? tombstoneRecord(batch, deletedAt) : batch),
+        doses: prev.doses.map((dose) => vialIdsToDelete.has(dose.vialId) ? tombstoneRecord(dose, deletedAt) : dose),
       };
     });
   }, [setAndPersistData]);
@@ -437,7 +463,7 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed
   }, [data.doses]);
 
   const addDose = useCallback((dose: Omit<Dose, 'id'>) => {
-    const newDose: Dose = { ...dose, id: `dose-${Date.now()}` };
+    const newDose: Dose = { ...dose, id: createRecordId('dose') };
     void setAndPersistData(prev => ({ ...prev, doses: [...prev.doses, newDose] }));
   }, [setAndPersistData]);
 
@@ -536,12 +562,14 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed
   const deleteReconstitutionCalculation = useCallback((id: string) => {
     void setAndPersistData(prev => ({
       ...prev,
-      reconstitutionCalculations: prev.reconstitutionCalculations.filter((calculation) => calculation.id !== id),
+      reconstitutionCalculations: prev.reconstitutionCalculations.map((calculation) =>
+        calculation.id === id ? tombstoneRecord(calculation, new Date().toISOString()) : calculation
+      ),
     }));
   }, [setAndPersistData]);
 
   const addSignalCheckIn = useCallback((checkIn: Omit<SignalCheckIn, 'id'>) => {
-    const newCheckIn: SignalCheckIn = { ...checkIn, id: `signal-${Date.now()}` };
+    const newCheckIn: SignalCheckIn = { ...checkIn, id: createRecordId('signal') };
     void setAndPersistData(prev => ({
       ...prev,
       signalCheckIns: [newCheckIn, ...prev.signalCheckIns],
@@ -564,12 +592,21 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed
   }, [setAndPersistData]);
 
   const deleteLabReport = useCallback((reportId: string) => {
-    void setAndPersistData(prev => ({
-      ...prev,
-      labReports: prev.labReports.filter((report) => report.id !== reportId),
-      labResults: prev.labResults.filter((result) => result.reportId !== reportId),
-      labImportAudits: prev.labImportAudits.filter((audit) => audit.reportId !== reportId),
-    }));
+    void setAndPersistData(prev => {
+      const deletedAt = new Date().toISOString();
+      return {
+        ...prev,
+        labReports: prev.labReports.map((report) =>
+          report.id === reportId ? tombstoneRecord(report, deletedAt) : report
+        ),
+        labResults: prev.labResults.map((result) =>
+          result.reportId === reportId ? tombstoneRecord(result, deletedAt) : result
+        ),
+        labImportAudits: prev.labImportAudits.map((audit) =>
+          audit.reportId === reportId ? tombstoneRecord(audit, deletedAt) : audit
+        ),
+      };
+    });
   }, [setAndPersistData]);
 
   // Stacks
@@ -578,7 +615,7 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud auto-sync failed
  }, [visibleData.stacks]);
 
   const addStack = useCallback((stack: Omit<Stack, 'id'>) => {
-    const id = `stack-${Date.now()}`;
+    const id = createRecordId('stack');
     const newStack: Stack = normalizeStack({ ...stack, id });
     void setAndPersistData(prev => ({ ...prev, stacks: [...prev.stacks, newStack] }));
     return id;
@@ -901,9 +938,45 @@ autoCloudRetrieveKey.current = syncKey;
 void retrieveFromCloud({ automatic: true });
 }, [authStatus, authUser, cloudSyncAdapter, data.cloudSyncEnabled, hydrated, persistenceOwnerId, retrieveFromCloud]);
 
-if (!hydrated) {
-return null;
-}
+  const activePersistenceError = persistenceError?.ownerId === persistenceOwnerId ? persistenceError.message : null;
+
+  if (activePersistenceError) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center bg-background px-5 text-foreground">
+        <section className="w-full max-w-sm rounded-[22px] border border-border bg-card p-5 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Local data unavailable</p>
+          <h1 className="mt-3 text-2xl font-black tracking-tight">PeptideOS could not read this device.</h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            Your saved data has not been overwritten. Retry after checking storage permissions or private browsing mode.
+          </p>
+          <p className="mt-3 rounded-[14px] bg-secondary p-3 text-xs text-muted-foreground">{activePersistenceError}</p>
+          <button
+            className="mt-4 h-11 w-full rounded-[14px] bg-primary text-sm font-black text-primary-foreground"
+            type="button"
+            onClick={() => {
+              setPersistenceError(null);
+              setHydrateAttempt((attempt) => attempt + 1);
+            }}
+          >
+            Retry local data
+          </button>
+        </section>
+      </main>
+    );
+  }
+
+  if (!hydrated) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center bg-background px-5 text-foreground">
+        <section className="w-full max-w-sm rounded-[22px] border border-border bg-card p-5 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">PeptideOS</p>
+          <div className="mt-5 h-3 w-28 rounded-full bg-secondary" />
+          <div className="mt-3 h-3 w-44 rounded-full bg-secondary" />
+          <div className="mt-6 h-12 rounded-[16px] bg-secondary" />
+        </section>
+      </main>
+    );
+  }
 
 const effectiveCloudStatus = authStatus === 'signed-in' && cloudSyncAdapter
 ? (cloudStatus === 'unavailable' ? 'ready' : cloudStatus)
