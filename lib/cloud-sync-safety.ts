@@ -1,20 +1,61 @@
 import type { PersistedUserData } from './persistence';
 
+export type PersistedUserDataCollectionKey =
+  | 'vials'
+  | 'inventoryBatches'
+  | 'doses'
+  | 'stacks'
+  | 'schedules'
+  | 'scheduleLogs'
+  | 'reconstitutionCalculations'
+  | 'signalCheckIns'
+  | 'labReports'
+  | 'labResults'
+  | 'labImportAudits'
+  | 'userCompounds';
+
+export interface PersistedUserDataCollectionCount {
+  key: PersistedUserDataCollectionKey;
+  label: string;
+  localCount: number;
+  cloudCount: number;
+  delta: number;
+}
+
+const collectionLabels: Array<{ key: PersistedUserDataCollectionKey; label: string }> = [
+  { key: 'vials', label: 'Inventory containers' },
+  { key: 'inventoryBatches', label: 'Inventory batches' },
+  { key: 'doses', label: 'Logged doses' },
+  { key: 'stacks', label: 'Protocols' },
+  { key: 'schedules', label: 'Schedules' },
+  { key: 'scheduleLogs', label: 'Due-dose records' },
+  { key: 'reconstitutionCalculations', label: 'Reconstitution saves' },
+  { key: 'signalCheckIns', label: 'Signals' },
+  { key: 'labReports', label: 'Lab reports' },
+  { key: 'labResults', label: 'Lab results' },
+  { key: 'labImportAudits', label: 'Lab import audits' },
+  { key: 'userCompounds', label: 'Custom compounds' },
+];
+
 export function countPersistedUserRecords(data: PersistedUserData) {
-  return [
-    data.vials,
-    data.inventoryBatches,
-    data.doses,
-    data.stacks,
-    data.schedules,
-    data.scheduleLogs,
-    data.reconstitutionCalculations,
-    data.signalCheckIns,
-    data.labReports,
-    data.labResults,
-    data.labImportAudits,
-    data.userCompounds,
-  ].reduce((total, records) => total + records.length, 0);
+  return collectionLabels.reduce((total, collection) => total + data[collection.key].length, 0);
+}
+
+export function comparePersistedUserDataCounts(input: {
+  localData: PersistedUserData;
+  cloudData: PersistedUserData;
+}): PersistedUserDataCollectionCount[] {
+  return collectionLabels.map(({ key, label }) => {
+    const localCount = input.localData[key].length;
+    const cloudCount = input.cloudData[key].length;
+    return {
+      key,
+      label,
+      localCount,
+      cloudCount,
+      delta: cloudCount - localCount,
+    };
+  });
 }
 
 function getTimestampMs(value: string | null | undefined) {

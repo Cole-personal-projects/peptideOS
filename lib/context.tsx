@@ -5,7 +5,7 @@ import type { AppData, AppTheme, Compound, Peptide, Vial, Dose, InventoryBatch, 
 import { initialAppData } from './mock-data';
 import { useAuth } from './auth-context';
 import { createSupabaseAuthClient } from './auth';
-import { createScopedPeptideOSDatabase, getPersistenceOwnerId } from './db';
+import { createScopedPeptideOSDatabase, getPersistenceOwnerId, LOCAL_PERSISTENCE_OWNER_ID } from './db';
 import { createInventoryBatchForVials } from './inventory-batches';
 import { completeOnboarding as completeOnboardingState } from './onboarding';
 import { activateStackSchedules, normalizeStack, updateStackPeptideSchedule, updateStackPeptideScheduleTimes } from './schedules';
@@ -29,7 +29,7 @@ import { createSupabaseReferenceLibraryReader, getReleasedReferenceLibrary, type
 import { applyReleasedReferenceLibrarySnapshot } from './reference-library-state';
 import { buildReferenceLibraryStatus, type ReferenceLibraryStatus } from './reference-library-status';
 import { createSupabaseUserDataSyncAdapter, type SupabaseSyncClient } from './supabase-sync';
-import { countPersistedUserRecords, shouldRestoreCloudData } from './cloud-sync-safety';
+import { comparePersistedUserDataCounts, countPersistedUserRecords, shouldRestoreCloudData, type PersistedUserDataCollectionCount } from './cloud-sync-safety';
 
 const bundledReferenceLibrarySnapshot = buildBundledReferenceSnapshot(referenceCompounds);
 const bundledReferenceLibraryStatus: ReferenceLibraryStatus = {
@@ -79,6 +79,7 @@ export interface CloudRetrievePreview {
   localRecordCount: number;
   cloudHasMoreRecords: number;
   localHasMoreRecords: number;
+  collectionCounts: PersistedUserDataCollectionCount[];
 }
 
 interface PendingCloudRetrieve {
@@ -104,7 +105,34 @@ function buildCloudRetrievePreview(input: {
     localRecordCount,
     cloudHasMoreRecords: Math.max(cloudRecordCount - localRecordCount, 0),
     localHasMoreRecords: Math.max(localRecordCount - cloudRecordCount, 0),
+    collectionCounts: comparePersistedUserDataCounts({
+      localData: input.localData,
+      cloudData: input.cloudData,
+    }),
   };
+}
+
+function hasUserOwnedData(data: AppData) {
+  return [
+    data.vials,
+    data.inventoryBatches,
+    data.doses,
+    data.stacks,
+    data.schedules,
+    data.scheduleLogs,
+    data.reconstitutionCalculations,
+    data.signalCheckIns,
+    data.labReports,
+    data.labResults,
+    data.labImportAudits,
+  ].some((records) => records.length > 0) || data.compounds.some((compound) => compound.source === 'user');
+}
+
+function shouldSeedSignedInStoreFromLocal(input: { signedInData: AppData; localData: AppData }) {
+  if (hasUserOwnedData(input.signedInData)) return false;
+  return hasUserOwnedData(input.localData)
+    || input.localData.hasSeenDisclaimer
+    || input.localData.hasCompletedOnboarding;
 }
 
 interface AppContextType {
@@ -252,7 +280,32 @@ persistenceDb.close();
     let active = true;
 
     loadPersistedAppData(persistenceDb, initialAppData, { ownerId: persistenceOwnerId })
-      .then((persistedData) => {
+      .then(async (persistedData) => {
+        if (!active) return;
+        if (authStatus === 'signed-in' && persistenceOwnerId !== LOCAL_PERSISTENCE_OWNER_ID) {
+          const localDb = createScopedPeptideOSDatabase(LOCAL_PERSISTENCE_OWNER_ID);
+          try {
+            const localData = await loadPersistedAppData(localDb, initialAppData, { ownerId: LOCAL_PERSISTENCE_OWNER_ID });
+            if (active && shouldSeedSignedInStoreFromLocal({ signedInData: persistedData, localData })) {
+              const localPersistedData = await exportUserDataForCloudSync(localDb);
+              persistedData = await restorePersistedUserData(
+                persistenceDb,
+                initialAppData,
+                {
+                  ...localPersistedData,
+                  settings: {
+                    ...localPersistedData.settings,
+                    cloudSyncEnabled: persistedData.cloudSyncEnabled ?? localPersistedData.settings.cloudSyncEnabled,
+                  },
+                },
+                new Date(),
+                { ownerId: persistenceOwnerId },
+              );
+            }
+          } finally {
+            localDb.close();
+          }
+        }
         if (!active) return;
         setPersistenceError(null);
         dataRef.current = persistedData;
@@ -1004,19 +1057,17 @@ setCloudMessage(error instanceof Error ? error.message : 'Cloud retrieve failed.
     setCloudMessage(null);
     try {
       await persistenceQueue.current;
-      const backup = await exportUserData(persistenceDb);
-      downloadUserData(backup);
       lastCloudRestoreBackup.current = pendingCloudRetrieve.localData;
       await restoreCloudData(pendingCloudRetrieve.cloudData, new Date());
       setCanUndoCloudRetrieve(true);
       setPendingCloudRetrieve(null);
       setCloudStatus('ready');
-      setCloudMessage(`Retrieved ${pendingCloudRetrieve.preview.pulledRows} cloud records. A local backup was downloaded first.`);
+      setCloudMessage(`Retrieved ${pendingCloudRetrieve.preview.pulledRows} cloud records. An in-app restore point was created first.`);
     } catch (error) {
       setCloudStatus('error');
       setCloudMessage(error instanceof Error ? error.message : 'Cloud retrieve failed.');
     }
-  }, [pendingCloudRetrieve, persistenceDb, restoreCloudData]);
+  }, [pendingCloudRetrieve, restoreCloudData]);
 
   const undoLastCloudRetrieve = useCallback(async () => {
     if (!lastCloudRestoreBackup.current) {

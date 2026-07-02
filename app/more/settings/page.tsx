@@ -331,7 +331,7 @@ const biometricLockEnabled = isFeatureEnabled('biometric-lock');
 <div>
 <p className="font-medium text-sm">Cloud mode</p>
 <p className="text-xs text-muted-foreground mt-1">
-When on, this device retrieves your account data and auto-saves local changes to cloud.
+When on, PeptideOS saves app changes to your account automatically. Retrieve only when you want to replace this device with the cloud copy.
 </p>
 </div>
 </div>
@@ -394,7 +394,7 @@ Undo last cloud retrieve
    <AlertDialogHeader>
    <AlertDialogTitle>Review cloud retrieve</AlertDialogTitle>
    <AlertDialogDescription>
-   PeptideOS will download a local backup before replacing this device with the cloud copy.
+   This replaces this device with the cloud copy. PeptideOS creates an in-app restore point first, so iOS stays in the app.
    </AlertDialogDescription>
    </AlertDialogHeader>
    {persistenceStatus.cloudRetrievePreview ? (
@@ -414,10 +414,23 @@ Undo last cloud retrieve
    <p className="text-xs leading-5 text-muted-foreground">
    Cloud has {persistenceStatus.cloudRetrievePreview.cloudHasMoreRecords} more records by count. This device has {persistenceStatus.cloudRetrievePreview.localHasMoreRecords} more records by count.
    </p>
-   <p className="text-xs leading-5 text-muted-foreground">
-   Retrieved {persistenceStatus.cloudRetrievePreview.pulledRows} sync rows{persistenceStatus.cloudRetrievePreview.pulledAt ? ` · ${formatDateTime(persistenceStatus.cloudRetrievePreview.pulledAt)}` : ''}.
-   </p>
-   </div>
+ <p className="text-xs leading-5 text-muted-foreground">
+ Retrieved {persistenceStatus.cloudRetrievePreview.pulledRows} sync rows{persistenceStatus.cloudRetrievePreview.pulledAt ? ` · ${formatDateTime(persistenceStatus.cloudRetrievePreview.pulledAt)}` : ''}.
+ </p>
+ <div className="grid gap-1.5">
+ {persistenceStatus.cloudRetrievePreview.collectionCounts
+ .filter((item) => item.localCount > 0 || item.cloudCount > 0 || item.delta !== 0)
+ .map((item) => (
+ <div key={item.key} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 rounded-[10px] bg-background px-2.5 py-2 text-xs">
+ <span className="font-semibold">{item.label}</span>
+ <span className="text-muted-foreground">{item.localCount} → {item.cloudCount}</span>
+ <span className={item.delta === 0 ? 'text-muted-foreground' : item.delta > 0 ? 'text-emerald-600' : 'text-amber-600'}>
+ {item.delta > 0 ? `+${item.delta}` : item.delta}
+ </span>
+ </div>
+ ))}
+ </div>
+ </div>
    ) : (
    <div className="rounded-[16px] bg-secondary p-3 text-sm text-muted-foreground" role="status">
    {persistenceStatus.cloudStatus === 'retrieving' ? 'Checking cloud copy...' : 'No cloud retrieve preview is available.'}
@@ -440,7 +453,7 @@ Undo last cloud retrieve
    void confirmCloudRetrieve();
    }}
    >
-   {persistenceStatus.cloudStatus === 'retrieving' ? 'Retrieving...' : 'Download backup and retrieve'}
+   {persistenceStatus.cloudStatus === 'retrieving' ? 'Retrieving...' : 'Create restore point and retrieve'}
    </AlertDialogAction>
    </AlertDialogFooter>
 </AlertDialogContent>
