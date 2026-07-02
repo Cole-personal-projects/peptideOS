@@ -112,6 +112,18 @@ await expect(page.getByText('Need control?')).toBeVisible();
   await expect(page.getByText('Flagged')).toBeVisible();
   await expect(page.getByText('Baseline')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Analyze' }).first()).toBeVisible();
+  await page.route('**/api/ai/analyze-labs', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Peppi reviewed labs against PeptideOS records.', cards: [] }),
+    });
+  });
+  await page.getByRole('button', { name: 'Analyze all' }).click();
+  await expect(page.getByLabel('Peppi lab analysis loading')).toBeVisible();
+  await expect(page.getByText('Peppi is reading your markers')).toBeVisible();
+  await expect(page.getByText('Peppi reviewed labs against PeptideOS records.')).toBeVisible();
+  await page.unroute('**/api/ai/analyze-labs');
   await page.getByRole('button', { name: /Open lab report Quest Diagnostics Hormones/ }).click();
   await expect(page).toHaveURL(/view=report/);
   await expect(page.getByText('Report detail')).toBeVisible();
