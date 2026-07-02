@@ -2,6 +2,34 @@ import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 
 test.describe('local persistence', () => {
+  test('blocks app writes when IndexedDB hydration fails', async ({ page }) => {
+    await page.addInitScript(() => {
+      const failingIndexedDb = {
+        open() {
+          throw new Error('Injected IndexedDB failure');
+        },
+        deleteDatabase() {
+          throw new Error('Injected IndexedDB failure');
+        },
+        cmp() {
+          return 0;
+        },
+      };
+
+      Object.defineProperty(window, 'indexedDB', {
+        configurable: true,
+        value: failingIndexedDb,
+      });
+    });
+
+    await page.goto('/');
+
+    await expect(page.getByRole('heading', { name: 'PeptideOS could not read this device.' })).toBeVisible();
+    await expect(page.getByText('Your saved data has not been overwritten.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Retry local data' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'One-time setup' })).toHaveCount(0);
+  });
+
   test('persists onboarding completion across reloads', async ({ page }) => {
     await page.goto('/');
 

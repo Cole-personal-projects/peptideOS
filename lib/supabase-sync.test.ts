@@ -108,15 +108,131 @@ describe('Supabase user-data sync contracts', () => {
       syncedAt: new Date('2026-06-16T12:10:00.000Z'),
     });
 
-    expect(rows.find((row) => row.collection === 'stacks' && row.record_id === 'stack-deleted')).toEqual(
-      expect.objectContaining({
-        deleted_at: '2026-06-16T12:05:00.000Z',
-        payload: expect.objectContaining({ id: 'stack-deleted', deletedAt: '2026-06-16T12:05:00.000Z' }),
-      }),
-    );
+  expect(rows.find((row) => row.collection === 'stacks' && row.record_id === 'stack-deleted')).toEqual(
+    expect.objectContaining({
+      deleted_at: '2026-06-16T12:05:00.000Z',
+      payload: expect.objectContaining({ id: 'stack-deleted', deletedAt: '2026-06-16T12:05:00.000Z' }),
+    }),
+  );
+});
+
+test('serializes inventory, lab, and reconstitution tombstones for cross-device deletes', () => {
+  const deletedAt = '2026-06-16T12:05:00.000Z';
+  const data: PersistedUserData = {
+    ...emptyData,
+    vials: [
+      {
+        id: 'vial-deleted',
+        name: 'Deleted vial',
+        peptideId: 'kpv',
+        containerType: 'lyophilized-vial',
+        dateAdded: '2026-06-16',
+        source: 'Source A',
+        lotNumber: 'KPV-001',
+        mg: 10,
+        totalAmount: { value: 10, unit: 'mg' },
+        bacWaterMl: 0,
+        reconstitutedDate: null,
+        expirationDate: '2027-06-16',
+        status: 'sealed',
+        deletedAt,
+      },
+    ],
+    inventoryBatches: [
+      {
+        id: 'batch-deleted',
+        name: 'Deleted batch',
+        peptideId: 'kpv',
+        containerType: 'lyophilized-vial',
+        dateAdded: '2026-06-16',
+        source: 'Source A',
+        lotNumber: 'KPV-001',
+        mg: 10,
+        totalAmount: { value: 10, unit: 'mg' },
+        vialCount: 1,
+        createdFrom: 'manual',
+        deletedAt,
+      },
+    ],
+    reconstitutionCalculations: [
+      {
+        id: 'recon-deleted',
+        compoundName: 'KPV',
+        compoundId: 'kpv',
+        vialSize: 10,
+        vialUnit: 'mg',
+        bacWaterMl: 2,
+        doseValue: 250,
+        doseUnit: 'mcg',
+        drawUnits: 5,
+        drawMl: 0.05,
+        concentration: '5 mg/mL',
+        dosesPerVial: 40,
+        savedAt: '2026-06-16T12:00:00.000Z',
+        deletedAt,
+      },
+    ],
+    labReports: [
+      {
+        id: 'report-deleted',
+        drawDate: '2026-06-16',
+        uniqueImportKey: 'deleted-report',
+        notes: '',
+        createdAt: '2026-06-16T12:00:00.000Z',
+        deletedAt,
+      },
+    ],
+    labResults: [
+      {
+        id: 'result-deleted',
+        reportId: 'report-deleted',
+        testName: 'Estradiol',
+        normalizedKey: 'estradiol',
+        value: '22',
+        numericValue: 22,
+        unit: 'pg/mL',
+        flag: 'normal',
+        deletedAt,
+      },
+    ],
+    labImportAudits: [
+      {
+        id: 'audit-deleted',
+        reportId: 'report-deleted',
+        method: 'manual',
+        importedAt: '2026-06-16T12:00:00.000Z',
+        parserConfidence: 1,
+        unresolvedRows: [],
+        duplicateStatus: 'new',
+        deletedAt,
+      },
+    ],
+  };
+
+  const rows = buildSupabaseSyncRows({
+    userId: 'user-amy',
+    data,
+    syncedAt: new Date('2026-06-16T12:10:00.000Z'),
   });
 
-  test('hydrates persisted data from active Supabase sync rows', () => {
+  for (const [collection, recordId] of [
+    ['vials', 'vial-deleted'],
+    ['inventory_batches', 'batch-deleted'],
+    ['reconstitution_calculations', 'recon-deleted'],
+    ['lab_reports', 'report-deleted'],
+    ['lab_results', 'result-deleted'],
+    ['lab_import_audits', 'audit-deleted'],
+  ] as const) {
+    expect(rows.find((row) => row.collection === collection && row.record_id === recordId)).toEqual(
+      expect.objectContaining({
+        deleted_at: deletedAt,
+        payload: expect.objectContaining({ id: recordId, deletedAt }),
+      }),
+    );
+  }
+});
+
+test('hydrates persisted data from active Supabase sync rows', () => {
     const rows = buildSupabaseSyncRows({
       userId: 'user-amy',
       data: {

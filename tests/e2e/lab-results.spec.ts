@@ -105,10 +105,10 @@ await expect(page.getByText('Need control?')).toBeVisible();
     await expect(page.getByLabel('Test name 5')).toBeHidden();
     await page.getByRole('button', { name: 'Confirm Import' }).click();
     await expect(page.getByText('Import complete')).toBeVisible();
-    await page.getByRole('button', { name: 'View Timeline' }).click();
+  await page.getByRole('button', { name: 'View Timeline' }).click();
 
   await expect(page.getByText('Quest Diagnostics')).toBeVisible();
-  await expect(page.getByText('Hormones')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Open lab report Quest Diagnostics Hormones/ })).toBeVisible();
   await expect(page.getByText('Flagged')).toBeVisible();
   await expect(page.getByText('Baseline')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Analyze' }).first()).toBeVisible();
