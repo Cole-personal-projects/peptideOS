@@ -14,8 +14,8 @@ const defaultWords = ['PeptideOS', 'Optimize', 'Grow', 'Live'];
 
 export function MarqueeTicker({ words = defaultWords, className, label = 'PeptideOS welcome banner' }: MarqueeTickerProps) {
   const [paused, setPaused] = useState(false);
-  const rowOne = words;
-  const rowTwo = [...words].reverse();
+  const rowOne = buildTickerWords(words);
+  const rowTwo = buildTickerWords([...words].reverse());
 
   useEffect(() => {
     const update = () => setPaused(document.hidden);
@@ -27,7 +27,7 @@ export function MarqueeTicker({ words = defaultWords, className, label = 'Peptid
   return (
     <section
       aria-label={label}
-      className={cn('c06-marquee overflow-hidden rounded-[18px] border bg-card py-2 shadow-sm', className)}
+      className={cn('c06-marquee relative isolate overflow-hidden rounded-[18px] border bg-card py-2 shadow-sm', className)}
       data-paused={paused ? 'true' : 'false'}
     >
       <TickerRow words={rowOne} tone="a" />
@@ -36,75 +36,37 @@ export function MarqueeTicker({ words = defaultWords, className, label = 'Peptid
         .c06-marquee {
           background:
             radial-gradient(circle at 18% 0%, hsl(var(--primary) / 0.2), transparent 38%),
-            linear-gradient(135deg, hsl(var(--card)), hsl(var(--secondary) / 0.42));
-        }
-
-        .c06-row {
-          width: 100%;
-          overflow: hidden;
-          white-space: nowrap;
-        }
-
-        .c06-track {
-          display: inline-block;
-          min-width: max-content;
-          will-change: transform;
-          animation: c06-scroll-left 16s linear infinite;
-          animation-play-state: running;
-        }
-
-        .c06-track--b {
-          animation-name: c06-scroll-right;
-          animation-duration: 20s;
+            linear-gradient(135deg, hsl(var(--card)), hsl(var(--secondary) / 0.55));
+          -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
         }
 
         .c06-marquee[data-paused='true'] .c06-track {
           animation-play-state: paused;
         }
 
-        .c06-word {
-          display: inline-block;
-          padding: 0 0.35em;
-          font-size: clamp(1.4rem, 8vw, 3.8rem);
-          font-weight: 800;
-          letter-spacing: 0;
-          line-height: 0.95;
-        }
-
-        .c06-track--a .c06-word {
-          color: hsl(var(--primary));
-        }
-
-        .c06-track--b .c06-word {
-          color: hsl(var(--chart-3));
-        }
-
-        .c06-dot {
-          color: hsl(var(--chart-4));
-        }
-
-        @keyframes c06-scroll-left {
+        @keyframes c06-marquee-left {
           from {
-            transform: translateX(0);
+            transform: translate3d(0, 0, 0);
           }
           to {
-            transform: translateX(-50%);
+            transform: translate3d(-33.333%, 0, 0);
           }
         }
 
-        @keyframes c06-scroll-right {
+        @keyframes c06-marquee-right {
           from {
-            transform: translateX(-50%);
+            transform: translate3d(-33.333%, 0, 0);
           }
           to {
-            transform: translateX(0);
+            transform: translate3d(0, 0, 0);
           }
         }
 
         @media (prefers-reduced-motion: reduce) {
           .c06-track {
-            animation: none;
-            transform: none;
+            animation: none !important;
+            transform: translate3d(-12%, 0, 0);
           }
         }
       `}</style>
@@ -113,26 +75,37 @@ export function MarqueeTicker({ words = defaultWords, className, label = 'Peptid
 }
 
 function TickerRow({ words, tone }: { words: string[]; tone: 'a' | 'b' }) {
-  const unit = (
-    <>
-      {words.map((word) => (
-        <span key={`${tone}-${word}`} className="c06-word">
-          {word}
-          <span className="c06-dot" aria-hidden="true">
-            {' '}
+  return (
+    <div className="c06-row overflow-hidden whitespace-nowrap leading-none" aria-hidden="true">
+      <div
+        className={cn(
+          'c06-track inline-flex min-w-max items-center gap-4 py-1 text-[13px] font-semibold tracking-normal will-change-transform',
+          tone === 'a' ? 'animate-[c06-marquee-left_16s_linear_infinite] text-foreground' : 'animate-[c06-marquee-right_18s_linear_infinite] text-muted-foreground',
+        )}
+      >
+        <TickerUnit words={words} />
+        <TickerUnit words={words} />
+        <TickerUnit words={words} />
+      </div>
+    </div>
+  );
+}
+
+function TickerUnit({ words }: { words: string[] }) {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-4 whitespace-nowrap pr-4">
+      {words.map((word, index) => (
+        <span key={`${word}-${index}`} className="inline-flex shrink-0 items-center gap-4 whitespace-nowrap">
+          <span>{word}</span>
+          <span className="text-primary" aria-hidden="true">
             &bull;
           </span>
         </span>
       ))}
-    </>
+    </span>
   );
+}
 
-  return (
-    <div className="c06-row" aria-hidden="true">
-      <div className={`c06-track c06-track--${tone}`}>
-        {unit}
-        {unit}
-      </div>
-    </div>
-  );
+function buildTickerWords(words: string[]) {
+  return words.length > 0 ? words : defaultWords;
 }

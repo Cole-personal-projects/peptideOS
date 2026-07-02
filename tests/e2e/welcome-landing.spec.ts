@@ -31,7 +31,21 @@ test.describe('welcome landing page', () => {
   });
 
   test('keeps the landing hero inside the mobile viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/welcome', { waitUntil: 'networkidle' });
+    const banner = page.getByLabel('PeptideOS welcome banner');
+    await expect(banner).toBeVisible();
+
+    await expect
+      .poll(async () => banner.evaluate((element) => {
+        const rows = Array.from(element.querySelectorAll('.c06-row'));
+        return rows.every((row) => {
+          const style = window.getComputedStyle(row);
+          return style.whiteSpace === 'nowrap' && row.getBoundingClientRect().height < 28 && row.scrollWidth > row.clientWidth;
+        });
+      }))
+      .toBe(true);
+
     const hero = page.getByLabel('Animated protocol cockpit preview');
     await expect(hero).toBeVisible();
 

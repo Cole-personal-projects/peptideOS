@@ -87,7 +87,7 @@ function ProtocolCockpitHero() {
     <div
       aria-label="Animated protocol cockpit preview"
       data-testid="protocol-cockpit-hero"
-      className="relative mx-auto w-full max-w-[420px]"
+      className="relative mx-auto w-full max-w-full sm:max-w-[420px]"
     >
       <div className="absolute -inset-3 rounded-[2rem] border border-primary/15 bg-primary/5 blur-xl" />
       <motion.div
@@ -318,8 +318,8 @@ export function WelcomeScreen({ onGetStarted, completedOnboarding = false }: Wel
       </div>
 
       <section className="mx-auto grid w-full max-w-6xl items-center gap-10 px-5 pb-14 pt-8 md:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] md:pb-20 md:pt-14">
-        <div className="max-w-2xl">
-<MarqueeTicker className="mb-5 max-w-xl" />
+        <div className="min-w-0 max-w-2xl">
+          <MarqueeTicker className="mb-5 w-full max-w-full sm:max-w-xl" />
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
             <ShieldCheck className="size-3.5 text-primary" />
             Private research tracking. Local-first by default.
