@@ -17,8 +17,9 @@ import {
   importUserData,
 loadPersistedAppData,
 resetPersistedAppData,
-restorePersistedUserData,
-savePersistedAppData,
+  restorePersistedUserData,
+  savePersistedAppData,
+  type PersistedUserData,
 } from './persistence';
 import { createUserCompound, softDeleteUserCompound, updateUserCompound, type UserCompoundDraft } from './user-compounds';
 import { completeDueDose, skipDueDose } from './due-doses';
@@ -70,6 +71,42 @@ function tombstoneRecord<T extends { deletedAt?: string | null }>(record: T, del
   return { ...record, deletedAt };
 }
 
+export interface CloudRetrievePreview {
+  id: string;
+  pulledRows: number;
+  pulledAt: string | null;
+  cloudRecordCount: number;
+  localRecordCount: number;
+  cloudHasMoreRecords: number;
+  localHasMoreRecords: number;
+}
+
+interface PendingCloudRetrieve {
+  preview: CloudRetrievePreview;
+  cloudData: PersistedUserData;
+  localData: PersistedUserData;
+}
+
+function buildCloudRetrievePreview(input: {
+  id: string;
+  pulledRows: number;
+  pulledAt: string | null;
+  cloudData: PersistedUserData;
+  localData: PersistedUserData;
+}): CloudRetrievePreview {
+  const cloudRecordCount = countPersistedUserRecords(input.cloudData);
+  const localRecordCount = countPersistedUserRecords(input.localData);
+  return {
+    id: input.id,
+    pulledRows: input.pulledRows,
+    pulledAt: input.pulledAt,
+    cloudRecordCount,
+    localRecordCount,
+    cloudHasMoreRecords: Math.max(cloudRecordCount - localRecordCount, 0),
+    localHasMoreRecords: Math.max(localRecordCount - cloudRecordCount, 0),
+  };
+}
+
 interface AppContextType {
   data: AppData;
   referenceLibraryStatus: ReferenceLibraryStatus;
@@ -78,10 +115,12 @@ mode: 'local-only' | 'signed-in';
 ownerId: string;
 lastSavedAt: string | null;
 cloudLastSavedAt: string | null;
-cloudLastRetrievedAt: string | null;
-cloudStatus: 'unavailable' | 'ready' | 'saving' | 'retrieving' | 'error';
-cloudMessage: string | null;
-};
+    cloudLastRetrievedAt: string | null;
+    cloudStatus: 'unavailable' | 'ready' | 'saving' | 'retrieving' | 'error';
+    cloudMessage: string | null;
+    cloudRetrievePreview: CloudRetrievePreview | null;
+    canUndoCloudRetrieve: boolean;
+  };
   // Peptides
   getPeptide: (id: string) => Peptide | undefined;
   // Compounds
@@ -136,9 +175,13 @@ toggleBiometricLock: () => void;
 setCloudSyncEnabled: (enabled: boolean) => Promise<void>;
 exportAllData: () => Promise<void>;
 importAllData: (file: File) => Promise<void>;
-clearAllData: () => Promise<void>;
-saveToCloud: () => Promise<void>;
-retrieveFromCloud: () => Promise<void>;
+  clearAllData: () => Promise<void>;
+  saveToCloud: () => Promise<void>;
+  previewCloudRetrieve: () => Promise<void>;
+  confirmCloudRetrieve: () => Promise<void>;
+  cancelCloudRetrievePreview: () => void;
+  undoLastCloudRetrieve: () => Promise<void>;
+  retrieveFromCloud: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -179,6 +222,8 @@ const [cloudLastSavedAt, setCloudLastSavedAt] = useState<string | null>(null);
 const [cloudLastRetrievedAt, setCloudLastRetrievedAt] = useState<string | null>(null);
   const [cloudStatus, setCloudStatus] = useState<'unavailable' | 'ready' | 'saving' | 'retrieving' | 'error'>('unavailable');
   const [cloudMessage, setCloudMessage] = useState<string | null>(null);
+  const [pendingCloudRetrieve, setPendingCloudRetrieve] = useState<PendingCloudRetrieve | null>(null);
+  const [canUndoCloudRetrieve, setCanUndoCloudRetrieve] = useState(false);
   const [persistenceError, setPersistenceError] = useState<{ ownerId: string; message: string } | null>(null);
   const [hydrateAttempt, setHydrateAttempt] = useState(0);
   const [hydratedOwnerId, setHydratedOwnerId] = useState<string | null>(null);
@@ -186,9 +231,10 @@ const [cloudLastRetrievedAt, setCloudLastRetrievedAt] = useState<string | null>(
   const saveSequence = useRef(0);
 const persistenceQueue = useRef(Promise.resolve());
 const dataRef = useRef(data);
-const loadedReferenceLibraryKey = useRef<string | null>(null);
-const autoCloudRetrieveKey = useRef<string | null>(null);
-const skipNextCloudPush = useRef(false);
+  const loadedReferenceLibraryKey = useRef<string | null>(null);
+  const autoCloudRetrieveKey = useRef<string | null>(null);
+  const skipNextCloudPush = useRef(false);
+  const lastCloudRestoreBackup = useRef<PersistedUserData | null>(null);
 
   useEffect(() => {
     dataRef.current = data;
@@ -815,7 +861,7 @@ setData(resetData);
 setLastSavedAt(null);
 }, [enqueuePersistenceOperation, persistenceDb]);
 
-const saveToCloud = useCallback(async () => {
+  const saveToCloud = useCallback(async () => {
 if (authStatus !== 'signed-in' || !authUser || !cloudSyncAdapter) {
 setCloudStatus('unavailable');
 setCloudMessage('Sign in with cloud sync configured before saving to cloud.');
@@ -839,10 +885,36 @@ setCloudMessage(`Saved ${result.pushedRows} records to cloud.`);
 } catch (error) {
 setCloudStatus('error');
 setCloudMessage(error instanceof Error ? error.message : 'Cloud save failed.');
-}
-}, [authStatus, authUser, cloudSyncAdapter, persistenceDb]);
+    }
+  }, [authStatus, authUser, cloudSyncAdapter, persistenceDb]);
 
-const retrieveFromCloud = useCallback(async (options?: { automatic?: boolean }) => {
+  const restoreCloudData = useCallback(async (
+    cloudData: PersistedUserData,
+    restoredAt: Date,
+  ) => {
+    saveSequence.current++;
+    const persistedCloudSyncEnabled = dataRef.current.cloudSyncEnabled;
+    const restoredPersistedData = {
+      ...cloudData,
+      settings: {
+        ...cloudData.settings,
+        cloudSyncEnabled: persistedCloudSyncEnabled,
+      },
+    };
+    const restoredData = await enqueuePersistenceOperation(() => restorePersistedUserData(
+      persistenceDb,
+      initialAppData,
+      restoredPersistedData,
+      restoredAt,
+      { ownerId: persistenceOwnerId },
+    ));
+    dataRef.current = restoredData;
+    setData(restoredData);
+    setLastSavedAt(restoredAt.toISOString());
+    setCloudLastRetrievedAt(restoredAt.toISOString());
+  }, [enqueuePersistenceOperation, persistenceDb, persistenceOwnerId]);
+
+  const retrieveFromCloud = useCallback(async (options?: { automatic?: boolean }) => {
 if (authStatus !== 'signed-in' || !authUser || !cloudSyncAdapter) {
 setCloudStatus('unavailable');
 setCloudMessage('Sign in with cloud sync configured before retrieving cloud data.');
@@ -874,34 +946,99 @@ setCloudMessage('Cloud copy is not newer than this device. Local data was kept.'
 return;
 }
 
-const restoredAt = new Date();
-saveSequence.current++;
-const persistedCloudSyncEnabled = dataRef.current.cloudSyncEnabled;
-const restoredPersistedData = {
-...result.data,
-settings: {
-...result.data.settings,
-cloudSyncEnabled: persistedCloudSyncEnabled,
-},
-};
-const restoredData = await enqueuePersistenceOperation(() => restorePersistedUserData(
-persistenceDb,
-initialAppData,
-restoredPersistedData,
-restoredAt,
-{ ownerId: persistenceOwnerId },
-));
-dataRef.current = restoredData;
-setData(restoredData);
-setLastSavedAt(restoredAt.toISOString());
-setCloudLastRetrievedAt(restoredAt.toISOString());
-setCloudStatus('ready');
-setCloudMessage(`Retrieved ${result.pulledRows} records from cloud.`);
+      await restoreCloudData(result.data, new Date());
+      setCloudStatus('ready');
+      setCloudMessage(`Retrieved ${result.pulledRows} records from cloud.`);
 } catch (error) {
 setCloudStatus('error');
 setCloudMessage(error instanceof Error ? error.message : 'Cloud retrieve failed.');
 }
-}, [authStatus, authUser, cloudSyncAdapter, enqueuePersistenceOperation, lastSavedAt, persistenceDb, persistenceOwnerId]);
+  }, [authStatus, authUser, cloudSyncAdapter, lastSavedAt, persistenceDb, restoreCloudData]);
+
+  const previewCloudRetrieve = useCallback(async () => {
+    if (authStatus !== 'signed-in' || !authUser || !cloudSyncAdapter) {
+      setCloudStatus('unavailable');
+      setCloudMessage('Sign in with cloud sync configured before retrieving cloud data.');
+      return;
+    }
+
+    setCloudStatus('retrieving');
+    setCloudMessage(null);
+    setPendingCloudRetrieve(null);
+    try {
+      await persistenceQueue.current;
+      const result = await cloudSyncAdapter.pullUserData({ userId: authUser.id });
+      if (result.pulledRows === 0) {
+        setCloudStatus('ready');
+        setCloudMessage('No cloud records found for account. Local data was not changed.');
+        return;
+      }
+
+      const localData = await exportUserDataForCloudSync(persistenceDb);
+      const preview = buildCloudRetrievePreview({
+        id: createRecordId('cloud-preview'),
+        pulledRows: result.pulledRows,
+        pulledAt: result.pulledAt,
+        cloudData: result.data,
+        localData,
+      });
+      setPendingCloudRetrieve({ preview, cloudData: result.data, localData });
+      setCloudStatus('ready');
+      setCloudMessage('Review the cloud retrieve preview before replacing this device.');
+    } catch (error) {
+      setCloudStatus('error');
+      setCloudMessage(error instanceof Error ? error.message : 'Cloud retrieve preview failed.');
+    }
+  }, [authStatus, authUser, cloudSyncAdapter, persistenceDb]);
+
+  const cancelCloudRetrievePreview = useCallback(() => {
+    setPendingCloudRetrieve(null);
+    setCloudStatus('ready');
+    setCloudMessage('Cloud retrieve canceled. Local data was kept.');
+  }, []);
+
+  const confirmCloudRetrieve = useCallback(async () => {
+    if (!pendingCloudRetrieve) return;
+
+    setCloudStatus('retrieving');
+    setCloudMessage(null);
+    try {
+      await persistenceQueue.current;
+      const backup = await exportUserData(persistenceDb);
+      downloadUserData(backup);
+      lastCloudRestoreBackup.current = pendingCloudRetrieve.localData;
+      await restoreCloudData(pendingCloudRetrieve.cloudData, new Date());
+      setCanUndoCloudRetrieve(true);
+      setPendingCloudRetrieve(null);
+      setCloudStatus('ready');
+      setCloudMessage(`Retrieved ${pendingCloudRetrieve.preview.pulledRows} cloud records. A local backup was downloaded first.`);
+    } catch (error) {
+      setCloudStatus('error');
+      setCloudMessage(error instanceof Error ? error.message : 'Cloud retrieve failed.');
+    }
+  }, [pendingCloudRetrieve, persistenceDb, restoreCloudData]);
+
+  const undoLastCloudRetrieve = useCallback(async () => {
+    if (!lastCloudRestoreBackup.current) {
+      setCloudStatus('ready');
+      setCloudMessage('No cloud retrieve backup is available to undo.');
+      return;
+    }
+
+    setCloudStatus('retrieving');
+    setCloudMessage(null);
+    try {
+      await restoreCloudData(lastCloudRestoreBackup.current, new Date());
+      lastCloudRestoreBackup.current = null;
+      setCanUndoCloudRetrieve(false);
+      setPendingCloudRetrieve(null);
+      setCloudStatus('ready');
+      setCloudMessage('Restored the local data from before the last cloud retrieve.');
+    } catch (error) {
+      setCloudStatus('error');
+      setCloudMessage(error instanceof Error ? error.message : 'Could not undo cloud retrieve.');
+    }
+  }, [restoreCloudData]);
 
 const setCloudSyncEnabled = useCallback(async (enabled: boolean) => {
 if (enabled && authStatus !== 'signed-in') {
@@ -994,10 +1131,12 @@ mode: authStatus === 'signed-in' ? 'signed-in' : 'local-only',
 ownerId: persistenceOwnerId,
 lastSavedAt,
 cloudLastSavedAt,
-cloudLastRetrievedAt,
-cloudStatus: effectiveCloudStatus,
-cloudMessage: effectiveCloudMessage,
-},
+        cloudLastRetrievedAt,
+        cloudStatus: effectiveCloudStatus,
+        cloudMessage: effectiveCloudMessage,
+        cloudRetrievePreview: pendingCloudRetrieve?.preview ?? null,
+        canUndoCloudRetrieve,
+      },
       getPeptide,
       getCompound,
       addUserCompound,
@@ -1043,10 +1182,14 @@ toggleBiometricLock,
 setCloudSyncEnabled,
 exportAllData,
 importAllData,
-clearAllData,
-saveToCloud,
-retrieveFromCloud
-}}>
+        clearAllData,
+        saveToCloud,
+        previewCloudRetrieve,
+        confirmCloudRetrieve,
+        cancelCloudRetrievePreview,
+        undoLastCloudRetrieve,
+        retrieveFromCloud
+      }}>
       {children}
     </AppContext.Provider>
   );

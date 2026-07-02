@@ -90,10 +90,13 @@ setTheme,
 toggleBiometricLock,
 exportAllData,
 importAllData,
-clearAllData,
-saveToCloud,
-retrieveFromCloud,
-setCloudSyncEnabled,
+  clearAllData,
+  saveToCloud,
+  previewCloudRetrieve,
+  confirmCloudRetrieve,
+  cancelCloudRetrievePreview,
+  undoLastCloudRetrieve,
+  setCloudSyncEnabled,
 } = useApp();
   const activeTheme = data.theme ?? (data.darkMode ? 'graphite-dark' : 'clinical-light');
   const { config: authConfig, status: authStatus, user, signInWithEmail, verifyEmailCode, signOut } = useAuth();
@@ -358,12 +361,27 @@ onClick={() => void saveToCloud()}
 variant="outline"
 className="w-full justify-start"
 disabled={!canUseCloud || isCloudBusy}
-onClick={() => setRetrieveDialogOpen(true)}
+onClick={() => {
+setRetrieveDialogOpen(true);
+void previewCloudRetrieve();
+}}
 >
 <RefreshCw className="w-4 h-4 mr-3" />
 {persistenceStatus.cloudStatus === 'retrieving' ? 'Retrieving...' : 'Retrieve from cloud'}
 </Button>
 </div>
+
+{persistenceStatus.canUndoCloudRetrieve && (
+<Button
+variant="outline"
+className="w-full justify-start"
+disabled={isCloudBusy}
+onClick={() => void undoLastCloudRetrieve()}
+>
+<RefreshCw className="w-4 h-4 mr-3" />
+Undo last cloud retrieve
+</Button>
+)}
 
 {persistenceStatus.cloudMessage && (
 <p className="rounded-md bg-secondary p-3 text-sm text-muted-foreground" role="status" aria-live="polite">
@@ -372,26 +390,59 @@ onClick={() => setRetrieveDialogOpen(true)}
 )}
 
 <AlertDialog open={retrieveDialogOpen} onOpenChange={setRetrieveDialogOpen}>
-<AlertDialogContent>
-<AlertDialogHeader>
-<AlertDialogTitle>Retrieve cloud data?</AlertDialogTitle>
-<AlertDialogDescription>
-This replaces the signed-in data on this device with the current cloud copy for your account. Export a backup first if you want a local checkpoint.
-</AlertDialogDescription>
-</AlertDialogHeader>
-<AlertDialogFooter>
-<AlertDialogCancel disabled={isCloudBusy}>Cancel</AlertDialogCancel>
-<AlertDialogAction
-disabled={isCloudBusy}
-onClick={(event) => {
-event.preventDefault();
-setRetrieveDialogOpen(false);
-void retrieveFromCloud();
-}}
->
-{persistenceStatus.cloudStatus === 'retrieving' ? 'Retrieving...' : 'Retrieve cloud data'}
-</AlertDialogAction>
-</AlertDialogFooter>
+   <AlertDialogContent>
+   <AlertDialogHeader>
+   <AlertDialogTitle>Review cloud retrieve</AlertDialogTitle>
+   <AlertDialogDescription>
+   PeptideOS will download a local backup before replacing this device with the cloud copy.
+   </AlertDialogDescription>
+   </AlertDialogHeader>
+   {persistenceStatus.cloudRetrievePreview ? (
+   <div className="grid gap-3 rounded-[16px] bg-secondary p-3 text-sm">
+   <div className="grid grid-cols-2 gap-2">
+   <div className="rounded-[12px] bg-background p-3">
+   <p className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">This device</p>
+   <p className="mt-1 text-2xl font-black">{persistenceStatus.cloudRetrievePreview.localRecordCount}</p>
+   <p className="text-xs text-muted-foreground">local records</p>
+   </div>
+   <div className="rounded-[12px] bg-background p-3">
+   <p className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">Cloud copy</p>
+   <p className="mt-1 text-2xl font-black">{persistenceStatus.cloudRetrievePreview.cloudRecordCount}</p>
+   <p className="text-xs text-muted-foreground">cloud records</p>
+   </div>
+   </div>
+   <p className="text-xs leading-5 text-muted-foreground">
+   Cloud has {persistenceStatus.cloudRetrievePreview.cloudHasMoreRecords} more records by count. This device has {persistenceStatus.cloudRetrievePreview.localHasMoreRecords} more records by count.
+   </p>
+   <p className="text-xs leading-5 text-muted-foreground">
+   Retrieved {persistenceStatus.cloudRetrievePreview.pulledRows} sync rows{persistenceStatus.cloudRetrievePreview.pulledAt ? ` · ${formatDateTime(persistenceStatus.cloudRetrievePreview.pulledAt)}` : ''}.
+   </p>
+   </div>
+   ) : (
+   <div className="rounded-[16px] bg-secondary p-3 text-sm text-muted-foreground" role="status">
+   {persistenceStatus.cloudStatus === 'retrieving' ? 'Checking cloud copy...' : 'No cloud retrieve preview is available.'}
+   </div>
+   )}
+   <AlertDialogFooter>
+   <AlertDialogCancel
+   disabled={isCloudBusy}
+   onClick={() => {
+   cancelCloudRetrievePreview();
+   }}
+   >
+   Cancel
+   </AlertDialogCancel>
+   <AlertDialogAction
+   disabled={isCloudBusy || !persistenceStatus.cloudRetrievePreview}
+   onClick={(event) => {
+   event.preventDefault();
+   setRetrieveDialogOpen(false);
+   void confirmCloudRetrieve();
+   }}
+   >
+   {persistenceStatus.cloudStatus === 'retrieving' ? 'Retrieving...' : 'Download backup and retrieve'}
+   </AlertDialogAction>
+   </AlertDialogFooter>
 </AlertDialogContent>
 </AlertDialog>
 
