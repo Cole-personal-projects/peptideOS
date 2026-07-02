@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { countPersistedUserRecords, shouldRestoreCloudData } from './cloud-sync-safety';
+import { comparePersistedUserDataCounts, countPersistedUserRecords, shouldRestoreCloudData } from './cloud-sync-safety';
 import type { PersistedUserData } from './persistence';
 
 const settings = {
@@ -52,6 +52,58 @@ describe('cloud sync safety decisions', () => {
   test('counts persisted user records outside settings', () => {
     expect(countPersistedUserRecords(emptyData)).toBe(0);
     expect(countPersistedUserRecords(localInventoryData)).toBe(1);
+  });
+
+  test('compares local and cloud record counts by collection', () => {
+    const comparison = comparePersistedUserDataCounts({
+      localData: localInventoryData,
+      cloudData: {
+        ...emptyData,
+        stacks: [
+          {
+            id: 'stack-cloud',
+            name: 'Cloud protocol',
+            description: '',
+            peptides: [],
+            startDate: '2026-06-24',
+            durationDays: 30,
+            status: 'active',
+            notes: '',
+          },
+        ],
+        labReports: [
+          {
+            id: 'lab-cloud',
+            drawDate: '2026-06-24',
+            uniqueImportKey: 'cloud-lab',
+            notes: '',
+            createdAt: '2026-06-24T12:00:00.000Z',
+          },
+        ],
+      },
+    });
+
+    expect(comparison.find((item) => item.key === 'vials')).toEqual({
+      key: 'vials',
+      label: 'Inventory containers',
+      localCount: 1,
+      cloudCount: 0,
+      delta: -1,
+    });
+    expect(comparison.find((item) => item.key === 'stacks')).toEqual({
+      key: 'stacks',
+      label: 'Protocols',
+      localCount: 0,
+      cloudCount: 1,
+      delta: 1,
+    });
+    expect(comparison.find((item) => item.key === 'labReports')).toEqual({
+      key: 'labReports',
+      label: 'Lab reports',
+      localCount: 0,
+      cloudCount: 1,
+      delta: 1,
+    });
   });
 
   test('allows automatic cloud restore for an empty local device', () => {
