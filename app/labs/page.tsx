@@ -1050,20 +1050,43 @@ function TimelineView(props: {
           <CardTitle className="flex items-center justify-between gap-3 text-sm">
             <span className="flex items-center gap-2"><Bot className="h-4 w-4 text-primary" /> Peppi lab analysis</span>
           <Button size="sm" variant="outline" onClick={() => props.onAnalyze()} disabled={props.cards.length === 0 || props.isAnalyzing}>
-              {props.isAnalyzing ? <span className="inline-flex items-center gap-2"><FluidMetaballs label="Peppi analyzing labs" size="sm" /> Analyzing...</span> : 'Analyze all'}
+              {props.isAnalyzing ? <span className="inline-flex items-center gap-2"><FluidMetaballs label="Peppi analyzing labs" size="md" /> Analyzing...</span> : 'Analyze all'}
             </Button>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <p className="text-xs text-muted-foreground">Peppi explains trends against local protocol records. It does not diagnose, recommend dose changes, or determine safety.</p>
-          {props.isAnalyzing ? (
-            <div className="rounded-md border bg-background px-3 py-2"><FluidMetaballs label="Peppi analyzing labs" size="sm" showLabel /></div>
-          ) : props.analysisMessage ? <p className="rounded-md border bg-background px-3 py-2 text-sm">{props.analysisMessage}</p> : null}
+          {props.isAnalyzing ? <PeppiLabAnalysisLoader /> : props.analysisMessage ? <p className="rounded-md border bg-background px-3 py-2 text-sm">{props.analysisMessage}</p> : null}
           {props.analysisCards.map((card) => <div key={card.id} className="rounded-md border bg-background p-3 text-sm"><p className="font-medium">{card.title}</p><p className="text-muted-foreground">{card.body}</p></div>)}
         </CardContent>
       </Card>
 
       {props.cards.map((card) => <LabReportCard key={card.report.id} card={card} onAnalyze={props.onAnalyze} onDelete={props.onDelete} onOpenReport={props.onOpenReport} />)}
+    </div>
+  );
+}
+
+function PeppiLabAnalysisLoader() {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-primary/25 bg-primary/10 p-4" aria-label="Peppi lab analysis loading">
+      <div className="flex items-center gap-4">
+        <div className="grid size-16 shrink-0 place-items-center rounded-2xl border border-primary/25 bg-background/80 shadow-[0_0_24px_hsl(var(--primary)/0.18)]">
+          <FluidMetaballs label="Peppi analyzing labs" size="lg" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold">Peppi is reading your markers</p>
+          <p className="mt-1 text-xs text-muted-foreground">Checking dates, assay context, trends, and linked protocols.</p>
+          <div className="mt-3 space-y-1.5" aria-hidden="true">
+            {[72, 92, 58].map((width, index) => (
+              <span
+                key={width}
+                className="block h-1.5 rounded-full bg-primary/70 animate-pulse"
+                style={{ width: `${width}%`, animationDelay: `${index * 160}ms` }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
